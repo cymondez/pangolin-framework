@@ -13,3 +13,5 @@
 採用過 Bookstore Handler 的程式需更新 import；型別、建構與 HTTP 行為不變。舊 Bookstore main 的路徑不保留轉接命令。E2E 會從新路徑建置，輸出 binary／log 名稱仍為 bookstore-api／bookstore-worker，對帳流程與原始 evidence 格式維持一致。
 
 同套件 `_test.go` 與程式碼並置；跨套件驗收、共用 fixture、操作腳本與 Go 命令分別在 tests、internal/testkit、scripts、tools，新增總覽說明入口。原 M0／M1 驗收紀錄及其來源 hash 不改寫；本次重跑結果另存，不能以舊位置的 profile 代表新工作樹。
+
+本次來源 `b3bf59c0` 的 Windows／Linux 完整 Gate、race、實際新入口 E2E 與原 API 比對已通過，見 [回歸紀錄](../evidence/source-layout.md)。

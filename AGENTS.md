@@ -10,6 +10,8 @@ panGOlin-framework 是 Go 模組化應用框架，先以模組化單體交付，
 
 本檔下文的 package、介面與執行流程都是既定設計的導覽，不表示對應目錄或功能已存在。實作開始後應同步更新這段狀態；不能由文件完成推論 Runtime 可執行或品質門檻已通過。
 
+M1 後續目錄整理已在來源 `b3bf59c03f4b66ff7389d44d8434356258a85d9a` 通過同版 Windows／Linux（含 race）回歸：共用框架 import 保留，Bookstore 專用入口／HTTP／fixture 已集中；現行位置見 [目錄指南](docs/guides/repository-layout.md)，證據見 [回歸紀錄](docs/evidence/source-layout.md)。
+
 | 文件 | 唯一責任 | 何時閱讀 |
 |---|---|---|
 | [實作規範書](design/panGOlin-framework_實作規範書.md) | §5.7、§16 定義 95 項正式需求；相關章節定義介面、失敗與資料契約；§13 定義 A01–A95 與品質門檻；§15 定義版本範圍 | 實作、修改 API／schema、補測試、判斷產品行為前 |

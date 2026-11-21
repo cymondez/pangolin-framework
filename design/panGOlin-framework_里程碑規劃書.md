@@ -149,6 +149,8 @@ flowchart LR
 
 ### M1 — 最小真實垂直流程與工程 Gate
 
+後續目錄整理增量已以來源 `b3bf59c03f4b66ff7389d44d8434356258a85d9a` 通過相同 Windows／Linux（含 race）累積 Gate；未新增正式 Delivers 或改寫首次交付來源。見 [目錄整理回歸紀錄](../docs/evidence/source-layout.md)。
+
 **狀態：Verified；來源 `9eb10df6cd848b87fda964f0b6b61d60dc12b0a6`，分支 `codex/m1-vertical-flow`。** WP02–WP05 的正式案例、S2／S3、Windows／固定 OCI Linux（含 race）同 commit Gate 全部通過；9 項正式需求、47 個具名子情境與 20 份模組說明已驗證。完整結果見 [M1 驗收紀錄](../docs/evidence/M1.md)，重現方式見 [M1 開發指南](../docs/guides/m1-development.md)。
 
 **原節奏：** W3–W6；**責任：** Go A 主責，Go B／C 補事件及身分薄切片，QA／SRE 驗證。  

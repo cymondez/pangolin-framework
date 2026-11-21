@@ -4,7 +4,7 @@
 
 ```text
 kernel/、persistence/、security/、events/   共用框架公開能力
-modules/organization/contracts/            尚待完整模組實作的中立管理 Port
+modules/organization/contracts/            尚待完整模組實作的穩定管理 Port
 examples/bookstore/
   cmd/api/、cmd/worker/                    範例的兩個可執行入口
   bootstrap/                              模組、Provider 與程序組裝
@@ -45,5 +45,6 @@ Bookstore 專用 main 及 Handler 已集中於範例。根目錄 cmd 將保留�
 - [工具索引](../../tools/README.md)：完整 Gate、檢查命令與操作腳本。
 - [搬移對照](../release-notes/source-layout.md)：既有命令與 import 的更新方式。
 - [ADR10](../adr/ADR10-source-ownership.md)：決策、相容性與驗證要求。
+- [目錄整理回歸紀錄](../evidence/source-layout.md)：搬移後的跨平台完整 Gate 與 API 比對結果。
 
 每個模組 README 隨程式一起維護。歷史 evidence 保留當時的來源 commit／路徑；不能因本次搬移重寫舊 report、原始 profile 或 hash。
