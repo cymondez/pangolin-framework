@@ -15,6 +15,7 @@ panGOlin-framework 是 Go 模組化應用框架，先以模組化單體交付，
 | [實作規範書](design/panGOlin-framework_實作規範書.md) | §5.7、§16 定義 95 項正式需求；相關章節定義介面、失敗與資料契約；§13 定義 A01–A95 與品質門檻；§15 定義版本範圍 | 實作、修改 API／schema、補測試、判斷產品行為前 |
 | [里程碑規劃書](design/panGOlin-framework_里程碑規劃書.md) | M0–M6、工作包、前置 Gate、唯一需求交付映射及證據 | 拆工作、確認依賴、更新進度與驗收前 |
 | [架構總覽](design/panGOlin-framework_完整架構與實作規劃書.md) | 系統定位、設計理由、關係圖與閱讀入口 | 首次理解專案或討論跨模組設計時 |
+| [倉庫目錄指南](docs/guides/repository-layout.md) | 現行程式歸屬、範例與測試／工具入口 | 新增檔案、移動 package、尋找使用入口時 |
 
 - 「應該怎麼運作」以實作規範為準；「目前實際怎麼運作」由程式碼與同版本的測試證據確認。兩者不一致時指出缺陷，不直接修改規範來合理化實作。
 - 範例、圖表、本檔摘要與正式契約不一致時，修正說明性內容；正式契約有歧義時先釐清並修正唯一來源，不自行採較寬鬆的解讀。
@@ -30,6 +31,8 @@ panGOlin-framework 是 Go 模組化應用框架，先以模組化單體交付，
 5. 實作任務先建立對應驗收案例，再完成程式與回歸。尚未實作的案例保持明確待辦，不用空測試或假成功代替。
 
 ## 讀與改 Go 程式碼
+
+- 先按擁有者歸類，再在擁有者內分層；不增加 `src`。框架 production package 不得 import `examples/`，Bookstore 專用 main／Handler／fixture 全部歸 `examples/bookstore`。單元測試與套件並置；跨套件驗收、共享 fixture、操作腳本與工具依 [目錄指南](docs/guides/repository-layout.md) 放置。
 
 - 先用 `rg --files` 找檔案，`rg -n` 找定義、呼叫與配置，再閱讀相關 package、介面、建構函式及測試。工具可用時搭配 Go 語意工具確認引用與實作；文字搜尋沒有結果不等於不存在介面使用者。
 - 依賴以 constructor 與明確 Port 傳入。package 使用小寫短名稱，公開介面按責任命名；import path 以實際 `go.mod` 為準，不自行杜撰發行位置。
@@ -141,7 +144,7 @@ panGOlin-framework 是 Go 模組化應用框架，先以模組化單體交付，
 | 快取 | `platform/cache` | §9.3；key 含 application／version／tenant／完整 scope，權限相關結果另含 principal／revision |
 | 背景工作 | `platform/jobs` | §9.4、§14.3 |
 | Logs／Metrics／Tracing／Health | `observability` | §9.6；敏感內容遮罩，不以無界租戶／組織 labels 建 Metrics |
-| CLI、兩種 Profile 範本與 Bookstore | `cmd/pangolin`、`cmd/bookstore-*`、`examples/bookstore` | §10、§12、§13.4 |
+| CLI、兩種 Profile 範本與 Bookstore | `cmd/pangolin`（後續 CLI）、`examples/bookstore/cmd/{api,worker}`、`examples/bookstore` | §10、§12、§13.4 |
 
 v0.1 的正式範圍只由[實作規範 §15](design/panGOlin-framework_實作規範書.md#s-15)決定。Organization 對應用可選，但仍是框架發行包交付項。Redis、Blob Storage、進階 Cron、新的 DB／Broker／Transport Adapter 列在 v0.2+，沒有本次時程承諾。
 

@@ -6,6 +6,8 @@ Go 模組化應用框架，採模組化單體、明確 DI、UOW、Tenant／Scope
 
 ## 本機檢查
 
+先看 [倉庫目錄與程式歸屬](docs/guides/repository-layout.md)、[Bookstore 入口](examples/bookstore/README.md)、[測試索引](tests/README.md) 與 [工具索引](tools/README.md)。Bookstore 專用 Handler／main 已集中到範例；搬移相容性見 [目錄整理說明](docs/release-notes/source-layout.md)。
+
 M1 各模組的使用、設定、生命週期、測試與交付邊界：
 
 | 領域 | 模組說明 |
@@ -14,7 +16,7 @@ M1 各模組的使用、設定、生命週期、測試與交付邊界：
 | Persistence | [UOW](persistence/uow/README.md)、[PostgreSQL](persistence/postgres/README.md) |
 | Security | [Authentication](security/authn/README.md)、[Scope](security/scope/README.md) |
 | Events | [Envelope／Codec](events/distributed/README.md)、[NATS JetStream](events/nats/README.md) |
-| HTTP／範例 | [HTTP](transport/http/README.md)、[Bookstore 分層與組裝](examples/bookstore/README.md) |
+| HTTP／範例 | [HTTP](examples/bookstore/transport/http/README.md)、[Bookstore 分層與組裝](examples/bookstore/README.md) |
 | 工程 Gate | [品質計數](internal/quality/README.md)、[check 命令](tools/check/README.md)、[M1 重現指南](docs/guides/m1-development.md) |
 
 使用 Go 1.27.4、Python 3.11+、sqlc v1.31.1 及真實 PostgreSQL／NATS／測試 IdP。先依 [M1 指南](docs/guides/m1-development.md) 啟動隔離環境與設定連線，再執行 Windows PowerShell：

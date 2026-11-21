@@ -2,7 +2,7 @@
 
 M1 在 `codex/m1-vertical-flow` 實作。核心為 module DAG／SemVer、跨模組 lifecycle、DI、四層唯讀組態與有界 Drain；Bookstore 提供 tenant-only 的 Required 交易、RS256 JWT／JWKS、PostgreSQL FORCE RLS，以及分程序 Outbox → JetStream → Inbox → Read Model。完整 UOW、安全及事件矩陣仍依 M2／M3 交付。
 
-各模組在自身目錄附 `README.md`，從根目錄的模組表或 [Bookstore 分層索引](../../examples/bookstore/README.md) 進入。`tests/contract/m1.json` 列出 20 份說明文件，Gate 檢查其存在與本機連結；開發規範要求實作與文件同一變更完成。
+各模組在自身目錄附 `README.md`，從根目錄的模組表或 [Bookstore 分層索引](../../examples/bookstore/README.md) 進入。`tests/contract/m1.json` 列出各模組與工具／測試索引的說明文件，Gate 檢查其存在與本機連結；開發規範要求實作與文件同一變更完成。
 
 ## 工具與隔離環境
 
@@ -49,8 +49,10 @@ GitHub Actions 的 Linux job 執行完整 M1 Gate，Windows hosted job 執行 na
 
 Integration harness 首次建立 M1 schema／Broker topology。這是 M1 fixture bootstrap；正式部署 migration／鎖與相容性矩陣於 M3 驗收。API 啟動只檢查 schema，不執行 DDL。
 
-設定 `PANGOLIN_DSN` 為 app DSN、`PANGOLIN_ISSUER` 為可信 issuer 後執行 `go run ./cmd/bookstore-api -listen 127.0.0.1:18181`。本機可由測試 IdP `/token` 取得真實簽章 token，使用 `Authorization: Bearer <token>` 呼叫 `POST /books`（id、title）及 `GET /books/<id>`。id 可由客戶端預先指定，作為回應遺失後的狀態查詢識別；查無資料不代表 Commit Unknown 已確認回滾。
+設定 `PANGOLIN_DSN` 為 app DSN、`PANGOLIN_ISSUER` 為可信 issuer 後執行 `go run ./examples/bookstore/cmd/api -listen 127.0.0.1:18181`。本機可由測試 IdP `/token` 取得真實簽章 token，使用 `Authorization: Bearer <token>` 呼叫 `POST /books`（id、title）及 `GET /books/<id>`。id 可由客戶端預先指定，作為回應遺失後的狀態查詢識別；查無資料不代表 Commit Unknown 已確認回滾。
 
-另一程序設定 `PANGOLIN_DSN` 為 worker DSN、`PANGOLIN_NATS_URL`、`PANGOLIN_WORKER_TENANTS=tenant-a,tenant-b`，執行 `go run ./cmd/bookstore-worker`。兩程序均支援 `-run-for 10s` 供有界 demo；一般使用 Ctrl+C／SIGTERM 停機。可信 JWKS URL 預設 issuer 下的 `/jwks.json`，可由 `PANGOLIN_JWKS_URL` 明示設定；這是 M1 RS256 切片，完整 OIDC discovery／演算法與安全矩陣仍由 M3 交付。
+另一程序設定 `PANGOLIN_DSN` 為 worker DSN、`PANGOLIN_NATS_URL`、`PANGOLIN_WORKER_TENANTS=tenant-a,tenant-b`，執行 `go run ./examples/bookstore/cmd/worker`。兩程序均支援 `-run-for 10s` 供有界 demo；一般使用 Ctrl+C／SIGTERM 停機。可信 JWKS URL 預設 issuer 下的 `/jwks.json`，可由 `PANGOLIN_JWKS_URL` 明示設定；這是 M1 RS256 切片，完整 OIDC discovery／演算法與安全矩陣仍由 M3 交付。
 
 結束前確認 project 歸屬，再以 `docker compose -p pangolin-m1-dev -f deploy/compose/m1.yaml down` 停止自己的三個服務；保留 volumes，不做全域 prune。
+
+目錄歸屬與新入口見 [倉庫目錄指南](repository-layout.md)；本次搬移的命令／import 對照見 [目錄整理說明](../release-notes/source-layout.md)。

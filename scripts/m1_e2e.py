@@ -26,7 +26,7 @@ def run(output, project, packages, execute):
         raise ValueError("E2E requires an explicit pangolin-m1 namespace")
     suffix = ".exe" if os.name == "nt" else ""
     query=output/("m1-query"+suffix)
-    execute(["go","build","-o",str(query),"./internal/testkit/cmd/m1-query"])
+    execute(["go","build","-o",str(query),"./examples/bookstore/internal/testkit/cmd/m1-query"])
     def sql(statement):
         return execute([str(query),statement]).strip()
     if sql("SELECT current_database()")!="pangolin_m0":raise ValueError("not the isolated M1 fixture database")
@@ -36,9 +36,9 @@ def run(output, project, packages, execute):
     api_cov, worker_cov = output / "api-cov", output / "worker-cov"
     for path in (api_cov, worker_cov):
         path.mkdir(parents=True, exist_ok=True)
-    for name in ("bookstore-api", "bookstore-worker"):
-        execute(["go", "build", "-cover", "-covermode=atomic", "-coverpkg=" + packages, "-o", str(output / (name + suffix)), "./cmd/" + name])
-    execute(["go", "build", "-o", str(output / ("crash-worker" + suffix)), "./internal/testkit/cmd/crash-worker"])
+    for name,entry in (("bookstore-api","api"),("bookstore-worker","worker")):
+        execute(["go", "build", "-cover", "-covermode=atomic", "-coverpkg=" + packages, "-o", str(output / (name + suffix)), "./examples/bookstore/cmd/" + entry])
+    execute(["go", "build", "-o", str(output / ("crash-worker" + suffix)), "./examples/bookstore/internal/testkit/cmd/crash-worker"])
     children, logs = [], []
     def start(name, arguments, child_env, label=None):
         log = open(output / ((label or name) + ".log"), "w", encoding="utf-8")

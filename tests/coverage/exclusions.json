@@ -1,8 +1,8 @@
 {
   "github.com/cymondez/pangolin-framework/internal/testkit/idp/idp.go": "test fixture",
   "github.com/cymondez/pangolin-framework/internal/testkit/cmd/idp/main.go": "test fixture",
-  "github.com/cymondez/pangolin-framework/internal/testkit/cmd/crash-worker/main.go": "test fixture",
-  "github.com/cymondez/pangolin-framework/internal/testkit/cmd/m1-query/main.go": "test fixture",
+  "github.com/cymondez/pangolin-framework/examples/bookstore/internal/testkit/cmd/crash-worker/main.go": "test fixture",
+  "github.com/cymondez/pangolin-framework/examples/bookstore/internal/testkit/cmd/m1-query/main.go": "test fixture",
   "github.com/cymondez/pangolin-framework/examples/bookstore/infrastructure/internal/bookdb/db.go": "generated: sqlc v1.31.1",
   "github.com/cymondez/pangolin-framework/examples/bookstore/infrastructure/internal/bookdb/models.go": "generated: sqlc v1.31.1",
   "github.com/cymondez/pangolin-framework/examples/bookstore/infrastructure/internal/bookdb/queries.sql.go": "generated: sqlc v1.31.1"

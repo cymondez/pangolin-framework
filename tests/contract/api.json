@@ -5,14 +5,6 @@
       "sha256": "819842bab5df4bca5b271eec3baa2e4b496b026ada8ee152266c92633872a84f",
       "surface": "package pangolin // import \"github.com/cymondez/pangolin-framework\"\n\nPackage pangolin documents the panGOlin modular application framework.\n\nThe repository is establishing its M0 engineering foundation. Runtime,\npersistence and security contracts are specified in design/ and are not yet\nimplemented. Development tools do not constitute framework conformance.\n"
     },
-    "github.com/cymondez/pangolin-framework/cmd/bookstore-api": {
-      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
-      "surface": "\n"
-    },
-    "github.com/cymondez/pangolin-framework/cmd/bookstore-worker": {
-      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
-      "surface": "\n"
-    },
     "github.com/cymondez/pangolin-framework/events/distributed": {
       "sha256": "63608578c7a1f3e7c039aa0c306c5b6a089e673f2055491f94a18367f75f6bd1",
       "surface": "package distributed // import \"github.com/cymondez/pangolin-framework/events/distributed\"\n\nPackage distributed defines the integration envelope and publisher ports.\n\nFUNCTIONS\n\nfunc Encode(e Envelope) ([]byte, error)\n    Encode preserves the versioned snake_case wire envelope, bounded to 1 MiB.\n\n\nTYPES\n\ntype BrokerPublisher interface {\n\tSend(context.Context, Envelope) error\n}\n\ntype Envelope struct {\n\tID            string\n\tType          string\n\tSchemaVersion int\n\tOccurredAt    time.Time\n\tTenantID      string\n\tScopeKind     string\n\tScopeID       string\n\tCorrelationID string\n\tCausationID   string\n\tProducer      string\n\tPayload       json.RawMessage\n}\n\nfunc Decode(raw []byte) (Envelope, error)\n\ntype IntegrationEventPublisher interface {\n\tPublish(context.Context, any) error\n}\n\n"
@@ -33,6 +25,14 @@
       "sha256": "9857e13284d5d0994d882855a451835354b64cbefaffcd16a1b554767b3f7d9e",
       "surface": "package bootstrap // import \"github.com/cymondez/pangolin-framework/examples/bookstore/bootstrap\"\n\nPackage bootstrap composes the M1 API/worker executables with kernel lifecycle.\n\nFUNCTIONS\n\nfunc Run(ctx context.Context, mode string, args []string, out io.Writer, decorate func(distributed.BrokerPublisher) distributed.BrokerPublisher) error\n    Run keeps secrets in environment variables; file/CLI sources cannot supply\n    DSNs. An optional publisher decorator is a fault-injection seam used only by\n    testkit.\n\n"
     },
+    "github.com/cymondez/pangolin-framework/examples/bookstore/cmd/api": {
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "surface": "\n"
+    },
+    "github.com/cymondez/pangolin-framework/examples/bookstore/cmd/worker": {
+      "sha256": "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+      "surface": "\n"
+    },
     "github.com/cymondez/pangolin-framework/examples/bookstore/domain": {
       "sha256": "5668f42c0feb406ddbf6eae1189c7a53ec4e63246b0763cb838b47967877e349",
       "surface": "package domain // import \"github.com/cymondez/pangolin-framework/examples/bookstore/domain\"\n\nPackage domain contains the Book aggregate and its repository port.\n\nVARIABLES\n\nvar ErrConflict = errors.New(\"CONFLICT\")\nvar ErrInvalidBook = errors.New(\"VALIDATION_FAILED\")\nvar ErrNotFound = errors.New(\"NOT_FOUND\")\n\nTYPES\n\ntype Book struct {\n\tID      string `json:\"id\"`\n\tTitle   string `json:\"title\"`\n\tVersion int64  `json:\"version\"`\n}\n\nfunc NewBook(id, title string) (Book, error)\n\ntype Repository interface {\n\tInsert(context.Context, Book) error\n\tGet(context.Context, string) (Book, error)\n}\n\n"
@@ -40,6 +40,10 @@
     "github.com/cymondez/pangolin-framework/examples/bookstore/infrastructure": {
       "sha256": "e9d61d1c3ef09456c1a7c491c4e23e7d15f63e4e86078482aaf937df51975983",
       "surface": "package infrastructure // import \"github.com/cymondez/pangolin-framework/examples/bookstore/infrastructure\"\n\n\nTYPES\n\ntype Replicator struct {\n\tPool    *pgxpool.Pool\n\tBroker  distributed.BrokerPublisher\n\tTenants map[string]bool\n}\n    Replicator is the example's tenant-only M1 queue/read-model slice. General\n    queue stores, capacity controls and the complete failure matrix arrive in\n    M3.\n\nfunc (r *Replicator) Dispatch(ctx context.Context) (bool, error)\n\nfunc (r *Replicator) Project(ctx context.Context) (bool, error)\n\nfunc (r *Replicator) Receive(ctx context.Context, event distributed.Envelope) error\n\ntype Repository struct{}\n\nfunc (Repository) Get(ctx context.Context, id string) (domain.Book, error)\n\nfunc (Repository) Insert(ctx context.Context, b domain.Book) error\n\nfunc (Repository) Publish(ctx context.Context, value any) error\n\n"
+    },
+    "github.com/cymondez/pangolin-framework/examples/bookstore/transport/http": {
+      "sha256": "94ba259ff490afb86ac053fa9d7860e7e46d07a42b4f78283fbbabb39cdb13bd",
+      "surface": "package http // import \"github.com/cymondez/pangolin-framework/examples/bookstore/transport/http\"\n\nPackage http implements the M1 tenant-only, non-streaming Bookstore transport.\n\nTYPES\n\ntype Authenticator interface {\n\tAuthenticate(context.Context, string) (context.Context, error)\n}\n\ntype BookService interface {\n\tCreate(context.Context, string, string) (domain.Book, error)\n\tGet(context.Context, string) (domain.Book, error)\n}\n\ntype Handler struct {\n\tBooks  BookService\n\tAuth   Authenticator\n\tScopes scope.ScopeResolver\n\tWork   *runtime.WorkGroup\n\tReady  func() bool\n}\n\nfunc (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request)\n\n"
     },
     "github.com/cymondez/pangolin-framework/kernel/config": {
       "sha256": "d63b117bbd50c1a0ef4495f31918784668fe0fae070eaba957a2d79712c2bb92",
@@ -80,10 +84,6 @@
     "github.com/cymondez/pangolin-framework/security/scope": {
       "sha256": "4e2313292d0cf4baf1d0ddb71aaa0e27529ea24af978cc3bac74788da164a41a",
       "surface": "package scope // import \"github.com/cymondez/pangolin-framework/security/scope\"\n\nPackage scope defines neutral resource scope ports. Binding/admission are not\nimplemented in M0.\n\nTYPES\n\ntype IdentityReader func(context.Context) (PrincipalRef, string, bool)\n    IdentityReader is supplied by the trusted authentication adapter at\n    composition.\n\ntype PrincipalRef struct {\n\tID   string\n\tKind string\n}\n\ntype ScopeAdmitter interface {\n\tAdmit(context.Context, ScopeBinding) (ScopeBinding, error)\n}\n    ScopeAdmitter returns the authoritative snapshot for a new top-level\n    operation. It preserves Ref/Principal; RequiresNew reuses its parent's\n    admitted snapshot.\n\ntype ScopeBinding struct {\n\tRef               ScopeRef\n\tPrincipal         PrincipalRef\n\tAuthorityRevision string\n}\n\nfunc Current(ctx context.Context) (ScopeBinding, bool)\n    Current returns only bindings installed by an authorized resolver.\n\ntype ScopeProvider interface {\n\tKinds() []string\n\tResolve(context.Context, PrincipalRef, ScopeRef) (ScopeBinding, error)\n\tAuthorize(context.Context, ScopeBinding, string) error\n}\n\ntype ScopeRef struct {\n\tTenantID string\n\tKind     string\n\tID       string\n}\n\ntype ScopeResolver interface {\n\tBind(context.Context, ScopeRef) (context.Context, error)\n\tCurrent(context.Context) (ScopeBinding, bool)\n}\n\nfunc NewTenantResolver(identity IdentityReader) ScopeResolver\n    NewTenantResolver provides the tenant-only M1 profile. Organization kinds\n    are rejected; authority revisions for mutable membership are delivered in\n    M2/M3.\n\n"
-    },
-    "github.com/cymondez/pangolin-framework/transport/http": {
-      "sha256": "b94f02a0ee1b6f4bb9c725544817ae799ab79188ac56dba654d9ac4d265e78d7",
-      "surface": "package http // import \"github.com/cymondez/pangolin-framework/transport/http\"\n\nPackage http implements the M1 tenant-only, non-streaming Bookstore transport.\n\nTYPES\n\ntype Authenticator interface {\n\tAuthenticate(context.Context, string) (context.Context, error)\n}\n\ntype BookService interface {\n\tCreate(context.Context, string, string) (domain.Book, error)\n\tGet(context.Context, string) (domain.Book, error)\n}\n\ntype Handler struct {\n\tBooks  BookService\n\tAuth   Authenticator\n\tScopes scope.ScopeResolver\n\tWork   *runtime.WorkGroup\n\tReady  func() bool\n}\n\nfunc (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request)\n\n"
     }
   }
 }

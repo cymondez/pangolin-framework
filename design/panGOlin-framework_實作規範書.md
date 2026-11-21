@@ -1205,9 +1205,7 @@ Blob Storage 的 Port、Local／S3 Adapter 均列入 v0.2+，本版不定義其�
 pangolin-framework/
 ├── go.mod
 ├── cmd/
-│   ├── pangolin/                   # CLI
-│   ├── bookstore-api/              # 範例 API
-│   └── bookstore-worker/           # 範例 Worker
+│   └── pangolin/                   # 框架 CLI；範例入口歸各自 examples
 ├── kernel/
 │   ├── module/                     # DAG, Lifecycle
 │   ├── di/                         # Provider Registry
@@ -1247,15 +1245,20 @@ pangolin-framework/
 │   ├── cache/
 │   └── blob/                       # v0.2+，非 v0.1 必建
 ├── transport/
-│   ├── http/
+│   ├── http/                       # 共用入口機制，不引用範例業務模型
 │   └── grpc/                       # Future Adapter
 ├── observability/
 ├── examples/
 │   └── bookstore/
+│       ├── cmd/
+│       │   ├── api/                # Bookstore API 入口
+│       │   └── worker/             # Bookstore Worker 入口
+│       ├── bootstrap/              # 範例自身的模組與 Provider 組裝
 │       ├── domain/
 │       ├── application/
 │       ├── infrastructure/
-│       └── transport/
+│       ├── transport/http/         # Bookstore 專用 Handler
+│       └── internal/testkit/cmd/   # 只用於範例的故障／對帳程序
 ├── migrations/
 ├── design/                         # 架構總覽、實作規範、里程碑規劃
 ├── docs/
@@ -1275,6 +1278,8 @@ pangolin-framework/
 ```
 
 **Go 命名規則：** 套件名小寫短詞（例如 `uow`, `outbox`），程式碼路徑以實際倉庫設定的 module path 為準。不要把首字母混用或專案品牌名稱硬塞進所有 package；對外宣告的 Interface 名稱以職責命名。`internal/` 可保護非公開實作，待倉庫切分與公共 API 審查時決定最終位置。
+
+**目錄歸屬：** 保留單一根目錄 `go.mod`，共用公開套件不增加 `src` 前綴。範例自己的入口、HTTP Handler、組裝、資料 Adapter 與專用 fixture 歸該範例，框架 production package 不得反向 import `examples/`。同套件單元測試與程式碼並置；跨套件驗收、共用 fixture、工具與執行產物各按用途歸 `tests/`、`internal/testkit/`、`tools/`／`scripts/`、`artifacts/`。此歸屬規則落實 §1.1／ARC-001，不改需求 ID 或產品行為。現況與入口見 [倉庫目錄指南](../docs/guides/repository-layout.md)；上圖仍包含後續里程碑的目標 package，沒有實作時不建立空殼。
 
 <a id="s-11"></a>
 

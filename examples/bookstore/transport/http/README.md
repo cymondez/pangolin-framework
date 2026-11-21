@@ -1,6 +1,6 @@
 # HTTP：Bookstore 非串流入口
 
-本套件依 `BookService`／`Authenticator`／ScopeResolver Port 呼叫 Application，不直接操作 PostgreSQL 或 Broker。實作見 [books.go](books.go)，組裝見 [bootstrap](../../examples/bookstore/bootstrap/README.md)。
+本套件依 `BookService`／`Authenticator`／ScopeResolver Port 呼叫 Application，不直接操作 PostgreSQL 或 Broker。實作見 [books.go](books.go)，組裝見 [bootstrap](../../bootstrap/README.md)。
 
 提供 `GET /readyz`、`POST /books`（id 可省略、title 必填）及 `GET /books/<id>`。業務請求在 Host Ready 且 WorkGroup 接受 admission 後，依序建立有界操作、驗證 Bearer JWT、檢查 Tenant／Scope hint、Bind、解碼／驗證，再呼叫 Application。M1 拒絕非 tenant 的 Scope Kind，以及和身分不一致的 Tenant／Scope ID。
 
@@ -10,4 +10,4 @@ POST body 上限 1 MiB，拒絕未知欄位、非法或尾隨 JSON；請求 time
 
 Handler 的 WorkGroup 記錄活躍操作；Quiesce 後拒絕新工作。HTTP server 的 listener／Shutdown 必須由 Runtime Participant 管理，不能只停 Ready 後立即關 DB。
 
-驗證：`go test ./transport/http`，涵蓋拒絕順序、body、錯誤遮罩與成功回應 barrier；真實 Commit 前不回 2xx、簽章／租戶拒絕及停機用 [M1 E2E](../../docs/guides/m1-development.md)。Streaming／SSE 尚未交付。
+驗證：`go test ./examples/bookstore/transport/http`，涵蓋拒絕順序、body、錯誤遮罩與成功回應 barrier；真實 Commit 前不回 2xx、簽章／租戶拒絕及停機用 [M1 E2E](../../../../docs/guides/m1-development.md)。Streaming／SSE 尚未交付。

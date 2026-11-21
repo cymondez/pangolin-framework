@@ -16,6 +16,23 @@ import m1
 
 
 class EngineeringGates(unittest.TestCase):
+    def test_framework_never_imports_examples(self):
+        for area in ("kernel/runtime","persistence/postgres","security/authn","events/nats","transport/http"):
+            with self.subTest(area=area),self.assertRaisesRegex(ValueError,"[Ff]ramework.*example"):
+                m0.check_imports([{"ImportPath":m0.MODULE+"/"+area,"Imports":[m0.MODULE+"/examples/bookstore/domain"]}])
+        m0.check_imports([{"ImportPath":m0.MODULE+"/examples/bookstore/bootstrap","Imports":[m0.MODULE+"/kernel/runtime"]}])
+        with self.assertRaises(ValueError):
+            m0.check_imports([{"ImportPath":m0.MODULE+"/examples/bookstore/application","Imports":[m0.MODULE+"/examples/bookstore/transport/http"]}])
+        with tempfile.TemporaryDirectory(dir=ROOT/".cache") as directory:
+            root=Path(directory)
+            (root/"go.mod").write_text("module "+m0.MODULE+"\n\ngo 1.27.0\n")
+            (root/"kernel/runtime").mkdir(parents=True)
+            (root/"examples/bookstore/domain").mkdir(parents=True)
+            (root/"examples/bookstore/domain/book.go").write_text("package domain\ntype Book struct{}\n")
+            (root/"kernel/runtime/host.go").write_text('package runtime\nimport _ "'+m0.MODULE+'/examples/bookstore/domain"\n')
+            with self.assertRaisesRegex(ValueError,"framework imports example"):
+                m0.check_imports(m0.json_stream(m0.command(["go","list","-json","./..."],root)))
+
     def test_A45_real_import_graph_injection(self):
         with tempfile.TemporaryDirectory(dir=ROOT/".cache") as directory:
             root=Path(directory)

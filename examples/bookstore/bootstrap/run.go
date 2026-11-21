@@ -17,6 +17,7 @@ import (
 	broker "github.com/cymondez/pangolin-framework/events/nats"
 	"github.com/cymondez/pangolin-framework/examples/bookstore/application"
 	"github.com/cymondez/pangolin-framework/examples/bookstore/infrastructure"
+	transport "github.com/cymondez/pangolin-framework/examples/bookstore/transport/http"
 	"github.com/cymondez/pangolin-framework/kernel/config"
 	"github.com/cymondez/pangolin-framework/kernel/di"
 	"github.com/cymondez/pangolin-framework/kernel/module"
@@ -25,7 +26,6 @@ import (
 	"github.com/cymondez/pangolin-framework/persistence/uow"
 	"github.com/cymondez/pangolin-framework/security/authn"
 	"github.com/cymondez/pangolin-framework/security/scope"
-	transport "github.com/cymondez/pangolin-framework/transport/http"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nats-io/nats.go"
 )

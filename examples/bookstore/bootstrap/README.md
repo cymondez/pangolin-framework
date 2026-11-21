@@ -1,6 +1,6 @@
 # Bookstore Bootstrap：API／Worker 組裝
 
-`Run(ctx, mode, args, out, decorate)` 以 Kernel Module／DI／Config／Participant 組裝獨立 `api` 或 `worker` 程序。實作見 [run.go](run.go)。可執行入口位於 `cmd/bookstore-api`、`cmd/bookstore-worker`；OS signal 或 `-run-for` 到期會走有界停機。
+`Run(ctx, mode, args, out, decorate)` 以 Kernel Module／DI／Config／Participant 組裝獨立 `api` 或 `worker` 程序。實作見 [run.go](run.go)。可執行入口位於 `examples/bookstore/cmd/api`、`examples/bookstore/cmd/worker`；OS signal 或 `-run-for` 到期會走有界停機。
 
 | 設定 | 用途 |
 |---|---|

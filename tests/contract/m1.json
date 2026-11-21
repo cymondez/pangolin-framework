@@ -68,15 +68,20 @@
     "security/scope/README.md",
     "events/distributed/README.md",
     "events/nats/README.md",
-    "transport/http/README.md",
+    "examples/bookstore/transport/http/README.md",
     "examples/bookstore/README.md",
     "examples/bookstore/domain/README.md",
     "examples/bookstore/application/README.md",
     "examples/bookstore/infrastructure/README.md",
     "examples/bookstore/bootstrap/README.md",
-    "cmd/bookstore-api/README.md",
-    "cmd/bookstore-worker/README.md",
+    "examples/bookstore/cmd/api/README.md",
+    "examples/bookstore/cmd/worker/README.md",
     "internal/quality/README.md",
-    "tools/check/README.md"
+    "tools/check/README.md",
+    "tests/README.md",
+    "tools/README.md",
+    "scripts/README.md",
+    "internal/testkit/README.md",
+    "examples/bookstore/internal/testkit/README.md"
   ]
 }
