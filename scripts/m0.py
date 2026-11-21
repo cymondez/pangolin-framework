@@ -183,10 +183,9 @@ def check(root=ROOT):
     tenant = command(["go", "list", "-deps", "./internal/testkit/assemblies/tenant"], root).splitlines()
     if any(name.startswith(MODULE + "/modules/organization") for name in tenant):
         raise ValueError("tenant-only fixture captures organization dependency")
-    modules = json_stream(command(["go", "list", "-m", "-json", "all"], root))
-    if len(modules) != 1 or modules[0]["Path"] != MODULE:
-        raise ValueError("M0 dependency/license inventory changed; review and replace the stdlib-only baseline")
-    return dict(result, api_packages=len(load(root / "tests/contract/api.json")["packages"]), dependencies="stdlib-only")
+    import dependencies
+    dependency_result = dependencies.check()
+    return dict(result, api_packages=len(load(root / "tests/contract/api.json")["packages"]), dependencies=dependency_result)
 
 
 def revision(root=ROOT):

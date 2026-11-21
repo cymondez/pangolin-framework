@@ -1,13 +1,4 @@
 #!/bin/sh
 set -eu
 cd "$(dirname "$0")/.."
-mkdir -p artifacts
-go build ./...
-go vet ./...
-go run ./tools/check
-packages=$(go list ./... | sed '\|/internal/testkit/|d' | paste -sd, -)
-go test -coverpkg="$packages" -covermode=atomic -coverprofile=artifacts/unit.out ./...
-go run ./tools/check -coverage artifacts/unit.out
-python3 scripts/m0.py check
-python3 -m unittest discover -s tests/m0 -p 'test_*.py'
-go test -race ./...
+exec python3 scripts/m1.py verify --project "${PANGOLIN_M1_PROJECT:?set the isolated M1 Compose project}" --race

@@ -14,7 +14,7 @@ lang: zh-TW
 
 本文件依[實作規範書 v1.3](panGOlin-framework_實作規範書.md)安排全框架 v0.1 的交付，包含可選的 Enterprise／Organization 單一模組。需求正式句、介面、產品行為、版本範圍、A01–A95 及品質門檻只由實作規範定義；本文件不重新定義它們。
 
-**2026-11-21：M0 已 Verified（來源 commit `a0b1ad099fdf7bd28240514a24c34590220019a1`）；M1–M6 與全部產品需求映射仍為 Planned。** 已建立的底座及未完成條件見 §2.1。文件、CI 配置或品質工具測試不等於 M0 通過，也不等於 Runtime 已驗收或全框架達成 90% coverage。只有指定 commit 的 Exit 證據完整且 Gate 通過才能改為 Verified。
+**2026-11-21：M0 已 Verified（來源 commit `a0b1ad099fdf7bd28240514a24c34590220019a1`）；M1 在 `codex/m1-vertical-flow` In progress，M2–M6 與未驗收產品需求映射保持 Planned。** 已建立的底座及未完成條件見 §2.1。文件、CI 配置或品質工具測試不等於 M0 通過，也不等於 Runtime 已驗收或全框架達成 90% coverage。只有指定 commit 的 Exit 證據完整且 Gate 通過才能改為 Verified。
 
 ## 1. 範圍、估算與角色
 
@@ -148,6 +148,8 @@ flowchart LR
 **Gate：** 契約、環境或估算缺一不進 M1 正式交付。
 
 ### M1 — 最小真實垂直流程與工程 Gate
+
+**狀態：In progress；開發分支 `codex/m1-vertical-flow`。** WP02 的插樁 E2E／聯集 collector、WP03 Kernel／DI／Config／Drain、WP04 DB 薄片與 WP05 JWT／RLS／事件薄片已進入驗證；未取得同 commit Windows／Linux（含 race）Gate 前不標 Verified。重現入口見 [M1 開發指南](../docs/guides/m1-development.md)。
 
 **原節奏：** W3–W6；**責任：** Go A 主責，Go B／C 補事件及身分薄切片，QA／SRE 驗證。  
 **Delivers：** `ARC-001`、`MOD-001`、`MOD-002`、`MOD-003`、`CFG-001`、`OPS-001`、`REL-001`、`REL-002`、`REL-004`。
