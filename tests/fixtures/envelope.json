@@ -1,0 +1,13 @@
+{
+  "event_id":"00000000-0000-0000-0000-000000000100",
+  "event_type":"bookstore.book-created",
+  "schema_version":1,
+  "occurred_at":"2026-11-21T00:00:00Z",
+  "tenant_id":"00000000-0000-0000-0000-000000000001",
+  "scope_kind":"org.organization",
+  "scope_id":"00000000-0000-0000-0000-000000000011",
+  "correlation_id":"m0-fixture-operation",
+  "causation_id":null,
+  "producer":"bookstore-fixture",
+  "payload":{"id":"00000000-0000-0000-0000-000000000101"}
+}

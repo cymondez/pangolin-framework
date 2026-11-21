@@ -1,0 +1,78 @@
+name: M0 foundation
+on:
+  push:
+    branches: [main, develop, 'codex/**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-24.04
+    container:
+      image: golang:1.27.4-bookworm@sha256:4fa7c968ba93f1635670522dbb01a2c78150443e1385746924566079f36570ea
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Build, inventory, coverage, vet and race
+        run: python3 scripts/m0.py verify --race
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: m0-quality-linux-amd64
+          path: artifacts/
+          if-no-files-found: error
+
+  windows:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
+        with:
+          go-version: '1.27.4'
+          cache: false
+      - name: Windows build, vet, inventory and coverage
+        shell: pwsh
+        run: python scripts/m0.py verify
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: m0-quality-windows-amd64
+          path: artifacts/
+          if-no-files-found: error
+
+  environment:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
+        with:
+          go-version: '1.27.4'
+          cache: false
+      - name: Build local fixture using locked Go toolchain
+        run: |
+          mkdir -p artifacts
+          docker run --rm --network none --cpus=1 --memory=1g --pids-limit=256 -e CGO_ENABLED=0 -v "$PWD:/src" -w /src golang:1.27.4-bookworm@sha256:4fa7c968ba93f1635670522dbb01a2c78150443e1385746924566079f36570ea go build -o artifacts/test-idp ./internal/testkit/cmd/idp
+      - name: Isolated test services on disposable runner
+        env:
+          PANGOLIN_SOURCE_COMMIT: ${{ github.sha }}
+        run: |
+          docker compose -p pangolin-m0-ci -f deploy/compose/compose.yaml config --quiet
+          docker compose -p pangolin-m0-ci -f deploy/compose/compose.yaml up -d --build --wait --wait-timeout 90
+          python3 scripts/m0.py verify --environment --project pangolin-m0-ci
+      - name: Capture this project's logs
+        if: always()
+        run: docker compose -p pangolin-m0-ci -f deploy/compose/compose.yaml logs --no-color > artifacts/compose.log
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: m0-environment-linux-amd64
+          path: artifacts/
+          if-no-files-found: error
+      - name: Remove only this job's disposable containers
+        if: always()
+        run: docker compose -p pangolin-m0-ci -f deploy/compose/compose.yaml down
+
+# Runtime conformance, license/dependency scans and distribution are future gates.
+# A green M0 workflow never authorizes a v0.1 release.

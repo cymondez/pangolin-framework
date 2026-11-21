@@ -1,0 +1,3375 @@
+{
+  "baseline": "v1.3",
+  "profile": "tenant-only",
+  "status": "planned",
+  "subtests": [
+    {
+      "id": "A01/duplicate-name",
+      "requirement": "MOD-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A01/duplicate-name/"
+    },
+    {
+      "id": "A01/missing-dependency",
+      "requirement": "MOD-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A01/missing-dependency/"
+    },
+    {
+      "id": "A01/incompatible-version",
+      "requirement": "MOD-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A01/incompatible-version/"
+    },
+    {
+      "id": "A01/cycle",
+      "requirement": "MOD-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A01/cycle/"
+    },
+    {
+      "id": "A01/stable-layer-order",
+      "requirement": "MOD-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A01/stable-layer-order/"
+    },
+    {
+      "id": "A02/phase-order",
+      "requirement": "MOD-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A02/phase-order/"
+    },
+    {
+      "id": "A02/partial-start-failure",
+      "requirement": "MOD-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A02/partial-start-failure/"
+    },
+    {
+      "id": "A02/reverse-cleanup",
+      "requirement": "MOD-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A02/reverse-cleanup/"
+    },
+    {
+      "id": "A02/no-ready-on-failure",
+      "requirement": "MOD-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A02/no-ready-on-failure/"
+    },
+    {
+      "id": "A03/required-two-repositories-outer-rollback",
+      "requirement": "UOW-006",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A03/required-two-repositories-outer-rollback/"
+    },
+    {
+      "id": "A04/handler-chain-commit",
+      "requirement": "UOW-018",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A04/handler-chain-commit/"
+    },
+    {
+      "id": "A04/handler-error",
+      "requirement": "UOW-018",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A04/handler-error/"
+    },
+    {
+      "id": "A04/outbox-error",
+      "requirement": "UOW-018",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A04/outbox-error/"
+    },
+    {
+      "id": "A04/audit-error",
+      "requirement": "UOW-018",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A04/audit-error/"
+    },
+    {
+      "id": "A05/precommit-failure",
+      "requirement": "UOW-020",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A05/precommit-failure/"
+    },
+    {
+      "id": "A05/explicit-rollback-response",
+      "requirement": "UOW-020",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A05/explicit-rollback-response/"
+    },
+    {
+      "id": "A06/two-worker-barrier",
+      "requirement": "EVT-006",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A06/two-worker-barrier/"
+    },
+    {
+      "id": "A06/crash-before-commit",
+      "requirement": "EVT-006",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A06/crash-before-commit/"
+    },
+    {
+      "id": "A06/retry-after-crash",
+      "requirement": "EVT-006",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A06/retry-after-crash/"
+    },
+    {
+      "id": "A07/replay-success",
+      "requirement": "IDEM-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A07/replay-success/"
+    },
+    {
+      "id": "A07/crash-after-commit-before-response",
+      "requirement": "IDEM-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A07/crash-after-commit-before-response/"
+    },
+    {
+      "id": "A08/http-tenant-hint",
+      "requirement": "TEN-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A08/http-tenant-hint/"
+    },
+    {
+      "id": "A08/job-tenant-tamper",
+      "requirement": "TEN-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A08/job-tenant-tamper/"
+    },
+    {
+      "id": "A08/event-tenant-tamper",
+      "requirement": "TEN-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A08/event-tenant-tamper/"
+    },
+    {
+      "id": "A08/untrusted-producer",
+      "requirement": "TEN-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A08/untrusted-producer/"
+    },
+    {
+      "id": "A09/interleaved-auto-queries",
+      "requirement": "UOW-004",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A09/interleaved-auto-queries/"
+    },
+    {
+      "id": "A09/connection-reuse",
+      "requirement": "UOW-004",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A09/connection-reuse/"
+    },
+    {
+      "id": "A09/explicit-nontransactional-rejected",
+      "requirement": "UOW-004",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A09/explicit-nontransactional-rejected/"
+    },
+    {
+      "id": "A10/concurrent-version-conflict",
+      "requirement": "DATA-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A10/concurrent-version-conflict/"
+    },
+    {
+      "id": "A11/lease-takeover",
+      "requirement": "EVT-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A11/lease-takeover/"
+    },
+    {
+      "id": "A11/stale-success-update",
+      "requirement": "EVT-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A11/stale-success-update/"
+    },
+    {
+      "id": "A11/stale-failure-update",
+      "requirement": "EVT-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A11/stale-failure-update/"
+    },
+    {
+      "id": "A12/valid-token",
+      "requirement": "SEC-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A12/valid-token/"
+    },
+    {
+      "id": "A12/expired-token",
+      "requirement": "SEC-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A12/expired-token/"
+    },
+    {
+      "id": "A12/forged-token",
+      "requirement": "SEC-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A12/forged-token/"
+    },
+    {
+      "id": "A12/issuer",
+      "requirement": "SEC-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A12/issuer/"
+    },
+    {
+      "id": "A12/audience",
+      "requirement": "SEC-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A12/audience/"
+    },
+    {
+      "id": "A12/algorithm",
+      "requirement": "SEC-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A12/algorithm/"
+    },
+    {
+      "id": "A12/jwks-rotation",
+      "requirement": "SEC-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A12/jwks-rotation/"
+    },
+    {
+      "id": "A13/allow",
+      "requirement": "SEC-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A13/allow/"
+    },
+    {
+      "id": "A13/explicit-user-deny",
+      "requirement": "SEC-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A13/explicit-user-deny/"
+    },
+    {
+      "id": "A13/role-tenant-matrix",
+      "requirement": "SEC-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A13/role-tenant-matrix/"
+    },
+    {
+      "id": "A13/feature-not-permission",
+      "requirement": "SEC-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A13/feature-not-permission/"
+    },
+    {
+      "id": "A13/direct-use-case",
+      "requirement": "SEC-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A13/direct-use-case/"
+    },
+    {
+      "id": "A14/success-after-commit",
+      "requirement": "API-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A14/success-after-commit/"
+    },
+    {
+      "id": "A14/precommit-error",
+      "requirement": "API-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A14/precommit-error/"
+    },
+    {
+      "id": "A14/explicit-rollback",
+      "requirement": "API-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A14/explicit-rollback/"
+    },
+    {
+      "id": "A14/unknown-no-2xx",
+      "requirement": "API-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A14/unknown-no-2xx/"
+    },
+    {
+      "id": "A15/active-http",
+      "requirement": "OPS-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A15/active-http/"
+    },
+    {
+      "id": "A15/active-worker",
+      "requirement": "OPS-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A15/active-worker/"
+    },
+    {
+      "id": "A15/drain-timeout",
+      "requirement": "OPS-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A15/drain-timeout/"
+    },
+    {
+      "id": "A15/reverse-stop",
+      "requirement": "OPS-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A15/reverse-stop/"
+    },
+    {
+      "id": "A15/close-once",
+      "requirement": "OPS-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A15/close-once/"
+    },
+    {
+      "id": "A16/old-schema",
+      "requirement": "EVT-009",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A16/old-schema/"
+    },
+    {
+      "id": "A16/optional-field",
+      "requirement": "EVT-009",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A16/optional-field/"
+    },
+    {
+      "id": "A16/unknown-schema",
+      "requirement": "EVT-009",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A16/unknown-schema/"
+    },
+    {
+      "id": "A16/breaking-change",
+      "requirement": "EVT-009",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A16/breaking-change/"
+    },
+    {
+      "id": "A17/request-isolation",
+      "requirement": "UOW-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A17/request-isolation/"
+    },
+    {
+      "id": "A17/current-active",
+      "requirement": "UOW-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A17/current-active/"
+    },
+    {
+      "id": "A17/root-closed",
+      "requirement": "UOW-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A17/root-closed/"
+    },
+    {
+      "id": "A17/required-view-closed",
+      "requirement": "UOW-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A17/required-view-closed/"
+    },
+    {
+      "id": "A17/parent-still-active",
+      "requirement": "UOW-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A17/parent-still-active/"
+    },
+    {
+      "id": "A18/zero-options",
+      "requirement": "UOW-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A18/zero-options/"
+    },
+    {
+      "id": "A18/negative-timeout",
+      "requirement": "UOW-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A18/negative-timeout/"
+    },
+    {
+      "id": "A18/unknown-enum",
+      "requirement": "UOW-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A18/unknown-enum/"
+    },
+    {
+      "id": "A18/nil-context",
+      "requirement": "UOW-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A18/nil-context/"
+    },
+    {
+      "id": "A18/nil-callback",
+      "requirement": "UOW-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A18/nil-callback/"
+    },
+    {
+      "id": "A18/nil-hook",
+      "requirement": "UOW-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A18/nil-hook/"
+    },
+    {
+      "id": "A18/missing-defaults",
+      "requirement": "UOW-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A18/missing-defaults/"
+    },
+    {
+      "id": "A19/http-command",
+      "requirement": "UOW-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A19/http-command/"
+    },
+    {
+      "id": "A19/http-query",
+      "requirement": "UOW-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A19/http-query/"
+    },
+    {
+      "id": "A19/job-command",
+      "requirement": "UOW-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A19/job-command/"
+    },
+    {
+      "id": "A19/job-query",
+      "requirement": "UOW-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A19/job-query/"
+    },
+    {
+      "id": "A19/consumer-command",
+      "requirement": "UOW-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A19/consumer-command/"
+    },
+    {
+      "id": "A19/consumer-query",
+      "requirement": "UOW-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A19/consumer-query/"
+    },
+    {
+      "id": "A20/no-scope",
+      "requirement": "UOW-005",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A20/no-scope/"
+    },
+    {
+      "id": "A20/read-only",
+      "requirement": "UOW-005",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A20/read-only/"
+    },
+    {
+      "id": "A20/nontransactional",
+      "requirement": "UOW-005",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A20/nontransactional/"
+    },
+    {
+      "id": "A20/closed-scope",
+      "requirement": "UOW-005",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A20/closed-scope/"
+    },
+    {
+      "id": "A20/writable-control",
+      "requirement": "UOW-005",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A20/writable-control/"
+    },
+    {
+      "id": "A21/compatible-grid",
+      "requirement": "UOW-007",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A21/compatible-grid/"
+    },
+    {
+      "id": "A21/access-conflict",
+      "requirement": "UOW-007",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A21/access-conflict/"
+    },
+    {
+      "id": "A21/transaction-conflict",
+      "requirement": "UOW-007",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A21/transaction-conflict/"
+    },
+    {
+      "id": "A21/isolation-conflict",
+      "requirement": "UOW-007",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A21/isolation-conflict/"
+    },
+    {
+      "id": "A21/identity-conflict",
+      "requirement": "UOW-007",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A21/identity-conflict/"
+    },
+    {
+      "id": "A21/caught-conflict",
+      "requirement": "UOW-007",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A21/caught-conflict/"
+    },
+    {
+      "id": "A22/caught-inner-error",
+      "requirement": "UOW-008",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A22/caught-inner-error/"
+    },
+    {
+      "id": "A22/explicit-rollback-only",
+      "requirement": "UOW-008",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A22/explicit-rollback-only/"
+    },
+    {
+      "id": "A23/independent-resource",
+      "requirement": "UOW-009",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A23/independent-resource/"
+    },
+    {
+      "id": "A23/suspended-parent",
+      "requirement": "UOW-009",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A23/suspended-parent/"
+    },
+    {
+      "id": "A23/resumed-parent",
+      "requirement": "UOW-009",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A23/resumed-parent/"
+    },
+    {
+      "id": "A24/child-commit-parent-rollback",
+      "requirement": "UOW-010",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A24/child-commit-parent-rollback/"
+    },
+    {
+      "id": "A25/caught-child-error",
+      "requirement": "UOW-011",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A25/caught-child-error/"
+    },
+    {
+      "id": "A25/propagated-child-error",
+      "requirement": "UOW-011",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A25/propagated-child-error/"
+    },
+    {
+      "id": "A26/depth-boundary",
+      "requirement": "UOW-012",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A26/depth-boundary/"
+    },
+    {
+      "id": "A26/depth-exceeded",
+      "requirement": "UOW-012",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A26/depth-exceeded/"
+    },
+    {
+      "id": "A26/pool-exhaustion",
+      "requirement": "UOW-012",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A26/pool-exhaustion/"
+    },
+    {
+      "id": "A26/parent-lock-wait",
+      "requirement": "UOW-012",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A26/parent-lock-wait/"
+    },
+    {
+      "id": "A27/unknown-propagation",
+      "requirement": "UOW-013",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A27/unknown-propagation/"
+    },
+    {
+      "id": "A27/no-savepoint-api",
+      "requirement": "UOW-013",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A27/no-savepoint-api/"
+    },
+    {
+      "id": "A27/no-suppress-api",
+      "requirement": "UOW-013",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A27/no-suppress-api/"
+    },
+    {
+      "id": "A28/pool-deadline",
+      "requirement": "UOW-014",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A28/pool-deadline/"
+    },
+    {
+      "id": "A28/begin-deadline",
+      "requirement": "UOW-014",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A28/begin-deadline/"
+    },
+    {
+      "id": "A28/sql-deadline",
+      "requirement": "UOW-014",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A28/sql-deadline/"
+    },
+    {
+      "id": "A28/handler-deadline",
+      "requirement": "UOW-014",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A28/handler-deadline/"
+    },
+    {
+      "id": "A28/commit-deadline",
+      "requirement": "UOW-014",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A28/commit-deadline/"
+    },
+    {
+      "id": "A28/longer-child",
+      "requirement": "UOW-014",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A28/longer-child/"
+    },
+    {
+      "id": "A28/shorter-child",
+      "requirement": "UOW-014",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A28/shorter-child/"
+    },
+    {
+      "id": "A29/cancel-before-commit",
+      "requirement": "UOW-015",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A29/cancel-before-commit/"
+    },
+    {
+      "id": "A29/independent-cleanup-context",
+      "requirement": "UOW-015",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A29/independent-cleanup-context/"
+    },
+    {
+      "id": "A30/overlapping-sql",
+      "requirement": "UOW-016",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A30/overlapping-sql/"
+    },
+    {
+      "id": "A30/open-rows-busy",
+      "requirement": "UOW-016",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A30/open-rows-busy/"
+    },
+    {
+      "id": "A30/rows-delayed-error",
+      "requirement": "UOW-016",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A30/rows-delayed-error/"
+    },
+    {
+      "id": "A30/race-free",
+      "requirement": "UOW-016",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A30/race-free/"
+    },
+    {
+      "id": "A31/flush-then-rollback",
+      "requirement": "UOW-017",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A31/flush-then-rollback/"
+    },
+    {
+      "id": "A31/no-event-drain",
+      "requirement": "UOW-017",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A31/no-event-drain/"
+    },
+    {
+      "id": "A31/no-completion-hook",
+      "requirement": "UOW-017",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A31/no-completion-hook/"
+    },
+    {
+      "id": "A31/immediate-sql-adapter",
+      "requirement": "UOW-017",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A31/immediate-sql-adapter/"
+    },
+    {
+      "id": "A32/single-root-commit",
+      "requirement": "UOW-019",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A32/single-root-commit/"
+    },
+    {
+      "id": "A32/single-root-rollback",
+      "requirement": "UOW-019",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A32/single-root-rollback/"
+    },
+    {
+      "id": "A32/no-public-commit-handle",
+      "requirement": "UOW-019",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A32/no-public-commit-handle/"
+    },
+    {
+      "id": "A33/disconnect-before-delivery",
+      "requirement": "UOW-021",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A33/disconnect-before-delivery/"
+    },
+    {
+      "id": "A33/disconnect-after-db-commit",
+      "requirement": "UOW-021",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A33/disconnect-after-db-commit/"
+    },
+    {
+      "id": "A33/reconcile-same-key",
+      "requirement": "UOW-021",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A33/reconcile-same-key/"
+    },
+    {
+      "id": "A34/canceled-cleanup",
+      "requirement": "UOW-022",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A34/canceled-cleanup/"
+    },
+    {
+      "id": "A34/rollback-failure",
+      "requirement": "UOW-022",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A34/rollback-failure/"
+    },
+    {
+      "id": "A34/original-cause",
+      "requirement": "UOW-022",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A34/original-cause/"
+    },
+    {
+      "id": "A34/broken-connection",
+      "requirement": "UOW-022",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A34/broken-connection/"
+    },
+    {
+      "id": "A34/unknown-preserved",
+      "requirement": "UOW-022",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A34/unknown-preserved/"
+    },
+    {
+      "id": "A35/callback-panic",
+      "requirement": "UOW-023",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A35/callback-panic/"
+    },
+    {
+      "id": "A35/handler-panic",
+      "requirement": "UOW-023",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A35/handler-panic/"
+    },
+    {
+      "id": "A35/panic-value-preserved",
+      "requirement": "UOW-023",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A35/panic-value-preserved/"
+    },
+    {
+      "id": "A35/no-resource-leak",
+      "requirement": "UOW-023",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A35/no-resource-leak/"
+    },
+    {
+      "id": "A36/root-and-required-success",
+      "requirement": "UOW-024",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A36/root-and-required-success/"
+    },
+    {
+      "id": "A36/rolled-back-no-completed",
+      "requirement": "UOW-024",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A36/rolled-back-no-completed/"
+    },
+    {
+      "id": "A36/unknown-no-completed",
+      "requirement": "UOW-024",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A36/unknown-no-completed/"
+    },
+    {
+      "id": "A36/requires-new-hooks",
+      "requirement": "UOW-024",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A36/requires-new-hooks/"
+    },
+    {
+      "id": "A37/hook-error",
+      "requirement": "UOW-025",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A37/hook-error/"
+    },
+    {
+      "id": "A37/hook-panic",
+      "requirement": "UOW-025",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A37/hook-panic/"
+    },
+    {
+      "id": "A37/cooperative-hook-timeout",
+      "requirement": "UOW-025",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A37/cooperative-hook-timeout/"
+    },
+    {
+      "id": "A37/later-hooks-run",
+      "requirement": "UOW-025",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A37/later-hooks-run/"
+    },
+    {
+      "id": "A38/committed",
+      "requirement": "UOW-026",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A38/committed/"
+    },
+    {
+      "id": "A38/failed",
+      "requirement": "UOW-026",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A38/failed/"
+    },
+    {
+      "id": "A38/panic",
+      "requirement": "UOW-026",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A38/panic/"
+    },
+    {
+      "id": "A38/unknown",
+      "requirement": "UOW-026",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A38/unknown/"
+    },
+    {
+      "id": "A38/disposed-once",
+      "requirement": "UOW-026",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A38/disposed-once/"
+    },
+    {
+      "id": "A38/observer-error-isolated",
+      "requirement": "UOW-026",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A38/observer-error-isolated/"
+    },
+    {
+      "id": "A39/cancel-after-commit",
+      "requirement": "UOW-027",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A39/cancel-after-commit/"
+    },
+    {
+      "id": "A39/response-lost-after-commit",
+      "requirement": "UOW-027",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A39/response-lost-after-commit/"
+    },
+    {
+      "id": "A39/query-result",
+      "requirement": "UOW-027",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A39/query-result/"
+    },
+    {
+      "id": "A40/serialization-failure",
+      "requirement": "UOW-028",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A40/serialization-failure/"
+    },
+    {
+      "id": "A40/deadlock",
+      "requirement": "UOW-028",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A40/deadlock/"
+    },
+    {
+      "id": "A40/commit-unknown",
+      "requirement": "UOW-028",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A40/commit-unknown/"
+    },
+    {
+      "id": "A40/explicit-upper-retry",
+      "requirement": "UOW-028",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A40/explicit-upper-retry/"
+    },
+    {
+      "id": "A41/second-resource-key-rejected",
+      "requirement": "UOW-029",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A41/second-resource-key-rejected/"
+    },
+    {
+      "id": "A42/sentinel-codes",
+      "requirement": "UOW-030",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A42/sentinel-codes/"
+    },
+    {
+      "id": "A42/errors-is",
+      "requirement": "UOW-030",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A42/errors-is/"
+    },
+    {
+      "id": "A42/errors-as",
+      "requirement": "UOW-030",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A42/errors-as/"
+    },
+    {
+      "id": "A42/http-mapping",
+      "requirement": "UOW-030",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A42/http-mapping/"
+    },
+    {
+      "id": "A42/detail-redaction",
+      "requirement": "UOW-030",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A42/detail-redaction/"
+    },
+    {
+      "id": "A42/unknown-retry-policy",
+      "requirement": "UOW-030",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A42/unknown-retry-policy/"
+    },
+    {
+      "id": "A43/read-only-child-query",
+      "requirement": "UOW-031",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A43/read-only-child-query/"
+    },
+    {
+      "id": "A43/read-only-child-write-rejected",
+      "requirement": "UOW-031",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A43/read-only-child-write-rejected/"
+    },
+    {
+      "id": "A44/requires-new-tenant-switch",
+      "requirement": "UOW-032",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A44/requires-new-tenant-switch/"
+    },
+    {
+      "id": "A44/requires-new-principal-switch",
+      "requirement": "UOW-032",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A44/requires-new-principal-switch/"
+    },
+    {
+      "id": "A45/allowed-import",
+      "requirement": "ARC-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A45/allowed-import/"
+    },
+    {
+      "id": "A45/forbidden-import-regression",
+      "requirement": "ARC-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A45/forbidden-import-regression/"
+    },
+    {
+      "id": "A46/singleton",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/singleton/"
+    },
+    {
+      "id": "A46/transient",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/transient/"
+    },
+    {
+      "id": "A46/operation",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/operation/"
+    },
+    {
+      "id": "A46/missing-provider",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/missing-provider/"
+    },
+    {
+      "id": "A46/cycle",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/cycle/"
+    },
+    {
+      "id": "A46/duplicate-provider",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/duplicate-provider/"
+    },
+    {
+      "id": "A46/explicit-replace",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/explicit-replace/"
+    },
+    {
+      "id": "A46/sealed-registry",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/sealed-registry/"
+    },
+    {
+      "id": "A46/factory-failure",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/factory-failure/"
+    },
+    {
+      "id": "A46/scoped-cleanup",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/scoped-cleanup/"
+    },
+    {
+      "id": "A46/captive-scope",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/captive-scope/"
+    },
+    {
+      "id": "A47/four-layer-precedence",
+      "requirement": "CFG-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A47/four-layer-precedence/"
+    },
+    {
+      "id": "A47/missing-timeout",
+      "requirement": "CFG-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A47/missing-timeout/"
+    },
+    {
+      "id": "A47/invalid-config",
+      "requirement": "CFG-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A47/invalid-config/"
+    },
+    {
+      "id": "A47/sealed-config",
+      "requirement": "CFG-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A47/sealed-config/"
+    },
+    {
+      "id": "A47/secret-redaction",
+      "requirement": "CFG-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A47/secret-redaction/"
+    },
+    {
+      "id": "A48/invalid-identity",
+      "requirement": "API-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A48/invalid-identity/"
+    },
+    {
+      "id": "A48/entry-denied",
+      "requirement": "API-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A48/entry-denied/"
+    },
+    {
+      "id": "A48/malformed-dto",
+      "requirement": "API-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A48/malformed-dto/"
+    },
+    {
+      "id": "A48/oversized-body",
+      "requirement": "API-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A48/oversized-body/"
+    },
+    {
+      "id": "A48/valid-request",
+      "requirement": "API-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A48/valid-request/"
+    },
+    {
+      "id": "A48/resource-policy",
+      "requirement": "API-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A48/resource-policy/"
+    },
+    {
+      "id": "A48/problem-details",
+      "requirement": "API-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A48/problem-details/"
+    },
+    {
+      "id": "A49/two-short-scopes",
+      "requirement": "API-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A49/two-short-scopes/"
+    },
+    {
+      "id": "A49/no-transaction-for-connection-lifetime",
+      "requirement": "API-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A49/no-transaction-for-connection-lifetime/"
+    },
+    {
+      "id": "A50/commit",
+      "requirement": "EVT-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A50/commit/"
+    },
+    {
+      "id": "A50/rollback",
+      "requirement": "EVT-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A50/rollback/"
+    },
+    {
+      "id": "A50/no-scope",
+      "requirement": "EVT-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A50/no-scope/"
+    },
+    {
+      "id": "A50/outbox-disabled",
+      "requirement": "EVT-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A50/outbox-disabled/"
+    },
+    {
+      "id": "A51/producer-restart",
+      "requirement": "EVT-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A51/producer-restart/"
+    },
+    {
+      "id": "A51/full-envelope-replay",
+      "requirement": "EVT-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A51/full-envelope-replay/"
+    },
+    {
+      "id": "A51/scope-preserved",
+      "requirement": "EVT-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A51/scope-preserved/"
+    },
+    {
+      "id": "A52/durable-ack",
+      "requirement": "EVT-004",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A52/durable-ack/"
+    },
+    {
+      "id": "A52/unroutable",
+      "requirement": "EVT-004",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A52/unroutable/"
+    },
+    {
+      "id": "A52/rejected",
+      "requirement": "EVT-004",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A52/rejected/"
+    },
+    {
+      "id": "A52/timed-out",
+      "requirement": "EVT-004",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A52/timed-out/"
+    },
+    {
+      "id": "A52/broker-restart",
+      "requirement": "EVT-004",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A52/broker-restart/"
+    },
+    {
+      "id": "A53/persist-before-ack",
+      "requirement": "EVT-005",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A53/persist-before-ack/"
+    },
+    {
+      "id": "A53/database-failure",
+      "requirement": "EVT-005",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A53/database-failure/"
+    },
+    {
+      "id": "A53/receiver-crash-before-persist",
+      "requirement": "EVT-005",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A53/receiver-crash-before-persist/"
+    },
+    {
+      "id": "A53/receiver-crash-after-persist",
+      "requirement": "EVT-005",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A53/receiver-crash-after-persist/"
+    },
+    {
+      "id": "A53/identical-duplicate",
+      "requirement": "EVT-005",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A53/identical-duplicate/"
+    },
+    {
+      "id": "A53/conflicting-duplicate",
+      "requirement": "EVT-005",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A53/conflicting-duplicate/"
+    },
+    {
+      "id": "A54/external-success-local-crash",
+      "requirement": "EVT-007",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A54/external-success-local-crash/"
+    },
+    {
+      "id": "A54/stable-provider-key",
+      "requirement": "EVT-007",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A54/stable-provider-key/"
+    },
+    {
+      "id": "A54/no-exactly-once-claim",
+      "requirement": "EVT-007",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A54/no-exactly-once-claim/"
+    },
+    {
+      "id": "A55/priority-registration-order",
+      "requirement": "EVT-008",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A55/priority-registration-order/"
+    },
+    {
+      "id": "A55/fifo-new-events",
+      "requirement": "EVT-008",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A55/fifo-new-events/"
+    },
+    {
+      "id": "A55/event-limit",
+      "requirement": "EVT-008",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A55/event-limit/"
+    },
+    {
+      "id": "A55/depth-limit",
+      "requirement": "EVT-008",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A55/depth-limit/"
+    },
+    {
+      "id": "A55/cyclic-chain",
+      "requirement": "EVT-008",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A55/cyclic-chain/"
+    },
+    {
+      "id": "A56/missing-tenant",
+      "requirement": "TEN-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A56/missing-tenant/"
+    },
+    {
+      "id": "A56/missing-sql-filter",
+      "requirement": "TEN-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A56/missing-sql-filter/"
+    },
+    {
+      "id": "A56/cross-tenant-read",
+      "requirement": "TEN-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A56/cross-tenant-read/"
+    },
+    {
+      "id": "A56/cross-tenant-write",
+      "requirement": "TEN-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A56/cross-tenant-write/"
+    },
+    {
+      "id": "A56/cross-tenant-soft-delete",
+      "requirement": "TEN-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A56/cross-tenant-soft-delete/"
+    },
+    {
+      "id": "A56/role-attributes",
+      "requirement": "TEN-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A56/role-attributes/"
+    },
+    {
+      "id": "A57/cross-tenant-fk",
+      "requirement": "TEN-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A57/cross-tenant-fk/"
+    },
+    {
+      "id": "A57/same-tenant-fk",
+      "requirement": "TEN-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A57/same-tenant-fk/"
+    },
+    {
+      "id": "A57/existence-redaction",
+      "requirement": "TEN-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A57/existence-redaction/"
+    },
+    {
+      "id": "A58/ordinary-override-denied",
+      "requirement": "SEC-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A58/ordinary-override-denied/"
+    },
+    {
+      "id": "A58/host-policy-allow",
+      "requirement": "SEC-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A58/host-policy-allow/"
+    },
+    {
+      "id": "A58/host-audit",
+      "requirement": "SEC-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A58/host-audit/"
+    },
+    {
+      "id": "A58/no-global-bypass",
+      "requirement": "SEC-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A58/no-global-bypass/"
+    },
+    {
+      "id": "A59/empty-database",
+      "requirement": "DATA-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A59/empty-database/"
+    },
+    {
+      "id": "A59/forward-upgrade",
+      "requirement": "DATA-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A59/forward-upgrade/"
+    },
+    {
+      "id": "A59/concurrent-deploy",
+      "requirement": "DATA-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A59/concurrent-deploy/"
+    },
+    {
+      "id": "A59/incompatible-schema",
+      "requirement": "DATA-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A59/incompatible-schema/"
+    },
+    {
+      "id": "A59/api-does-not-migrate",
+      "requirement": "DATA-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A59/api-does-not-migrate/"
+    },
+    {
+      "id": "A60/same-key-same-body",
+      "requirement": "IDEM-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A60/same-key-same-body/"
+    },
+    {
+      "id": "A60/same-key-different-body",
+      "requirement": "IDEM-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A60/same-key-different-body/"
+    },
+    {
+      "id": "A60/holder-rollback",
+      "requirement": "IDEM-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A60/holder-rollback/"
+    },
+    {
+      "id": "A60/wait-timeout",
+      "requirement": "IDEM-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A60/wait-timeout/"
+    },
+    {
+      "id": "A61/authorized-success",
+      "requirement": "IDEM-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A61/authorized-success/"
+    },
+    {
+      "id": "A61/other-principal-denied",
+      "requirement": "IDEM-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A61/other-principal-denied/"
+    },
+    {
+      "id": "A61/pending-not-failed",
+      "requirement": "IDEM-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A61/pending-not-failed/"
+    },
+    {
+      "id": "A61/retention-boundary",
+      "requirement": "IDEM-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A61/retention-boundary/"
+    },
+    {
+      "id": "A61/expired-guarantee",
+      "requirement": "IDEM-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A61/expired-guarantee/"
+    },
+    {
+      "id": "A62/success-required-audit",
+      "requirement": "AUD-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A62/success-required-audit/"
+    },
+    {
+      "id": "A62/auth-denial-log",
+      "requirement": "AUD-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A62/auth-denial-log/"
+    },
+    {
+      "id": "A62/business-rollback-log",
+      "requirement": "AUD-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A62/business-rollback-log/"
+    },
+    {
+      "id": "A62/audit-write-failure",
+      "requirement": "AUD-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A62/audit-write-failure/"
+    },
+    {
+      "id": "A62/telemetry-failure",
+      "requirement": "AUD-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A62/telemetry-failure/"
+    },
+    {
+      "id": "A63/broker-offline",
+      "requirement": "OPS-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A63/broker-offline/"
+    },
+    {
+      "id": "A63/capacity-limit",
+      "requirement": "OPS-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A63/capacity-limit/"
+    },
+    {
+      "id": "A63/retry-limit",
+      "requirement": "OPS-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A63/retry-limit/"
+    },
+    {
+      "id": "A63/dead-replay",
+      "requirement": "OPS-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A63/dead-replay/"
+    },
+    {
+      "id": "A63/recovery-drain",
+      "requirement": "OPS-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A63/recovery-drain/"
+    },
+    {
+      "id": "A63/tenant-load-competition",
+      "requirement": "OPS-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A63/tenant-load-competition/"
+    },
+    {
+      "id": "A64/bounded-retry",
+      "requirement": "JOB-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A64/bounded-retry/"
+    },
+    {
+      "id": "A64/cancellation",
+      "requirement": "JOB-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A64/cancellation/"
+    },
+    {
+      "id": "A64/stale-lease",
+      "requirement": "JOB-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A64/stale-lease/"
+    },
+    {
+      "id": "A64/manual-replay-audit",
+      "requirement": "JOB-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A64/manual-replay-audit/"
+    },
+    {
+      "id": "A64/tenant-tamper",
+      "requirement": "JOB-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A64/tenant-tamper/"
+    },
+    {
+      "id": "A64/handler-idempotency",
+      "requirement": "JOB-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A64/handler-idempotency/"
+    },
+    {
+      "id": "A65/tenant-cache-isolation",
+      "requirement": "PLAT-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A65/tenant-cache-isolation/"
+    },
+    {
+      "id": "A65/setting-precedence",
+      "requirement": "PLAT-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A65/setting-precedence/"
+    },
+    {
+      "id": "A65/feature-permission",
+      "requirement": "PLAT-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A65/feature-permission/"
+    },
+    {
+      "id": "A65/invalidation-failure",
+      "requirement": "PLAT-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A65/invalidation-failure/"
+    },
+    {
+      "id": "A65/ttl-version-convergence",
+      "requirement": "PLAT-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A65/ttl-version-convergence/"
+    },
+    {
+      "id": "A66/trace-correlation",
+      "requirement": "OBS-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A66/trace-correlation/"
+    },
+    {
+      "id": "A66/alerting",
+      "requirement": "OBS-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A66/alerting/"
+    },
+    {
+      "id": "A66/liveness",
+      "requirement": "OBS-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A66/liveness/"
+    },
+    {
+      "id": "A66/required-dependency-unready",
+      "requirement": "OBS-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A66/required-dependency-unready/"
+    },
+    {
+      "id": "A66/optional-broker-outage",
+      "requirement": "OBS-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A66/optional-broker-outage/"
+    },
+    {
+      "id": "A66/redaction",
+      "requirement": "OBS-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A66/redaction/"
+    },
+    {
+      "id": "A67/new",
+      "requirement": "CLI-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A67/new/"
+    },
+    {
+      "id": "A67/module",
+      "requirement": "CLI-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A67/module/"
+    },
+    {
+      "id": "A67/migrate-create",
+      "requirement": "CLI-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A67/migrate-create/"
+    },
+    {
+      "id": "A67/migrate-status",
+      "requirement": "CLI-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A67/migrate-status/"
+    },
+    {
+      "id": "A67/doctor",
+      "requirement": "CLI-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A67/doctor/"
+    },
+    {
+      "id": "A67/openapi",
+      "requirement": "CLI-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A67/openapi/"
+    },
+    {
+      "id": "A67/help",
+      "requirement": "CLI-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A67/help/"
+    },
+    {
+      "id": "A67/invalid-arguments",
+      "requirement": "CLI-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A67/invalid-arguments/"
+    },
+    {
+      "id": "A67/existing-files",
+      "requirement": "CLI-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A67/existing-files/"
+    },
+    {
+      "id": "A67/reentry",
+      "requirement": "CLI-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A67/reentry/"
+    },
+    {
+      "id": "A67/generated-build-test",
+      "requirement": "CLI-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A67/generated-build-test/"
+    },
+    {
+      "id": "A68/below-threshold",
+      "requirement": "REL-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A68/below-threshold/"
+    },
+    {
+      "id": "A68/exact-threshold",
+      "requirement": "REL-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A68/exact-threshold/"
+    },
+    {
+      "id": "A68/aggregate-masks-critical-package",
+      "requirement": "REL-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A68/aggregate-masks-critical-package/"
+    },
+    {
+      "id": "A68/missing-profile",
+      "requirement": "REL-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A68/missing-profile/"
+    },
+    {
+      "id": "A68/untested-package",
+      "requirement": "REL-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A68/untested-package/"
+    },
+    {
+      "id": "A68/duplicate-block-union",
+      "requirement": "REL-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A68/duplicate-block-union/"
+    },
+    {
+      "id": "A69/required-case-fails",
+      "requirement": "REL-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A69/required-case-fails/"
+    },
+    {
+      "id": "A69/required-case-skipped",
+      "requirement": "REL-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A69/required-case-skipped/"
+    },
+    {
+      "id": "A69/race-fails",
+      "requirement": "REL-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A69/race-fails/"
+    },
+    {
+      "id": "A69/static-analysis-fails",
+      "requirement": "REL-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A69/static-analysis-fails/"
+    },
+    {
+      "id": "A69/dependency-license-fails",
+      "requirement": "REL-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A69/dependency-license-fails/"
+    },
+    {
+      "id": "A69/coverage-cannot-mask-failure",
+      "requirement": "REL-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A69/coverage-cannot-mask-failure/"
+    },
+    {
+      "id": "A70/missing-release-item",
+      "requirement": "REL-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A70/missing-release-item/"
+    },
+    {
+      "id": "A70/unknown-requirement",
+      "requirement": "REL-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A70/unknown-requirement/"
+    },
+    {
+      "id": "A70/duplicate-delivery",
+      "requirement": "REL-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A70/duplicate-delivery/"
+    },
+    {
+      "id": "A70/template-runtime-version",
+      "requirement": "REL-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A70/template-runtime-version/"
+    },
+    {
+      "id": "A71/new-increment",
+      "requirement": "REL-004",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A71/new-increment/"
+    },
+    {
+      "id": "A71/previous-increment-regression",
+      "requirement": "REL-004",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A71/previous-increment-regression/"
+    },
+    {
+      "id": "A71/same-commit-evidence",
+      "requirement": "REL-004",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A71/same-commit-evidence/"
+    },
+    {
+      "id": "A72/clean-rebuild",
+      "requirement": "REL-005",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A72/clean-rebuild/"
+    },
+    {
+      "id": "A72/forward-upgrade",
+      "requirement": "REL-005",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A72/forward-upgrade/"
+    },
+    {
+      "id": "A72/backup-restore",
+      "requirement": "REL-005",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A72/backup-restore/"
+    },
+    {
+      "id": "A72/load-baseline",
+      "requirement": "REL-005",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A72/load-baseline/"
+    },
+    {
+      "id": "A72/security-review",
+      "requirement": "REL-005",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A72/security-review/"
+    },
+    {
+      "id": "A73/full-tuple-identity",
+      "requirement": "SCP-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A73/full-tuple-identity/"
+    },
+    {
+      "id": "A73/missing-field",
+      "requirement": "SCP-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A73/missing-field/"
+    },
+    {
+      "id": "A73/tenant-id-mismatch",
+      "requirement": "SCP-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A73/tenant-id-mismatch/"
+    },
+    {
+      "id": "A73/parent-not-union",
+      "requirement": "SCP-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A73/parent-not-union/"
+    },
+    {
+      "id": "A74/tenant-only",
+      "requirement": "SCP-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A74/tenant-only/"
+    },
+    {
+      "id": "A74/organization-enabled",
+      "requirement": "SCP-002",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A74/organization-enabled/"
+    },
+    {
+      "id": "A74/replacement-provider",
+      "requirement": "SCP-002",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A74/replacement-provider/"
+    },
+    {
+      "id": "A74/missing-required-provider",
+      "requirement": "SCP-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A74/missing-required-provider/"
+    },
+    {
+      "id": "A74/duplicate-kind",
+      "requirement": "SCP-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A74/duplicate-kind/"
+    },
+    {
+      "id": "A74/unsupported-kind-no-fallback",
+      "requirement": "SCP-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A74/unsupported-kind-no-fallback/"
+    },
+    {
+      "id": "A75/header-route-conflict",
+      "requirement": "SCP-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A75/header-route-conflict/"
+    },
+    {
+      "id": "A75/dto-owner-tamper",
+      "requirement": "SCP-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A75/dto-owner-tamper/"
+    },
+    {
+      "id": "A75/unauthorized-scope",
+      "requirement": "SCP-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A75/unauthorized-scope/"
+    },
+    {
+      "id": "A75/provider-tenant-mismatch",
+      "requirement": "SCP-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A75/provider-tenant-mismatch/"
+    },
+    {
+      "id": "A75/provider-request-mismatch",
+      "requirement": "SCP-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A75/provider-request-mismatch/"
+    },
+    {
+      "id": "A75/direct-application-entry",
+      "requirement": "SCP-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A75/direct-application-entry/"
+    },
+    {
+      "id": "A76/required-switch",
+      "requirement": "SCP-004",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A76/required-switch/"
+    },
+    {
+      "id": "A76/requires-new-switch",
+      "requirement": "SCP-004",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A76/requires-new-switch/"
+    },
+    {
+      "id": "A76/new-authorized-top-level",
+      "requirement": "SCP-004",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A76/new-authorized-top-level/"
+    },
+    {
+      "id": "A77/missing-owner-filter",
+      "requirement": "SCP-005",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A77/missing-owner-filter/"
+    },
+    {
+      "id": "A77/forged-owner",
+      "requirement": "SCP-005",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A77/forged-owner/"
+    },
+    {
+      "id": "A77/parent-cannot-read-child",
+      "requirement": "SCP-005",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A77/parent-cannot-read-child/"
+    },
+    {
+      "id": "A77/org-cannot-use-tenant-only",
+      "requirement": "SCP-005",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A77/org-cannot-use-tenant-only/"
+    },
+    {
+      "id": "A77/missing-scope",
+      "requirement": "SCP-005",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A77/missing-scope/"
+    },
+    {
+      "id": "A77/pool-reuse",
+      "requirement": "SCP-005",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A77/pool-reuse/"
+    },
+    {
+      "id": "A78/unknown-owner",
+      "requirement": "SCP-006",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A78/unknown-owner/"
+    },
+    {
+      "id": "A78/cross-tenant-fk",
+      "requirement": "SCP-006",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A78/cross-tenant-fk/"
+    },
+    {
+      "id": "A78/cross-owner-fk",
+      "requirement": "SCP-006",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A78/cross-owner-fk/"
+    },
+    {
+      "id": "A78/same-owner-control",
+      "requirement": "SCP-006",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A78/same-owner-control/"
+    },
+    {
+      "id": "A78/neutral-catalog-dependency",
+      "requirement": "SCP-006",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A78/neutral-catalog-dependency/"
+    },
+    {
+      "id": "A79/restart-replay",
+      "requirement": "SCP-007",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A79/restart-replay/"
+    },
+    {
+      "id": "A79/scope-tamper",
+      "requirement": "SCP-007",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A79/scope-tamper/"
+    },
+    {
+      "id": "A79/revoked-user",
+      "requirement": "SCP-007",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A79/revoked-user/"
+    },
+    {
+      "id": "A79/current-service-grant",
+      "requirement": "SCP-007",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A79/current-service-grant/"
+    },
+    {
+      "id": "A79/missing-org-scope",
+      "requirement": "SCP-007",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A79/missing-org-scope/"
+    },
+    {
+      "id": "A79/unavailable-provider",
+      "requirement": "SCP-007",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A79/unavailable-provider/"
+    },
+    {
+      "id": "A79/legacy-tenant-upcast",
+      "requirement": "SCP-007",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A79/legacy-tenant-upcast/"
+    },
+    {
+      "id": "A80/scope-cache-isolation",
+      "requirement": "SCP-008",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A80/scope-cache-isolation/"
+    },
+    {
+      "id": "A80/scoped-invalidation",
+      "requirement": "SCP-008",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A80/scoped-invalidation/"
+    },
+    {
+      "id": "A80/setting-inheritance",
+      "requirement": "SCP-008",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A80/setting-inheritance/"
+    },
+    {
+      "id": "A80/parent-security-restriction",
+      "requirement": "SCP-008",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A80/parent-security-restriction/"
+    },
+    {
+      "id": "A80/audit-owner",
+      "requirement": "SCP-008",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A80/audit-owner/"
+    },
+    {
+      "id": "A81/scope-specific-key",
+      "requirement": "SCP-009",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A81/scope-specific-key/"
+    },
+    {
+      "id": "A81/replay-same-scope",
+      "requirement": "SCP-009",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A81/replay-same-scope/"
+    },
+    {
+      "id": "A81/cross-scope-result-denied",
+      "requirement": "SCP-009",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A81/cross-scope-result-denied/"
+    },
+    {
+      "id": "A81/revoked-replay-denied",
+      "requirement": "SCP-009",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A81/revoked-replay-denied/"
+    },
+    {
+      "id": "A81/committed-effect-preserved",
+      "requirement": "SCP-009",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A81/committed-effect-preserved/"
+    },
+    {
+      "id": "A82/tenant-only-build",
+      "requirement": "ORG-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A82/tenant-only-build/"
+    },
+    {
+      "id": "A82/no-core-organization-import",
+      "requirement": "ORG-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A82/no-core-organization-import/"
+    },
+    {
+      "id": "A82/single-optional-module",
+      "requirement": "ORG-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A82/single-optional-module/"
+    },
+    {
+      "id": "A82/replacement-assembly",
+      "requirement": "ORG-001",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A82/replacement-assembly/"
+    },
+    {
+      "id": "A83/standalone",
+      "requirement": "ORG-002",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A83/standalone/"
+    },
+    {
+      "id": "A83/single-parent",
+      "requirement": "ORG-002",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A83/single-parent/"
+    },
+    {
+      "id": "A83/multiple-parent-rejected",
+      "requirement": "ORG-002",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A83/multiple-parent-rejected/"
+    },
+    {
+      "id": "A83/cross-tenant-rejected",
+      "requirement": "ORG-002",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A83/cross-tenant-rejected/"
+    },
+    {
+      "id": "A83/owner-stable-on-transfer",
+      "requirement": "ORG-002",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A83/owner-stable-on-transfer/"
+    },
+    {
+      "id": "A84/multi-organization-membership",
+      "requirement": "ORG-003",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A84/multi-organization-membership/"
+    },
+    {
+      "id": "A84/independent-roles",
+      "requirement": "ORG-003",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A84/independent-roles/"
+    },
+    {
+      "id": "A84/scoped-revocation",
+      "requirement": "ORG-003",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A84/scoped-revocation/"
+    },
+    {
+      "id": "A84/tenant-membership-revoked",
+      "requirement": "ORG-003",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A84/tenant-membership-revoked/"
+    },
+    {
+      "id": "A85/enterprise-directory",
+      "requirement": "ORG-004",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A85/enterprise-directory/"
+    },
+    {
+      "id": "A85/governance-policy",
+      "requirement": "ORG-004",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A85/governance-policy/"
+    },
+    {
+      "id": "A85/enterprise-owner-no-org-content",
+      "requirement": "ORG-004",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A85/enterprise-owner-no-org-content/"
+    },
+    {
+      "id": "A85/derived-member-no-org-permission",
+      "requirement": "ORG-004",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A85/derived-member-no-org-permission/"
+    },
+    {
+      "id": "A86/role-policy-grid",
+      "requirement": "ORG-005",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A86/role-policy-grid/"
+    },
+    {
+      "id": "A86/explicit-deny",
+      "requirement": "ORG-005",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A86/explicit-deny/"
+    },
+    {
+      "id": "A86/parent-allow-no-membership",
+      "requirement": "ORG-005",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A86/parent-allow-no-membership/"
+    },
+    {
+      "id": "A86/feature-no-grant",
+      "requirement": "ORG-005",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A86/feature-no-grant/"
+    },
+    {
+      "id": "A86/unauthorized-self-elevation",
+      "requirement": "ORG-005",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A86/unauthorized-self-elevation/"
+    },
+    {
+      "id": "A86/audited-owner-join",
+      "requirement": "ORG-005",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A86/audited-owner-join/"
+    },
+    {
+      "id": "A87/atomic-success",
+      "requirement": "ORG-006",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A87/atomic-success/"
+    },
+    {
+      "id": "A87/membership-write-failure",
+      "requirement": "ORG-006",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A87/membership-write-failure/"
+    },
+    {
+      "id": "A87/catalog-write-failure",
+      "requirement": "ORG-006",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A87/catalog-write-failure/"
+    },
+    {
+      "id": "A87/audit-write-failure",
+      "requirement": "ORG-006",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A87/audit-write-failure/"
+    },
+    {
+      "id": "A87/outbox-write-failure",
+      "requirement": "ORG-006",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A87/outbox-write-failure/"
+    },
+    {
+      "id": "A87/revision-consistency",
+      "requirement": "ORG-006",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A87/revision-consistency/"
+    },
+    {
+      "id": "A88/revocation-between-bind-and-admission",
+      "requirement": "ORG-007",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A88/revocation-between-bind-and-admission/"
+    },
+    {
+      "id": "A88/new-operation-after-revocation",
+      "requirement": "ORG-007",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A88/new-operation-after-revocation/"
+    },
+    {
+      "id": "A88/stale-jwt-cache",
+      "requirement": "ORG-007",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A88/stale-jwt-cache/"
+    },
+    {
+      "id": "A88/admitted-operation-snapshot",
+      "requirement": "ORG-007",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A88/admitted-operation-snapshot/"
+    },
+    {
+      "id": "A89/unauthorized-transfer",
+      "requirement": "ORG-008",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A89/unauthorized-transfer/"
+    },
+    {
+      "id": "A89/cross-tenant-transfer",
+      "requirement": "ORG-008",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A89/cross-tenant-transfer/"
+    },
+    {
+      "id": "A89/nonempty-parent-delete",
+      "requirement": "ORG-008",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A89/nonempty-parent-delete/"
+    },
+    {
+      "id": "A89/valid-same-tenant-transfer",
+      "requirement": "ORG-008",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A89/valid-same-tenant-transfer/"
+    },
+    {
+      "id": "A89/stable-owner-and-new-ancestry",
+      "requirement": "ORG-008",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A89/stable-owner-and-new-ancestry/"
+    },
+    {
+      "id": "A90/last-owner-removal-denied",
+      "requirement": "ORG-009",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A90/last-owner-removal-denied/"
+    },
+    {
+      "id": "A90/tenant-revocation-allowed",
+      "requirement": "ORG-009",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A90/tenant-revocation-allowed/"
+    },
+    {
+      "id": "A90/ownerless-denied",
+      "requirement": "ORG-009",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A90/ownerless-denied/"
+    },
+    {
+      "id": "A90/audited-recovery",
+      "requirement": "ORG-009",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A90/audited-recovery/"
+    },
+    {
+      "id": "A91/provider-export-import",
+      "requirement": "ORG-010",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A91/provider-export-import/"
+    },
+    {
+      "id": "A91/stable-owner-id",
+      "requirement": "ORG-010",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A91/stable-owner-id/"
+    },
+    {
+      "id": "A91/membership-state-revision",
+      "requirement": "ORG-010",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A91/membership-state-revision/"
+    },
+    {
+      "id": "A91/preserved-event-replay",
+      "requirement": "ORG-010",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A91/preserved-event-replay/"
+    },
+    {
+      "id": "A91/negative-authorization-parity",
+      "requirement": "ORG-010",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A91/negative-authorization-parity/"
+    },
+    {
+      "id": "A92/catalog-removal-blocked",
+      "requirement": "ORG-011",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A92/catalog-removal-blocked/"
+    },
+    {
+      "id": "A92/business-owner-removal-blocked",
+      "requirement": "ORG-011",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A92/business-owner-removal-blocked/"
+    },
+    {
+      "id": "A92/pending-job-removal-blocked",
+      "requirement": "ORG-011",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A92/pending-job-removal-blocked/"
+    },
+    {
+      "id": "A92/pending-event-removal-blocked",
+      "requirement": "ORG-011",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A92/pending-event-removal-blocked/"
+    },
+    {
+      "id": "A92/required-capability-blocked",
+      "requirement": "ORG-011",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A92/required-capability-blocked/"
+    },
+    {
+      "id": "A92/no-tenant-downgrade",
+      "requirement": "ORG-011",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A92/no-tenant-downgrade/"
+    },
+    {
+      "id": "A93/tenant-owner-backfill",
+      "requirement": "ORG-012",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A93/tenant-owner-backfill/"
+    },
+    {
+      "id": "A93/interrupted-backfill",
+      "requirement": "ORG-012",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A93/interrupted-backfill/"
+    },
+    {
+      "id": "A93/interrupted-policy-switch",
+      "requirement": "ORG-012",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A93/interrupted-policy-switch/"
+    },
+    {
+      "id": "A93/forward-resume",
+      "requirement": "ORG-012",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A93/forward-resume/"
+    },
+    {
+      "id": "A93/no-permissive-policy-union",
+      "requirement": "ORG-012",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A93/no-permissive-policy-union/"
+    },
+    {
+      "id": "A94/default-tenant-template",
+      "requirement": "ORG-013",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A94/default-tenant-template/"
+    },
+    {
+      "id": "A94/explicit-organization-template",
+      "requirement": "ORG-013",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A94/explicit-organization-template/"
+    },
+    {
+      "id": "A94/complete-module-migrations",
+      "requirement": "ORG-013",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A94/complete-module-migrations/"
+    },
+    {
+      "id": "A94/no-half-enterprise-template",
+      "requirement": "ORG-013",
+      "applicability": "not-applicable",
+      "reason": "§13.4: no organization provider/schema or organization-owned data in this assembly; applicable missing-kind/capability/downgrade negatives remain in A74/A75/A79/A82/A92/A95",
+      "status": "not-applicable",
+      "evidence": "artifacts/{commit}/{profile}/A94/no-half-enterprise-template/"
+    },
+    {
+      "id": "A95/organization-contract-fails",
+      "requirement": "ORG-014",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A95/organization-contract-fails/"
+    },
+    {
+      "id": "A95/applicable-case-skipped",
+      "requirement": "ORG-014",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A95/applicable-case-skipped/"
+    },
+    {
+      "id": "A95/critical-package-below-threshold",
+      "requirement": "ORG-014",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A95/critical-package-below-threshold/"
+    },
+    {
+      "id": "A95/tenant-only-build-independent",
+      "requirement": "ORG-014",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A95/tenant-only-build-independent/"
+    }
+  ]
+}

@@ -196,12 +196,12 @@ type Module struct {
     DependsOn  []Dependency
     RequiredScopeKinds []string // capability；缺 Provider 時不 Ready
 
-    PreConfigure  func(*Builder) error
-    Configure     func(*Builder) error
-    PostConfigure func(*Builder) error
+    PreConfigure  func(Builder) error
+    Configure     func(Builder) error
+    PostConfigure func(Builder) error
 
-    Start func(context.Context, *Runtime) error
-    Stop  func(context.Context, *Runtime) error
+    Start func(context.Context, Runtime) error
+    Stop  func(context.Context, Runtime) error
 }
 
 type Registry interface {
@@ -209,6 +209,10 @@ type Registry interface {
     Plan() (Plan, error) // topo-order 與缺漏/循環資訊
 }
 ```
+
+M0 的精確型別宣告與套件歸屬固定在 `kernel/module/contracts.go`、`kernel/di/contracts.go`、`kernel/config/contracts.go`、`kernel/runtime/contracts.go`；其公開 surface 由 `tests/contract/api.json` 及 CI 檢查。此 surface 固定 Go 簽章，不另立產品行為權威。`Builder`／`Runtime` 是介面而非介面指標，避免 module 與 runtime 的循環 import；`Runtime.Services()` 僅提供 Resolver、`Runtime.Config()` 提供唯讀 Reader，Builder 沒有 Resolve。
+
+DI Token 以 `(Name, Type)` 為身分，透過 `NewKey[T]` 保留服務型別；Name 空值、未知 Lifetime、nil Factory、缺漏／重複／循環相依在封存前拒絕。Factory 明示 DependsOn，只能解析所宣告的相依；Singleton 不得透過直接或 Transient 相依捕獲 Operation 服務。Factory 回傳的 Cleanup 由 Container 擁有，建構部分失敗亦須清理；Module.Stop 不再重複關閉該資源。Operation 資源由自身 Scope.Close 清理，Container 最後反相依序釋放 Singleton；清理仍遵守 §14.3 的有界與單一 owner 規則。Replace 需非空理由；Seal 後不可新增／替換 Provider。Plan 的 Ordered／Layers 是 detached snapshot，修改不影響已封存 Runtime。以上由 MOD-001–003／A01／A02／A46 驗證。
 
 `Builder` 僅可供註冊與組態操作，不可在 `Configure` 時解析尚未建立的 Runtime Service；所有 `Start` 回呼應可辨識失敗並回收資源，禁止默默吞掉錯誤。**熱重載模組不在首版範圍**。
 
@@ -952,6 +956,8 @@ type ScopeResolver interface {
 
 `ScopeBinding` 是回傳資料，不是持有人可自行授權的 token。只有 ScopeResolver 在核對已驗證 Principal／Tenant、Provider 結果與 requested 相等後，能透過私有 context key 安裝不可變 binding；使用者 JSON 或自行建立的 struct 不能跳過此入口。`AuthorityRevision` 是 Provider 的不透明版本識別，用於撤權／關係／Policy 快照；Core 不解析其中 Enterprise／Organization 資料。Resolve 驗證可選取該 scope，Authorize 再檢查目前操作的 Permission；敏感 Use Case 與 Resource Policy 仍照常執行。
 
+M0 固定中立 admission Port 為 `ScopeAdmitter.Admit(context.Context, ScopeBinding) (ScopeBinding, error)`，宣告位於 `security/scope/contracts.go`。輸出只可更新經一致權威查驗的 AuthorityRevision，不可變更 Ref 或 Principal；已撤權／停用時拒絕，權威來源故障使用既有 SCOPE_AUTHORITY_UNAVAILABLE，不回傳過期 allow。新根操作保存這份 admission 快照，RequiresNew 使用父操作已 admission 的同一 binding／期限，不重新延長授權。這是 SCP-003／ORG-007 既有快照邊界的介面化，由 A75／A88 驗證。
+
 每個全新頂層 UOW 在進入業務 callback 前，透過中立 Scope admission hook 重新核對權威 revision；Bind 與 admission 之間若已有撤權，不接受舊 binding。admission 的權威查驗點是新操作授權快照的生效時點；已通過該點的操作按 §7.8 的短 UOW 規則完成。Provider 以單次一致查詢或同一一致性快照取得 membership、父層及限制，不拼接不同版本的 allow。Core 只呼叫中立 hook，不知道組織資料表或角色模型。
 
 | 部署 Profile | 行為 |
@@ -1046,6 +1052,8 @@ Required／RequiresNew 都保留完整 ScopeRef；不可在父 UOW 裡切換 Org
 
 ### 7.11 治理生命週期與管理 Port
 
+M0 的公開 DTO／Management Port 凍結於 `modules/organization/contracts/contracts.go`：所有命令的 target Tenant／Kind／ID 仍需和可信 context 核對，Command.ExpectedVersion 與 IdempotencyKey 不可省略其既定驗證。List 使用 PageRequest.Cursor／Limit；精確函式簽章由 API surface gate 保護。此宣告沒有預設組織實作，不代表組織功能已交付。
+
 公開 `modules/organization/contracts` 的操作包含 CreateEnterprise、CreateOrganization、ListMyOrganizations、ListEnterpriseOrganizations、Set／RemoveOrganizationMembership、SetEnterpriseRole、AssignEnterprise、Suspend／Resume 與 Archive；具體 DTO 版本化，包含明示 Tenant／target ID、expectedVersion、必要的冪等鍵及分頁 cursor／limit。入口先驗證 action，不以通用 Repository CRUD 暴露私有表。Create 時建立首位 owner；加入組織以已存在且有 Tenant 資格的 Principal 為對象，邀請郵件／Teams／SCIM／帳單不在首版範圍。
 
 內建治理角色與 Permission 分別綁定所管理的 scope。建立 Enterprise／standalone Org 要有 Tenant 的建立權；在 Enterprise 下建立 Org 要有該 Enterprise 的建立權。AssignEnterprise 需要目標 Org 的 transfer 權、來源 Enterprise 的 detach 權（若有）及目標 Enterprise 的 attach 權（若有）；同 Tenant 內以一個根 UOW 鎖定並比較 Org／關係版本，再更新 parent、revision、必要 Audit／Outbox。組織資源保持原 owner ID，快取與新操作改用新 ancestry；只持有舊 Enterprise 治理角色者不再管理已移出的 Org。治理入口不需要在一個 UOW 中切換業務 ScopeRef。
@@ -1139,6 +1147,9 @@ Outbox Worker 查詢需處理 `processing` 已過期的 Lease，並以每次認�
 <a id="s-8.4"></a>
 
 ### 8.4 Migration 政策
+
+M0 固定部署 Port 於 `persistence/migration/contracts.go`：Runner.Apply／CheckCompatibility、Locker.Acquire／Lock.Release；全模組同一 DB 使用 session advisory LockKey `0x70616e676f6c696e`，版本表為 `pangolin.goose_db_version`。Goose v3.30.0 以 PostgresSessionLocker 的 WithLockID 綁定該鍵，Acquire／Release 使用同一獨占連線；失敗不能交還仍可能持鎖的連線到 Pool。這些 Port 只用於部署，不暴露給業務 Repository 或 UOW callback。DATA-002／A59 的正式 Adapter 與 migration 驗收仍按里程碑交付。
+
 
 正式環境採單一 Migration Tool（建議在啟動週期前選定 `goose` 或 `golang-migrate`，不得每模組混用）。每個模組獨立版本目錄，部署管線負責排序與衝突檢測；API 程序啟動時只檢查相容性，不自行偷偷修改正式 DB。Rollback 必須評估不可逆資料遷移，採向前修復而非盲目 Down。
 

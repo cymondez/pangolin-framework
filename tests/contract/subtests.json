@@ -1,0 +1,4188 @@
+{
+  "baseline": "v1.3",
+  "authority": "design/panGOlin-framework_實作規範書.md#s-13.2",
+  "groups": [
+    {
+      "id": "A01",
+      "requirement": "MOD-001",
+      "milestone": "M1",
+      "status": "planned",
+      "setup": "各種非法模組圖及合法同層模組",
+      "stimulus": "建立 Runtime",
+      "expected": "非法圖返回具相依路徑的錯誤且無 Start；合法圖依穩定順序規劃",
+      "source_sha256": "256f7f15ddfd5b1e9fcaa0cd3bb95aaa2f1f5ec06fb3121b4731ffd42d08b30a",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A01/duplicate-name",
+          "stimulus_variant": "duplicate-name",
+          "assertion_ref": "A01.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A01/duplicate-name/"
+        },
+        {
+          "id": "A01/missing-dependency",
+          "stimulus_variant": "missing-dependency",
+          "assertion_ref": "A01.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A01/missing-dependency/"
+        },
+        {
+          "id": "A01/incompatible-version",
+          "stimulus_variant": "incompatible-version",
+          "assertion_ref": "A01.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A01/incompatible-version/"
+        },
+        {
+          "id": "A01/cycle",
+          "stimulus_variant": "cycle",
+          "assertion_ref": "A01.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A01/cycle/"
+        },
+        {
+          "id": "A01/stable-layer-order",
+          "stimulus_variant": "stable-layer-order",
+          "assertion_ref": "A01.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A01/stable-layer-order/"
+        }
+      ]
+    },
+    {
+      "id": "A02",
+      "requirement": "MOD-002",
+      "milestone": "M1",
+      "status": "planned",
+      "setup": "三模組及會部分取得資源後失敗的第三個 Start",
+      "stimulus": "啟動並注入第三個失敗",
+      "expected": "失敗模組自行清理部分資源；已啟動模組逆序 Stop；未報 Ready",
+      "source_sha256": "a2f5a915879a30f7b434f29f720c8b5cb6ebae8545e1b33935e7a38d8c3df7f3",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A02/phase-order",
+          "stimulus_variant": "phase-order",
+          "assertion_ref": "A02.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A02/phase-order/"
+        },
+        {
+          "id": "A02/partial-start-failure",
+          "stimulus_variant": "partial-start-failure",
+          "assertion_ref": "A02.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A02/partial-start-failure/"
+        },
+        {
+          "id": "A02/reverse-cleanup",
+          "stimulus_variant": "reverse-cleanup",
+          "assertion_ref": "A02.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A02/reverse-cleanup/"
+        },
+        {
+          "id": "A02/no-ready-on-failure",
+          "stimulus_variant": "no-ready-on-failure",
+          "assertion_ref": "A02.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A02/no-ready-on-failure/"
+        }
+      ]
+    },
+    {
+      "id": "A03",
+      "requirement": "UOW-006",
+      "milestone": "M2",
+      "status": "planned",
+      "setup": "外層可寫 Scope，兩個 Repository 與內層 Required",
+      "stimulus": "內層更新後外層回傳錯誤",
+      "expected": "僅一次 Begin、沒有內層 Commit；兩個 Repository 更新均回滾",
+      "source_sha256": "f7c87343b325c098f5ba57f30830d61ccb255c2069f5a7d7f90e9196787ea3cd",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A03/required-two-repositories-outer-rollback",
+          "stimulus_variant": "required-two-repositories-outer-rollback",
+          "assertion_ref": "A03.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A03/required-two-repositories-outer-rollback/"
+        }
+      ]
+    },
+    {
+      "id": "A04",
+      "requirement": "UOW-018",
+      "milestone": "M3",
+      "status": "planned",
+      "setup": "Handler 會新增資料與下一個事件",
+      "stimulus": "完成根 Scope；另在 Handler／Outbox／Audit 各階段注入錯誤",
+      "expected": "成功情境全部提交；任一提交前失敗時全部回滾，無可配送 Outbox",
+      "source_sha256": "6758ff8ba09f63d625849992e49095177e54f821558b2fe15e1c5f7cbe92767e",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A04/handler-chain-commit",
+          "stimulus_variant": "handler-chain-commit",
+          "assertion_ref": "A04.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A04/handler-chain-commit/"
+        },
+        {
+          "id": "A04/handler-error",
+          "stimulus_variant": "handler-error",
+          "assertion_ref": "A04.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A04/handler-error/"
+        },
+        {
+          "id": "A04/outbox-error",
+          "stimulus_variant": "outbox-error",
+          "assertion_ref": "A04.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A04/outbox-error/"
+        },
+        {
+          "id": "A04/audit-error",
+          "stimulus_variant": "audit-error",
+          "assertion_ref": "A04.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A04/audit-error/"
+        }
+      ]
+    },
+    {
+      "id": "A05",
+      "requirement": "UOW-020",
+      "milestone": "M2",
+      "status": "planned",
+      "setup": "可控制的提交前故障或資料庫明確回滾回覆",
+      "stimulus": "Outbox 已寫入後觸發確定回滾",
+      "expected": "業務資料與 Outbox 均不存在；Broker 沒有該事件；Outcome 為 RolledBack",
+      "source_sha256": "8ce897236832b4295dfe4e53a3cab14d9f6028e5e52296b74fe82b882a2d97f6",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A05/precommit-failure",
+          "stimulus_variant": "precommit-failure",
+          "assertion_ref": "A05.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A05/precommit-failure/"
+        },
+        {
+          "id": "A05/explicit-rollback-response",
+          "stimulus_variant": "explicit-rollback-response",
+          "assertion_ref": "A05.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A05/explicit-rollback-response/"
+        }
+      ]
+    },
+    {
+      "id": "A06",
+      "requirement": "EVT-006",
+      "milestone": "M3",
+      "status": "planned",
+      "setup": "同一 pending 事件與兩個以 barrier 同時起跑的 Worker",
+      "stimulus": "兩 Worker 競爭，另在業務修改後 Commit 前崩潰再重試",
+      "expected": "本地業務效果僅一次；崩潰交易全回滾後可重新執行；不靠僅有接收唯一鍵防重",
+      "source_sha256": "00a99353ee64cfe942917a73836e9fc45c1bf90d9845f5d6896a1769bf8bedf3",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A06/two-worker-barrier",
+          "stimulus_variant": "two-worker-barrier",
+          "assertion_ref": "A06.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A06/two-worker-barrier/"
+        },
+        {
+          "id": "A06/crash-before-commit",
+          "stimulus_variant": "crash-before-commit",
+          "assertion_ref": "A06.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A06/crash-before-commit/"
+        },
+        {
+          "id": "A06/retry-after-crash",
+          "stimulus_variant": "retry-after-crash",
+          "assertion_ref": "A06.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A06/retry-after-crash/"
+        }
+      ]
+    },
+    {
+      "id": "A07",
+      "requirement": "IDEM-001",
+      "milestone": "M3",
+      "status": "planned",
+      "setup": "同 tenant／principal／operation／key 的重送",
+      "stimulus": "成功後再送；另在 Commit 後回覆前崩潰",
+      "expected": "重送回傳已保存結果而不執行第二次業務修改／新增事件",
+      "source_sha256": "2a6edff192aa4b0e02f0e2e112e88266b04f8a60256fa32ae3279068714c80c5",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A07/replay-success",
+          "stimulus_variant": "replay-success",
+          "assertion_ref": "A07.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A07/replay-success/"
+        },
+        {
+          "id": "A07/crash-after-commit-before-response",
+          "stimulus_variant": "crash-after-commit-before-response",
+          "assertion_ref": "A07.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A07/crash-after-commit-before-response/"
+        }
+      ]
+    },
+    {
+      "id": "A08",
+      "requirement": "TEN-001",
+      "milestone": "M3",
+      "status": "planned",
+      "setup": "有效 Tenant A Principal 與 Tenant B hint／竄改 Job／Event",
+      "stimulus": "從 HTTP、Job、Consumer 入口執行",
+      "expected": "偽造／衝突輸入在業務存取前拒絕；不盲信 envelope 的 producer 字串",
+      "source_sha256": "2e5fcd5b7dbdce6c57fb8c4d319f571d4503dc3ba657e4bedefe345c4f117618",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A08/http-tenant-hint",
+          "stimulus_variant": "http-tenant-hint",
+          "assertion_ref": "A08.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A08/http-tenant-hint/"
+        },
+        {
+          "id": "A08/job-tenant-tamper",
+          "stimulus_variant": "job-tenant-tamper",
+          "assertion_ref": "A08.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A08/job-tenant-tamper/"
+        },
+        {
+          "id": "A08/event-tenant-tamper",
+          "stimulus_variant": "event-tenant-tamper",
+          "assertion_ref": "A08.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A08/event-tenant-tamper/"
+        },
+        {
+          "id": "A08/untrusted-producer",
+          "stimulus_variant": "untrusted-producer",
+          "assertion_ref": "A08.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A08/untrusted-producer/"
+        }
+      ]
+    },
+    {
+      "id": "A09",
+      "requirement": "UOW-004",
+      "milestone": "M3",
+      "status": "planned",
+      "setup": "RLS 租戶表與可重用的 connection pool",
+      "stimulus": "交錯執行兩租戶的 Auto Query，另要求 NonTransactional",
+      "expected": "Auto Query 使用唯讀交易且設定本次 Tenant；顯式 NonTransactional 被拒絕；無跨租戶資料",
+      "source_sha256": "f67b089989edea1c7d94ec3e6341e9e90cf7032d43341a8bf185e05bcbdb58cf",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A09/interleaved-auto-queries",
+          "stimulus_variant": "interleaved-auto-queries",
+          "assertion_ref": "A09.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A09/interleaved-auto-queries/"
+        },
+        {
+          "id": "A09/connection-reuse",
+          "stimulus_variant": "connection-reuse",
+          "assertion_ref": "A09.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A09/connection-reuse/"
+        },
+        {
+          "id": "A09/explicit-nontransactional-rejected",
+          "stimulus_variant": "explicit-nontransactional-rejected",
+          "assertion_ref": "A09.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A09/explicit-nontransactional-rejected/"
+        }
+      ]
+    },
+    {
+      "id": "A10",
+      "requirement": "DATA-001",
+      "milestone": "M2",
+      "status": "planned",
+      "setup": "同一聚合相同版本的兩個更新",
+      "stimulus": "併發提交不同修改",
+      "expected": "一方成功、一方 CONFLICT；不覆蓋已提交更新",
+      "source_sha256": "50dc4a25bbcc75e02df507fda3e6d265f1fe5d954b5ddf02335214211965b870",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A10/concurrent-version-conflict",
+          "stimulus_variant": "concurrent-version-conflict",
+          "assertion_ref": "A10.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A10/concurrent-version-conflict/"
+        }
+      ]
+    },
+    {
+      "id": "A11",
+      "requirement": "EVT-003",
+      "milestone": "M3",
+      "status": "planned",
+      "setup": "兩個 Worker 與到期 processing 記錄",
+      "stimulus": "舊 Worker 暫停、新 Worker 接管後讓舊 Worker 回寫",
+      "expected": "有效認領不重疊；舊 token 更新影響零列；新狀態未遭覆寫",
+      "source_sha256": "ee99e5f0f3bc90c1670b81a2b0c20bc6603a1078fcc36b01cd183f82246bc289",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A11/lease-takeover",
+          "stimulus_variant": "lease-takeover",
+          "assertion_ref": "A11.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A11/lease-takeover/"
+        },
+        {
+          "id": "A11/stale-success-update",
+          "stimulus_variant": "stale-success-update",
+          "assertion_ref": "A11.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A11/stale-success-update/"
+        },
+        {
+          "id": "A11/stale-failure-update",
+          "stimulus_variant": "stale-failure-update",
+          "assertion_ref": "A11.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A11/stale-failure-update/"
+        }
+      ]
+    },
+    {
+      "id": "A12",
+      "requirement": "SEC-001",
+      "milestone": "M3",
+      "status": "planned",
+      "setup": "合法、過期、偽造及新舊簽章 key Token",
+      "stimulus": "對各入口送 Token 並輪替 JWKS",
+      "expected": "不合法時 401 且不執行 Use Case；依已配置的快取更新政策接受合法輪替",
+      "source_sha256": "359f16029786627161faeeeac16d46d15e9674cfa498dee3c76c27f65bf62298",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A12/valid-token",
+          "stimulus_variant": "valid-token",
+          "assertion_ref": "A12.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A12/valid-token/"
+        },
+        {
+          "id": "A12/expired-token",
+          "stimulus_variant": "expired-token",
+          "assertion_ref": "A12.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A12/expired-token/"
+        },
+        {
+          "id": "A12/forged-token",
+          "stimulus_variant": "forged-token",
+          "assertion_ref": "A12.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A12/forged-token/"
+        },
+        {
+          "id": "A12/issuer",
+          "stimulus_variant": "issuer",
+          "assertion_ref": "A12.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A12/issuer/"
+        },
+        {
+          "id": "A12/audience",
+          "stimulus_variant": "audience",
+          "assertion_ref": "A12.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A12/audience/"
+        },
+        {
+          "id": "A12/algorithm",
+          "stimulus_variant": "algorithm",
+          "assertion_ref": "A12.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A12/algorithm/"
+        },
+        {
+          "id": "A12/jwks-rotation",
+          "stimulus_variant": "jwks-rotation",
+          "assertion_ref": "A12.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A12/jwks-rotation/"
+        }
+      ]
+    },
+    {
+      "id": "A13",
+      "requirement": "SEC-002",
+      "milestone": "M3",
+      "status": "planned",
+      "setup": "各 User／Role／Tenant 權限組合與 Feature 開啟",
+      "stimulus": "直接呼叫 Use Case 並經 HTTP 呼叫",
+      "expected": "遵守 §7.4 明確拒絕優先規則；禁止案例 403 且無業務寫入；繞過 Transport 不可繞過授權",
+      "source_sha256": "89b69e55781122fb99f36aff3c59c30000fcfb1467f97c1769badd1588c869da",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A13/allow",
+          "stimulus_variant": "allow",
+          "assertion_ref": "A13.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A13/allow/"
+        },
+        {
+          "id": "A13/explicit-user-deny",
+          "stimulus_variant": "explicit-user-deny",
+          "assertion_ref": "A13.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A13/explicit-user-deny/"
+        },
+        {
+          "id": "A13/role-tenant-matrix",
+          "stimulus_variant": "role-tenant-matrix",
+          "assertion_ref": "A13.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A13/role-tenant-matrix/"
+        },
+        {
+          "id": "A13/feature-not-permission",
+          "stimulus_variant": "feature-not-permission",
+          "assertion_ref": "A13.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A13/feature-not-permission/"
+        },
+        {
+          "id": "A13/direct-use-case",
+          "stimulus_variant": "direct-use-case",
+          "assertion_ref": "A13.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A13/direct-use-case/"
+        }
+      ]
+    },
+    {
+      "id": "A14",
+      "requirement": "API-001",
+      "milestone": "M2",
+      "status": "planned",
+      "setup": "可攔截 ResponseWriter 的寫入 API",
+      "stimulus": "分別注入提交前失敗、確定回滾及 Commit Unknown",
+      "expected": "任何未確認提交情境均不寫出 2xx；正常成功只在 Commit 之後寫出",
+      "source_sha256": "c58772da985259d48ba1e10afb434598d5e30cf3e32c69819fb5e182571d9c7a",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A14/success-after-commit",
+          "stimulus_variant": "success-after-commit",
+          "assertion_ref": "A14.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A14/success-after-commit/"
+        },
+        {
+          "id": "A14/precommit-error",
+          "stimulus_variant": "precommit-error",
+          "assertion_ref": "A14.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A14/precommit-error/"
+        },
+        {
+          "id": "A14/explicit-rollback",
+          "stimulus_variant": "explicit-rollback",
+          "assertion_ref": "A14.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A14/explicit-rollback/"
+        },
+        {
+          "id": "A14/unknown-no-2xx",
+          "stimulus_variant": "unknown-no-2xx",
+          "assertion_ref": "A14.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A14/unknown-no-2xx/"
+        }
+      ]
+    },
+    {
+      "id": "A15",
+      "requirement": "OPS-001",
+      "milestone": "M1",
+      "status": "planned",
+      "setup": "執行中 HTTP、Worker 與 Stop 時需使用 DB 的模組",
+      "stimulus": "發送停機並測試工作超時",
+      "expected": "先不 Ready／停認領；工作完成或取消後才清理；依賴存活至使用者停止；每資源只關閉一次",
+      "source_sha256": "4a87aa023fad1530e8fe04421eb3eaf7e1231ce80b3c8f930c3f5e1d143badc5",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A15/active-http",
+          "stimulus_variant": "active-http",
+          "assertion_ref": "A15.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A15/active-http/"
+        },
+        {
+          "id": "A15/active-worker",
+          "stimulus_variant": "active-worker",
+          "assertion_ref": "A15.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A15/active-worker/"
+        },
+        {
+          "id": "A15/drain-timeout",
+          "stimulus_variant": "drain-timeout",
+          "assertion_ref": "A15.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A15/drain-timeout/"
+        },
+        {
+          "id": "A15/reverse-stop",
+          "stimulus_variant": "reverse-stop",
+          "assertion_ref": "A15.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A15/reverse-stop/"
+        },
+        {
+          "id": "A15/close-once",
+          "stimulus_variant": "close-once",
+          "assertion_ref": "A15.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A15/close-once/"
+        }
+      ]
+    },
+    {
+      "id": "A16",
+      "requirement": "EVT-009",
+      "milestone": "M3",
+      "status": "planned",
+      "setup": "舊版 Consumer fixture 與新 optional 欄位",
+      "stimulus": "讀取相容事件及未知／破壞性 schema",
+      "expected": "相容資料可讀；破壞性變更需新版本；未知版本隔離待處理，不靜默丟棄",
+      "source_sha256": "ffd8d326f97c954c178bb208187d6f4198b1a72f99d36c9294f95af86d4eb347",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A16/old-schema",
+          "stimulus_variant": "old-schema",
+          "assertion_ref": "A16.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A16/old-schema/"
+        },
+        {
+          "id": "A16/optional-field",
+          "stimulus_variant": "optional-field",
+          "assertion_ref": "A16.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A16/optional-field/"
+        },
+        {
+          "id": "A16/unknown-schema",
+          "stimulus_variant": "unknown-schema",
+          "assertion_ref": "A16.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A16/unknown-schema/"
+        },
+        {
+          "id": "A16/breaking-change",
+          "stimulus_variant": "breaking-change",
+          "assertion_ref": "A16.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A16/breaking-change/"
+        }
+      ]
+    },
+    {
+      "id": "A17",
+      "requirement": "UOW-001",
+      "milestone": "M2",
+      "status": "planned",
+      "setup": "兩個獨立 request context、已結束根 Scope 與已退出的 Required 子視圖",
+      "stimulus": "交錯呼叫 Current 並重用已結束 context",
+      "expected": "不同請求不共享 Scope；有效 Scope 可查得；失效視圖 Current 回傳 false、Executor 回傳 UOW_CLOSED；子退出後父仍有效",
+      "source_sha256": "34c41259b81af1b679aaae7bbff05c70f84e0e7654a16a358bf6b32dab7e546b",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A17/request-isolation",
+          "stimulus_variant": "request-isolation",
+          "assertion_ref": "A17.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A17/request-isolation/"
+        },
+        {
+          "id": "A17/current-active",
+          "stimulus_variant": "current-active",
+          "assertion_ref": "A17.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A17/current-active/"
+        },
+        {
+          "id": "A17/root-closed",
+          "stimulus_variant": "root-closed",
+          "assertion_ref": "A17.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A17/root-closed/"
+        },
+        {
+          "id": "A17/required-view-closed",
+          "stimulus_variant": "required-view-closed",
+          "assertion_ref": "A17.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A17/required-view-closed/"
+        },
+        {
+          "id": "A17/parent-still-active",
+          "stimulus_variant": "parent-still-active",
+          "assertion_ref": "A17.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A17/parent-still-active/"
+        }
+      ]
+    },
+    {
+      "id": "A18",
+      "requirement": "UOW-002",
+      "milestone": "M2",
+      "status": "planned",
+      "setup": "完整 DefaultOptions 與各種合法／非法 Options",
+      "stimulus": "測試零值、負 timeout、未知 enum、nil context／callback／hook、缺少必要啟動設定",
+      "expected": "零值按表繼承；非法輸入返回 UOW_OPTIONS_INVALID；尚未建立 Scope 的非法輸入 callback 與 DB Begin 次數均為零；非法 hook 不被註冊或執行",
+      "source_sha256": "3d4927fae0d35271d743a417986a66767b49f011d05a1bfaa16b7e875108fa27",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A18/zero-options",
+          "stimulus_variant": "zero-options",
+          "assertion_ref": "A18.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A18/zero-options/"
+        },
+        {
+          "id": "A18/negative-timeout",
+          "stimulus_variant": "negative-timeout",
+          "assertion_ref": "A18.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A18/negative-timeout/"
+        },
+        {
+          "id": "A18/unknown-enum",
+          "stimulus_variant": "unknown-enum",
+          "assertion_ref": "A18.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A18/unknown-enum/"
+        },
+        {
+          "id": "A18/nil-context",
+          "stimulus_variant": "nil-context",
+          "assertion_ref": "A18.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A18/nil-context/"
+        },
+        {
+          "id": "A18/nil-callback",
+          "stimulus_variant": "nil-callback",
+          "assertion_ref": "A18.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A18/nil-callback/"
+        },
+        {
+          "id": "A18/nil-hook",
+          "stimulus_variant": "nil-hook",
+          "assertion_ref": "A18.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A18/nil-hook/"
+        },
+        {
+          "id": "A18/missing-defaults",
+          "stimulus_variant": "missing-defaults",
+          "assertion_ref": "A18.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A18/missing-defaults/"
+        }
+      ]
+    },
+    {
+      "id": "A19",
+      "requirement": "UOW-003",
+      "milestone": "M2",
+      "status": "planned",
+      "setup": "同一 Use Case 的 HTTP、Job、Consumer 入口",
+      "stimulus": "各入口呼叫相同 Command 與 Query",
+      "expected": "Command 使用可寫交易；Query 使用唯讀政策；沒有反射攔截器或 HTTP method 偷改 Use Case 語意",
+      "source_sha256": "9caae59df32c9329edabb2efbefd56aa48c1f82df9f34c73a61c738117e92ec2",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A19/http-command",
+          "stimulus_variant": "http-command",
+          "assertion_ref": "A19.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A19/http-command/"
+        },
+        {
+          "id": "A19/http-query",
+          "stimulus_variant": "http-query",
+          "assertion_ref": "A19.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A19/http-query/"
+        },
+        {
+          "id": "A19/job-command",
+          "stimulus_variant": "job-command",
+          "assertion_ref": "A19.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A19/job-command/"
+        },
+        {
+          "id": "A19/job-query",
+          "stimulus_variant": "job-query",
+          "assertion_ref": "A19.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A19/job-query/"
+        },
+        {
+          "id": "A19/consumer-command",
+          "stimulus_variant": "consumer-command",
+          "assertion_ref": "A19.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A19/consumer-command/"
+        },
+        {
+          "id": "A19/consumer-query",
+          "stimulus_variant": "consumer-query",
+          "assertion_ref": "A19.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A19/consumer-query/"
+        }
+      ]
+    },
+    {
+      "id": "A20",
+      "requirement": "UOW-005",
+      "milestone": "M2",
+      "status": "planned",
+      "setup": "同一 Insert 方法與上述三類無寫入資格的 context",
+      "stimulus": "分別呼叫 Insert；另在合法可寫 Scope 呼叫",
+      "expected": "非法情境回傳對應 UOW 錯誤且無資料變動；合法情境成功；不退回 Pool 自動提交",
+      "source_sha256": "44fc58a8be82b18caee68fa7c27d3202791807a69afb6a536bbd3dd03d862c78",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A20/no-scope",
+          "stimulus_variant": "no-scope",
+          "assertion_ref": "A20.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A20/no-scope/"
+        },
+        {
+          "id": "A20/read-only",
+          "stimulus_variant": "read-only",
+          "assertion_ref": "A20.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A20/read-only/"
+        },
+        {
+          "id": "A20/nontransactional",
+          "stimulus_variant": "nontransactional",
+          "assertion_ref": "A20.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A20/nontransactional/"
+        },
+        {
+          "id": "A20/closed-scope",
+          "stimulus_variant": "closed-scope",
+          "assertion_ref": "A20.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A20/closed-scope/"
+        },
+        {
+          "id": "A20/writable-control",
+          "stimulus_variant": "writable-control",
+          "assertion_ref": "A20.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A20/writable-control/"
+        }
+      ]
+    },
+    {
+      "id": "A21",
+      "requirement": "UOW-007",
+      "milestone": "M2",
+      "status": "planned",
+      "setup": "各種外層模式與內層明示選項的組合",
+      "stimulus": "逐格執行 Required，捕捉不相容錯誤後嘗試正常返回",
+      "expected": "相容格共用交易；不相容格 callback 不執行且根 Scope 無法提交",
+      "source_sha256": "f0a705cfd4b9297e622076b3a0d4d46f6de21d62dbacdfc8bd3ccd9c8b6c227f",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A21/compatible-grid",
+          "stimulus_variant": "compatible-grid",
+          "assertion_ref": "A21.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A21/compatible-grid/"
+        },
+        {
+          "id": "A21/access-conflict",
+          "stimulus_variant": "access-conflict",
+          "assertion_ref": "A21.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A21/access-conflict/"
+        },
+        {
+          "id": "A21/transaction-conflict",
+          "stimulus_variant": "transaction-conflict",
+          "assertion_ref": "A21.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A21/transaction-conflict/"
+        },
+        {
+          "id": "A21/isolation-conflict",
+          "stimulus_variant": "isolation-conflict",
+          "assertion_ref": "A21.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A21/isolation-conflict/"
+        },
+        {
+          "id": "A21/identity-conflict",
+          "stimulus_variant": "identity-conflict",
+          "assertion_ref": "A21.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A21/identity-conflict/"
+        },
+        {
+          "id": "A21/caught-conflict",
+          "stimulus_variant": "caught-conflict",
+          "assertion_ref": "A21.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A21/caught-conflict/"
+        }
+      ]
+    },
+    {
+      "id": "A22",
+      "requirement": "UOW-008",
+      "milestone": "M2",
+      "status": "planned",
+      "setup": "外層已有寫入、內層回傳錯誤",
+      "stimulus": "外層捕捉錯誤並回傳 nil；另測顯式 SetRollbackOnly",
+      "expected": "外層返回 UOW_ROLLBACK_ONLY，所有同交易修改與 Outbox 都未提交",
+      "source_sha256": "af375103eea53fb61950269a7d894b8f4808563e6ac57be31b745d0d580b0878",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A22/caught-inner-error",
+          "stimulus_variant": "caught-inner-error",
+          "assertion_ref": "A22.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A22/caught-inner-error/"
+        },
+        {
+          "id": "A22/explicit-rollback-only",
+          "stimulus_variant": "explicit-rollback-only",
+          "assertion_ref": "A22.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A22/explicit-rollback-only/"
+        }
+      ]
+    },
+    {
+      "id": "A23",
+      "requirement": "UOW-009",
+      "milestone": "M2",
+      "status": "planned",
+      "setup": "外層交易，Pool 可提供第二條連線",
+      "stimulus": "建立 RequiresNew；在子 Scope 內嘗試使用捕獲的父 Executor",
+      "expected": "父子 Scope／交易 ID 不同；父 Executor 回傳 UOW_SUSPENDED；子結束後父 Scope 可繼續",
+      "source_sha256": "3b7f83aef696af55e0a54c0e59c8d64aaa6c33ff7804b90ff06e18f07a7972f0",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A23/independent-resource",
+          "stimulus_variant": "independent-resource",
+          "assertion_ref": "A23.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A23/independent-resource/"
+        },
+        {
+          "id": "A23/suspended-parent",
+          "stimulus_variant": "suspended-parent",
+          "assertion_ref": "A23.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A23/suspended-parent/"
+        },
+        {
+          "id": "A23/resumed-parent",
+          "stimulus_variant": "resumed-parent",
+          "assertion_ref": "A23.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A23/resumed-parent/"
+        }
+      ]
+    },
+    {
+      "id": "A24",
+      "requirement": "UOW-010",
+      "milestone": "M2",
+      "status": "planned",
+      "setup": "父子交易寫入互不鎖定的資料列",
+      "stimulus": "子 RequiresNew 成功提交，外層回傳錯誤",
+      "expected": "子資料及子 Outbox 存在，父資料及父 Outbox 不存在；沒有宣稱整個呼叫鏈原子性",
+      "source_sha256": "697f8154f223dec00d8e42c8dc1750bf00b3f638203ce59a54aded49ffc14cfd",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A24/child-commit-parent-rollback",
+          "stimulus_variant": "child-commit-parent-rollback",
+          "assertion_ref": "A24.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A24/child-commit-parent-rollback/"
+        }
+      ]
+    },
+    {
+      "id": "A25",
+      "requirement": "UOW-011",
+      "milestone": "M2",
+      "status": "planned",
+      "setup": "父 Scope 寫入 A，子 Scope 寫入 B 後失敗",
+      "stimulus": "父捕捉子錯誤後成功；另測父直接傳回子錯誤",
+      "expected": "捕捉情境 A 提交、B 回滾；傳回情境 A 與 B 均回滾",
+      "source_sha256": "3ac9a1f53c5d51c5c4f76fcd3d7221af84f96f7ef0eea582c307ce50984960fd",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A25/caught-child-error",
+          "stimulus_variant": "caught-child-error",
+          "assertion_ref": "A25.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A25/caught-child-error/"
+        },
+        {
+          "id": "A25/propagated-child-error",
+          "stimulus_variant": "propagated-child-error",
+          "assertion_ref": "A25.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A25/propagated-child-error/"
+        }
+      ]
+    },
+    {
+      "id": "A26",
+      "requirement": "UOW-012",
+      "milestone": "M2",
+      "status": "planned",
+      "setup": "深度上限、Pool 僅一連線、父持鎖三組情境",
+      "stimulus": "要求超深 RequiresNew、等待第二連線、子存取父鎖住的列",
+      "expected": "超深 callback 不執行；等待在期限內失敗；父資源仍按原生命週期清理；沒有無限等待",
+      "source_sha256": "b9d890fd4047bbc94211962d9869e9fd5e040fc5bc1ba222e6107dbc8e5d5a01",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A26/depth-boundary",
+          "stimulus_variant": "depth-boundary",
+          "assertion_ref": "A26.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A26/depth-boundary/"
+        },
+        {
+          "id": "A26/depth-exceeded",
+          "stimulus_variant": "depth-exceeded",
+          "assertion_ref": "A26.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A26/depth-exceeded/"
+        },
+        {
+          "id": "A26/pool-exhaustion",
+          "stimulus_variant": "pool-exhaustion",
+          "assertion_ref": "A26.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A26/pool-exhaustion/"
+        },
+        {
+          "id": "A26/parent-lock-wait",
+          "stimulus_variant": "parent-lock-wait",
+          "assertion_ref": "A26.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A26/parent-lock-wait/"
+        }
+      ]
+    },
+    {
+      "id": "A27",
+      "requirement": "UOW-013",
+      "milestone": "M2",
+      "status": "planned",
+      "setup": "公開 API 與傳入未知 Propagation 的測試",
+      "stimulus": "嘗試未支援的傳播／Savepoint 呼叫",
+      "expected": "公開契約無 Savepoint／Suppress 入口；未知模式回傳 UOW_OPTIONS_INVALID，無 callback／Begin",
+      "source_sha256": "f42663474994ec2fb0d8ba9fd650ffd676ca3c42f465516d0122d72ca6108904",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A27/unknown-propagation",
+          "stimulus_variant": "unknown-propagation",
+          "assertion_ref": "A27.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A27/unknown-propagation/"
+        },
+        {
+          "id": "A27/no-savepoint-api",
+          "stimulus_variant": "no-savepoint-api",
+          "assertion_ref": "A27.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A27/no-savepoint-api/"
+        },
+        {
+          "id": "A27/no-suppress-api",
+          "stimulus_variant": "no-suppress-api",
+          "assertion_ref": "A27.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A27/no-suppress-api/"
+        }
+      ]
+    },
+    {
+      "id": "A28",
+      "requirement": "UOW-014",
+      "milestone": "M2",
+      "status": "planned",
+      "setup": "設定 DefaultTimeout；父 context 有更短 deadline",
+      "stimulus": "對各階段注入延遲，另測內層指定較長或較短 timeout",
+      "expected": "最早 deadline 生效；內層無法延長父期限；提交前超時導致回滾；Commit 期間斷線依 outcome 分類",
+      "source_sha256": "207f400c454d8e8ca855466869fba5a20b8deb7f24579e94c7fdd6002c6b24f9",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A28/pool-deadline",
+          "stimulus_variant": "pool-deadline",
+          "assertion_ref": "A28.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A28/pool-deadline/"
+        },
+        {
+          "id": "A28/begin-deadline",
+          "stimulus_variant": "begin-deadline",
+          "assertion_ref": "A28.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A28/begin-deadline/"
+        },
+        {
+          "id": "A28/sql-deadline",
+          "stimulus_variant": "sql-deadline",
+          "assertion_ref": "A28.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A28/sql-deadline/"
+        },
+        {
+          "id": "A28/handler-deadline",
+          "stimulus_variant": "handler-deadline",
+          "assertion_ref": "A28.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A28/handler-deadline/"
+        },
+        {
+          "id": "A28/commit-deadline",
+          "stimulus_variant": "commit-deadline",
+          "assertion_ref": "A28.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A28/commit-deadline/"
+        },
+        {
+          "id": "A28/longer-child",
+          "stimulus_variant": "longer-child",
+          "assertion_ref": "A28.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A28/longer-child/"
+        },
+        {
+          "id": "A28/shorter-child",
+          "stimulus_variant": "shorter-child",
+          "assertion_ref": "A28.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A28/shorter-child/"
+        }
+      ]
+    },
+    {
+      "id": "A29",
+      "requirement": "UOW-015",
+      "milestone": "M2",
+      "status": "planned",
+      "setup": "callback 已寫入但尚未提交",
+      "stimulus": "取消 context 後讓 callback 返回 nil",
+      "expected": "不開始新的 Commit；清理使用獨立有界 context；業務修改回滾",
+      "source_sha256": "2d5d45d29744a130715e512add04c5be981362ea686043361b957b7eb568ef01",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A29/cancel-before-commit",
+          "stimulus_variant": "cancel-before-commit",
+          "assertion_ref": "A29.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A29/cancel-before-commit/"
+        },
+        {
+          "id": "A29/independent-cleanup-context",
+          "stimulus_variant": "independent-cleanup-context",
+          "assertion_ref": "A29.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A29/independent-cleanup-context/"
+        }
+      ]
+    },
+    {
+      "id": "A30",
+      "requirement": "UOW-016",
+      "milestone": "M2",
+      "status": "planned",
+      "setup": "同一 Scope 的第一個 Query 以 barrier 保持執行中，或已回傳但 Rows 尚未關閉",
+      "stimulus": "第二個 goroutine 對相同 Executor 發送 Query；另注入 Rows.Err",
+      "expected": "第二個操作被拒絕；第一個完成後最終仍回滾；延遲讀取錯誤不提交；race detector 無資料競態",
+      "source_sha256": "f23111604173f36d6abe0257151d8a8b84c5d9c0a331f42f344f2e5eb32c242e",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A30/overlapping-sql",
+          "stimulus_variant": "overlapping-sql",
+          "assertion_ref": "A30.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A30/overlapping-sql/"
+        },
+        {
+          "id": "A30/open-rows-busy",
+          "stimulus_variant": "open-rows-busy",
+          "assertion_ref": "A30.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A30/open-rows-busy/"
+        },
+        {
+          "id": "A30/rows-delayed-error",
+          "stimulus_variant": "rows-delayed-error",
+          "assertion_ref": "A30.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A30/rows-delayed-error/"
+        },
+        {
+          "id": "A30/race-free",
+          "stimulus_variant": "race-free",
+          "assertion_ref": "A30.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A30/race-free/"
+        }
+      ]
+    },
+    {
+      "id": "A31",
+      "requirement": "UOW-017",
+      "milestone": "M2",
+      "status": "planned",
+      "setup": "Repository 有待寫入資料及 Local Event",
+      "stimulus": "SaveChanges 後使外層失敗；另測 pgx 即時 SQL Adapter",
+      "expected": "flush 的資料仍可回滾；事件與完成回呼未提早執行；即時 Adapter 可無待寫入資料但仍檢查 Scope 狀態",
+      "source_sha256": "4817cfe1e94f1caef608c2603c67a5f20644af7577d38e79d09b6360d586c2de",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A31/flush-then-rollback",
+          "stimulus_variant": "flush-then-rollback",
+          "assertion_ref": "A31.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A31/flush-then-rollback/"
+        },
+        {
+          "id": "A31/no-event-drain",
+          "stimulus_variant": "no-event-drain",
+          "assertion_ref": "A31.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A31/no-event-drain/"
+        },
+        {
+          "id": "A31/no-completion-hook",
+          "stimulus_variant": "no-completion-hook",
+          "assertion_ref": "A31.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A31/no-completion-hook/"
+        },
+        {
+          "id": "A31/immediate-sql-adapter",
+          "stimulus_variant": "immediate-sql-adapter",
+          "assertion_ref": "A31.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A31/immediate-sql-adapter/"
+        }
+      ]
+    },
+    {
+      "id": "A32",
+      "requirement": "UOW-019",
+      "milestone": "M2",
+      "status": "planned",
+      "setup": "Within 包含多層 Required 與 Repository",
+      "stimulus": "正常完成或回傳錯誤，檢查交易控制呼叫",
+      "expected": "每個根交易至多一次 Commit；業務端不能手動提交或提早關閉共用連線",
+      "source_sha256": "42ed15495f7dc091d52ff9bfdd80f9b277429045cddec3e2a00b11ddcb9e0959",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A32/single-root-commit",
+          "stimulus_variant": "single-root-commit",
+          "assertion_ref": "A32.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A32/single-root-commit/"
+        },
+        {
+          "id": "A32/single-root-rollback",
+          "stimulus_variant": "single-root-rollback",
+          "assertion_ref": "A32.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A32/single-root-rollback/"
+        },
+        {
+          "id": "A32/no-public-commit-handle",
+          "stimulus_variant": "no-public-commit-handle",
+          "assertion_ref": "A32.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A32/no-public-commit-handle/"
+        }
+      ]
+    },
+    {
+      "id": "A33",
+      "requirement": "UOW-021",
+      "milestone": "M2",
+      "status": "planned",
+      "setup": "可在 COMMIT 往返間切斷連線的真實 DB 代理",
+      "stimulus": "分別切斷送達前及 DB 提交後回覆前的連線",
+      "expected": "對不可判定案例不回 2xx、不宣稱已回滾、不自動重跑；同一操作可由冪等紀錄對帳",
+      "source_sha256": "ffaf07356302fa760e49be26129fe81df9755577b5e012b5437ba30cc951aebc",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A33/disconnect-before-delivery",
+          "stimulus_variant": "disconnect-before-delivery",
+          "assertion_ref": "A33.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A33/disconnect-before-delivery/"
+        },
+        {
+          "id": "A33/disconnect-after-db-commit",
+          "stimulus_variant": "disconnect-after-db-commit",
+          "assertion_ref": "A33.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A33/disconnect-after-db-commit/"
+        },
+        {
+          "id": "A33/reconcile-same-key",
+          "stimulus_variant": "reconcile-same-key",
+          "assertion_ref": "A33.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A33/reconcile-same-key/"
+        }
+      ]
+    },
+    {
+      "id": "A34",
+      "requirement": "UOW-022",
+      "milestone": "M2",
+      "status": "planned",
+      "setup": "業務錯誤加已取消 context，並注入 Rollback 失敗",
+      "stimulus": "退出 Within",
+      "expected": "使用不繼承業務取消的有界清理 context；errors.Is 可識別原錯；壞連線不回 Pool；Unknown 不因清理改成 RolledBack",
+      "source_sha256": "b98652fad1b9f2769700f7a1c307b1607a1003d7359bed70f2a07209bb7a1c85",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A34/canceled-cleanup",
+          "stimulus_variant": "canceled-cleanup",
+          "assertion_ref": "A34.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A34/canceled-cleanup/"
+        },
+        {
+          "id": "A34/rollback-failure",
+          "stimulus_variant": "rollback-failure",
+          "assertion_ref": "A34.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A34/rollback-failure/"
+        },
+        {
+          "id": "A34/original-cause",
+          "stimulus_variant": "original-cause",
+          "assertion_ref": "A34.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A34/original-cause/"
+        },
+        {
+          "id": "A34/broken-connection",
+          "stimulus_variant": "broken-connection",
+          "assertion_ref": "A34.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A34/broken-connection/"
+        },
+        {
+          "id": "A34/unknown-preserved",
+          "stimulus_variant": "unknown-preserved",
+          "assertion_ref": "A34.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A34/unknown-preserved/"
+        }
+      ]
+    },
+    {
+      "id": "A35",
+      "requirement": "UOW-023",
+      "milestone": "M2",
+      "status": "planned",
+      "setup": "同交易已寫入資料與 Outbox",
+      "stimulus": "在 callback／Local Handler 注入可辨識的 Panic 值",
+      "expected": "資料不提交；外層 recovery 收到相同 Panic 值；交易連線不洩漏",
+      "source_sha256": "cb09e6e1fe7d2fe79d5949395025604729bc67a14f816a6a3ef0ba10c47be9aa",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A35/callback-panic",
+          "stimulus_variant": "callback-panic",
+          "assertion_ref": "A35.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A35/callback-panic/"
+        },
+        {
+          "id": "A35/handler-panic",
+          "stimulus_variant": "handler-panic",
+          "assertion_ref": "A35.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A35/handler-panic/"
+        },
+        {
+          "id": "A35/panic-value-preserved",
+          "stimulus_variant": "panic-value-preserved",
+          "assertion_ref": "A35.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A35/panic-value-preserved/"
+        },
+        {
+          "id": "A35/no-resource-leak",
+          "stimulus_variant": "no-resource-leak",
+          "assertion_ref": "A35.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A35/no-resource-leak/"
+        }
+      ]
+    },
+    {
+      "id": "A36",
+      "requirement": "UOW-024",
+      "milestone": "M2",
+      "status": "planned",
+      "setup": "根 Scope 與內層 Required 均註冊回呼",
+      "stimulus": "分別成功、回滾、Commit Unknown",
+      "expected": "成功時各回呼一次；其餘不執行；RequiresNew 使用自己的回呼集合",
+      "source_sha256": "f7c571e40bd036df520a25a590b5b780495d6bc62c43f89e95df74a575ea2768",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A36/root-and-required-success",
+          "stimulus_variant": "root-and-required-success",
+          "assertion_ref": "A36.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A36/root-and-required-success/"
+        },
+        {
+          "id": "A36/rolled-back-no-completed",
+          "stimulus_variant": "rolled-back-no-completed",
+          "assertion_ref": "A36.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A36/rolled-back-no-completed/"
+        },
+        {
+          "id": "A36/unknown-no-completed",
+          "stimulus_variant": "unknown-no-completed",
+          "assertion_ref": "A36.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A36/unknown-no-completed/"
+        },
+        {
+          "id": "A36/requires-new-hooks",
+          "stimulus_variant": "requires-new-hooks",
+          "assertion_ref": "A36.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A36/requires-new-hooks/"
+        }
+      ]
+    },
+    {
+      "id": "A37",
+      "requirement": "UOW-025",
+      "milestone": "M2",
+      "status": "planned",
+      "setup": "OnCompleted 回呼分別回錯、Panic、等待 context 取消",
+      "stimulus": "確認 Commit 後執行回呼",
+      "expected": "每個回呼受 HookTimeout 限制且記錄失敗；後續回呼仍執行；不回滾、不將 Within 轉成業務失敗",
+      "source_sha256": "a2fdfaffdb770478d834b2c82600b920986e283ff069093ad8089f21019d42c7",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A37/hook-error",
+          "stimulus_variant": "hook-error",
+          "assertion_ref": "A37.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A37/hook-error/"
+        },
+        {
+          "id": "A37/hook-panic",
+          "stimulus_variant": "hook-panic",
+          "assertion_ref": "A37.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A37/hook-panic/"
+        },
+        {
+          "id": "A37/cooperative-hook-timeout",
+          "stimulus_variant": "cooperative-hook-timeout",
+          "assertion_ref": "A37.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A37/cooperative-hook-timeout/"
+        },
+        {
+          "id": "A37/later-hooks-run",
+          "stimulus_variant": "later-hooks-run",
+          "assertion_ref": "A37.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A37/later-hooks-run/"
+        }
+      ]
+    },
+    {
+      "id": "A38",
+      "requirement": "UOW-026",
+      "milestone": "M2",
+      "status": "planned",
+      "setup": "成功、一般錯誤、Panic、Unknown 四種終態",
+      "stimulus": "註冊生命週期觀察器並退出 Scope",
+      "expected": "OnFailed 僅失敗情境一次且帶 Outcome；OnDisposed 所有情境一次；觀察器錯誤不覆蓋主要結果",
+      "source_sha256": "ff20e14e65a1804eed3affe09b9b1640d9aae644e05efd4667b0d03c44206907",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A38/committed",
+          "stimulus_variant": "committed",
+          "assertion_ref": "A38.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A38/committed/"
+        },
+        {
+          "id": "A38/failed",
+          "stimulus_variant": "failed",
+          "assertion_ref": "A38.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A38/failed/"
+        },
+        {
+          "id": "A38/panic",
+          "stimulus_variant": "panic",
+          "assertion_ref": "A38.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A38/panic/"
+        },
+        {
+          "id": "A38/unknown",
+          "stimulus_variant": "unknown",
+          "assertion_ref": "A38.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A38/unknown/"
+        },
+        {
+          "id": "A38/disposed-once",
+          "stimulus_variant": "disposed-once",
+          "assertion_ref": "A38.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A38/disposed-once/"
+        },
+        {
+          "id": "A38/observer-error-isolated",
+          "stimulus_variant": "observer-error-isolated",
+          "assertion_ref": "A38.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A38/observer-error-isolated/"
+        }
+      ]
+    },
+    {
+      "id": "A39",
+      "requirement": "UOW-027",
+      "milestone": "M2",
+      "status": "planned",
+      "setup": "DB 已回覆 Commit 成功",
+      "stimulus": "立即取消 request context 或中斷 response",
+      "expected": "資料與 Outbox 存在；不標成 RolledBack；操作可查詢；不存在第二次 Commit",
+      "source_sha256": "eb9390cd9b817972e1e9b40efdc4905c5bea2636f4cc14cb26c13b7f301b5a2a",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A39/cancel-after-commit",
+          "stimulus_variant": "cancel-after-commit",
+          "assertion_ref": "A39.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A39/cancel-after-commit/"
+        },
+        {
+          "id": "A39/response-lost-after-commit",
+          "stimulus_variant": "response-lost-after-commit",
+          "assertion_ref": "A39.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A39/response-lost-after-commit/"
+        },
+        {
+          "id": "A39/query-result",
+          "stimulus_variant": "query-result",
+          "assertion_ref": "A39.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A39/query-result/"
+        }
+      ]
+    },
+    {
+      "id": "A40",
+      "requirement": "UOW-028",
+      "milestone": "M2",
+      "status": "planned",
+      "setup": "callback 有可計數呼叫且 DB 注入 serialization failure／deadlock／Unknown",
+      "stimulus": "各情境呼叫一次 Within",
+      "expected": "每次 Within callback 至多執行一次；上層僅對已確認回滾且宣告可重試的操作建立新根 Scope",
+      "source_sha256": "6875e2e215ce4c7a936b1a8c556cc99b417f88d42bd1ca2bd9d3d96281cf850a",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A40/serialization-failure",
+          "stimulus_variant": "serialization-failure",
+          "assertion_ref": "A40.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A40/serialization-failure/"
+        },
+        {
+          "id": "A40/deadlock",
+          "stimulus_variant": "deadlock",
+          "assertion_ref": "A40.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A40/deadlock/"
+        },
+        {
+          "id": "A40/commit-unknown",
+          "stimulus_variant": "commit-unknown",
+          "assertion_ref": "A40.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A40/commit-unknown/"
+        },
+        {
+          "id": "A40/explicit-upper-retry",
+          "stimulus_variant": "explicit-upper-retry",
+          "assertion_ref": "A40.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A40/explicit-upper-retry/"
+        }
+      ]
+    },
+    {
+      "id": "A41",
+      "requirement": "UOW-029",
+      "milestone": "M2",
+      "status": "planned",
+      "setup": "同一 Scope 依序要求兩個不同 DB resource key",
+      "stimulus": "第一個已寫入後取得第二個 Executor",
+      "expected": "返回 UOW_RESOURCE_MISMATCH 並使根 Scope 回滾；不宣稱跨 DB 原子性",
+      "source_sha256": "f1233e83a36260a6ca69dd96a6518863b6c8f07375ad99774dfda0d012d327fa",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A41/second-resource-key-rejected",
+          "stimulus_variant": "second-resource-key-rejected",
+          "assertion_ref": "A41.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A41/second-resource-key-rejected/"
+        }
+      ]
+    },
+    {
+      "id": "A42",
+      "requirement": "UOW-030",
+      "milestone": "M2",
+      "status": "planned",
+      "setup": "逐一建立 §5.6 的錯誤情境",
+      "stimulus": "透過 errors.Is／errors.As 與 HTTP 映射檢查結果",
+      "expected": "錯誤可分類且帶 ScopeID／OperationID；公開 detail 不含 DSN、SQL、Token；Unknown 不可無條件重試",
+      "source_sha256": "60ecabbfa73afa18738f391ef479a08e83cb0c00fd2f4b36a781b12ffbc17be8",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A42/sentinel-codes",
+          "stimulus_variant": "sentinel-codes",
+          "assertion_ref": "A42.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A42/sentinel-codes/"
+        },
+        {
+          "id": "A42/errors-is",
+          "stimulus_variant": "errors-is",
+          "assertion_ref": "A42.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A42/errors-is/"
+        },
+        {
+          "id": "A42/errors-as",
+          "stimulus_variant": "errors-as",
+          "assertion_ref": "A42.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A42/errors-as/"
+        },
+        {
+          "id": "A42/http-mapping",
+          "stimulus_variant": "http-mapping",
+          "assertion_ref": "A42.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A42/http-mapping/"
+        },
+        {
+          "id": "A42/detail-redaction",
+          "stimulus_variant": "detail-redaction",
+          "assertion_ref": "A42.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A42/detail-redaction/"
+        },
+        {
+          "id": "A42/unknown-retry-policy",
+          "stimulus_variant": "unknown-retry-policy",
+          "assertion_ref": "A42.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A42/unknown-retry-policy/"
+        }
+      ]
+    },
+    {
+      "id": "A43",
+      "requirement": "UOW-031",
+      "milestone": "M2",
+      "status": "planned",
+      "setup": "ReadWrite 根 Scope 下建立 ReadOnly Required",
+      "stimulus": "從子 context 呼叫 Insert，並測有效唯讀 Query",
+      "expected": "Query 可執行；Insert 被拒絕並標記根交易 rollback-only；不因根交易可寫而放行",
+      "source_sha256": "cc278792ccec11011086dce915aa240de637310e4643184a6fa276c88003b35a",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A43/read-only-child-query",
+          "stimulus_variant": "read-only-child-query",
+          "assertion_ref": "A43.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A43/read-only-child-query/"
+        },
+        {
+          "id": "A43/read-only-child-write-rejected",
+          "stimulus_variant": "read-only-child-write-rejected",
+          "assertion_ref": "A43.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A43/read-only-child-write-rejected/"
+        }
+      ]
+    },
+    {
+      "id": "A44",
+      "requirement": "UOW-032",
+      "milestone": "M3",
+      "status": "planned",
+      "setup": "已驗證 Tenant A 的外層 Scope",
+      "stimulus": "以竄改為 Tenant B 或其他 Principal 的衍生 context 建立 RequiresNew",
+      "expected": "返回 UOW_TENANT_MISMATCH／UOW_IDENTITY_MISMATCH；沒有第二個 Begin；跨租戶工作需另建授權頂層操作",
+      "source_sha256": "6c49f7dac1ffcc0c02725df3b35670d880060ad7efca9df75fefec8618eab5dd",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A44/requires-new-tenant-switch",
+          "stimulus_variant": "requires-new-tenant-switch",
+          "assertion_ref": "A44.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A44/requires-new-tenant-switch/"
+        },
+        {
+          "id": "A44/requires-new-principal-switch",
+          "stimulus_variant": "requires-new-principal-switch",
+          "assertion_ref": "A44.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A44/requires-new-principal-switch/"
+        }
+      ]
+    },
+    {
+      "id": "A45",
+      "requirement": "ARC-001",
+      "milestone": "M1",
+      "status": "planned",
+      "setup": "架構 import 檢查與合法範例",
+      "stimulus": "注入一條禁止依賴再移除",
+      "expected": "禁止依賴使 CI 失敗；合法範例可編譯",
+      "source_sha256": "eeca4e7c954b58205347683de0ba9fcad9c5da6101512bcdcc97f8cb16905196",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A45/allowed-import",
+          "stimulus_variant": "allowed-import",
+          "assertion_ref": "A45.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A45/allowed-import/"
+        },
+        {
+          "id": "A45/forbidden-import-regression",
+          "stimulus_variant": "forbidden-import-regression",
+          "assertion_ref": "A45.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A45/forbidden-import-regression/"
+        }
+      ]
+    },
+    {
+      "id": "A46",
+      "requirement": "MOD-003",
+      "milestone": "M1",
+      "status": "planned",
+      "setup": "Singleton／Transient／Operation Provider 與失敗 Factory",
+      "stimulus": "驗證相依圖、封存後註冊、建構失敗及 Scope 結束",
+      "expected": "錯誤不被吞掉；封存後不可變；操作資源不被 Singleton 捕獲且會釋放",
+      "source_sha256": "41c282d9173f35a2b74caed6c8732363f16f20acb89fde616cdff8e169648e60",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A46/singleton",
+          "stimulus_variant": "singleton",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/singleton/"
+        },
+        {
+          "id": "A46/transient",
+          "stimulus_variant": "transient",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/transient/"
+        },
+        {
+          "id": "A46/operation",
+          "stimulus_variant": "operation",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/operation/"
+        },
+        {
+          "id": "A46/missing-provider",
+          "stimulus_variant": "missing-provider",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/missing-provider/"
+        },
+        {
+          "id": "A46/cycle",
+          "stimulus_variant": "cycle",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/cycle/"
+        },
+        {
+          "id": "A46/duplicate-provider",
+          "stimulus_variant": "duplicate-provider",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/duplicate-provider/"
+        },
+        {
+          "id": "A46/explicit-replace",
+          "stimulus_variant": "explicit-replace",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/explicit-replace/"
+        },
+        {
+          "id": "A46/sealed-registry",
+          "stimulus_variant": "sealed-registry",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/sealed-registry/"
+        },
+        {
+          "id": "A46/factory-failure",
+          "stimulus_variant": "factory-failure",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/factory-failure/"
+        },
+        {
+          "id": "A46/scoped-cleanup",
+          "stimulus_variant": "scoped-cleanup",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/scoped-cleanup/"
+        },
+        {
+          "id": "A46/captive-scope",
+          "stimulus_variant": "captive-scope",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/captive-scope/"
+        }
+      ]
+    },
+    {
+      "id": "A47",
+      "requirement": "CFG-001",
+      "milestone": "M1",
+      "status": "planned",
+      "setup": "同一 key 的四層設定與缺漏的 UOW timeout",
+      "stimulus": "啟動並嘗試在請求中改寫設定",
+      "expected": "優先序固定；缺漏啟動失敗；封存設定不可變；Secrets 不進入日誌",
+      "source_sha256": "a5ef49ea8d51e6ec7c3198fe6285773fed49c2a0d37abb5875ab7a9fb8e23428",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A47/four-layer-precedence",
+          "stimulus_variant": "four-layer-precedence",
+          "assertion_ref": "A47.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A47/four-layer-precedence/"
+        },
+        {
+          "id": "A47/missing-timeout",
+          "stimulus_variant": "missing-timeout",
+          "assertion_ref": "A47.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A47/missing-timeout/"
+        },
+        {
+          "id": "A47/invalid-config",
+          "stimulus_variant": "invalid-config",
+          "assertion_ref": "A47.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A47/invalid-config/"
+        },
+        {
+          "id": "A47/sealed-config",
+          "stimulus_variant": "sealed-config",
+          "assertion_ref": "A47.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A47/sealed-config/"
+        },
+        {
+          "id": "A47/secret-redaction",
+          "stimulus_variant": "secret-redaction",
+          "assertion_ref": "A47.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A47/secret-redaction/"
+        }
+      ]
+    },
+    {
+      "id": "A48",
+      "requirement": "API-002",
+      "milestone": "M3",
+      "status": "planned",
+      "setup": "非法身分、入口權限、DTO、超大 body 與合法請求",
+      "stimulus": "送出每類請求並追蹤 Use Case／Begin 呼叫",
+      "expected": "拒絕條件在相應階段停止；格式符合 problem+json；無敏感 detail；資源授權不省略",
+      "source_sha256": "96f969020cc2510a10c3c16e9776648add62cae837c2eb56ac33f0c293f97f0d",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A48/invalid-identity",
+          "stimulus_variant": "invalid-identity",
+          "assertion_ref": "A48.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A48/invalid-identity/"
+        },
+        {
+          "id": "A48/entry-denied",
+          "stimulus_variant": "entry-denied",
+          "assertion_ref": "A48.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A48/entry-denied/"
+        },
+        {
+          "id": "A48/malformed-dto",
+          "stimulus_variant": "malformed-dto",
+          "assertion_ref": "A48.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A48/malformed-dto/"
+        },
+        {
+          "id": "A48/oversized-body",
+          "stimulus_variant": "oversized-body",
+          "assertion_ref": "A48.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A48/oversized-body/"
+        },
+        {
+          "id": "A48/valid-request",
+          "stimulus_variant": "valid-request",
+          "assertion_ref": "A48.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A48/valid-request/"
+        },
+        {
+          "id": "A48/resource-policy",
+          "stimulus_variant": "resource-policy",
+          "assertion_ref": "A48.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A48/resource-policy/"
+        },
+        {
+          "id": "A48/problem-details",
+          "stimulus_variant": "problem-details",
+          "assertion_ref": "A48.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A48/problem-details/"
+        }
+      ]
+    },
+    {
+      "id": "A49",
+      "requirement": "API-003",
+      "milestone": "M2",
+      "status": "planned",
+      "setup": "長時間 SSE 連線與兩次業務操作",
+      "stimulus": "保持連線並觀察 DB 交易／Pool",
+      "expected": "每次操作獨立完成且釋放資源；串流存活期間不佔用一個長交易",
+      "source_sha256": "ccf810952134c9a7107aff1c6d847d8e6166eb3ebfdab3dff4dd5d695e2c4c6c",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A49/two-short-scopes",
+          "stimulus_variant": "two-short-scopes",
+          "assertion_ref": "A49.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A49/two-short-scopes/"
+        },
+        {
+          "id": "A49/no-transaction-for-connection-lifetime",
+          "stimulus_variant": "no-transaction-for-connection-lifetime",
+          "assertion_ref": "A49.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A49/no-transaction-for-connection-lifetime/"
+        }
+      ]
+    },
+    {
+      "id": "A50",
+      "requirement": "EVT-001",
+      "milestone": "M3",
+      "status": "planned",
+      "setup": "可靠 publisher 與同交易業務寫入",
+      "stimulus": "正常完成、回滾、關閉 Outbox 三種情境",
+      "expected": "成功時業務與 Outbox 同在；回滾時同無；無 Scope／停用時顯式錯誤，不直接 Send",
+      "source_sha256": "9214f6ee9a6473bb7d54e0cce66efb72158fd9139f3ab0462db26f0931022631",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A50/commit",
+          "stimulus_variant": "commit",
+          "assertion_ref": "A50.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A50/commit/"
+        },
+        {
+          "id": "A50/rollback",
+          "stimulus_variant": "rollback",
+          "assertion_ref": "A50.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A50/rollback/"
+        },
+        {
+          "id": "A50/no-scope",
+          "stimulus_variant": "no-scope",
+          "assertion_ref": "A50.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A50/no-scope/"
+        },
+        {
+          "id": "A50/outbox-disabled",
+          "stimulus_variant": "outbox-disabled",
+          "assertion_ref": "A50.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A50/outbox-disabled/"
+        }
+      ]
+    },
+    {
+      "id": "A51",
+      "requirement": "EVT-002",
+      "milestone": "M3",
+      "status": "planned",
+      "setup": "含全部 envelope 欄位的事件",
+      "stimulus": "寫入後終止 producer，重新啟動 Worker 並重送",
+      "expected": "event ID、Tenant、version、occurred_at、correlation、causation、producer、payload 均一致",
+      "source_sha256": "e4017973f543157d01ce3afb85489bb2bc758deb590f8ed7de8ba2bba3053d68",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A51/producer-restart",
+          "stimulus_variant": "producer-restart",
+          "assertion_ref": "A51.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A51/producer-restart/"
+        },
+        {
+          "id": "A51/full-envelope-replay",
+          "stimulus_variant": "full-envelope-replay",
+          "assertion_ref": "A51.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A51/full-envelope-replay/"
+        },
+        {
+          "id": "A51/scope-preserved",
+          "stimulus_variant": "scope-preserved",
+          "assertion_ref": "A51.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A51/scope-preserved/"
+        }
+      ]
+    },
+    {
+      "id": "A52",
+      "requirement": "EVT-004",
+      "milestone": "M3",
+      "status": "planned",
+      "setup": "真實首選 Broker 與正確／缺失的目的地",
+      "stimulus": "測試正常發送、無法路由、拒絕、timeout 及 Broker 重啟",
+      "expected": "只有確認進入所配置可靠目的地才可標 sent；不確定或被退回時保留可重試／dead 狀態",
+      "source_sha256": "e38a2cc1219fd62123659f3a6b0497fa3246ef51c1dc64c12cdabd22f1910360",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A52/durable-ack",
+          "stimulus_variant": "durable-ack",
+          "assertion_ref": "A52.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A52/durable-ack/"
+        },
+        {
+          "id": "A52/unroutable",
+          "stimulus_variant": "unroutable",
+          "assertion_ref": "A52.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A52/unroutable/"
+        },
+        {
+          "id": "A52/rejected",
+          "stimulus_variant": "rejected",
+          "assertion_ref": "A52.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A52/rejected/"
+        },
+        {
+          "id": "A52/timed-out",
+          "stimulus_variant": "timed-out",
+          "assertion_ref": "A52.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A52/timed-out/"
+        },
+        {
+          "id": "A52/broker-restart",
+          "stimulus_variant": "broker-restart",
+          "assertion_ref": "A52.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A52/broker-restart/"
+        }
+      ]
+    },
+    {
+      "id": "A53",
+      "requirement": "EVT-005",
+      "milestone": "M3",
+      "status": "planned",
+      "setup": "合法事件、DB 失敗、相同 ID 同內容／不同內容事件",
+      "stimulus": "接收並在落地前後終止 Receiver",
+      "expected": "未落地不 ACK；同內容重複可 ACK；不同內容衝突隔離並告警，不覆寫原事件",
+      "source_sha256": "fc840c582975b535029737934291903da53fcfcd29339571eed107869da21494",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A53/persist-before-ack",
+          "stimulus_variant": "persist-before-ack",
+          "assertion_ref": "A53.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A53/persist-before-ack/"
+        },
+        {
+          "id": "A53/database-failure",
+          "stimulus_variant": "database-failure",
+          "assertion_ref": "A53.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A53/database-failure/"
+        },
+        {
+          "id": "A53/receiver-crash-before-persist",
+          "stimulus_variant": "receiver-crash-before-persist",
+          "assertion_ref": "A53.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A53/receiver-crash-before-persist/"
+        },
+        {
+          "id": "A53/receiver-crash-after-persist",
+          "stimulus_variant": "receiver-crash-after-persist",
+          "assertion_ref": "A53.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A53/receiver-crash-after-persist/"
+        },
+        {
+          "id": "A53/identical-duplicate",
+          "stimulus_variant": "identical-duplicate",
+          "assertion_ref": "A53.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A53/identical-duplicate/"
+        },
+        {
+          "id": "A53/conflicting-duplicate",
+          "stimulus_variant": "conflicting-duplicate",
+          "assertion_ref": "A53.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A53/conflicting-duplicate/"
+        }
+      ]
+    },
+    {
+      "id": "A54",
+      "requirement": "EVT-007",
+      "milestone": "M3",
+      "status": "planned",
+      "setup": "可記錄冪等鍵的外部 Provider 測試端點",
+      "stimulus": "外部成功後中斷本地完成並重送",
+      "expected": "同一外部操作保留同鍵且副作用不重複；無冪等能力的端點不被標示為不重複保證",
+      "source_sha256": "375e1c4fcd60b884e87a7f4a77a243d392158354455e0d1fb0da4f1801ad6f20",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A54/external-success-local-crash",
+          "stimulus_variant": "external-success-local-crash",
+          "assertion_ref": "A54.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A54/external-success-local-crash/"
+        },
+        {
+          "id": "A54/stable-provider-key",
+          "stimulus_variant": "stable-provider-key",
+          "assertion_ref": "A54.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A54/stable-provider-key/"
+        },
+        {
+          "id": "A54/no-exactly-once-claim",
+          "stimulus_variant": "no-exactly-once-claim",
+          "assertion_ref": "A54.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A54/no-exactly-once-claim/"
+        }
+      ]
+    },
+    {
+      "id": "A55",
+      "requirement": "EVT-008",
+      "milestone": "M3",
+      "status": "planned",
+      "setup": "多 Handler、Handler 新增事件及循環事件鏈",
+      "stimulus": "完成 UOW 並觸發上下限邊界",
+      "expected": "順序可重現；超限返回錯誤；未提交資料與 Outbox 不存在",
+      "source_sha256": "e7264ce8b4b591bc9f50e2f1504f37702e60de8e1ba88de1ca2a5ab426a724d0",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A55/priority-registration-order",
+          "stimulus_variant": "priority-registration-order",
+          "assertion_ref": "A55.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A55/priority-registration-order/"
+        },
+        {
+          "id": "A55/fifo-new-events",
+          "stimulus_variant": "fifo-new-events",
+          "assertion_ref": "A55.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A55/fifo-new-events/"
+        },
+        {
+          "id": "A55/event-limit",
+          "stimulus_variant": "event-limit",
+          "assertion_ref": "A55.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A55/event-limit/"
+        },
+        {
+          "id": "A55/depth-limit",
+          "stimulus_variant": "depth-limit",
+          "assertion_ref": "A55.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A55/depth-limit/"
+        },
+        {
+          "id": "A55/cyclic-chain",
+          "stimulus_variant": "cyclic-chain",
+          "assertion_ref": "A55.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A55/cyclic-chain/"
+        }
+      ]
+    },
+    {
+      "id": "A56",
+      "requirement": "TEN-002",
+      "milestone": "M3",
+      "status": "planned",
+      "setup": "兩租戶同 entity ID、正常應用 DB role",
+      "stimulus": "漏 Tenant context、漏 SQL tenant 條件、跨租戶 CRUD／soft delete",
+      "expected": "沒有 context 拒絕；RLS 阻擋漏條件存取；一般 role 無 owner／BYPASSRLS／superuser 權限",
+      "source_sha256": "e56d15e6a8bcb62cb041e59c55bd69368c3521038264a662d2adb7f3c2973ffa",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A56/missing-tenant",
+          "stimulus_variant": "missing-tenant",
+          "assertion_ref": "A56.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A56/missing-tenant/"
+        },
+        {
+          "id": "A56/missing-sql-filter",
+          "stimulus_variant": "missing-sql-filter",
+          "assertion_ref": "A56.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A56/missing-sql-filter/"
+        },
+        {
+          "id": "A56/cross-tenant-read",
+          "stimulus_variant": "cross-tenant-read",
+          "assertion_ref": "A56.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A56/cross-tenant-read/"
+        },
+        {
+          "id": "A56/cross-tenant-write",
+          "stimulus_variant": "cross-tenant-write",
+          "assertion_ref": "A56.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A56/cross-tenant-write/"
+        },
+        {
+          "id": "A56/cross-tenant-soft-delete",
+          "stimulus_variant": "cross-tenant-soft-delete",
+          "assertion_ref": "A56.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A56/cross-tenant-soft-delete/"
+        },
+        {
+          "id": "A56/role-attributes",
+          "stimulus_variant": "role-attributes",
+          "assertion_ref": "A56.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A56/role-attributes/"
+        }
+      ]
+    },
+    {
+      "id": "A57",
+      "requirement": "TEN-003",
+      "milestone": "M3",
+      "status": "planned",
+      "setup": "A 的子資料與 B 的父資料；同租戶合法對照",
+      "stimulus": "嘗試寫入兩種關聯",
+      "expected": "跨租戶外鍵失敗且無殘留資料；同租戶成功；公開錯誤不洩漏其他租戶存在性",
+      "source_sha256": "3b57c308417c23b8799190caf58c2cffe10c480b962f08a60ef13e45d849b5cb",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A57/cross-tenant-fk",
+          "stimulus_variant": "cross-tenant-fk",
+          "assertion_ref": "A57.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A57/cross-tenant-fk/"
+        },
+        {
+          "id": "A57/same-tenant-fk",
+          "stimulus_variant": "same-tenant-fk",
+          "assertion_ref": "A57.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A57/same-tenant-fk/"
+        },
+        {
+          "id": "A57/existence-redaction",
+          "stimulus_variant": "existence-redaction",
+          "assertion_ref": "A57.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A57/existence-redaction/"
+        }
+      ]
+    },
+    {
+      "id": "A58",
+      "requirement": "SEC-003",
+      "milestone": "M3",
+      "status": "planned",
+      "setup": "一般使用者與 Host 管理身分",
+      "stimulus": "要求跨租戶查詢／Filter Override",
+      "expected": "一般身分拒絕；Host 依指定 Policy 通過並留下稽核；一般連線無全域 bypass",
+      "source_sha256": "26df1d3cb48dbc0500d1701d4ed61e367f37e8fa816c99ed4466b04c10be7425",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A58/ordinary-override-denied",
+          "stimulus_variant": "ordinary-override-denied",
+          "assertion_ref": "A58.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A58/ordinary-override-denied/"
+        },
+        {
+          "id": "A58/host-policy-allow",
+          "stimulus_variant": "host-policy-allow",
+          "assertion_ref": "A58.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A58/host-policy-allow/"
+        },
+        {
+          "id": "A58/host-audit",
+          "stimulus_variant": "host-audit",
+          "assertion_ref": "A58.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A58/host-audit/"
+        },
+        {
+          "id": "A58/no-global-bypass",
+          "stimulus_variant": "no-global-bypass",
+          "assertion_ref": "A58.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A58/no-global-bypass/"
+        }
+      ]
+    },
+    {
+      "id": "A59",
+      "requirement": "DATA-002",
+      "milestone": "M3",
+      "status": "planned",
+      "setup": "空 DB、前版 DB、兩個同時部署程序",
+      "stimulus": "建庫、升級、競爭執行及啟動不相容 API",
+      "expected": "遷移不重複／交錯；前向升級成功；API 不自行遷移；不相容時不 Ready",
+      "source_sha256": "66e7bd1df8866b15767da0d7e218fb43a823445c13f259a317e154688c2909d4",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A59/empty-database",
+          "stimulus_variant": "empty-database",
+          "assertion_ref": "A59.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A59/empty-database/"
+        },
+        {
+          "id": "A59/forward-upgrade",
+          "stimulus_variant": "forward-upgrade",
+          "assertion_ref": "A59.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A59/forward-upgrade/"
+        },
+        {
+          "id": "A59/concurrent-deploy",
+          "stimulus_variant": "concurrent-deploy",
+          "assertion_ref": "A59.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A59/concurrent-deploy/"
+        },
+        {
+          "id": "A59/incompatible-schema",
+          "stimulus_variant": "incompatible-schema",
+          "assertion_ref": "A59.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A59/incompatible-schema/"
+        },
+        {
+          "id": "A59/api-does-not-migrate",
+          "stimulus_variant": "api-does-not-migrate",
+          "assertion_ref": "A59.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A59/api-does-not-migrate/"
+        }
+      ]
+    },
+    {
+      "id": "A60",
+      "requirement": "IDEM-002",
+      "milestone": "M3",
+      "status": "planned",
+      "setup": "兩個同鍵同 payload 請求與同鍵異 payload 請求",
+      "stimulus": "同時送出並測試持鎖者回滾",
+      "expected": "同內容最多一次成功業務效果；不同內容 409；已回滾可取得鍵重試；等待超時可辨識",
+      "source_sha256": "302ff480ec8ac6afa2f31f91b592a0e8abb7432af34be8de33b1f55da218acec",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A60/same-key-same-body",
+          "stimulus_variant": "same-key-same-body",
+          "assertion_ref": "A60.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A60/same-key-same-body/"
+        },
+        {
+          "id": "A60/same-key-different-body",
+          "stimulus_variant": "same-key-different-body",
+          "assertion_ref": "A60.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A60/same-key-different-body/"
+        },
+        {
+          "id": "A60/holder-rollback",
+          "stimulus_variant": "holder-rollback",
+          "assertion_ref": "A60.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A60/holder-rollback/"
+        },
+        {
+          "id": "A60/wait-timeout",
+          "stimulus_variant": "wait-timeout",
+          "assertion_ref": "A60.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A60/wait-timeout/"
+        }
+      ]
+    },
+    {
+      "id": "A61",
+      "requirement": "IDEM-003",
+      "milestone": "M3",
+      "status": "planned",
+      "setup": "已成功、仍未完成、已過期及其他 Principal 操作",
+      "stimulus": "查詢結果並在保存期限邊界重送",
+      "expected": "僅授權者可讀；期限內成功可復原；未確認／過期明確標示保證範圍，不洩露結果",
+      "source_sha256": "9b615b1e2d2995a00bc62b21de428799dcb0162c2d9d49cfa625408acb27674d",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A61/authorized-success",
+          "stimulus_variant": "authorized-success",
+          "assertion_ref": "A61.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A61/authorized-success/"
+        },
+        {
+          "id": "A61/other-principal-denied",
+          "stimulus_variant": "other-principal-denied",
+          "assertion_ref": "A61.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A61/other-principal-denied/"
+        },
+        {
+          "id": "A61/pending-not-failed",
+          "stimulus_variant": "pending-not-failed",
+          "assertion_ref": "A61.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A61/pending-not-failed/"
+        },
+        {
+          "id": "A61/retention-boundary",
+          "stimulus_variant": "retention-boundary",
+          "assertion_ref": "A61.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A61/retention-boundary/"
+        },
+        {
+          "id": "A61/expired-guarantee",
+          "stimulus_variant": "expired-guarantee",
+          "assertion_ref": "A61.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A61/expired-guarantee/"
+        }
+      ]
+    },
+    {
+      "id": "A62",
+      "requirement": "AUD-001",
+      "milestone": "M3",
+      "status": "planned",
+      "setup": "成功業務、授權拒絕與業務回滾",
+      "stimulus": "觸發三類操作與稽核寫入失敗",
+      "expected": "成功必要稽核失敗則業務回滾；拒絕／失敗仍留遮罩安全紀錄；非關鍵 telemetry 不翻轉已提交結果",
+      "source_sha256": "7b1e5fcd799923f5714ed6b7e1c269a004957ddd0c3ba1833833cac123739030",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A62/success-required-audit",
+          "stimulus_variant": "success-required-audit",
+          "assertion_ref": "A62.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A62/success-required-audit/"
+        },
+        {
+          "id": "A62/auth-denial-log",
+          "stimulus_variant": "auth-denial-log",
+          "assertion_ref": "A62.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A62/auth-denial-log/"
+        },
+        {
+          "id": "A62/business-rollback-log",
+          "stimulus_variant": "business-rollback-log",
+          "assertion_ref": "A62.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A62/business-rollback-log/"
+        },
+        {
+          "id": "A62/audit-write-failure",
+          "stimulus_variant": "audit-write-failure",
+          "assertion_ref": "A62.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A62/audit-write-failure/"
+        },
+        {
+          "id": "A62/telemetry-failure",
+          "stimulus_variant": "telemetry-failure",
+          "assertion_ref": "A62.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A62/telemetry-failure/"
+        }
+      ]
+    },
+    {
+      "id": "A63",
+      "requirement": "OPS-002",
+      "milestone": "M4",
+      "status": "planned",
+      "setup": "Broker 長期離線、失敗工作與大量租戶負載",
+      "stimulus": "跑到容量／重試上限後恢復 Broker",
+      "expected": "按 runbook 限流／停止接單或認領；無無界記憶體成長；dead 保留可稽核重送；復原後可排空",
+      "source_sha256": "d3760f20282aadda41215ea1447a826839d4db48232cb75970d1f1fb570cfefe",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A63/broker-offline",
+          "stimulus_variant": "broker-offline",
+          "assertion_ref": "A63.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A63/broker-offline/"
+        },
+        {
+          "id": "A63/capacity-limit",
+          "stimulus_variant": "capacity-limit",
+          "assertion_ref": "A63.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A63/capacity-limit/"
+        },
+        {
+          "id": "A63/retry-limit",
+          "stimulus_variant": "retry-limit",
+          "assertion_ref": "A63.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A63/retry-limit/"
+        },
+        {
+          "id": "A63/dead-replay",
+          "stimulus_variant": "dead-replay",
+          "assertion_ref": "A63.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A63/dead-replay/"
+        },
+        {
+          "id": "A63/recovery-drain",
+          "stimulus_variant": "recovery-drain",
+          "assertion_ref": "A63.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A63/recovery-drain/"
+        },
+        {
+          "id": "A63/tenant-load-competition",
+          "stimulus_variant": "tenant-load-competition",
+          "assertion_ref": "A63.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A63/tenant-load-competition/"
+        }
+      ]
+    },
+    {
+      "id": "A64",
+      "requirement": "JOB-001",
+      "milestone": "M4",
+      "status": "planned",
+      "setup": "可重試／可取消工作與兩 Worker",
+      "stimulus": "失敗、租約過期、手動重送及 payload 租戶竄改",
+      "expected": "有界退避與 dead；舊 token 無效；重送有 Audit；竄改拒絕；Handler 可處理至少一次執行",
+      "source_sha256": "043b3b1505797002c9590a0dced0da7cc7600300232c31ae13beb2bb14c1e7f7",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A64/bounded-retry",
+          "stimulus_variant": "bounded-retry",
+          "assertion_ref": "A64.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A64/bounded-retry/"
+        },
+        {
+          "id": "A64/cancellation",
+          "stimulus_variant": "cancellation",
+          "assertion_ref": "A64.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A64/cancellation/"
+        },
+        {
+          "id": "A64/stale-lease",
+          "stimulus_variant": "stale-lease",
+          "assertion_ref": "A64.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A64/stale-lease/"
+        },
+        {
+          "id": "A64/manual-replay-audit",
+          "stimulus_variant": "manual-replay-audit",
+          "assertion_ref": "A64.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A64/manual-replay-audit/"
+        },
+        {
+          "id": "A64/tenant-tamper",
+          "stimulus_variant": "tenant-tamper",
+          "assertion_ref": "A64.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A64/tenant-tamper/"
+        },
+        {
+          "id": "A64/handler-idempotency",
+          "stimulus_variant": "handler-idempotency",
+          "assertion_ref": "A64.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A64/handler-idempotency/"
+        }
+      ]
+    },
+    {
+      "id": "A65",
+      "requirement": "PLAT-001",
+      "milestone": "M5",
+      "status": "planned",
+      "setup": "兩租戶同 resource ID、多層 setting 與失效失敗",
+      "stimulus": "讀寫設定、切換 Feature、令快取刪除失敗",
+      "expected": "資料不跨租戶；覆寫順序固定；TTL／版本收斂；Feature 不繞過授權",
+      "source_sha256": "1ef4c2f0360fac9aa9612829c054ee645a41c6a4c96c7fada90504c708695561",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A65/tenant-cache-isolation",
+          "stimulus_variant": "tenant-cache-isolation",
+          "assertion_ref": "A65.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A65/tenant-cache-isolation/"
+        },
+        {
+          "id": "A65/setting-precedence",
+          "stimulus_variant": "setting-precedence",
+          "assertion_ref": "A65.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A65/setting-precedence/"
+        },
+        {
+          "id": "A65/feature-permission",
+          "stimulus_variant": "feature-permission",
+          "assertion_ref": "A65.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A65/feature-permission/"
+        },
+        {
+          "id": "A65/invalidation-failure",
+          "stimulus_variant": "invalidation-failure",
+          "assertion_ref": "A65.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A65/invalidation-failure/"
+        },
+        {
+          "id": "A65/ttl-version-convergence",
+          "stimulus_variant": "ttl-version-convergence",
+          "assertion_ref": "A65.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A65/ttl-version-convergence/"
+        }
+      ]
+    },
+    {
+      "id": "A66",
+      "requirement": "OBS-001",
+      "milestone": "M4",
+      "status": "planned",
+      "setup": "完整 API→Outbox→Consumer 與可選 Broker 故障",
+      "stimulus": "檢查追蹤、告警、livez／readyz 與錯誤 log",
+      "expected": "可追查 operation／event；必要依賴不健康時不 Ready；可選 Broker 故障不無條件停 API；無敏感內容",
+      "source_sha256": "3250b00c2234a062ae6b1499cf73d58389a3648605b30a08e2142bd855d8b1db",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A66/trace-correlation",
+          "stimulus_variant": "trace-correlation",
+          "assertion_ref": "A66.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A66/trace-correlation/"
+        },
+        {
+          "id": "A66/alerting",
+          "stimulus_variant": "alerting",
+          "assertion_ref": "A66.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A66/alerting/"
+        },
+        {
+          "id": "A66/liveness",
+          "stimulus_variant": "liveness",
+          "assertion_ref": "A66.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A66/liveness/"
+        },
+        {
+          "id": "A66/required-dependency-unready",
+          "stimulus_variant": "required-dependency-unready",
+          "assertion_ref": "A66.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A66/required-dependency-unready/"
+        },
+        {
+          "id": "A66/optional-broker-outage",
+          "stimulus_variant": "optional-broker-outage",
+          "assertion_ref": "A66.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A66/optional-broker-outage/"
+        },
+        {
+          "id": "A66/redaction",
+          "stimulus_variant": "redaction",
+          "assertion_ref": "A66.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A66/redaction/"
+        }
+      ]
+    },
+    {
+      "id": "A67",
+      "requirement": "CLI-001",
+      "milestone": "M5",
+      "status": "planned",
+      "setup": "空目錄、已存在目錄與合法／非法參數",
+      "stimulus": "執行全部命令並重複執行，建置生成的 Bookstore",
+      "expected": "合法生成可測試與連接 Compose；衝突不毀損既有檔；錯誤非零退出；OpenAPI 可驗證",
+      "source_sha256": "324e666a28194fbc49c623fdb4c6114f8d66bc53b8beaa22769ca01d16f08754",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A67/new",
+          "stimulus_variant": "new",
+          "assertion_ref": "A67.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A67/new/"
+        },
+        {
+          "id": "A67/module",
+          "stimulus_variant": "module",
+          "assertion_ref": "A67.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A67/module/"
+        },
+        {
+          "id": "A67/migrate-create",
+          "stimulus_variant": "migrate-create",
+          "assertion_ref": "A67.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A67/migrate-create/"
+        },
+        {
+          "id": "A67/migrate-status",
+          "stimulus_variant": "migrate-status",
+          "assertion_ref": "A67.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A67/migrate-status/"
+        },
+        {
+          "id": "A67/doctor",
+          "stimulus_variant": "doctor",
+          "assertion_ref": "A67.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A67/doctor/"
+        },
+        {
+          "id": "A67/openapi",
+          "stimulus_variant": "openapi",
+          "assertion_ref": "A67.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A67/openapi/"
+        },
+        {
+          "id": "A67/help",
+          "stimulus_variant": "help",
+          "assertion_ref": "A67.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A67/help/"
+        },
+        {
+          "id": "A67/invalid-arguments",
+          "stimulus_variant": "invalid-arguments",
+          "assertion_ref": "A67.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A67/invalid-arguments/"
+        },
+        {
+          "id": "A67/existing-files",
+          "stimulus_variant": "existing-files",
+          "assertion_ref": "A67.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A67/existing-files/"
+        },
+        {
+          "id": "A67/reentry",
+          "stimulus_variant": "reentry",
+          "assertion_ref": "A67.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A67/reentry/"
+        },
+        {
+          "id": "A67/generated-build-test",
+          "stimulus_variant": "generated-build-test",
+          "assertion_ref": "A67.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A67/generated-build-test/"
+        }
+      ]
+    },
+    {
+      "id": "A68",
+      "requirement": "REL-001",
+      "milestone": "M1",
+      "status": "planned",
+      "setup": "含未執行檔案與關鍵 package 的 coverage fixture",
+      "stimulus": "注入 89.99%、90.00%、僅整體達標及缺失 profile 情境",
+      "expected": "門檻以原始計數精確比較；未達標／缺資料均失敗；不得四捨五入過關或漏列未測 package",
+      "source_sha256": "c35f44bd1fb86fd0e653b5aeb0463f794e686b9b4d49ca552b78730d4f3e368f",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A68/below-threshold",
+          "stimulus_variant": "below-threshold",
+          "assertion_ref": "A68.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A68/below-threshold/"
+        },
+        {
+          "id": "A68/exact-threshold",
+          "stimulus_variant": "exact-threshold",
+          "assertion_ref": "A68.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A68/exact-threshold/"
+        },
+        {
+          "id": "A68/aggregate-masks-critical-package",
+          "stimulus_variant": "aggregate-masks-critical-package",
+          "assertion_ref": "A68.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A68/aggregate-masks-critical-package/"
+        },
+        {
+          "id": "A68/missing-profile",
+          "stimulus_variant": "missing-profile",
+          "assertion_ref": "A68.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A68/missing-profile/"
+        },
+        {
+          "id": "A68/untested-package",
+          "stimulus_variant": "untested-package",
+          "assertion_ref": "A68.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A68/untested-package/"
+        },
+        {
+          "id": "A68/duplicate-block-union",
+          "stimulus_variant": "duplicate-block-union",
+          "assertion_ref": "A68.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A68/duplicate-block-union/"
+        }
+      ]
+    },
+    {
+      "id": "A69",
+      "requirement": "REL-002",
+      "milestone": "M1",
+      "status": "planned",
+      "setup": "一個已交付需求測試失敗／skip 及各檢查失敗",
+      "stimulus": "執行 PR 與 release pipeline",
+      "expected": "任一必需項失敗或 skip 則 gate 失敗；90% 覆蓋率不抵銷契約失敗",
+      "source_sha256": "0a79a30cb1872ac19a7df744fb3ce6bd2499b7f5c67abf0cdcb29cafec9f3824",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A69/required-case-fails",
+          "stimulus_variant": "required-case-fails",
+          "assertion_ref": "A69.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A69/required-case-fails/"
+        },
+        {
+          "id": "A69/required-case-skipped",
+          "stimulus_variant": "required-case-skipped",
+          "assertion_ref": "A69.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A69/required-case-skipped/"
+        },
+        {
+          "id": "A69/race-fails",
+          "stimulus_variant": "race-fails",
+          "assertion_ref": "A69.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A69/race-fails/"
+        },
+        {
+          "id": "A69/static-analysis-fails",
+          "stimulus_variant": "static-analysis-fails",
+          "assertion_ref": "A69.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A69/static-analysis-fails/"
+        },
+        {
+          "id": "A69/dependency-license-fails",
+          "stimulus_variant": "dependency-license-fails",
+          "assertion_ref": "A69.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A69/dependency-license-fails/"
+        },
+        {
+          "id": "A69/coverage-cannot-mask-failure",
+          "stimulus_variant": "coverage-cannot-mask-failure",
+          "assertion_ref": "A69.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A69/coverage-cannot-mask-failure/"
+        }
+      ]
+    },
+    {
+      "id": "A70",
+      "requirement": "REL-003",
+      "milestone": "M6",
+      "status": "planned",
+      "setup": "發布 manifest、需求映射、CLI／runtime 版本",
+      "stimulus": "移除任一必交項或新增未映射需求",
+      "expected": "發布失敗且列出缺項；無未知／多重交付 ID；範本綁定版本",
+      "source_sha256": "4d0a754ff813749cfc8e59ea1398efac751d1fb4ed3d26f2736f8b6f884bef2b",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A70/missing-release-item",
+          "stimulus_variant": "missing-release-item",
+          "assertion_ref": "A70.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A70/missing-release-item/"
+        },
+        {
+          "id": "A70/unknown-requirement",
+          "stimulus_variant": "unknown-requirement",
+          "assertion_ref": "A70.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A70/unknown-requirement/"
+        },
+        {
+          "id": "A70/duplicate-delivery",
+          "stimulus_variant": "duplicate-delivery",
+          "assertion_ref": "A70.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A70/duplicate-delivery/"
+        },
+        {
+          "id": "A70/template-runtime-version",
+          "stimulus_variant": "template-runtime-version",
+          "assertion_ref": "A70.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A70/template-runtime-version/"
+        }
+      ]
+    },
+    {
+      "id": "A71",
+      "requirement": "REL-004",
+      "milestone": "M1",
+      "status": "planned",
+      "setup": "上期已通過案例及本期新增案例",
+      "stimulus": "本期故意破壞上一期行為後跑 pipeline",
+      "expected": "回歸被攔截；未通過 gate 不宣告里程碑完成；保留版本、seed、log、coverage 與故障注入設定",
+      "source_sha256": "e177855cc57a3baf2c970a94978262c553a0c358c37226019fd498473753815a",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A71/new-increment",
+          "stimulus_variant": "new-increment",
+          "assertion_ref": "A71.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A71/new-increment/"
+        },
+        {
+          "id": "A71/previous-increment-regression",
+          "stimulus_variant": "previous-increment-regression",
+          "assertion_ref": "A71.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A71/previous-increment-regression/"
+        },
+        {
+          "id": "A71/same-commit-evidence",
+          "stimulus_variant": "same-commit-evidence",
+          "assertion_ref": "A71.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A71/same-commit-evidence/"
+        }
+      ]
+    },
+    {
+      "id": "A72",
+      "requirement": "REL-005",
+      "milestone": "M6",
+      "status": "planned",
+      "setup": "乾淨 runner、前版 schema、指定硬體與資料集",
+      "stimulus": "按 Quickstart 建置並演練升級／復原／負載",
+      "expected": "有操作證據、p95／p99／誤差與實測 RPO／RTO；無未處理高風險問題；不以估算冒充實測",
+      "source_sha256": "9224e2a84fe422100f9886aa3c235e1c136e7d2658cf38b770278868161e86e7",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A72/clean-rebuild",
+          "stimulus_variant": "clean-rebuild",
+          "assertion_ref": "A72.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A72/clean-rebuild/"
+        },
+        {
+          "id": "A72/forward-upgrade",
+          "stimulus_variant": "forward-upgrade",
+          "assertion_ref": "A72.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A72/forward-upgrade/"
+        },
+        {
+          "id": "A72/backup-restore",
+          "stimulus_variant": "backup-restore",
+          "assertion_ref": "A72.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A72/backup-restore/"
+        },
+        {
+          "id": "A72/load-baseline",
+          "stimulus_variant": "load-baseline",
+          "assertion_ref": "A72.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A72/load-baseline/"
+        },
+        {
+          "id": "A72/security-review",
+          "stimulus_variant": "security-review",
+          "assertion_ref": "A72.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A72/security-review/"
+        }
+      ]
+    },
+    {
+      "id": "A73",
+      "requirement": "SCP-001",
+      "milestone": "M2",
+      "status": "planned",
+      "setup": "同 Tenant 的不同 kind／ID，以及另一 Tenant 的相同 ID",
+      "stimulus": "分別解析並比較範圍，測試空值與 tenant-kind ID 不一致",
+      "expected": "kind＋ID＋Tenant 全部相等才相同；非法組合拒絕；上層 scope 不等同子層聯集",
+      "source_sha256": "1cef85211645c42fd9a23187ff86654f884824650b12fce0948506a328c91a5f",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A73/full-tuple-identity",
+          "stimulus_variant": "full-tuple-identity",
+          "assertion_ref": "A73.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A73/full-tuple-identity/"
+        },
+        {
+          "id": "A73/missing-field",
+          "stimulus_variant": "missing-field",
+          "assertion_ref": "A73.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A73/missing-field/"
+        },
+        {
+          "id": "A73/tenant-id-mismatch",
+          "stimulus_variant": "tenant-id-mismatch",
+          "assertion_ref": "A73.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A73/tenant-id-mismatch/"
+        },
+        {
+          "id": "A73/parent-not-union",
+          "stimulus_variant": "parent-not-union",
+          "assertion_ref": "A73.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A73/parent-not-union/"
+        }
+      ]
+    },
+    {
+      "id": "A74",
+      "requirement": "SCP-002",
+      "milestone": "M2",
+      "status": "planned",
+      "setup": "tenant-only、organization-enabled、替換 Provider 及重複註冊組態",
+      "stimulus": "建置／啟動四種 profile 並移除必要 Provider",
+      "expected": "純 Tenant 可獨立編譯啟動；缺能力／重複 Provider 不 Ready；無隱式降級",
+      "source_sha256": "617005106375e19b4c4690f5acdc7c8301ed13b776f4f01a036bfd0a7c25e62b",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A74/tenant-only",
+          "stimulus_variant": "tenant-only",
+          "assertion_ref": "A74.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A74/tenant-only/"
+        },
+        {
+          "id": "A74/organization-enabled",
+          "stimulus_variant": "organization-enabled",
+          "assertion_ref": "A74.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A74/organization-enabled/"
+        },
+        {
+          "id": "A74/replacement-provider",
+          "stimulus_variant": "replacement-provider",
+          "assertion_ref": "A74.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A74/replacement-provider/"
+        },
+        {
+          "id": "A74/missing-required-provider",
+          "stimulus_variant": "missing-required-provider",
+          "assertion_ref": "A74.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A74/missing-required-provider/"
+        },
+        {
+          "id": "A74/duplicate-kind",
+          "stimulus_variant": "duplicate-kind",
+          "assertion_ref": "A74.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A74/duplicate-kind/"
+        },
+        {
+          "id": "A74/unsupported-kind-no-fallback",
+          "stimulus_variant": "unsupported-kind-no-fallback",
+          "assertion_ref": "A74.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A74/unsupported-kind-no-fallback/"
+        }
+      ]
+    },
+    {
+      "id": "A75",
+      "requirement": "SCP-003",
+      "milestone": "M3",
+      "status": "planned",
+      "setup": "有效 Tenant 身分，偽造 scope header／route／DTO，以及錯誤 Provider 回傳",
+      "stimulus": "從 HTTP 與直接 Application 入口執行",
+      "expected": "衝突或越權 hint 拒絕；DTO 不決定 owner；Provider 不能改寫 Tenant／requested scope；未通過不開業務 UOW",
+      "source_sha256": "0ef874ec34aa79b25cadc27bf42a877dfe7477c2dd9f3e5f0caa993c73115b8a",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A75/header-route-conflict",
+          "stimulus_variant": "header-route-conflict",
+          "assertion_ref": "A75.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A75/header-route-conflict/"
+        },
+        {
+          "id": "A75/dto-owner-tamper",
+          "stimulus_variant": "dto-owner-tamper",
+          "assertion_ref": "A75.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A75/dto-owner-tamper/"
+        },
+        {
+          "id": "A75/unauthorized-scope",
+          "stimulus_variant": "unauthorized-scope",
+          "assertion_ref": "A75.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A75/unauthorized-scope/"
+        },
+        {
+          "id": "A75/provider-tenant-mismatch",
+          "stimulus_variant": "provider-tenant-mismatch",
+          "assertion_ref": "A75.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A75/provider-tenant-mismatch/"
+        },
+        {
+          "id": "A75/provider-request-mismatch",
+          "stimulus_variant": "provider-request-mismatch",
+          "assertion_ref": "A75.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A75/provider-request-mismatch/"
+        },
+        {
+          "id": "A75/direct-application-entry",
+          "stimulus_variant": "direct-application-entry",
+          "assertion_ref": "A75.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A75/direct-application-entry/"
+        }
+      ]
+    },
+    {
+      "id": "A76",
+      "requirement": "SCP-004",
+      "milestone": "M2",
+      "status": "planned",
+      "setup": "使用者同時有 Org A 與 Org B 權限，外層已綁定 A",
+      "stimulus": "用衍生 context 嘗試 Required／RequiresNew 切到 B 或 Enterprise",
+      "expected": "返回 UOW_SCOPE_MISMATCH；Required 根 rollback-only；RequiresNew 未建立子交易；另建授權頂層操作才可使用 B",
+      "source_sha256": "3d1e824b3b3eefcf762ae33cb4e29bd68badaa7bfa387050f011c5e6cf95f505",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A76/required-switch",
+          "stimulus_variant": "required-switch",
+          "assertion_ref": "A76.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A76/required-switch/"
+        },
+        {
+          "id": "A76/requires-new-switch",
+          "stimulus_variant": "requires-new-switch",
+          "assertion_ref": "A76.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A76/requires-new-switch/"
+        },
+        {
+          "id": "A76/new-authorized-top-level",
+          "stimulus_variant": "new-authorized-top-level",
+          "assertion_ref": "A76.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A76/new-authorized-top-level/"
+        }
+      ]
+    },
+    {
+      "id": "A77",
+      "requirement": "SCP-005",
+      "milestone": "M3",
+      "status": "planned",
+      "setup": "同 Tenant、不同 Org／Enterprise 擁有同名同 ID 資源，以及 TenantOnly 業務表",
+      "stimulus": "漏 SQL owner 條件、偽造 owner、父 scope 查詢 Org 資料、Org context 讀 TenantOnly Repository",
+      "expected": "Repo／RLS 阻擋跨 owner 讀寫；父 scope 不取得子資料；TenantOnly 不作降級出口；缺 scope 拒絕且無 Pool 污染",
+      "source_sha256": "0ad0321be3e9c9282e014e8323ba42d3dc44108b5ad037b4e985a66eb4219bd9",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A77/missing-owner-filter",
+          "stimulus_variant": "missing-owner-filter",
+          "assertion_ref": "A77.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A77/missing-owner-filter/"
+        },
+        {
+          "id": "A77/forged-owner",
+          "stimulus_variant": "forged-owner",
+          "assertion_ref": "A77.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A77/forged-owner/"
+        },
+        {
+          "id": "A77/parent-cannot-read-child",
+          "stimulus_variant": "parent-cannot-read-child",
+          "assertion_ref": "A77.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A77/parent-cannot-read-child/"
+        },
+        {
+          "id": "A77/org-cannot-use-tenant-only",
+          "stimulus_variant": "org-cannot-use-tenant-only",
+          "assertion_ref": "A77.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A77/org-cannot-use-tenant-only/"
+        },
+        {
+          "id": "A77/missing-scope",
+          "stimulus_variant": "missing-scope",
+          "assertion_ref": "A77.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A77/missing-scope/"
+        },
+        {
+          "id": "A77/pool-reuse",
+          "stimulus_variant": "pool-reuse",
+          "assertion_ref": "A77.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A77/pool-reuse/"
+        }
+      ]
+    },
+    {
+      "id": "A78",
+      "requirement": "SCP-006",
+      "milestone": "M3",
+      "status": "planned",
+      "setup": "中立 Scope Catalog 與有業務關聯的父子資料",
+      "stimulus": "寫入未知 owner、跨 Tenant 或跨 Org 外鍵",
+      "expected": "資料庫拒絕非法引用；合法同 owner 成功；業務 schema 不引用可替換模組的私有表",
+      "source_sha256": "5f927fbf631954f1873498f9458d884208183db65646f84e5829ac32eece1ad3",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A78/unknown-owner",
+          "stimulus_variant": "unknown-owner",
+          "assertion_ref": "A78.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A78/unknown-owner/"
+        },
+        {
+          "id": "A78/cross-tenant-fk",
+          "stimulus_variant": "cross-tenant-fk",
+          "assertion_ref": "A78.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A78/cross-tenant-fk/"
+        },
+        {
+          "id": "A78/cross-owner-fk",
+          "stimulus_variant": "cross-owner-fk",
+          "assertion_ref": "A78.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A78/cross-owner-fk/"
+        },
+        {
+          "id": "A78/same-owner-control",
+          "stimulus_variant": "same-owner-control",
+          "assertion_ref": "A78.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A78/same-owner-control/"
+        },
+        {
+          "id": "A78/neutral-catalog-dependency",
+          "stimulus_variant": "neutral-catalog-dependency",
+          "assertion_ref": "A78.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A78/neutral-catalog-dependency/"
+        }
+      ]
+    },
+    {
+      "id": "A79",
+      "requirement": "SCP-007",
+      "milestone": "M3",
+      "status": "planned",
+      "setup": "Org 事件／Job、已撤權使用者及缺少 Scope 的舊事件",
+      "stimulus": "重啟、重送、偽造 Scope、停用 Provider 後處理",
+      "expected": "Scope 不變；舊快照不授權；合法服務身分可處理已提交事實；缺能力隔離／告警；Org 事件不降成 Tenant",
+      "source_sha256": "b1f86eef4ca678457e091e496dd12ef2d71d1c478e19df97bf15fcb340fac178",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A79/restart-replay",
+          "stimulus_variant": "restart-replay",
+          "assertion_ref": "A79.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A79/restart-replay/"
+        },
+        {
+          "id": "A79/scope-tamper",
+          "stimulus_variant": "scope-tamper",
+          "assertion_ref": "A79.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A79/scope-tamper/"
+        },
+        {
+          "id": "A79/revoked-user",
+          "stimulus_variant": "revoked-user",
+          "assertion_ref": "A79.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A79/revoked-user/"
+        },
+        {
+          "id": "A79/current-service-grant",
+          "stimulus_variant": "current-service-grant",
+          "assertion_ref": "A79.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A79/current-service-grant/"
+        },
+        {
+          "id": "A79/missing-org-scope",
+          "stimulus_variant": "missing-org-scope",
+          "assertion_ref": "A79.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A79/missing-org-scope/"
+        },
+        {
+          "id": "A79/unavailable-provider",
+          "stimulus_variant": "unavailable-provider",
+          "assertion_ref": "A79.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A79/unavailable-provider/"
+        },
+        {
+          "id": "A79/legacy-tenant-upcast",
+          "stimulus_variant": "legacy-tenant-upcast",
+          "assertion_ref": "A79.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A79/legacy-tenant-upcast/"
+        }
+      ]
+    },
+    {
+      "id": "A80",
+      "requirement": "SCP-008",
+      "milestone": "M5",
+      "status": "planned",
+      "setup": "同 Tenant 的兩 Org 與 Enterprise 同名資源／設定",
+      "stimulus": "讀快取、繼承設定、發布失效及寫 Audit",
+      "expected": "資料及失效不串 scope；依明定順序繼承；安全限制只收緊；稽核可還原原 owner",
+      "source_sha256": "4602747cf8837045c0b070dc4a199e1df1c6ea81a5637d53d9ab7e967e0529d9",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A80/scope-cache-isolation",
+          "stimulus_variant": "scope-cache-isolation",
+          "assertion_ref": "A80.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A80/scope-cache-isolation/"
+        },
+        {
+          "id": "A80/scoped-invalidation",
+          "stimulus_variant": "scoped-invalidation",
+          "assertion_ref": "A80.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A80/scoped-invalidation/"
+        },
+        {
+          "id": "A80/setting-inheritance",
+          "stimulus_variant": "setting-inheritance",
+          "assertion_ref": "A80.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A80/setting-inheritance/"
+        },
+        {
+          "id": "A80/parent-security-restriction",
+          "stimulus_variant": "parent-security-restriction",
+          "assertion_ref": "A80.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A80/parent-security-restriction/"
+        },
+        {
+          "id": "A80/audit-owner",
+          "stimulus_variant": "audit-owner",
+          "assertion_ref": "A80.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A80/audit-owner/"
+        }
+      ]
+    },
+    {
+      "id": "A81",
+      "requirement": "SCP-009",
+      "milestone": "M3",
+      "status": "planned",
+      "setup": "同 user／operation／key 在 Org A、Org B 各執行一次",
+      "stimulus": "各自重送，另在撤銷 A 成員資格後查詢／重播 A 結果",
+      "expected": "每個 scope 各執行至多一次；不回傳他 scope 結果；撤權後拒絕重播，已提交效果不撤銷",
+      "source_sha256": "5bb5eda8ebbe53b6806f6c399a6d5862d6d7a36844c3056362da815ece40026b",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A81/scope-specific-key",
+          "stimulus_variant": "scope-specific-key",
+          "assertion_ref": "A81.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A81/scope-specific-key/"
+        },
+        {
+          "id": "A81/replay-same-scope",
+          "stimulus_variant": "replay-same-scope",
+          "assertion_ref": "A81.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A81/replay-same-scope/"
+        },
+        {
+          "id": "A81/cross-scope-result-denied",
+          "stimulus_variant": "cross-scope-result-denied",
+          "assertion_ref": "A81.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A81/cross-scope-result-denied/"
+        },
+        {
+          "id": "A81/revoked-replay-denied",
+          "stimulus_variant": "revoked-replay-denied",
+          "assertion_ref": "A81.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A81/revoked-replay-denied/"
+        },
+        {
+          "id": "A81/committed-effect-preserved",
+          "stimulus_variant": "committed-effect-preserved",
+          "assertion_ref": "A81.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A81/committed-effect-preserved/"
+        }
+      ]
+    },
+    {
+      "id": "A82",
+      "requirement": "ORG-001",
+      "milestone": "M2",
+      "status": "planned",
+      "setup": "啟用與未啟用的 import graph／module DAG",
+      "stimulus": "以 go list 檢查純 Tenant 產物並切換 Provider",
+      "expected": "Core 無反向 import；純 Tenant 無組織表／路由／migration 依賴；不存在獨立 Enterprise 模組必選鏈",
+      "source_sha256": "2ff54d3a37651db7ade3bf5618d34f0d26f9bca1e1d15d10c9402029b7a519a7",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A82/tenant-only-build",
+          "stimulus_variant": "tenant-only-build",
+          "assertion_ref": "A82.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A82/tenant-only-build/"
+        },
+        {
+          "id": "A82/no-core-organization-import",
+          "stimulus_variant": "no-core-organization-import",
+          "assertion_ref": "A82.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A82/no-core-organization-import/"
+        },
+        {
+          "id": "A82/single-optional-module",
+          "stimulus_variant": "single-optional-module",
+          "assertion_ref": "A82.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A82/single-optional-module/"
+        },
+        {
+          "id": "A82/replacement-assembly",
+          "stimulus_variant": "replacement-assembly",
+          "assertion_ref": "A82.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A82/replacement-assembly/"
+        }
+      ]
+    },
+    {
+      "id": "A83",
+      "requirement": "ORG-002",
+      "milestone": "M3",
+      "status": "planned",
+      "setup": "兩 Tenant、多個 Enterprise 與 standalone Organization",
+      "stimulus": "建立／附屬／轉移組織並嘗試跨 Tenant 關聯",
+      "expected": "standalone 與一對多關係可用；多父／跨 Tenant 關聯拒絕；資源不因上層改變而改 owner",
+      "source_sha256": "1096e7bd5205bb7eb84ebd14df20726e79e4556f543f2ba95e4bfbfefef5c6a6",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A83/standalone",
+          "stimulus_variant": "standalone",
+          "assertion_ref": "A83.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A83/standalone/"
+        },
+        {
+          "id": "A83/single-parent",
+          "stimulus_variant": "single-parent",
+          "assertion_ref": "A83.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A83/single-parent/"
+        },
+        {
+          "id": "A83/multiple-parent-rejected",
+          "stimulus_variant": "multiple-parent-rejected",
+          "assertion_ref": "A83.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A83/multiple-parent-rejected/"
+        },
+        {
+          "id": "A83/cross-tenant-rejected",
+          "stimulus_variant": "cross-tenant-rejected",
+          "assertion_ref": "A83.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A83/cross-tenant-rejected/"
+        },
+        {
+          "id": "A83/owner-stable-on-transfer",
+          "stimulus_variant": "owner-stable-on-transfer",
+          "assertion_ref": "A83.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A83/owner-stable-on-transfer/"
+        }
+      ]
+    },
+    {
+      "id": "A84",
+      "requirement": "ORG-003",
+      "milestone": "M3",
+      "status": "planned",
+      "setup": "同一 user 為 Org A owner、Org B member，另有 Tenant B 同 user",
+      "stimulus": "授予／撤銷其中一份組織 membership",
+      "expected": "角色不擴散；一個 user 可有多個組織；Tenant 成員資格失效時不能使用任何下層授權",
+      "source_sha256": "02fd66fdd8897bc403803a6c59de2da78cb841339b05b97c348b7114dce6b02f",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A84/multi-organization-membership",
+          "stimulus_variant": "multi-organization-membership",
+          "assertion_ref": "A84.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A84/multi-organization-membership/"
+        },
+        {
+          "id": "A84/independent-roles",
+          "stimulus_variant": "independent-roles",
+          "assertion_ref": "A84.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A84/independent-roles/"
+        },
+        {
+          "id": "A84/scoped-revocation",
+          "stimulus_variant": "scoped-revocation",
+          "assertion_ref": "A84.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A84/scoped-revocation/"
+        },
+        {
+          "id": "A84/tenant-membership-revoked",
+          "stimulus_variant": "tenant-membership-revoked",
+          "assertion_ref": "A84.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A84/tenant-membership-revoked/"
+        }
+      ]
+    },
+    {
+      "id": "A85",
+      "requirement": "ORG-004",
+      "milestone": "M3",
+      "status": "planned",
+      "setup": "Enterprise owner 非 Org member，另有普通 Org member",
+      "stimulus": "讀 Enterprise 目錄／政策並嘗試讀各 Org 內容",
+      "expected": "owner 可管理已授權治理資料但不能直接讀 Org 內容；推導 Enterprise member 不獲其他 Org 權限",
+      "source_sha256": "593ec554c793ff9add2f0cb857dc6183227e19202944b97f85e9fd057e1a3782",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A85/enterprise-directory",
+          "stimulus_variant": "enterprise-directory",
+          "assertion_ref": "A85.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A85/enterprise-directory/"
+        },
+        {
+          "id": "A85/governance-policy",
+          "stimulus_variant": "governance-policy",
+          "assertion_ref": "A85.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A85/governance-policy/"
+        },
+        {
+          "id": "A85/enterprise-owner-no-org-content",
+          "stimulus_variant": "enterprise-owner-no-org-content",
+          "assertion_ref": "A85.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A85/enterprise-owner-no-org-content/"
+        },
+        {
+          "id": "A85/derived-member-no-org-permission",
+          "stimulus_variant": "derived-member-no-org-permission",
+          "assertion_ref": "A85.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A85/derived-member-no-org-permission/"
+        }
+      ]
+    },
+    {
+      "id": "A86",
+      "requirement": "ORG-005",
+      "milestone": "M3",
+      "status": "planned",
+      "setup": "member／owner／Enterprise owner 與 allow／deny／feature 組合",
+      "stimulus": "對同 action 逐格授權並測試 self-elevation",
+      "expected": "未滿足任一必要條件即拒絕；父 allow 不創建子 membership；顯式加入 owner 需治理權限與 Audit",
+      "source_sha256": "2dabb0c575f45e62782332ba9b7abb330e64bd4320df8557e42e53d5cd5f631a",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A86/role-policy-grid",
+          "stimulus_variant": "role-policy-grid",
+          "assertion_ref": "A86.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A86/role-policy-grid/"
+        },
+        {
+          "id": "A86/explicit-deny",
+          "stimulus_variant": "explicit-deny",
+          "assertion_ref": "A86.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A86/explicit-deny/"
+        },
+        {
+          "id": "A86/parent-allow-no-membership",
+          "stimulus_variant": "parent-allow-no-membership",
+          "assertion_ref": "A86.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A86/parent-allow-no-membership/"
+        },
+        {
+          "id": "A86/feature-no-grant",
+          "stimulus_variant": "feature-no-grant",
+          "assertion_ref": "A86.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A86/feature-no-grant/"
+        },
+        {
+          "id": "A86/unauthorized-self-elevation",
+          "stimulus_variant": "unauthorized-self-elevation",
+          "assertion_ref": "A86.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A86/unauthorized-self-elevation/"
+        },
+        {
+          "id": "A86/audited-owner-join",
+          "stimulus_variant": "audited-owner-join",
+          "assertion_ref": "A86.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A86/audited-owner-join/"
+        }
+      ]
+    },
+    {
+      "id": "A87",
+      "requirement": "ORG-006",
+      "milestone": "M3",
+      "status": "planned",
+      "setup": "有受影響 Scope 的成員／Enterprise 關係變更",
+      "stimulus": "在任一寫入階段注入錯誤並測試成功",
+      "expected": "失敗全部回滾；成功具有一致 revision 與完整稽核事件；不繞過 UOW 自行提交",
+      "source_sha256": "300fe205837a1a6c06c8111aee6cf3e03f67be94845ced3ee1a46eef6520630f",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A87/atomic-success",
+          "stimulus_variant": "atomic-success",
+          "assertion_ref": "A87.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A87/atomic-success/"
+        },
+        {
+          "id": "A87/membership-write-failure",
+          "stimulus_variant": "membership-write-failure",
+          "assertion_ref": "A87.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A87/membership-write-failure/"
+        },
+        {
+          "id": "A87/catalog-write-failure",
+          "stimulus_variant": "catalog-write-failure",
+          "assertion_ref": "A87.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A87/catalog-write-failure/"
+        },
+        {
+          "id": "A87/audit-write-failure",
+          "stimulus_variant": "audit-write-failure",
+          "assertion_ref": "A87.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A87/audit-write-failure/"
+        },
+        {
+          "id": "A87/outbox-write-failure",
+          "stimulus_variant": "outbox-write-failure",
+          "assertion_ref": "A87.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A87/outbox-write-failure/"
+        },
+        {
+          "id": "A87/revision-consistency",
+          "stimulus_variant": "revision-consistency",
+          "assertion_ref": "A87.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A87/revision-consistency/"
+        }
+      ]
+    },
+    {
+      "id": "A88",
+      "requirement": "ORG-007",
+      "milestone": "M3",
+      "status": "planned",
+      "setup": "有舊 JWT／快取、已 Bind 尚未 admission，以及執行中根 Scope 的成員",
+      "stimulus": "在 Bind 後 admission 前提交撤權；另測撤權後新請求與已 admission 的原操作",
+      "expected": "新 admission 查驗權威 revision 後拒絕；舊短 Scope 可按既有快照完成；不宣稱跨程序瞬時取消",
+      "source_sha256": "66fe7307cbcf5f83f6a54743c763e561486438df9e206dea3bd09efecd371c55",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A88/revocation-between-bind-and-admission",
+          "stimulus_variant": "revocation-between-bind-and-admission",
+          "assertion_ref": "A88.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A88/revocation-between-bind-and-admission/"
+        },
+        {
+          "id": "A88/new-operation-after-revocation",
+          "stimulus_variant": "new-operation-after-revocation",
+          "assertion_ref": "A88.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A88/new-operation-after-revocation/"
+        },
+        {
+          "id": "A88/stale-jwt-cache",
+          "stimulus_variant": "stale-jwt-cache",
+          "assertion_ref": "A88.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A88/stale-jwt-cache/"
+        },
+        {
+          "id": "A88/admitted-operation-snapshot",
+          "stimulus_variant": "admitted-operation-snapshot",
+          "assertion_ref": "A88.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A88/admitted-operation-snapshot/"
+        }
+      ]
+    },
+    {
+      "id": "A89",
+      "requirement": "ORG-008",
+      "milestone": "M3",
+      "status": "planned",
+      "setup": "Org 有資源、pending 事件與來源／目標 Enterprise",
+      "stimulus": "嘗試無權轉移、跨 Tenant 轉移、刪除有子組織 Enterprise，再執行授權同 Tenant 轉移",
+      "expected": "非法操作拒絕；合法轉移保留 Org／owner ID、更新 ancestry revision；非空父刪除 409",
+      "source_sha256": "421820c18cfe0fbe01ec0c9637f4624017035710c47131640d04209f07500b81",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A89/unauthorized-transfer",
+          "stimulus_variant": "unauthorized-transfer",
+          "assertion_ref": "A89.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A89/unauthorized-transfer/"
+        },
+        {
+          "id": "A89/cross-tenant-transfer",
+          "stimulus_variant": "cross-tenant-transfer",
+          "assertion_ref": "A89.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A89/cross-tenant-transfer/"
+        },
+        {
+          "id": "A89/nonempty-parent-delete",
+          "stimulus_variant": "nonempty-parent-delete",
+          "assertion_ref": "A89.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A89/nonempty-parent-delete/"
+        },
+        {
+          "id": "A89/valid-same-tenant-transfer",
+          "stimulus_variant": "valid-same-tenant-transfer",
+          "assertion_ref": "A89.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A89/valid-same-tenant-transfer/"
+        },
+        {
+          "id": "A89/stable-owner-and-new-ancestry",
+          "stimulus_variant": "stable-owner-and-new-ancestry",
+          "assertion_ref": "A89.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A89/stable-owner-and-new-ancestry/"
+        }
+      ]
+    },
+    {
+      "id": "A90",
+      "requirement": "ORG-009",
+      "milestone": "M3",
+      "status": "planned",
+      "setup": "只有一位 owner 的 Org／Enterprise",
+      "stimulus": "直接移除 owner；另撤銷該 Principal 的 Tenant 資格",
+      "expected": "直接移除被拒；Tenant 撤權不被擋住；ownerless 範圍不可授權，復原需專屬治理權限",
+      "source_sha256": "ab617762f1585c5993d61ed763b3f53a30a532cc36d3f4585ec8b8cd1a91a697",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A90/last-owner-removal-denied",
+          "stimulus_variant": "last-owner-removal-denied",
+          "assertion_ref": "A90.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A90/last-owner-removal-denied/"
+        },
+        {
+          "id": "A90/tenant-revocation-allowed",
+          "stimulus_variant": "tenant-revocation-allowed",
+          "assertion_ref": "A90.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A90/tenant-revocation-allowed/"
+        },
+        {
+          "id": "A90/ownerless-denied",
+          "stimulus_variant": "ownerless-denied",
+          "assertion_ref": "A90.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A90/ownerless-denied/"
+        },
+        {
+          "id": "A90/audited-recovery",
+          "stimulus_variant": "audited-recovery",
+          "assertion_ref": "A90.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A90/audited-recovery/"
+        }
+      ]
+    },
+    {
+      "id": "A91",
+      "requirement": "ORG-010",
+      "milestone": "M3",
+      "status": "planned",
+      "setup": "內建 Provider 資料及替代實作匯入 fixture",
+      "stimulus": "停機切換 Provider 並重播既有資料／事件",
+      "expected": "業務 owner ID 與公開 API 不變；未授權案例仍拒絕；不要求業務模組依賴私有實作",
+      "source_sha256": "f778b88433bc20c9ab198ed42c950db9b6dccb7d7330c0b2f35a41a723b7b2b7",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A91/provider-export-import",
+          "stimulus_variant": "provider-export-import",
+          "assertion_ref": "A91.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A91/provider-export-import/"
+        },
+        {
+          "id": "A91/stable-owner-id",
+          "stimulus_variant": "stable-owner-id",
+          "assertion_ref": "A91.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A91/stable-owner-id/"
+        },
+        {
+          "id": "A91/membership-state-revision",
+          "stimulus_variant": "membership-state-revision",
+          "assertion_ref": "A91.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A91/membership-state-revision/"
+        },
+        {
+          "id": "A91/preserved-event-replay",
+          "stimulus_variant": "preserved-event-replay",
+          "assertion_ref": "A91.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A91/preserved-event-replay/"
+        },
+        {
+          "id": "A91/negative-authorization-parity",
+          "stimulus_variant": "negative-authorization-parity",
+          "assertion_ref": "A91.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A91/negative-authorization-parity/"
+        }
+      ]
+    },
+    {
+      "id": "A92",
+      "requirement": "ORG-011",
+      "milestone": "M3",
+      "status": "planned",
+      "setup": "非 Tenant Catalog／業務資料、pending Job／Event 或依賴模組",
+      "stimulus": "移除組織 Provider 或修改組態啟動",
+      "expected": "不 Ready 並回報需要遷移；不把資料改成 Tenant 可見；不自動 drop 模組表",
+      "source_sha256": "964a13bf4bb5ba370ae1b5e1b75899033ee6f75e1aa90a4f3074fd63620b9e31",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A92/catalog-removal-blocked",
+          "stimulus_variant": "catalog-removal-blocked",
+          "assertion_ref": "A92.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A92/catalog-removal-blocked/"
+        },
+        {
+          "id": "A92/business-owner-removal-blocked",
+          "stimulus_variant": "business-owner-removal-blocked",
+          "assertion_ref": "A92.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A92/business-owner-removal-blocked/"
+        },
+        {
+          "id": "A92/pending-job-removal-blocked",
+          "stimulus_variant": "pending-job-removal-blocked",
+          "assertion_ref": "A92.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A92/pending-job-removal-blocked/"
+        },
+        {
+          "id": "A92/pending-event-removal-blocked",
+          "stimulus_variant": "pending-event-removal-blocked",
+          "assertion_ref": "A92.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A92/pending-event-removal-blocked/"
+        },
+        {
+          "id": "A92/required-capability-blocked",
+          "stimulus_variant": "required-capability-blocked",
+          "assertion_ref": "A92.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A92/required-capability-blocked/"
+        },
+        {
+          "id": "A92/no-tenant-downgrade",
+          "stimulus_variant": "no-tenant-downgrade",
+          "assertion_ref": "A92.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A92/no-tenant-downgrade/"
+        }
+      ]
+    },
+    {
+      "id": "A93",
+      "requirement": "ORG-012",
+      "milestone": "M3",
+      "status": "planned",
+      "setup": "既有 tenant-only Bookstore 有資料及兩租戶",
+      "stimulus": "啟用組織 profile，於回填／policy 切換注入中斷",
+      "expected": "可恢復的前向遷移；舊資料不被猜測分配 Org；無只按 Tenant 放行的寬鬆 RLS 與新政策並存",
+      "source_sha256": "050decdd976d12290f62feabb35e7954172ec928b456b792ecdfda8cdcc151d0",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A93/tenant-owner-backfill",
+          "stimulus_variant": "tenant-owner-backfill",
+          "assertion_ref": "A93.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A93/tenant-owner-backfill/"
+        },
+        {
+          "id": "A93/interrupted-backfill",
+          "stimulus_variant": "interrupted-backfill",
+          "assertion_ref": "A93.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A93/interrupted-backfill/"
+        },
+        {
+          "id": "A93/interrupted-policy-switch",
+          "stimulus_variant": "interrupted-policy-switch",
+          "assertion_ref": "A93.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A93/interrupted-policy-switch/"
+        },
+        {
+          "id": "A93/forward-resume",
+          "stimulus_variant": "forward-resume",
+          "assertion_ref": "A93.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A93/forward-resume/"
+        },
+        {
+          "id": "A93/no-permissive-policy-union",
+          "stimulus_variant": "no-permissive-policy-union",
+          "assertion_ref": "A93.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A93/no-permissive-policy-union/"
+        }
+      ]
+    },
+    {
+      "id": "A94",
+      "requirement": "ORG-013",
+      "milestone": "M5",
+      "status": "planned",
+      "setup": "乾淨目錄與兩種 profile",
+      "stimulus": "生成並建置／測試／啟動兩種 Bookstore",
+      "expected": "預設純 Tenant 可運行；啟用時完整模組／migration／契約套件存在；不生成半套 Enterprise／Org",
+      "source_sha256": "dc411835da441eb67dbbec18702d479937685433b038effa06ea203de68e4685",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A94/default-tenant-template",
+          "stimulus_variant": "default-tenant-template",
+          "assertion_ref": "A94.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A94/default-tenant-template/"
+        },
+        {
+          "id": "A94/explicit-organization-template",
+          "stimulus_variant": "explicit-organization-template",
+          "assertion_ref": "A94.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A94/explicit-organization-template/"
+        },
+        {
+          "id": "A94/complete-module-migrations",
+          "stimulus_variant": "complete-module-migrations",
+          "assertion_ref": "A94.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A94/complete-module-migrations/"
+        },
+        {
+          "id": "A94/no-half-enterprise-template",
+          "stimulus_variant": "no-half-enterprise-template",
+          "assertion_ref": "A94.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A94/no-half-enterprise-template/"
+        }
+      ]
+    },
+    {
+      "id": "A95",
+      "requirement": "ORG-014",
+      "milestone": "M6",
+      "status": "planned",
+      "setup": "兩 profile 與替換 fixture 的 pipeline",
+      "stimulus": "讓組織授權測試或其 coverage 失敗，另測純 Tenant build",
+      "expected": "任一適用案例失敗／skip 或關鍵 package 不足 90% 即阻擋發布；純 Tenant 不依賴 optional 模組",
+      "source_sha256": "5081b47e0fb274e9fcb5a1bcdf43722b778a26cc13f85f02659d6239701f56df",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A95/organization-contract-fails",
+          "stimulus_variant": "organization-contract-fails",
+          "assertion_ref": "A95.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A95/organization-contract-fails/"
+        },
+        {
+          "id": "A95/applicable-case-skipped",
+          "stimulus_variant": "applicable-case-skipped",
+          "assertion_ref": "A95.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A95/applicable-case-skipped/"
+        },
+        {
+          "id": "A95/critical-package-below-threshold",
+          "stimulus_variant": "critical-package-below-threshold",
+          "assertion_ref": "A95.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A95/critical-package-below-threshold/"
+        },
+        {
+          "id": "A95/tenant-only-build-independent",
+          "stimulus_variant": "tenant-only-build-independent",
+          "assertion_ref": "A95.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A95/tenant-only-build-independent/"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "milestone": "M0",
+  "status": "verified",
+  "source_commit": "a0b1ad099fdf7bd28240514a24c34590220019a1",
+  "runtime_requirements": "all-planned",
+  "reports": {
+    "windows-amd64": "a80e143b76fc3d4c3bd347fb63324943353376acce8638b837c7b9bdddb27f41",
+    "linux-amd64": "23985a03d12e7e9030dc7a0828b4d868568b3524205d6605d7fbe33916c8a299",
+    "environment": "f5c6d33a0fc3c6aa8e1711e8aeb505e82b0d5429bd87faf650e846bc2061d9f3"
+  },
+  "verified_date": "2026-11-21",
+  "engineering_scope": {
+    "api_packages": 11,
+    "acceptance_groups": 95,
+    "named_planned_subtests": 421,
+    "profiles": 3,
+    "fixture_files": 4,
+    "work_packages_estimated": 18
+  },
+  "coverage": {
+    "windows-amd64": {
+      "covered": 183,
+      "total": 186
+    },
+    "linux-amd64": {
+      "covered": 183,
+      "total": 186
+    }
+  },
+  "remote_github_actions": "configured-not-executed",
+  "cleanup": {
+    "source_commit": "a0b1ad099fdf7bd28240514a24c34590220019a1",
+    "project": "pangolin-m0-a0b1ad09",
+    "containers_stopped": 4,
+    "volumes_preserved": true,
+    "unrelated_services_running_after_cleanup": true,
+    "docker_desktop_or_engine_control_performed": false
+  },
+  "evidence_bundle": {
+    "path": "artifacts/a0b1ad09-m0-evidence.zip",
+    "sha256": "16db01e112a1c7777d86ebca14a85e8e01bd0da9a5218b5f69fa8865fbb0cc68"
+  }
+}

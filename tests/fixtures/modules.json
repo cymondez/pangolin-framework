@@ -1,0 +1,9 @@
+{
+  "modules": [{"name":"a","version":"0.1.0","depends_on":[]},{"name":"b","version":"0.1.0","depends_on":["a"]},{"name":"c","version":"0.1.0","depends_on":["a"]}],
+  "layers": [["a"],["b","c"]],
+  "phases": ["pre:a","pre:b","pre:c","configure:a","configure:b","configure:c","post:a","post:b","post:c","seal","start:a","start:b","start:c","ready"],
+  "partial_start_failure": {"failing_module":"c","expected_cleanup":["partial:c","stop:b","stop:a"],"ready":false},
+  "invalid_graphs": ["duplicate-name","missing-dependency","incompatible-version","cycle"],
+  "versions": {"accepted":["=0.1.0",">=0.1.0 <0.2.0","=0.1.0-rc.1"],"rejected":["*","^0.1.0","~0.1.0","0.1",">=0.1.0 || <0.2.0"]},
+  "provider_failures": ["missing","duplicate","cycle","sealed-write","captive-operation","undeclared-factory-dependency","partial-factory-cleanup"]
+}
