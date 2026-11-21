@@ -28,6 +28,11 @@ class EngineeringGates(unittest.TestCase):
                 if allowed: m0.check_imports(packages)
                 else:
                     with self.assertRaises(ValueError):m0.check_imports(packages)
+            infrastructure=root/"infrastructure";infrastructure.mkdir();(infrastructure/"store.go").write_text("package infrastructure\ntype Store struct{}\n")
+            application=root/"application";application.mkdir();(application/"app.go").write_text('package application\nimport _ "'+m0.MODULE+'/fixture/infrastructure"\n')
+            with self.assertRaises(ValueError):m0.check_imports(m0.json_stream(m0.command(["go","list","-json","./..."],root)))
+            for imported in (m0.MODULE+"/examples/bookstore/infrastructure",m0.MODULE+"/events/nats"):
+                with self.subTest(imported=imported),self.assertRaises(ValueError):m0.check_imports([{"ImportPath":m0.MODULE+"/examples/bookstore/application","Imports":[imported]}])
 
     def test_A69_failure_skip_and_missing_case(self):
         event={"Action":"pass","Package":"pkg","Test":"TestRequired"}

@@ -99,7 +99,8 @@ def check_imports(packages):
         name = package["ImportPath"]
         role = name[len(MODULE):].split("/")
         for imported in package.get("Imports", []):
-            concrete = imported in {"database/sql", "net/http"} or imported.startswith(("github.com/jackc/", "github.com/nats-io/", MODULE + "/persistence/postgres", MODULE + "/transport/"))
+            project_role = imported[len(MODULE):].split("/") if imported.startswith(MODULE + "/") else []
+            concrete = imported in {"database/sql", "net/http"} or "infrastructure" in project_role or imported.startswith(("github.com/jackc/", "github.com/nats-io/", MODULE + "/persistence/postgres", MODULE + "/events/nats", MODULE + "/transport/"))
             if "domain" in role and ("." in imported.split("/")[0] and imported != MODULE + "/domain" or concrete):
                 raise ValueError("forbidden Domain import: " + name + " -> " + imported)
             if "application" in role and concrete:
