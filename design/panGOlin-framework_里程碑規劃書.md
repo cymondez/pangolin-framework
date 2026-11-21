@@ -14,7 +14,7 @@ lang: zh-TW
 
 本文件依[實作規範書 v1.3](panGOlin-framework_實作規範書.md)安排全框架 v0.1 的交付，包含可選的 Enterprise／Organization 單一模組。需求正式句、介面、產品行為、版本範圍、A01–A95 及品質門檻只由實作規範定義；本文件不重新定義它們。
 
-**2026-11-21：M0 為 In progress；M1–M6 與全部產品需求映射仍為 Planned。** 已建立的底座及未完成條件見 §2.1。文件、CI 配置或品質工具測試不等於 M0 通過，也不等於 Runtime 已驗收或全框架達成 90% coverage。只有指定 commit 的 Exit 證據完整且 Gate 通過才能改為 Verified。
+**2026-11-21：M0 已 Verified（來源 commit `a0b1ad099fdf7bd28240514a24c34590220019a1`）；M1–M6 與全部產品需求映射仍為 Planned。** 已建立的底座及未完成條件見 §2.1。文件、CI 配置或品質工具測試不等於 M0 通過，也不等於 Runtime 已驗收或全框架達成 90% coverage。只有指定 commit 的 Exit 證據完整且 Gate 通過才能改為 Verified。
 
 ## 1. 範圍、估算與角色
 
@@ -38,8 +38,6 @@ M0 逐工作包重估工時、測試／遷移成本與關鍵路徑，形成可�
 | Go C：Security／Organization | Tenant／Scope、授權、Organization、平台／CLI | 規劃 1 FTE；負載在 M0 重新分配 |
 | QA | 符合性矩陣、故障時序、測試有效性及證據審查 | 規劃 0.5 FTE；開發者仍負責自身測試 |
 | SRE | CI 環境、Broker／DB、容量、停機及復原演練 | 規劃 0.5 FTE |
-
-<a id="decisions"></a>
 
 ### 1.3 M0 工作量重估草案
 
@@ -81,6 +79,8 @@ M0 逐工作包重估工時、測試／遷移成本與關鍵路徑，形成可�
 
 Go C 的組織／Scope／CLI 負載由 Go A 協作 owner schema／migration、Go B 協作 Scope envelope／Job 傳播與 CLI 事件範本；仍以公開 Port 先固定後分工。M0 的容量模型沿用 §1.2 的 3 Go FTE、QA／SRE 各 0.5 FTE，並以上列逐包人日重估及負載重分配作為可追溯基線。責任按角色指定，不虛構人員任命；實際人員與日曆日期未定只限制交期承諾，不額外增加原 M0 Exit 的人事核准條件。
 
+<a id="decisions"></a>
+
 ## 2. M0 決策與開工條件
 
 ENV01–ENV06 的待選值由[實作規範 §11.2](panGOlin-framework_實作規範書.md#s-11.2)列出。以下是決策責任與完成物，不重開已確立的 UOW／Scope 行為。
@@ -105,14 +105,14 @@ ENV01–ENV06 的待選值由[實作規範 §11.2](panGOlin-framework_實作規�
 
 | 項目 | 狀態／證據 | 尚未滿足的 Exit 條件 |
 |---|---|---|
-| ADR01–09／ENV01–06 | Go module／版本／Broker／Migration Tool／local profile 固定；核心 contracts.go 與 API surface 可編譯並有漂移檢查 | 待同 commit 完整 Gate 證據 |
+| ADR01–09／ENV01–06 | Go module／版本／Broker／Migration Tool／local profile 固定；核心 contracts.go 與 API surface 可編譯並有漂移檢查 | 已由同 commit Gate 驗證 |
 | Go／CI runner | Windows 本機與固定 digest 的 Linux OCI runner；同一 scripts/m0.py verify 入口供 GitHub Actions 使用 | 本機 runner 與同 commit 證據作 M0 驗收；遠端 GitHub Actions 執行另列、不虛報 |
 | 95 項驗收／Profile | 421 個具名子情境及三種適用性矩陣；錯誤 N/A／缺漏／假 verified 會被拒絕 | 正式 Runtime 全部 planned，依 M1–M6 原映射交付 |
-| Fixture／故障裝置 | 四份固定 seed 的 fixture、三個組裝 Port、獨立 PG／JetStream／IdP／Toxiproxy；使用新 namespace／空 volume 驗證 | 待最後同 commit 新環境 smoke 證據 |
+| Fixture／故障裝置 | 四份固定 seed 的 fixture、三個組裝 Port、獨立 PG／JetStream／IdP／Toxiproxy；使用新 namespace／空 volume 驗證 | 新 namespace／空 volumes 的同 commit 9 項 smoke 已通過 |
 | Coverage／證據 | 原始計數 fixture、API／import／配置／Profile／same-commit 防護；每個 runner 保存 log／metadata／hash／raw profile | E2E instrumentation／跨 suite 合併仍是 M1 工作，不冒稱 M0 已有 Runtime E2E |
 | 估算／容量 | §1.3 的逐工作包估算、角色負載調整及相對週數已固定為計畫基線 | 隨實際交付速率更新，不承諾未確認的人力或日曆日期 |
 
-目前 **M0 候選底座已齊備，待版本綁定的 Gate 執行後才標 Verified**。M0 Exit 驗證公開契約、可重現環境、驗收骨架與重估；它不要求將 M1–M6 的產品 Runtime 提前完成，也不將原計畫以外的人事／發布核准增設為門檻。
+**M0 Verified**：Windows、固定 OCI Linux runner（含 race）及空環境 report 均綁定上述乾淨來源 commit，M0 gate 通過。完整結果與 hash 見 [M0 驗收紀錄](../docs/evidence/M0.md)。M0 Exit 驗證公開契約、可重現環境、驗收骨架與重估；它不要求將 M1–M6 的產品 Runtime 提前完成，也不將原計畫以外的人事／發布核准增設為門檻。
 
 <a id="milestones"></a>
 
@@ -131,6 +131,8 @@ flowchart LR
 圖中為驗收相依，不禁止 Port 已固定後預先進行獨立工作。未通過前置 Gate 時，不把相依交付標為完成。正式 Delivers 只記一次；提前切片證據不等於整個子系統完成。以下 ID 清單是 §5 的閱讀索引，任何差異由一致性檢查阻擋。
 
 ### M0 — 契約、環境與估算底座
+
+**狀態：Verified；證據來源 `a0b1ad099fdf7bd28240514a24c34590220019a1`。**
 
 **原節奏：** W1–W2；**責任：** 技術負責人，Go A／B／C、QA、SRE 共同參與。  
 **Delivers：** 無產品需求正式驗收；交付 §2 決策、環境與證據底座。

@@ -2,7 +2,7 @@
 
 Go 模組化應用框架，採模組化單體、明確 DI、UOW、Tenant／Scope 隔離與可靠事件。產品目標 v0.1，規範基線 v1.3。
 
-目前正在建立 **M0 工程底座**。Runtime、UOW、Repository、正式 Broker Adapter、CLI 與 Organization 模組尚未實作；綠色的 M0 檢查不代表 95 項產品需求已驗收。
+**M0 工程底座已完成並通過 Gate**，見 [驗收紀錄](docs/evidence/M0.md)。Runtime、UOW、Repository、正式 Broker Adapter、CLI 與 Organization 模組尚未實作；綠色的 M0 檢查不代表 95 項產品需求已驗收。
 
 ## 本機檢查
 
