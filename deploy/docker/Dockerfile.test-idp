@@ -1,0 +1,5 @@
+FROM scratch
+COPY artifacts/test-idp /test-idp
+USER 65532:65532
+EXPOSE 8080
+ENTRYPOINT ["/test-idp"]

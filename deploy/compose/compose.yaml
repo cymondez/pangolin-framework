@@ -1,0 +1,74 @@
+name: pangolin-m0
+
+x-limits: &limits
+  restart: "no"
+  cpus: 0.5
+  pids_limit: 128
+  labels:
+    dev.pangolin.owner: pangolin-framework
+    dev.pangolin.purpose: m0-test-environment
+    dev.pangolin.source-commit: "${PANGOLIN_SOURCE_COMMIT:-working-tree}"
+
+services:
+  postgres:
+    <<: *limits
+    image: postgres:18.7-bookworm@sha256:194e55feb2597b1465dbee81cc9fd8d204566cd2eb42c8d22fd6c931a38781b1
+    mem_limit: 256m
+    environment:
+      POSTGRES_DB: pangolin_m0
+      POSTGRES_USER: pangolin_bootstrap
+      POSTGRES_PASSWORD: local-bootstrap-only
+    ports:
+      - "127.0.0.1:${PANGOLIN_PG_PORT:-15432}:5432"
+    volumes:
+      - pg-data:/var/lib/postgresql
+      - ./postgres-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U pangolin_bootstrap -d pangolin_m0"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+
+  nats:
+    <<: *limits
+    image: nats:2.15.3-alpine@sha256:558394a23dd3c36f2d3a64b51865fd09908010e80a542cea5e75c2af543ed62a
+    mem_limit: 128m
+    command: ["--config", "/etc/nats/nats.conf"]
+    ports:
+      - "127.0.0.1:${PANGOLIN_NATS_PORT:-14222}:4222"
+    volumes:
+      - nats-data:/data
+      - ./nats.conf:/etc/nats/nats.conf:ro
+
+  toxiproxy:
+    <<: *limits
+    image: ghcr.io/shopify/toxiproxy:2.13.0@sha256:5d3dae09bc185dcc5ff6cf43abf6062a4a720aff0c4306a471e773acdcd107aa
+    mem_limit: 64m
+    command: ["-host", "0.0.0.0", "-config", "/config/proxies.json"]
+    ports:
+      - "127.0.0.1:${PANGOLIN_TOXI_PORT:-18474}:8474"
+      - "127.0.0.1:${PANGOLIN_PG_PROXY_PORT:-15433}:5432"
+      - "127.0.0.1:${PANGOLIN_NATS_PROXY_PORT:-14223}:4222"
+    volumes:
+      - ./proxies.json:/config/proxies.json:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_started
+
+  test-idp:
+    <<: *limits
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile.test-idp
+    mem_limit: 64m
+    read_only: true
+    environment:
+      PANGOLIN_TEST_ISSUER: "http://127.0.0.1:${PANGOLIN_IDP_PORT:-18080}"
+    ports:
+      - "127.0.0.1:${PANGOLIN_IDP_PORT:-18080}:8080"
+
+volumes:
+  pg-data:
+  nats-data:

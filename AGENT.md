@@ -6,7 +6,7 @@ panGOlin-framework 是 Go 模組化應用框架，先以模組化單體交付，
 
 ## 目前狀態與文件權威
 
-**核對日期：2026-11-21。** 目前 repository 有三份設計文件，尚無 `go.mod`、Go 原始碼、測試、CLI、Compose 或 CI 設定；`docs/`、`image/` 目前為空目錄。文件基線為 v1.3，產品目標為 v0.1，M0–M6 及需求交付狀態皆為 Planned。
+**核對日期：2026-11-21。** 已開始 M0：建立正式 module path 的 `go.mod`、品質工具／測試、95 項驗收 manifest、ADR、獨立 Compose 測試環境及 GitHub Actions 配置。Runtime、UOW、正式 Adapter、CLI 與 Organization 模組仍未實作；`image/` 仍為空目錄。文件基線 v1.3、產品目標 v0.1；M0 為 In progress，M1–M6 及全部產品需求仍為 Planned。最新執行結果與剩餘 Gate 見里程碑 §2.1。
 
 本檔下文的 package、介面與執行流程都是既定設計的導覽，不表示對應目錄或功能已存在。實作開始後應同步更新這段狀態；不能由文件完成推論 Runtime 可執行或品質門檻已通過。
 
@@ -26,7 +26,7 @@ panGOlin-framework 是 Go 模組化應用框架，先以模組化單體交付，
 1. 確認工作目錄、checkout／worktree 與分支，先讀 `git status --short`；保留既有未提交修改，不覆寫不屬於本次任務的內容。
 2. 先讀實作規範 §1–§3，再依任務找到需求 ID、相關細則、§13 案例及里程碑規劃的工作包。不要只憑本檔摘要實作複雜機制。
 3. 檢查實際檔案與工具配置。規範 §10 是目標目錄，§12 是待交付 CLI，不是現有檔案清單或已可執行的命令。
-4. 確認工作前置條件。Go／PostgreSQL 版本、module path、單一 Broker、單一 Migration Tool 及必要容量／逾時配置仍由 M0 的 ENV01–ENV06、ADR01–ADR09 固定；不要把示例或本機版本當成已批准選型。
+4. 確認工作前置條件。M0 已將 Go／PostgreSQL、module path、單一 Broker／Migration Tool 及本機配置選擇記錄於 `docs/adr/`、`deploy/toolchain.json` 與 `deploy/profiles/local.json`；完整公開 Port、fixture、容量與同版證據仍依 M0 Gate 完成。不要將選型或示例當作 Runtime 已驗證。
 5. 實作任務先建立對應驗收案例，再完成程式與回歸。尚未實作的案例保持明確待辦，不用空測試或假成功代替。
 
 ## 讀與改 Go 程式碼
@@ -171,7 +171,7 @@ v0.1 的正式範圍只由[實作規範 §15](design/panGOlin-framework_實作�
 
 依據：[實作規範 §13](design/panGOlin-framework_實作規範書.md#s-13)、[里程碑規劃書](design/panGOlin-framework_里程碑規劃書.md)。
 
-目前只有文件，文件修改應檢查連結、章節、ID 與敘述一致性，不回報 Go build／test 通過。建立 Go module 後，從實際 module／workspace 執行適用的基礎檢查：
+目前 M0 品質工具可執行；Windows 使用 `scripts/check.ps1`，Linux 使用 `scripts/check.sh`，需要服務的本機驗證依 `docs/guides/m0-environment.md` 先盤點共用環境。文件修改仍需檢查連結、章節、ID 與敘述一致性；品質工具測試不能代替 Runtime 驗收。從實際 module／workspace 執行適用的基礎檢查：
 
 ```powershell
 go env GOMOD GOWORK
