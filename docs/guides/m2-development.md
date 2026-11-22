@@ -1,6 +1,6 @@
 # M2 開發與驗證
 
-在 `codex/m2-unit-of-work` 實作，產品版本固定 0.1.0。正式交付範圍以里程碑規劃 M2 為準；133 個具名子情境映射於 `tests/contract/m2.json`。開發中報告不等於 Verified。
+在 `codex/m2-unit-of-work` 實作，產品版本固定 0.1.0。正式交付範圍以里程碑規劃 M2 為準；133 個具名子情境映射於 `tests/contract/m2.json`。開發中報告不等於 Verified。來源 `23651f654389af99d8c427b11909c07bc70f58cc` 的正式雙平台驗收已通過，見 [M2 驗收紀錄](../evidence/M2.md)。
 
 ## 隔離服務
 

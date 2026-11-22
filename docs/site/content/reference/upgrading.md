@@ -19,3 +19,21 @@ description: 為應用固定套件來源，並在升級時檢查 API、設定與
 4. 驗證主要使用情境與回復方式後，再部署應用。
 
 套件版本與事件的 SchemaVersion 分別管理。升級框架不代表可以直接改寫已被其他服務使用的事件格式。
+
+## 更新較早的 0.1.0 預覽來源
+
+UOW sentinel 名稱已對齊 UOW_REQUIRED／UOW_CLOSED／UOW_BUSY，取代較早的 UOW_SCOPE_REQUIRED／UOW_SCOPE_ENDED／UOW_CONCURRENT_USE。已提交後的觀察器錯誤只記錄，不再使 Within 返回業務失敗。
+
+Bookstore 的資料表新增 nullable deleted_at，app role 需要 UPDATE 權限；tenant policies 同時比對完整 Scope，Worker 也要更新 transaction-local 設定。不要只更新一半的 schema 或程序。保留資料時先備份並規劃明示的部署遷移；API 啟動不自動改表。
+
+只使用 disposable demo 時，可先停止自己的 API／Worker，再確認 demo project 歸屬並清除其 volumes，然後重新執行教學準備步驟。這會刪除該 demo 的書籍資料，不能用在正式資料庫：
+
+```powershell
+$env:PANGOLIN_M1_PG_PORT = "15542"
+$env:PANGOLIN_M1_NATS_PORT = "14322"
+$env:PANGOLIN_M1_IDP_PORT = "18180"
+docker compose -p pangolin-bookstore-demo -f deploy/compose/m1.yaml down --volumes --rmi local
+pwsh ./examples/bookstore/scripts/demo.ps1 up
+```
+
+未知 Scope Kind 在預設 Bookstore 由舊的 403 改為 400／SCOPE_KIND_UNSUPPORTED。組織範例改用獨立 ScopeAware Repository，不能直接沿用 TenantOnly 資料表。

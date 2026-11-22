@@ -26,6 +26,10 @@ cd pangolin-framework/examples/basics
 
 若你設定過 `APP_NAME`，設定／問候範例會使用該值；移除它即可看到表中的預設輸出。
 
+## 需要資料庫的交易範例
+
+先完成 Bookstore 的服務準備，設定 PANGOLIN_DSN 後，從 `examples/basics` 執行 `go run ./transactions`。五行結果應全部為 true，依序顯示共用根、獨立根、父回滾、子提交及範圍結束。完整程式、命令與對帳方式見[交易傳播教學](../tutorials/transactions.mdx)。
+
 ## HTTP、交易與多租戶範例
 
 | 想學的套件 | 執行中的範例 | 使用說明 |

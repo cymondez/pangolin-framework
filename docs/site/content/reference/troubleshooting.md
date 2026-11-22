@@ -23,7 +23,9 @@ description: 排查安裝、執行範例、登入、租戶與交易的常見問�
 
 缺少資料表時，先完成教學的服務準備步驟，再啟動 API。需要重新操作時先停止自己的 API／Worker，再執行 demo.ps1 up；既有書籍資料會保留。
 
-## API 回應 401 或 403
+## API 回應 400、401 或 403
+
+400／SCOPE_KIND_UNSUPPORTED：預設 Bookstore 只接受 tenant Kind，不會把其他 Kind 當成 Tenant。
 
 401：Token 可能過期或不正確，本機教學 Token 有效五分鐘，重新執行登入步驟。403：檢查 Tenant Header 是否與登入身份相同，移除自行填入的其他 Scope。
 
@@ -38,3 +40,11 @@ Required 共用同一交易，內層失敗後，外層捕捉錯誤也不會讓�
 ## 書籍已建立，背景資料卻沒有更新
 
 確認 Worker 仍在執行，並使用教學中的 stream／subject、worker DB role 與 Tenant 清單。Broker 接受訊息不等於 Consumer 已完成；詳見[事件指南](../events/integration-events.mdx)。
+
+## RequiresNew 等不到連線或資料
+
+子交易需要另一條連線，也看不到父尚未提交的資料。確認 Pool 容量與父持有的鎖，設定短 Timeout 與合理深度；不要改用父 Executor，暫停期間會返回 UOW_SUSPENDED。
+
+## UOW_BUSY、UOW_CLOSED 或 UOW_RESOURCE_MISMATCH
+
+同一 Executor 只依序執行 SQL，Query 的 Rows 必須關閉，QueryRow 必須 Scan。callback 結束後使用新操作的 context；同一根操作不要混用不同資料庫 key。捕捉這些錯誤不會讓已失敗的根交易恢復提交。

@@ -1,5 +1,7 @@
 """Run the public tutorials as a consumer in a separate Go module."""
+import argparse
 import json
+import os
 from pathlib import Path
 import re
 import shutil
@@ -12,6 +14,9 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def main():
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--database',action='store_true',help='execute the PostgreSQL transaction example against the prepared disposable Bookstore database')
+    args=parser.parse_args()
     cache = ROOT / '.cache'
     cache.mkdir(exist_ok=True)
     project = Path(tempfile.mkdtemp(prefix='docs-beginner-', dir=cache)).resolve()
@@ -59,14 +64,21 @@ def main():
         source = (ROOT / 'docs/site/content' / document).read_text(encoding='utf-8')
         code = re.search(r'```go\n(.*?)```', source, re.S).group(1)
         (books / target).write_text(code, encoding='utf-8')
+    setup=project/'setup';setup.mkdir()
+    guide=(ROOT/'docs/site/content/security/resource-scopes.md').read_text(encoding='utf-8')
+    (setup/'organization.go').write_text(re.search(r'```go\n(.*?)```',guide,re.S).group(1),encoding='utf-8')
+    shutil.copyfile(ROOT/'examples/basics/transactions/main.go',project/'main.go')
     run(['go', 'mod', 'tidy'])
     run(['go', 'build', './...'])
+    if args.database:
+        if not os.getenv('PANGOLIN_DSN'):raise ValueError('--database requires PANGOLIN_DSN for the disposable Bookstore database')
+        run(['go','run','.'],'Required shares root: true\nRequiresNew has new root: true\nParent rolled back: true\nChild committed: true\nScope closed: true')
     report = {'status': 'passed', 'framework_version': version, 'consumer_project': str(project),
-              'samples': list(samples), 'commands': commands}
+              'samples': list(samples)+(['transactions'] if args.database else []), 'database_example_executed':args.database, 'commands': commands}
     output = ROOT / 'artifacts/docs'
     output.mkdir(parents=True, exist_ok=True)
     (output / 'beginner-examples.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-    print(f'PASS: {len(samples)} runnable consumer examples, environment overrides, invalid config, and manual Go snippets.')
+    print(f'PASS: {len(report["samples"])} runnable consumer examples, environment overrides, invalid config, and manual Go snippets.')
     print(f'Consumer project retained: {project}')
 
 

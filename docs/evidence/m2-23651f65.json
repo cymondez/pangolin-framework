@@ -1,0 +1,229 @@
+{
+  "milestone": "M2",
+  "baseline": "v1.3",
+  "source_commit": "23651f654389af99d8c427b11909c07bc70f58cc",
+  "source_sha256": "f3489a0e63045f360ecd1237216ab67358863cd2469979edd31d13437a46d5d4",
+  "gate_sha256": "6543c9f381f3740c4cbf3386c85ee87c5876f2af7aec5ea8c9207927755e947f",
+  "named_subtests": 133,
+  "reports": {
+    "windows-amd64": {
+      "sha256": "1f778dcf2a2f5ff802da946e55e3c451fe1981bcebeef9186f9fd1b8d5abc8c6",
+      "platform": {
+        "CGO_ENABLED": "0",
+        "GOARCH": "amd64",
+        "GOOS": "windows",
+        "GOVERSION": "go1.27.4"
+      },
+      "source_sha256": "f3489a0e63045f360ecd1237216ab67358863cd2469979edd31d13437a46d5d4",
+      "overall": {
+        "covered_statements": 1787,
+        "total_statements": 1916
+      },
+      "packages": {
+        "github.com/cymondez/pangolin-framework/application": {
+          "covered_statements": 6,
+          "total_statements": 6
+        },
+        "github.com/cymondez/pangolin-framework/events/distributed": {
+          "covered_statements": 16,
+          "total_statements": 16
+        },
+        "github.com/cymondez/pangolin-framework/events/nats": {
+          "covered_statements": 34,
+          "total_statements": 37
+        },
+        "github.com/cymondez/pangolin-framework/examples/bookstore/application": {
+          "covered_statements": 19,
+          "total_statements": 25
+        },
+        "github.com/cymondez/pangolin-framework/examples/bookstore/bootstrap": {
+          "covered_statements": 125,
+          "total_statements": 145
+        },
+        "github.com/cymondez/pangolin-framework/examples/bookstore/cmd/api": {
+          "covered_statements": 3,
+          "total_statements": 5
+        },
+        "github.com/cymondez/pangolin-framework/examples/bookstore/cmd/worker": {
+          "covered_statements": 3,
+          "total_statements": 5
+        },
+        "github.com/cymondez/pangolin-framework/examples/bookstore/domain": {
+          "covered_statements": 3,
+          "total_statements": 4
+        },
+        "github.com/cymondez/pangolin-framework/examples/bookstore/infrastructure": {
+          "covered_statements": 135,
+          "total_statements": 170
+        },
+        "github.com/cymondez/pangolin-framework/examples/bookstore/transport/http": {
+          "covered_statements": 73,
+          "total_statements": 79
+        },
+        "github.com/cymondez/pangolin-framework/internal/quality": {
+          "covered_statements": 132,
+          "total_statements": 132
+        },
+        "github.com/cymondez/pangolin-framework/kernel/config": {
+          "covered_statements": 45,
+          "total_statements": 45
+        },
+        "github.com/cymondez/pangolin-framework/kernel/di": {
+          "covered_statements": 179,
+          "total_statements": 182
+        },
+        "github.com/cymondez/pangolin-framework/kernel/module": {
+          "covered_statements": 152,
+          "total_statements": 159
+        },
+        "github.com/cymondez/pangolin-framework/kernel/runtime": {
+          "covered_statements": 166,
+          "total_statements": 171
+        },
+        "github.com/cymondez/pangolin-framework/modules/organization": {
+          "covered_statements": 22,
+          "total_statements": 24
+        },
+        "github.com/cymondez/pangolin-framework/persistence/postgres": {
+          "covered_statements": 113,
+          "total_statements": 119
+        },
+        "github.com/cymondez/pangolin-framework/persistence/uow": {
+          "covered_statements": 319,
+          "total_statements": 344
+        },
+        "github.com/cymondez/pangolin-framework/security/authn": {
+          "covered_statements": 62,
+          "total_statements": 63
+        },
+        "github.com/cymondez/pangolin-framework/security/scope": {
+          "covered_statements": 84,
+          "total_statements": 86
+        },
+        "github.com/cymondez/pangolin-framework/tools/check": {
+          "covered_statements": 48,
+          "total_statements": 51
+        },
+        "github.com/cymondez/pangolin-framework/transport/http": {
+          "covered_statements": 48,
+          "total_statements": 48
+        }
+      }
+    },
+    "linux-amd64": {
+      "sha256": "0a9d1dbefe37707defaddc1038e91615917e466e5882972e3cd1bd029c775244",
+      "platform": {
+        "CGO_ENABLED": "1",
+        "GOARCH": "amd64",
+        "GOOS": "linux",
+        "GOVERSION": "go1.27.4"
+      },
+      "source_sha256": "f3489a0e63045f360ecd1237216ab67358863cd2469979edd31d13437a46d5d4",
+      "overall": {
+        "covered_statements": 1786,
+        "total_statements": 1916
+      },
+      "packages": {
+        "github.com/cymondez/pangolin-framework/application": {
+          "covered_statements": 6,
+          "total_statements": 6
+        },
+        "github.com/cymondez/pangolin-framework/events/distributed": {
+          "covered_statements": 16,
+          "total_statements": 16
+        },
+        "github.com/cymondez/pangolin-framework/events/nats": {
+          "covered_statements": 34,
+          "total_statements": 37
+        },
+        "github.com/cymondez/pangolin-framework/examples/bookstore/application": {
+          "covered_statements": 19,
+          "total_statements": 25
+        },
+        "github.com/cymondez/pangolin-framework/examples/bookstore/bootstrap": {
+          "covered_statements": 124,
+          "total_statements": 145
+        },
+        "github.com/cymondez/pangolin-framework/examples/bookstore/cmd/api": {
+          "covered_statements": 3,
+          "total_statements": 5
+        },
+        "github.com/cymondez/pangolin-framework/examples/bookstore/cmd/worker": {
+          "covered_statements": 3,
+          "total_statements": 5
+        },
+        "github.com/cymondez/pangolin-framework/examples/bookstore/domain": {
+          "covered_statements": 3,
+          "total_statements": 4
+        },
+        "github.com/cymondez/pangolin-framework/examples/bookstore/infrastructure": {
+          "covered_statements": 135,
+          "total_statements": 170
+        },
+        "github.com/cymondez/pangolin-framework/examples/bookstore/transport/http": {
+          "covered_statements": 73,
+          "total_statements": 79
+        },
+        "github.com/cymondez/pangolin-framework/internal/quality": {
+          "covered_statements": 132,
+          "total_statements": 132
+        },
+        "github.com/cymondez/pangolin-framework/kernel/config": {
+          "covered_statements": 45,
+          "total_statements": 45
+        },
+        "github.com/cymondez/pangolin-framework/kernel/di": {
+          "covered_statements": 179,
+          "total_statements": 182
+        },
+        "github.com/cymondez/pangolin-framework/kernel/module": {
+          "covered_statements": 152,
+          "total_statements": 159
+        },
+        "github.com/cymondez/pangolin-framework/kernel/runtime": {
+          "covered_statements": 166,
+          "total_statements": 171
+        },
+        "github.com/cymondez/pangolin-framework/modules/organization": {
+          "covered_statements": 22,
+          "total_statements": 24
+        },
+        "github.com/cymondez/pangolin-framework/persistence/postgres": {
+          "covered_statements": 113,
+          "total_statements": 119
+        },
+        "github.com/cymondez/pangolin-framework/persistence/uow": {
+          "covered_statements": 319,
+          "total_statements": 344
+        },
+        "github.com/cymondez/pangolin-framework/security/authn": {
+          "covered_statements": 62,
+          "total_statements": 63
+        },
+        "github.com/cymondez/pangolin-framework/security/scope": {
+          "covered_statements": 84,
+          "total_statements": 86
+        },
+        "github.com/cymondez/pangolin-framework/tools/check": {
+          "covered_statements": 48,
+          "total_statements": 51
+        },
+        "github.com/cymondez/pangolin-framework/transport/http": {
+          "covered_statements": 48,
+          "total_statements": 48
+        }
+      }
+    }
+  },
+  "environment_artifacts": {
+    "environment.json": "9454aa6cd2e99db7fcf5b5a21db6d68c71c761403a98485ac50c600010645139",
+    "compose.log": "222a6f5fdf735522797b5d79a1acfffa331b582819161395962dca3314e9957e",
+    "cleanup.json": "5785589387f20e2b3e1f29235368bbc1eaaf46e29a0c26e9240c40de96741ce9"
+  },
+  "documentation_evidence": {
+    "artifacts/docs/beginner-examples.json": "085662f0a937575fcc17ee28e137afe9be45e9f072a1307d4a27d5f6bcd2ee92",
+    "artifacts/docs/m2-qa.json": "c52aba0e568bd22da011807d0cd9b4513895d817935471ba31957bdcea51636c",
+    "artifacts/docs/m2-transactions.jpg": "9f7861e3b9c3366a53522386256c767a442f606f407908d690206328639f0b3c",
+    "artifacts/docs/m2-scopes.jpg": "4e40004ebb794b415f0eee92e816484d2937671242d36c64f288794d05544a98"
+  }
+}
