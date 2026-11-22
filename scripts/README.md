@@ -16,3 +16,5 @@
 | `contract_matrix.py` | 421 個具名驗收計畫與 Profile manifest 的生成來源 |
 
 Docker 啟停前先盤點專案／ports／volumes／資源，只操作本次隔離名稱；不重啟 Engine 或全域 prune。歷史腳本／命令的相容性以當時來源 commit 為準，現行完整 Gate 見 [工具索引](../tools/README.md)。
+
+M2 現行累積入口為 m2.py，重用 m1.py 的工程檢查及分程序 E2E，再合併 M2 真實驗收。連線與清理見 [M2 指南](../docs/guides/m2-development.md)。

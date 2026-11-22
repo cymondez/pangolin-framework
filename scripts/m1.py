@@ -17,7 +17,7 @@ ROOT=m0.ROOT
 
 
 def source_hash():
-    paths=m0.command(["git","ls-files","--cached","--others","--exclude-standard"]).splitlines()
+    paths=m0.command(["git","-c","core.quotepath=false","ls-files","--cached","--others","--exclude-standard"]).splitlines()
     digest=hashlib.sha256()
     for name in sorted(set(paths)):
         path=ROOT/name
@@ -107,25 +107,28 @@ def gate(commit):
     (root/"gate.json").write_text(json.dumps(result,indent=2)+"\n");print(json.dumps(result,indent=2))
 
 
-def verify(args):
+def verify(args, increment=None):
+    milestone=increment["milestone"] if increment else "M1"
     commit=m0.revision();source=source_hash();dirty=not m0.clean()
     platform=json.loads(m0.command(["go","env","-json","GOOS","GOARCH","GOVERSION","CGO_ENABLED"]))
     if platform["GOVERSION"]!="go"+m0.load(ROOT/"deploy/toolchain.json")["go"]:raise ValueError("unexpected toolchain")
     label=platform["GOOS"]+"-"+platform["GOARCH"]
     # Dirty development runs are inspectable but cannot become Verified evidence.
-    output=ROOT/"artifacts"/("m1-development-"+source[:12]+"/"+label if dirty else commit+"/m1/"+label)
+    output=ROOT/"artifacts"/(milestone.lower()+"-development-"+source[:12]+"/"+label if dirty else commit+"/"+milestone.lower()+"/"+label)
     output.mkdir(parents=True,exist_ok=True)
-    report={"milestone":"M1","commit":commit,"source_sha256":source,"working_tree_dirty":dirty,"baseline":"v1.3","platform":platform,"seed":20261121,"project":args.project,"status":"failed","commands":[]}
+    report={"milestone":milestone,"commit":commit,"source_sha256":source,"working_tree_dirty":dirty,"baseline":"v1.3","platform":platform,"seed":20261121,"project":args.project,"status":"failed","commands":[]}
     mapping=m0.load(ROOT/"tests/contract/m1.json");validate_mapping(mapping)
     check_module_docs(mapping)
+    if increment: check_module_docs(increment)
     report["inputs"]={name:m0.digest(ROOT/name) for name in ("VERSION","go.mod","go.sum","deploy/toolchain.json","deploy/profiles/local.json","deploy/dependencies.json","tests/fixtures/manifest.json","tests/contract/api.json","tests/contract/m1.json")}
+    if increment: report["inputs"]["tests/contract/m2.json"]=m0.digest(ROOT/"tests/contract/m2.json")
     def execute(argv,name=None):
         index=len(report["commands"]);name=name or "e2e-step";log=output/f"{index:02d}-{name}.log";started=time.monotonic()
         result=subprocess.run(argv,cwd=ROOT,env=m0.go_environment(ROOT),capture_output=True,text=True,encoding="utf-8",errors="replace")
         log.write_text(result.stdout+result.stderr,encoding="utf-8")
         report["commands"].append({"name":name,"argv":argv,"exit_code":result.returncode,"log":log.name,"sha256":m0.digest(log),"seconds":round(time.monotonic()-started,3)})
         if result.returncode: raise ValueError("gate failed: "+name+"; see "+str(log))
-        if name in {"m0-regression","m1-regression"}:validate_python_output(result.stdout+result.stderr,mapping["python_tests"].values() if name=="m1-regression" else ())
+        if name in {"m0-regression","m1-regression","m2-regression"}:validate_python_output(result.stdout+result.stderr,mapping["python_tests"].values() if name=="m1-regression" else increment["python_tests"].values() if name=="m2-regression" else ())
         print("PASS",name,flush=True)
         return result.stdout
     try:
@@ -138,20 +141,21 @@ def verify(args):
         execute(["go","mod","verify"],"go-module-verify")
         execute([sys.executable,"-m","unittest","discover","-v","-s","tests/m0","-p","test_*.py"],"m0-regression")
         execute([sys.executable,"-m","unittest","discover","-v","-s","tests/m1","-p","test_*.py"],"m1-regression")
-        packages=",".join(p for p in m0.command(["go","list","./..."]).splitlines() if "/internal/testkit/" not in p and "/infrastructure/internal/bookdb" not in p)
+        if increment: execute([sys.executable,"-m","unittest","discover","-v","-s","tests/m2","-p","test_*.py"],"m2-regression")
+        packages=",".join(p for p in m0.command(["go","list","./..."]).splitlines() if "/internal/testkit/" not in p and "/infrastructure/internal/" not in p)
         unit=execute(["go","test","-count=1","-json","-covermode=atomic","-coverpkg="+packages,"-coverprofile="+str(output/"unit.out"),"./..."],"unit")
-        report["tests"]=validate_tests(unit,[v for v in mapping["go_tests"].values()])
-        integration=execute(["go","test","-count=1","-json","-tags=integration","-covermode=atomic","-coverpkg="+packages,"-coverprofile="+str(output/"integration.out"),"./tests/m1"],"integration")
-        report["integration_tests"]=validate_tests(integration,[m0.MODULE+"/tests/m1:TestM1Flow"])
+        report["tests"]=validate_tests(unit,[*mapping["go_tests"].values(),*(increment["unit_tests"].values() if increment else [])])
+        integration=execute(["go","test","-p=1","-count=1","-json","-tags=integration","-covermode=atomic","-coverpkg="+packages,"-coverprofile="+str(output/"integration.out"),"./tests/m1",*(["./tests/m2"] if increment else [])],"integration")
+        report["integration_tests"]=validate_tests(integration,[m0.MODULE+"/tests/m1:TestM1Flow",*(increment["integration_tests"].values() if increment else [])])
         report["e2e"]=m1_e2e.run(output,args.project,packages,execute)
         report["commands"].append({"name":"e2e","exit_code":0})
         if args.race:
             race=execute(["go","test","-count=1","-json","-race","-tags=integration","./..."],"race");validate_tests(race)
         sqlc=os.getenv("PANGOLIN_SQLC",str(ROOT/".cache/bin"/("sqlc.exe" if os.name=="nt" else "sqlc")))
         if execute([sqlc,"version"],"generation-version").strip()!="v1.31.1":raise ValueError("wrong sqlc version")
-        generated=list((ROOT/"examples/bookstore/infrastructure/internal/bookdb").glob("*.go"));before={p.name:m0.digest(p) for p in generated}
+        generated=list((ROOT/"examples/bookstore/infrastructure/internal").glob("*/*.go"));before={str(p.relative_to(ROOT)):m0.digest(p) for p in generated}
         execute([sqlc,"generate"],"generation")
-        if before!={p.name:m0.digest(p) for p in generated}:raise ValueError("sqlc generated source drift")
+        if before!={str(p.relative_to(ROOT)):m0.digest(p) for p in generated}:raise ValueError("sqlc generated source drift")
         merge_profiles([output/"unit.out",output/"integration.out",output/"e2e.out"],output/"merged.out")
         counts=execute(["go","run","./tools/check","-coverage",str(output/"merged.out")],"coverage")
         (output/"coverage.json").write_text(json.dumps(json.loads(counts.splitlines()[0]),indent=2)+"\n",encoding="utf-8")

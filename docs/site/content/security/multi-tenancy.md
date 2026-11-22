@@ -35,4 +35,4 @@ if err != nil { return }
 
 Header 中的 Tenant 只當成候選值，仍須與已驗證的身份比對。Bookstore 允許 `X-Tenant-ID`，但跨租戶請求回應 403；[教學第 6 步](../tutorials/bookstore.md#6-試試跨租戶存取)可以實際測試。
 
-目前支援 tenant Scope。Enterprise／Organization Scope 尚不提供，應用也不需要建立假的組織資料才能使用多租戶功能。
+預設 tenant-only 組裝不需要假的組織資料。需要在同 Tenant 內隔離團隊資源時，請閱讀[資源 Scope 與組織擴充](resource-scopes.md)；目前提供 Provider／Module 組裝邊界，完整組織治理尚未提供。

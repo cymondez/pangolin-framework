@@ -6,7 +6,7 @@
 
 ```text
 kernel/、persistence/、security/、events/   共用框架公開能力
-modules/organization/contracts/            尚待完整模組實作的穩定管理 Port
+modules/organization/                      可選 Provider 組裝薄片；contracts 為穩定管理 Port
 examples/bookstore/
   cmd/api/、cmd/worker/                    範例的兩個可執行入口
   bootstrap/                              模組、Provider 與程序組裝
@@ -50,3 +50,5 @@ Bookstore 專用 main 及 Handler 已集中於範例。根目錄 cmd 將保留�
 - [目錄整理回歸紀錄](../evidence/source-layout.md)：搬移後的跨平台完整 Gate 與 API 比對結果。
 
 每個模組 README 隨程式一起維護。歷史 evidence 保留當時的來源 commit／路徑；不能因本次搬移重寫舊 report、原始 profile 或 hash。
+
+M2 共用呼叫政策位於 application，共用 HTTP／串流邊界位於 transport/http；organization 模組根目錄現在提供可選 Provider 組裝薄片。跨套件驗收新增 tests/m2，完整操作入口見 [M2 開發指南](m2-development.md)。

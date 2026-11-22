@@ -1,4 +1,4 @@
-// Package scope defines neutral resource scope ports. Binding/admission are not implemented in M0.
+// Package scope defines neutral exact-owner references, providers and trusted bindings.
 package scope
 
 import "context"

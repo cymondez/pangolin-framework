@@ -14,6 +14,7 @@ import (
 	"github.com/cymondez/pangolin-framework/persistence/uow"
 	"github.com/cymondez/pangolin-framework/security/authn"
 	"github.com/cymondez/pangolin-framework/security/scope"
+	response "github.com/cymondez/pangolin-framework/transport/http"
 )
 
 type BookService interface {
@@ -76,7 +77,11 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if hint == "" {
 		hint = tenant
 	}
-	if r.Header.Get("X-Scope-Kind") != "" && r.Header.Get("X-Scope-Kind") != "tenant" || r.Header.Get("X-Scope-ID") != "" && r.Header.Get("X-Scope-ID") != tenant {
+	if r.Header.Get("X-Scope-Kind") != "" && r.Header.Get("X-Scope-Kind") != "tenant" {
+		problem(w, r, 400, "SCOPE_KIND_UNSUPPORTED")
+		return
+	}
+	if r.Header.Get("X-Scope-ID") != "" && r.Header.Get("X-Scope-ID") != tenant {
 		problem(w, r, 403, "PERMISSION_DENIED")
 		return
 	}
@@ -86,6 +91,11 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var book domain.Book
+	// This transport owns the outer operation; a joined child must not send 2xx.
+	if e := uow.Check(ctx, false); !errors.Is(e, uow.ErrRequired) {
+		response.WriteError(w, r, uow.ErrBusy)
+		return
+	}
 	switch {
 	case r.Method == http.MethodPost && r.URL.Path == "/books":
 		var request struct {
@@ -121,8 +131,9 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			status, code = 422, "VALIDATION_FAILED"
 		}
 		var failure uow.Error
-		if errors.As(e, &failure) && failure.Outcome() == uow.Unknown {
-			status, code = 503, "UOW_COMMIT_UNKNOWN"
+		if errors.As(e, &failure) && status == 500 {
+			response.WriteError(w, r, e)
+			return
 		}
 		problem(w, r, status, code)
 		return

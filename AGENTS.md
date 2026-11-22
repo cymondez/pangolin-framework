@@ -6,7 +6,7 @@ panGOlin-framework 是 Go 模組化應用框架，先以模組化單體交付，
 
 ## 目前狀態與文件權威
 
-**核對日期：2026-11-21。** M0 已 Verified，來源 commit `a0b1ad099fdf7bd28240514a24c34590220019a1`，見 [M0 驗收紀錄](docs/evidence/M0.md)。M1 已 Verified，來源 `9eb10df6cd848b87fda964f0b6b61d60dc12b0a6`，見 [M1 驗收紀錄](docs/evidence/M1.md)：交付 Kernel／DI／Config／Drain 與 tenant-only Bookstore Required 交易、JWT／RLS／分程序事件薄片，Windows／Linux（含 race）同版 Gate 通過，20 份模組 README 已補齊。完整 UOW／安全／通用 Adapter、CLI 與 Organization 仍依 M2–M6 交付。文件基線 v1.3、產品目標 v0.1.0；狀態由里程碑規劃書維護，重現方式見 [M1 開發指南](docs/guides/m1-development.md)。
+**核對日期：2026-11-22。** M0 已 Verified，來源 commit `a0b1ad099fdf7bd28240514a24c34590220019a1`，見 [M0 驗收紀錄](docs/evidence/M0.md)。M1 已 Verified，來源 `9eb10df6cd848b87fda964f0b6b61d60dc12b0a6`，見 [M1 驗收紀錄](docs/evidence/M1.md)：交付 Kernel／DI／Config／Drain 與 tenant-only Bookstore Required 交易、JWT／RLS／分程序事件薄片，Windows／Linux（含 race）同版 Gate 通過，20 份模組 README 已補齊。M2 已於來源 `23651f654389af99d8c427b11909c07bc70f58cc` 通過 UOW／Persistence／中立 Scope 核心驗收，見 [M2 驗收紀錄](docs/evidence/M2.md)。完整安全／可靠事件、組織治理、CLI 與平台服務仍依 M3–M6 交付。文件基線 v1.3、產品目標 v0.1.0；狀態由里程碑規劃書維護，重現方式見 [M1 開發指南](docs/guides/m1-development.md)。
 
 本檔下文的 package、介面與執行流程都是既定設計的導覽，不表示對應目錄或功能已存在。實作開始後應同步更新這段狀態；不能由文件完成推論 Runtime 可執行或品質門檻已通過。
 
@@ -129,6 +129,8 @@ M1 後續目錄整理已在來源 `b3bf59c03f4b66ff7389d44d8434356258a85d9a` 通
 - Command 冪等唯一鍵包含 Tenant、Scope Kind／ID、Principal、operation、key；在業務修改前保留，與成功結果／Outbox 同交易提交。併發靠 DB 唯一約束，不以先查後寫取代。
 - Commit Unknown 用原 key 對帳；查無結果不代表確定失敗。結果查詢與重播重新驗證目前權限，不能藉快取或舊成功紀錄繞過撤權。
 
+M2 已於來源 `23651f654389af99d8c427b11909c07bc70f58cc` 通過同版 Windows／Linux（含 race）驗收，見 [M2 驗收紀錄](docs/evidence/M2.md)；開發分支為 `codex/m2-unit-of-work`，重現入口見 [M2 開發指南](docs/guides/m2-development.md)。共用 Application 政策在 `application`、交易感知 HTTP／短串流操作在 `transport/http`、可選組織 Provider 組裝在 `modules/organization`；正式完成狀態仍以同版 Gate 與里程碑維護。
+
 ## 機制與模組索引
 
 以下是目標 package 與權威章節；建檔前先確認目前實際結構。
@@ -176,7 +178,7 @@ v0.1.0 的正式範圍只由[實作規範 §15](design/panGOlin-framework_實作
 
 依據：[實作規範 §13](design/panGOlin-framework_實作規範書.md#s-13)、[里程碑規劃書](design/panGOlin-framework_里程碑規劃書.md)。
 
-目前完整入口為 M1；Windows 使用 `scripts/check.ps1`，Linux 使用 `scripts/check.sh`，依 [M1 開發指南](docs/guides/m1-development.md) 設定連線並先盤點共用環境。`m0.py check` 保留契約盤點，M0 歷史 verify 不代替 M1 Gate。文件修改仍需檢查連結、章節、ID 與敘述一致性；品質工具測試不能代替 Runtime 驗收。從實際 module／workspace 執行適用的基礎檢查：
+目前完整入口為 M2 累積 Gate；Windows 使用 `scripts/check.ps1`，Linux 使用 `scripts/check.sh`，依 [M2 開發指南](docs/guides/m2-development.md) 設定連線並先盤點共用環境。`m0.py check` 保留契約盤點，M0 歷史 verify 不代替 M1 Gate。文件修改仍需檢查連結、章節、ID 與敘述一致性；品質工具測試不能代替 Runtime 驗收。從實際 module／workspace 執行適用的基礎檢查：
 
 ```powershell
 go env GOMOD GOWORK

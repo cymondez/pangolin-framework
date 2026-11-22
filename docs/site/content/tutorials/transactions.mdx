@@ -1,0 +1,57 @@
+---
+title: 交易傳播：共用或獨立提交
+description: 用真實 PostgreSQL 觀察 Required 共用交易，以及 RequiresNew 子提交與父回滾的關係。
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import source from '../_snippets/transactions.go';
+
+當服務呼叫另一個服務時，你需要決定它們是否一起成功。這個教學讓你實際觀察兩種選擇，再從新的交易查證結果。
+
+## 先準備資料庫
+
+先完成 [Bookstore 教學的服務準備](bookstore.md#1-準備示範服務)。這次只需要資料庫；API 與 Worker 可以停止，資料庫服務保持執行。
+
+切到套件來源的 **`pangolin-framework/examples/basics`**：
+
+```powershell
+$env:PANGOLIN_DSN = 'postgres://pangolin_app:local-app-only@127.0.0.1:15542/pangolin_m0?sslmode=disable'
+go run ./transactions
+```
+
+預期輸出：
+
+```text
+Required shares root: true
+RequiresNew has new root: true
+Parent rolled back: true
+Child committed: true
+Scope closed: true
+```
+
+## 完整程式
+
+<CodeBlock language="go" title="transactions/main.go">{source}</CodeBlock>
+
+固定的 `local-demo` 身分只用於本機命令列教學。在 HTTP 應用中，IdentityReader 應由已驗證的登入身分提供；不能信任 body 自報的 Tenant 或角色。
+
+## 程式做了什麼？
+
+1. 外層可寫交易建立一筆書籍。
+2. Required 子範圍取得相同根 ID，並限制為唯讀；子範圍結束時沒有提交。
+3. RequiresNew 暫停父範圍，使用另一條連線與獨立交易建立第二筆書籍。
+4. 子交易提交後，外層刻意失敗，因此第一筆書籍回滾。
+5. 新的唯讀交易查詢兩筆資料：父資料不存在，子資料仍存在。
+
+子提交留下 tenant-a 的一筆示範書籍。每次執行使用新 ID；教學結束時停止自己的示範服務並清除其資料即可。
+
+## 選擇哪一種傳播？
+
+| 你的需求 | 選擇 | 需要注意 |
+|---|---|---|
+| 多個服務共同完成同一次業務操作 | Required | 子失敗使整個根交易 rollback-only，捕捉錯誤也不能恢復提交 |
+| 接受子工作先獨立提交，父工作可能失敗 | RequiresNew | 子看不到父尚未提交的資料；不等同 Savepoint |
+
+RequiresNew 仍受父操作剩餘期限與深度上限限制，且不能切換 Tenant、Principal 或資源 Scope。連線池必須有第二條可用連線；子操作碰到父持有的鎖時可能等待至逾時。
+
+接著閱讀 [工作單元](../data/unit-of-work.md) 的選項與錯誤處理，以及 [PostgreSQL](../data/postgresql.md) 的 Rows 關閉規則。

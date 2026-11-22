@@ -36,3 +36,15 @@
 上述為本機文件／使用範例驗證，遠端 CI 僅新增設定、未宣稱已執行。後續依使用者要求清理已確認歸屬本專案的一次性環境：移除 8 個已停止容器、14 個測試 volumes、2 個測試 network 與 7 個無使用的專用測試 IdP 映像；紀錄保存於 `.cache/pangolin-test-cleanup-result.json`。其他專案維持原狀。
 
 供使用者瀏覽的正式 `pangolin-docs` 本機服務保留於 `http://localhost:18088/`。已套用「晨光藍砂」配色，重新檢視桌面／手機首頁、文件、中文搜尋、手機導覽與手動明暗切換；首頁示意卡保持水平。建置仍通過 25 頁與 1097 個站內連結，畫面與檢查摘要保存於 `artifacts/docs/home-dawn.jpg`、`reading-dawn.jpg` 與 `dawn-qa.json`。這次配色調整沿用同一個 docs 服務，未建立一次性測試環境。
+
+## 交易與 Scope 文件增量走查（2026-11-22）
+
+在 M2 Runtime 同版 Gate 通過後更新公開文件，新增交易傳播循序教學與資源 Scope 擴充指南，並同步 UOW／PostgreSQL／相容性／升級／錯誤回應。導覽維持套件使用者視角，沒有新增內部里程碑或驗收入口。
+
+`python scripts/docs_examples.py --database` 在新的獨立 consumer module 執行七份完整程式；交易範例使用真實 PostgreSQL，五項輸出皆為 true，證明 Required 共根、RequiresNew 新根、父回滾、子提交及舊 Scope 結束。手冊 Service／Repository／Organization 組裝完整檔案也編譯通過；預設驗證不需要 DB，資料庫操作必須明示 --database，不假報執行。
+
+Native production build 與 Docker build 都通過 27 頁、1233 個站內連結及一份搜尋索引。原生版本快照／對應頁切換／current 與封存程式碼及搜尋隔離／子路徑檢查通過 50 頁、2431 個連結及兩份索引，正式 checkout 沒有建立發行快照。Windows 沙箱建立 security 輸出目錄曾遭 EPERM；以相同命令取得必要執行權限後已完整通過，沒有變更 ACL。
+
+瀏覽器實際讀取新交易教學的前置條件、命令、輸出與完整程式；搜尋 RequiresNew 出現新教學與疑難排解，透過側邊欄到達資源 Scope 指南，確認完整治理尚未提供的邊界說明。兩頁在預設桌面 viewport 無頁面水平溢出；未因本次文字更新重做手機／配色測試。截圖為 artifacts/docs/m2-transactions.jpg 與 m2-scopes.jpg，摘要為 artifacts/docs/m2-qa.json。
+
+既有 pangolin-docs 服務已重建為更新後內容，維持 `http://localhost:18088/`。

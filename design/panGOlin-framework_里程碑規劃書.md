@@ -14,7 +14,7 @@ lang: zh-TW
 
 本文件依[實作規範書 v1.3](panGOlin-framework_實作規範書.md)安排全框架 v0.1.0 的交付，包含可選的 Enterprise／Organization 單一模組。需求正式句、介面、產品行為、版本範圍、A01–A95 及品質門檻只由實作規範定義；本文件不重新定義它們。
 
-**2026-11-21：M0 已 Verified（來源 commit `a0b1ad099fdf7bd28240514a24c34590220019a1`）；M1 已 Verified（來源 `9eb10df6cd848b87fda964f0b6b61d60dc12b0a6`），M2–M6 與其餘 86 項產品需求保持 Planned。** 已建立的底座及未完成條件見 §2.1。文件、CI 配置或品質工具測試不等於 M0 通過，也不等於 Runtime 已驗收或全框架達成 90% coverage。只有指定 commit 的 Exit 證據完整且 Gate 通過才能改為 Verified。
+**2026-11-21：M0 已 Verified（來源 commit `a0b1ad099fdf7bd28240514a24c34590220019a1`）；M1 已 Verified（來源 `9eb10df6cd848b87fda964f0b6b61d60dc12b0a6`），M2 已 Verified（來源 `23651f654389af99d8c427b11909c07bc70f58cc`）；M3–M6 的其餘 50 項產品需求保持 Planned。** 已建立的底座及未完成條件見 §2.1。文件、CI 配置或品質工具測試不等於 M0 通過，也不等於 Runtime 已驗收或全框架達成 90% coverage。只有指定 commit 的 Exit 證據完整且 Gate 通過才能改為 Verified。
 
 ## 1. 範圍、估算與角色
 
@@ -168,6 +168,8 @@ flowchart LR
 
 ### M2 — UOW／Persistence 與中立 Scope 完整
 
+**狀態：Verified；來源 `23651f654389af99d8c427b11909c07bc70f58cc`，分支 `codex/m2-unit-of-work`。** WP06–WP08、36 項正式需求與 133 個具名子情境及 M1 累積回歸已通過同版 Windows／Linux（含 race）Gate。見 [M2 驗收紀錄](../docs/evidence/M2.md) 與 [M2 開發指南](../docs/guides/m2-development.md)。
+
 **原節奏：** W7–W10；**責任：** Go A 主責，Go C 交付 Scope／模組薄切片，QA 注入故障。  
 **Delivers：** `UOW-001`、`UOW-002`、`UOW-003`、`UOW-005`、`UOW-006`、`UOW-007`、`UOW-008`、`UOW-009`、`UOW-010`、`UOW-011`、`UOW-012`、`UOW-013`、`UOW-014`、`UOW-015`、`UOW-016`、`UOW-017`、`UOW-019`、`UOW-020`、`UOW-021`、`UOW-022`、`UOW-023`、`UOW-024`、`UOW-025`、`UOW-026`、`UOW-027`、`UOW-028`、`UOW-029`、`UOW-030`、`UOW-031`、`API-001`、`API-003`、`DATA-001`、`SCP-001`、`SCP-002`、`SCP-004`、`ORG-001`。
 
@@ -270,46 +272,46 @@ flowchart LR
 
 | 里程碑 | 需求 ID | 驗收案例／Exit 證據 | 狀態 |
 |---|---|---|---|
-| M2 | UOW-001 | A17；同 commit 的執行結果與規範要求證據 | Planned |
-| M2 | UOW-002 | A18；同 commit 的執行結果與規範要求證據 | Planned |
-| M2 | UOW-003 | A19；同 commit 的執行結果與規範要求證據 | Planned |
+| M2 | UOW-001 | A17；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
+| M2 | UOW-002 | A18；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
+| M2 | UOW-003 | A19；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
 | M3 | UOW-004 | A09；同 commit 的執行結果與規範要求證據 | Planned |
-| M2 | UOW-005 | A20；同 commit 的執行結果與規範要求證據 | Planned |
-| M2 | UOW-006 | A03；同 commit 的執行結果與規範要求證據 | Planned |
-| M2 | UOW-007 | A21；同 commit 的執行結果與規範要求證據 | Planned |
-| M2 | UOW-008 | A22；同 commit 的執行結果與規範要求證據 | Planned |
-| M2 | UOW-009 | A23；同 commit 的執行結果與規範要求證據 | Planned |
-| M2 | UOW-010 | A24；同 commit 的執行結果與規範要求證據 | Planned |
-| M2 | UOW-011 | A25；同 commit 的執行結果與規範要求證據 | Planned |
-| M2 | UOW-012 | A26；同 commit 的執行結果與規範要求證據 | Planned |
-| M2 | UOW-013 | A27；同 commit 的執行結果與規範要求證據 | Planned |
-| M2 | UOW-014 | A28；同 commit 的執行結果與規範要求證據 | Planned |
-| M2 | UOW-015 | A29；同 commit 的執行結果與規範要求證據 | Planned |
-| M2 | UOW-016 | A30；同 commit 的執行結果與規範要求證據 | Planned |
-| M2 | UOW-017 | A31；同 commit 的執行結果與規範要求證據 | Planned |
+| M2 | UOW-005 | A20；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
+| M2 | UOW-006 | A03；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
+| M2 | UOW-007 | A21；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
+| M2 | UOW-008 | A22；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
+| M2 | UOW-009 | A23；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
+| M2 | UOW-010 | A24；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
+| M2 | UOW-011 | A25；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
+| M2 | UOW-012 | A26；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
+| M2 | UOW-013 | A27；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
+| M2 | UOW-014 | A28；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
+| M2 | UOW-015 | A29；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
+| M2 | UOW-016 | A30；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
+| M2 | UOW-017 | A31；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
 | M3 | UOW-018 | A04；同 commit 的執行結果與規範要求證據 | Planned |
-| M2 | UOW-019 | A32；同 commit 的執行結果與規範要求證據 | Planned |
-| M2 | UOW-020 | A05；同 commit 的執行結果與規範要求證據 | Planned |
-| M2 | UOW-021 | A33；同 commit 的執行結果與規範要求證據 | Planned |
-| M2 | UOW-022 | A34；同 commit 的執行結果與規範要求證據 | Planned |
-| M2 | UOW-023 | A35；同 commit 的執行結果與規範要求證據 | Planned |
-| M2 | UOW-024 | A36；同 commit 的執行結果與規範要求證據 | Planned |
-| M2 | UOW-025 | A37；同 commit 的執行結果與規範要求證據 | Planned |
-| M2 | UOW-026 | A38；同 commit 的執行結果與規範要求證據 | Planned |
-| M2 | UOW-027 | A39；同 commit 的執行結果與規範要求證據 | Planned |
-| M2 | UOW-028 | A40；同 commit 的執行結果與規範要求證據 | Planned |
-| M2 | UOW-029 | A41；同 commit 的執行結果與規範要求證據 | Planned |
-| M2 | UOW-030 | A42；同 commit 的執行結果與規範要求證據 | Planned |
-| M2 | UOW-031 | A43；同 commit 的執行結果與規範要求證據 | Planned |
+| M2 | UOW-019 | A32；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
+| M2 | UOW-020 | A05；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
+| M2 | UOW-021 | A33；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
+| M2 | UOW-022 | A34；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
+| M2 | UOW-023 | A35；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
+| M2 | UOW-024 | A36；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
+| M2 | UOW-025 | A37；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
+| M2 | UOW-026 | A38；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
+| M2 | UOW-027 | A39；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
+| M2 | UOW-028 | A40；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
+| M2 | UOW-029 | A41；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
+| M2 | UOW-030 | A42；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
+| M2 | UOW-031 | A43；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
 | M3 | UOW-032 | A44；同 commit 的執行結果與規範要求證據 | Planned |
 | M1 | ARC-001 | A45；同 commit 的執行結果與規範要求證據 | Verified（來源 9eb10df6；見 M1 驗收紀錄） |
 | M1 | MOD-001 | A01；同 commit 的執行結果與規範要求證據 | Verified（來源 9eb10df6；見 M1 驗收紀錄） |
 | M1 | MOD-002 | A02；同 commit 的執行結果與規範要求證據 | Verified（來源 9eb10df6；見 M1 驗收紀錄） |
 | M1 | MOD-003 | A46；同 commit 的執行結果與規範要求證據 | Verified（來源 9eb10df6；見 M1 驗收紀錄） |
 | M1 | CFG-001 | A47；同 commit 的執行結果與規範要求證據 | Verified（來源 9eb10df6；見 M1 驗收紀錄） |
-| M2 | API-001 | A14；同 commit 的執行結果與規範要求證據 | Planned |
+| M2 | API-001 | A14；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
 | M3 | API-002 | A48；同 commit 的執行結果與規範要求證據 | Planned |
-| M2 | API-003 | A49；同 commit 的執行結果與規範要求證據 | Planned |
+| M2 | API-003 | A49；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
 | M3 | EVT-001 | A50；同 commit 的執行結果與規範要求證據 | Planned |
 | M3 | EVT-002 | A51；同 commit 的執行結果與規範要求證據 | Planned |
 | M3 | EVT-003 | A11；同 commit 的執行結果與規範要求證據 | Planned |
@@ -325,7 +327,7 @@ flowchart LR
 | M3 | SEC-001 | A12；同 commit 的執行結果與規範要求證據 | Planned |
 | M3 | SEC-002 | A13；同 commit 的執行結果與規範要求證據 | Planned |
 | M3 | SEC-003 | A58；同 commit 的執行結果與規範要求證據 | Planned |
-| M2 | DATA-001 | A10；同 commit 的執行結果與規範要求證據 | Planned |
+| M2 | DATA-001 | A10；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
 | M3 | DATA-002 | A59；同 commit 的執行結果與規範要求證據 | Planned |
 | M3 | IDEM-001 | A07；同 commit 的執行結果與規範要求證據 | Planned |
 | M3 | IDEM-002 | A60；同 commit 的執行結果與規範要求證據 | Planned |
@@ -342,16 +344,16 @@ flowchart LR
 | M6 | REL-003 | A70；同 commit 的執行結果與規範要求證據 | Planned |
 | M1 | REL-004 | A71；同 commit 的執行結果與規範要求證據 | Verified（來源 9eb10df6；見 M1 驗收紀錄） |
 | M6 | REL-005 | A72；同 commit 的執行結果與規範要求證據 | Planned |
-| M2 | SCP-001 | A73；同 commit 的執行結果與規範要求證據 | Planned |
-| M2 | SCP-002 | A74；同 commit 的執行結果與規範要求證據 | Planned |
+| M2 | SCP-001 | A73；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
+| M2 | SCP-002 | A74；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
 | M3 | SCP-003 | A75；同 commit 的執行結果與規範要求證據 | Planned |
-| M2 | SCP-004 | A76；同 commit 的執行結果與規範要求證據 | Planned |
+| M2 | SCP-004 | A76；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
 | M3 | SCP-005 | A77；同 commit 的執行結果與規範要求證據 | Planned |
 | M3 | SCP-006 | A78；同 commit 的執行結果與規範要求證據 | Planned |
 | M3 | SCP-007 | A79；同 commit 的執行結果與規範要求證據 | Planned |
 | M5 | SCP-008 | A80；同 commit 的執行結果與規範要求證據 | Planned |
 | M3 | SCP-009 | A81；同 commit 的執行結果與規範要求證據 | Planned |
-| M2 | ORG-001 | A82；同 commit 的執行結果與規範要求證據 | Planned |
+| M2 | ORG-001 | A82；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
 | M3 | ORG-002 | A83；同 commit 的執行結果與規範要求證據 | Planned |
 | M3 | ORG-003 | A84；同 commit 的執行結果與規範要求證據 | Planned |
 | M3 | ORG-004 | A85；同 commit 的執行結果與規範要求證據 | Planned |

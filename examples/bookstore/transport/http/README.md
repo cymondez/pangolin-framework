@@ -10,4 +10,6 @@ POST body 上限 1 MiB，拒絕未知欄位、非法或尾隨 JSON；請求 time
 
 Handler 的 WorkGroup 記錄活躍操作；Quiesce 後拒絕新工作。HTTP server 的 listener／Shutdown 必須由 Runtime Participant 管理，不能只停 Ready 後立即關 DB。
 
-驗證：`go test ./examples/bookstore/transport/http`，涵蓋拒絕順序、body、錯誤遮罩與成功回應 barrier；真實 Commit 前不回 2xx、簽章／租戶拒絕及停機用 [M1 E2E](../../../../docs/guides/m1-development.md)。Streaming／SSE 尚未交付。
+驗證：`go test ./examples/bookstore/transport/http`，涵蓋拒絕順序、body、錯誤遮罩與成功回應 barrier；真實 Commit 前不回 2xx、簽章／租戶拒絕及停機用 [M1 E2E](../../../../docs/guides/m1-development.md)。Bookstore 本身不提供串流路由；共用 [短串流操作](../../../../transport/http/README.md) 在 M2 提供。
+
+M2 起不支援的 Scope Kind 回 400／SCOPE_KIND_UNSUPPORTED；已存在 UOW 的請求被拒絕，避免 Required 子範圍提前送出成功。UOW 錯誤共用框架 Problem Details 映射，Unknown 附 operationId／outcome，保持 503 且不無條件重試。

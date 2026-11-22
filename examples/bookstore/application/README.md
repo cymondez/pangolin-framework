@@ -9,3 +9,5 @@
 Create 的 client-supplied id 可用於後續 GET 狀態查詢；目前不提供正式 Idempotency-Key 契約。重複 ID 是 conflict，查無 ID 不能將 Commit Unknown 解釋為確定失敗。
 
 驗證：依 [M1 指南](../../../docs/guides/m1-development.md) 跑 `go test -tags=integration ./tests/m1`，核對真實提交、回滾、owner 與 Outbox。HTTP 成功回應 barrier 另見 Transport 測試。
+
+NewScopedBooks 明示選擇 ScopeAware Repository／Publisher，保留完整可信 owner；預設 NewBooks 僅接受 tenant binding。ScopeAware Outbox 與業務修改同交易保存，但完整組織配送矩陣仍待 M3。

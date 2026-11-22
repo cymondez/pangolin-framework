@@ -43,6 +43,7 @@ GET 回應包含相同欄位。id 可預先產生；title 必須為非空、最�
 | 狀態 | code | 你的處理方式 |
 |---|---|---|
 | 400 | MALFORMED_REQUEST | 修正 JSON／未知欄位 |
+| 400 | SCOPE_KIND_UNSUPPORTED | 預設 Bookstore 只接受 tenant Kind |
 | 401 | UNAUTHENTICATED | 檢查 Token 或重新登入 |
 | 403 | PERMISSION_DENIED | 檢查 Tenant／Scope，避免跨租戶存取 |
 | 404 | NOT_FOUND | 確認路徑、id 與目前 Tenant |
@@ -52,3 +53,5 @@ GET 回應包含相同欄位。id 可預先產生；title 必須為非空、最�
 | 503 | UOW_COMMIT_UNKNOWN | 用原操作 id 查詢／對帳，避免直接重送 |
 
 其他未分類錯誤回應 500／INTERNAL。查詢一次沒有結果，不能單憑它判斷未知的提交結果已確認回滾。
+
+Unknown 回覆包含 `outcome: "unknown"` 與 operationId，不提供無條件 retryable。提交後回應遺失時，使用發送前已保存的書籍 id 對帳；operationId 本身不會授予讀取結果的權限。
