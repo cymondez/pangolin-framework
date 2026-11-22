@@ -1,0 +1,59 @@
+---
+title: 建立可設定的問候服務
+description: 延續第一個應用，學習將自己的服務、設定與 Module 組合起來。
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import source from '../_snippets/greeting-app.go';
+
+完成這個教學後，你的應用會從環境讀取名字，透過自己定義的 `GreetingService` 輸出問候訊息。
+
+先完成[第一個應用](../getting-started/quickstart.mdx)。仍使用同一個 `hello-pangolin` 專案，不需要新增依賴或外部服務。
+
+## 1. 認識這次新增的服務
+
+`GreetingService` 是你自己的 Go 型別。它提供 `Greet(name)` 方法，並透過 constructor 資料接收輸出位置。
+
+應用將服務註冊到 DI（Dependency Injection，依賴注入）容器，之後需要它時再取得。這樣可以在測試時換成別的實作或輸出位置。
+
+## 2. 設定名字的來源
+
+程式預設使用 `World`，如果有 `APP_NAME` 環境變數，則用它覆寫 `app.name`。Module 啟動時透過 `app.Config().Lookup("app.name")` 讀取。
+
+## 3. 替換 main.go
+
+以下是完整程式，直接替換上一頁的 `main.go`：
+
+<CodeBlock language="go" title="hello-pangolin/main.go">{source}</CodeBlock>
+
+在 `Configure` 中使用 `b.Provide` 註冊服務；`di.Singleton` 表示整個應用只建立一份。`Start` 取得它並呼叫 `Greet`。
+
+## 4. 執行並改變設定
+
+先執行 `go run .`，預期輸出：
+
+```text
+Hello, World!
+```
+
+Windows PowerShell：
+
+```powershell
+$env:APP_NAME = 'Reader'
+go run .
+Remove-Item Env:APP_NAME
+```
+
+macOS／Linux：
+
+```bash
+APP_NAME=Reader go run .
+```
+
+這次應該看到 `Hello, Reader!`。
+
+## 接著可以做什麼？
+
+- [依賴注入](../fundamentals/dependency-injection.mdx)：把型別改成介面、選擇服務存活期間。
+- [設定](../fundamentals/configuration.mdx)：加入必要欄位與輸入驗證。
+- [Bookstore](bookstore.md)：把同樣的組裝方式用到 HTTP 與資料庫應用。

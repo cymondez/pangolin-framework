@@ -1,28 +1,43 @@
 # panGOlin-framework
 
-Go 模組化應用框架，採模組化單體、明確 DI、UOW、Tenant／Scope 隔離與可靠事件。產品目標 v0.1，規範基線 v1.3。
+Go 模組化應用框架，採模組化單體、明確 DI、UOW、Tenant／Scope 隔離與可靠事件。產品目標 v0.1.0，規範基線 v1.3。
 
-**M0 工程底座已完成並通過 Gate**，見 [驗收紀錄](docs/evidence/M0.md)。Runtime、UOW、Repository、正式 Broker Adapter、CLI 與 Organization 模組尚未實作；綠色的 M0 檢查不代表 95 項產品需求已驗收。
+M1–M6 同屬 [VERSION](VERSION) 指定的 **0.1.0 開發週期**，里程碑推進不改套件版本；完整發布仍須通過 M6 Gate。版本對齊及獨立版本領域見 [ADR11](docs/adr/ADR11-product-version.md)。
+
+**M0／M1 已通過 Gate。** M1 分支為 `codex/m1-vertical-flow`，同版 Windows／Linux（含 race）證據見 [M1 驗收紀錄](docs/evidence/M1.md)。 新增 Kernel／DI／Config／Drain 與 tenant-only Bookstore 真實交易及分程序事件薄片，見 [M1 開發與驗證](docs/guides/m1-development.md)、[API 增量](docs/release-notes/M1.md)。完整 UOW、安全、通用 Adapter、CLI 與 Organization 仍依 M2–M6 交付。
 
 ## 本機檢查
 
-使用 Go 1.27.4、Python 3.11+（M0 檢查只用標準庫），Windows PowerShell：
+先看 [倉庫目錄與程式歸屬](docs/guides/repository-layout.md)、[Bookstore 入口](examples/bookstore/README.md)、[測試索引](tests/README.md) 與 [工具索引](tools/README.md)。Bookstore 專用 Handler／main 已集中到範例；搬移相容性見 [目錄整理說明](docs/release-notes/source-layout.md)。
+
+M1 各模組的使用、設定、生命週期、測試與交付邊界：
+
+| 領域 | 模組說明 |
+|---|---|
+| Kernel | [Module](kernel/module/README.md)、[DI](kernel/di/README.md)、[Config](kernel/config/README.md)、[Runtime](kernel/runtime/README.md) |
+| Persistence | [UOW](persistence/uow/README.md)、[PostgreSQL](persistence/postgres/README.md) |
+| Security | [Authentication](security/authn/README.md)、[Scope](security/scope/README.md) |
+| Events | [Envelope／Codec](events/distributed/README.md)、[NATS JetStream](events/nats/README.md) |
+| HTTP／範例 | [HTTP](examples/bookstore/transport/http/README.md)、[Bookstore 分層與組裝](examples/bookstore/README.md) |
+| 工程 Gate | [品質計數](internal/quality/README.md)、[check 命令](tools/check/README.md)、[M1 重現指南](docs/guides/m1-development.md) |
+
+使用 Go 1.27.4、Python 3.11+、sqlc v1.31.1 及真實 PostgreSQL／NATS／測試 IdP。先依 [M1 指南](docs/guides/m1-development.md) 啟動隔離環境與設定連線，再執行 Windows PowerShell：
 
 ```powershell
-./scripts/check.ps1
+./scripts/check.ps1 -Project pangolin-m1-dev
 ```
 
 Linux（race 需要 C compiler／CGO）：
 
 ```sh
-sh scripts/check.sh
+PANGOLIN_M1_PROJECT=pangolin-m1-dev sh scripts/check.sh
 ```
 
-`python scripts/m0.py check` 另檢查公開 API surface、421 個具名驗收計畫、三種 Profile 的適用性、fixture、import 邊界與 stdlib-only 相依基線。API 變更須先同步規範／ADR，再明示執行 `python scripts/m0.py freeze-api`；CI 不自動更新快照來放過漂移。
+`python scripts/m0.py check` 另檢查公開 API surface、421 個具名驗收計畫、三種 Profile 的適用性、fixture、import 邊界與 固定依賴／license allowlist。API 變更須先同步規範／ADR，再明示執行 `python scripts/m0.py freeze-api`；CI 不自動更新快照來放過漂移。
 
 正式 M0 證據先固定為乾淨 commit，再執行 `python scripts/m0.py verify`；固定 Linux runner 加 `--race`，本專案空環境加 `--environment --project <name>`。三組結果保存於 `artifacts/<commit>/m0/`，最後以 `python scripts/m0.py gate --commit <full-sha>` 驗證相同版本、log hash、必要檢查與 Runtime 發布拒絕防護。這只判定 M0，不驗收後續 Runtime 功能。
 
-檢查包含 build、vet、95 項需求／案例／交付映射、單元測試及整體／關鍵 package 90% statement coverage。`internal/testkit` 為逐檔列出的測試 fixture 排除項；尚未實作的 Runtime 案例只列在 manifest，不用假成功或 skip 通過。`go run ./tools/check -release` 目前應以非零結束，明示缺少 Runtime 驗收證據。
+M1 完整檢查包含 build／vet、累積案例、真實 Integration／插樁 E2E、整體及每個關鍵 package 的 90% statement coverage，以及 Linux race。`internal/testkit` 與可重現的 sqlc 生成物逐檔列在排除 manifest；尚未實作的 Runtime 案例只列在 manifest，不用假成功或 skip 通過。`go run ./tools/check -release` 目前應以非零結束，明示完整 v0.1.0 驗收尚未完成。
 
 ## 隔離的測試環境
 
@@ -39,10 +54,12 @@ python scripts/smoke.py
 
 ## 文件入口
 
-- [代理導覽](AGENT.md)、[共用環境操作規則](AGENTS.md)
+- [官方文件網站：本機預覽、維護與 Docker 部署](docs/site/README.md)
+- [套件使用範例：獨立 Go 專案](examples/basics/README.md)
+- [代理導覽與共用環境操作規則](AGENTS.md)
 - [實作規範](design/panGOlin-framework_實作規範書.md)
 - [里程碑、進度與估算](design/panGOlin-framework_里程碑規劃書.md)
 - [M0 ADR](docs/adr/README.md)
 - [驗收底稿](tests/contract/README.md)
 
-尚未設定正式 release workflow；新增的 GitHub Actions 僅驗證 M0 工程底座，需 push 後才有遠端執行證據。
+尚未設定 v0.1.0 release workflow。GitHub Actions 已配置完整 Linux M1 Gate 與 Windows portability tests；完整跨平台 milestone gate 另要求 Windows 真實服務 report。實際 push／執行後才有遠端 workflow 證據。

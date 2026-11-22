@@ -1,6 +1,6 @@
 # 符合性驗收底稿
 
-`cases.json` 保存實作規範 v1.3 的 A01–A95、需求 ID、唯一交付 milestone；目前 Runtime 狀態全部 planned。`subtests.json` 已依 §13.6 拆成 421 個具名子情境，引用唯一規範列的 setup／刺激／預期與 fingerprint。`profiles/` 逐項記錄三種組裝的適用性、理由、狀態與 evidence 路徑；實際 Runtime 測試函式依 M1–M6 交付。
+`cases.json` 保存實作規範 v1.3 的 A01–A95、需求 ID、唯一交付 milestone；其中 planned 是完整產品驗收計畫旗標，不作執行結果；M1 的 9 項正式交付／47 個子情境已由 [同版驗收紀錄](../../docs/evidence/M1.md) 證明。`subtests.json` 已依 §13.6 拆成 421 個具名子情境，引用唯一規範列的 setup／刺激／預期與 fingerprint。`profiles/` 逐項記錄三種組裝的適用性、理由、狀態與 evidence 路徑；實際 Runtime 測試函式依 M1–M6 交付。
 
 `go run ./tools/check` 檢查規範定義、驗收映射、里程碑映射及 manifest 的一致性，不執行 95 項 Runtime 驗收。`-release` 必須失敗；不允許將 manifest 手改成 verified 來通過。
 
@@ -12,6 +12,8 @@ M1 的第一個真實切片：HTTP → CreateBook → Required Tx → PostgreSQL
 
 ## Coverage 計數 fixture
 
-`internal/quality` 的測試驗證 89.99%／90.00%、未測 package、重複 statement block 聯集、缺 instrumentation／profile 及不一致 metadata。CLI 暫時只接收同一 build 的一份 atomic profile；Unit／Integration／Contract／E2E 的同 build metadata 合併與證據 collector 尚待 M1。不得將不同 build 的 profile 直接合併。
+`internal/quality` 的測試驗證 89.99%／90.00%、未測 package、重複 statement block 聯集、缺 instrumentation／profile 及不一致 metadata。CLI 接收同一 build 的一份 atomic profile；M1 的 `scripts/m1.py` 已實作 Unit／Integration／插樁分程序 E2E 的聯集合併與同 commit 證據 collector。不得將不同 build 的 profile 直接合併。
 
-`tests/coverage/exclusions.json` 逐檔排除測試 IdP fixture。手寫品質工具仍在分母；尚未有 executable statements 的根 package 為 N/A，不回報 100%。這不是全框架已達 90% 的證據。
+`tests/coverage/exclusions.json` 逐檔排除測試 fixture 與可重現的 sqlc 生成物。手寫品質工具仍在分母；尚未有 executable statements 的根 package 為 N/A，不回報 100%。這不是全框架已達 90% 的證據。
+
+`m1.json` 是 M1 可執行案例／模組 README 的映射索引；執行結果仍從 report 取得，不能只修改其 status 就宣告 Verified。完整產品 Profile matrix 依後續里程碑交付。

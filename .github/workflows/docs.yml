@@ -1,0 +1,39 @@
+name: Documentation website
+on:
+  push:
+    branches: [main, develop, 'codex/**']
+    paths: ['docs/**', 'examples/basics/**', 'scripts/docs_examples.py', 'VERSION', '.github/workflows/docs.yml']
+  pull_request:
+    paths: ['docs/**', 'examples/basics/**', 'scripts/docs_examples.py', 'VERSION', '.github/workflows/docs.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  static-docs:
+    runs-on: ubuntu-24.04
+    container:
+      image: node:22.23.4-bookworm-slim@sha256:5ec23b7c622b00547753bc6ffd78085dd868a68aeb41c8e0a1418f033e13d96d
+    defaults:
+      run:
+        working-directory: docs/site
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: npm ci --no-audit --no-fund
+      - run: npm test
+      - run: npm run build
+      - name: Native version snapshot, versioned search and subpath proof
+        run: node scripts/check-versioning.mjs
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: pangolin-docs-static
+          path: docs/site/build/
+          if-no-files-found: error
+  consumer-examples:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
+        with:
+          go-version: '1.27.4'
+          cache: false
+      - run: python scripts/docs_examples.py

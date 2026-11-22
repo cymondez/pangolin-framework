@@ -1,0 +1,15 @@
+**
+!VERSION
+!docs/
+!docs/site/
+!docs/site/**
+!examples/
+!examples/basics/
+!examples/basics/**
+examples/basics/.cache/
+docs/site/node_modules/
+docs/site/build/
+docs/site/.docusaurus/
+docs/site/.cache/
+docs/site/*.log
+docs/site/content/_snippets/

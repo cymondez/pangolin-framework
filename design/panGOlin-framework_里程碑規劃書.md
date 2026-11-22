@@ -7,22 +7,22 @@ lang: zh-TW
 
 # panGOlin-framework｜里程碑規劃書
 
-> **文件基線：** v1.3；承接整合稿 v1.2，產品目標 v0.1。  
+> **文件基線：** v1.3；承接整合稿 v1.2，產品目標 v0.1.0。<br>
 > **狀態：** 已成文、待實作與證據驗收；文件檢查不代表功能已完成。
 
 ## 0. 計畫權威與目前狀態
 
-本文件依[實作規範書 v1.3](panGOlin-framework_實作規範書.md)安排全框架 v0.1 的交付，包含可選的 Enterprise／Organization 單一模組。需求正式句、介面、產品行為、版本範圍、A01–A95 及品質門檻只由實作規範定義；本文件不重新定義它們。
+本文件依[實作規範書 v1.3](panGOlin-framework_實作規範書.md)安排全框架 v0.1.0 的交付，包含可選的 Enterprise／Organization 單一模組。需求正式句、介面、產品行為、版本範圍、A01–A95 及品質門檻只由實作規範定義；本文件不重新定義它們。
 
-**2026-11-21：M0 已 Verified（來源 commit `a0b1ad099fdf7bd28240514a24c34590220019a1`）；M1–M6 與全部產品需求映射仍為 Planned。** 已建立的底座及未完成條件見 §2.1。文件、CI 配置或品質工具測試不等於 M0 通過，也不等於 Runtime 已驗收或全框架達成 90% coverage。只有指定 commit 的 Exit 證據完整且 Gate 通過才能改為 Verified。
+**2026-11-21：M0 已 Verified（來源 commit `a0b1ad099fdf7bd28240514a24c34590220019a1`）；M1 已 Verified（來源 `9eb10df6cd848b87fda964f0b6b61d60dc12b0a6`），M2–M6 與其餘 86 項產品需求保持 Planned。** 已建立的底座及未完成條件見 §2.1。文件、CI 配置或品質工具測試不等於 M0 通過，也不等於 Runtime 已驗收或全框架達成 90% coverage。只有指定 commit 的 Exit 證據完整且 Gate 通過才能改為 Verified。
 
 ## 1. 範圍、估算與角色
 
 ### 1.1 發布集合與延期項目
 
-v0.1 交付集合為實作規範 §5.7 與 §16 的全部 95 項需求；唯一逐項清單在本文件 §5。產品範圍以[實作規範 §15](panGOlin-framework_實作規範書.md#s-15)為準。v0.2+ 的 Redis、Blob、進階 Cron 及新增 Adapter 未分配本版工作量，也沒有虛構的已交付 ID；若納入，先修改規範、案例與估算。
+v0.1.0 交付集合為實作規範 §5.7 與 §16 的全部 95 項需求；唯一逐項清單在本文件 §5。產品範圍以[實作規範 §15](panGOlin-framework_實作規範書.md#s-15)為準。v0.2+ 的 Redis、Blob、進階 Cron 及新增 Adapter 未分配本版工作量，也沒有虛構的已交付 ID；若納入，先修改規範、案例與估算。
 
-Organization 模組對採用框架的專案可選，對 v0.1 框架發行包仍是交付項。純 Tenant、組織啟用與替換契約三種組裝依[實作規範 §13.4](panGOlin-framework_實作規範書.md#s-13.4)驗證。
+Organization 模組對採用框架的專案可選，對 v0.1.0 框架發行包仍是交付項。純 Tenant、組織啟用與替換契約三種組裝依[實作規範 §13.4](panGOlin-framework_實作規範書.md#s-13.4)驗證。
 
 ### 1.2 工期基線與容量假設
 
@@ -149,6 +149,10 @@ flowchart LR
 
 ### M1 — 最小真實垂直流程與工程 Gate
 
+後續目錄整理增量已以來源 `b3bf59c03f4b66ff7389d44d8434356258a85d9a` 通過相同 Windows／Linux（含 race）累積 Gate；未新增正式 Delivers 或改寫首次交付來源。見 [目錄整理回歸紀錄](../docs/evidence/source-layout.md)。
+
+**狀態：Verified；來源 `9eb10df6cd848b87fda964f0b6b61d60dc12b0a6`，分支 `codex/m1-vertical-flow`。** WP02–WP05 的正式案例、S2／S3、Windows／固定 OCI Linux（含 race）同 commit Gate 全部通過；9 項正式需求、47 個具名子情境與 20 份模組說明已驗證。完整結果見 [M1 驗收紀錄](../docs/evidence/M1.md)，重現方式見 [M1 開發指南](../docs/guides/m1-development.md)。
+
 **原節奏：** W3–W6；**責任：** Go A 主責，Go B／C 補事件及身分薄切片，QA／SRE 驗證。  
 **Delivers：** `ARC-001`、`MOD-001`、`MOD-002`、`MOD-003`、`CFG-001`、`OPS-001`、`REL-001`、`REL-002`、`REL-004`。
 
@@ -215,7 +219,7 @@ flowchart LR
 **Tasks**
 
 1. 完成 Memory Cache／Settings／Features、Scope key／繼承／失效及 Audit 整合回歸。
-2. 完成 CLI 全部 v0.1 命令、兩種 Profile Template、OpenAPI 與 Quickstart。
+2. 完成 CLI 全部 v0.1.0 命令、兩種 Profile Template、OpenAPI 與 Quickstart。
 3. 在乾淨 runner 生成、build／test／啟動兩種 Bookstore；重跑安全與 UOW 契約。
 
 **Exit：** 本節正式案例全過；新專案預設 tenant-only，明示選項啟用完整 organization 模組；命令重入不毀損已有檔案。  
@@ -298,11 +302,11 @@ flowchart LR
 | M2 | UOW-030 | A42；同 commit 的執行結果與規範要求證據 | Planned |
 | M2 | UOW-031 | A43；同 commit 的執行結果與規範要求證據 | Planned |
 | M3 | UOW-032 | A44；同 commit 的執行結果與規範要求證據 | Planned |
-| M1 | ARC-001 | A45；同 commit 的執行結果與規範要求證據 | Planned |
-| M1 | MOD-001 | A01；同 commit 的執行結果與規範要求證據 | Planned |
-| M1 | MOD-002 | A02；同 commit 的執行結果與規範要求證據 | Planned |
-| M1 | MOD-003 | A46；同 commit 的執行結果與規範要求證據 | Planned |
-| M1 | CFG-001 | A47；同 commit 的執行結果與規範要求證據 | Planned |
+| M1 | ARC-001 | A45；同 commit 的執行結果與規範要求證據 | Verified（來源 9eb10df6；見 M1 驗收紀錄） |
+| M1 | MOD-001 | A01；同 commit 的執行結果與規範要求證據 | Verified（來源 9eb10df6；見 M1 驗收紀錄） |
+| M1 | MOD-002 | A02；同 commit 的執行結果與規範要求證據 | Verified（來源 9eb10df6；見 M1 驗收紀錄） |
+| M1 | MOD-003 | A46；同 commit 的執行結果與規範要求證據 | Verified（來源 9eb10df6；見 M1 驗收紀錄） |
+| M1 | CFG-001 | A47；同 commit 的執行結果與規範要求證據 | Verified（來源 9eb10df6；見 M1 驗收紀錄） |
 | M2 | API-001 | A14；同 commit 的執行結果與規範要求證據 | Planned |
 | M3 | API-002 | A48；同 commit 的執行結果與規範要求證據 | Planned |
 | M2 | API-003 | A49；同 commit 的執行結果與規範要求證據 | Planned |
@@ -327,16 +331,16 @@ flowchart LR
 | M3 | IDEM-002 | A60；同 commit 的執行結果與規範要求證據 | Planned |
 | M3 | IDEM-003 | A61；同 commit 的執行結果與規範要求證據 | Planned |
 | M3 | AUD-001 | A62；同 commit 的執行結果與規範要求證據 | Planned |
-| M1 | OPS-001 | A15；同 commit 的執行結果與規範要求證據 | Planned |
+| M1 | OPS-001 | A15；同 commit 的執行結果與規範要求證據 | Verified（來源 9eb10df6；見 M1 驗收紀錄） |
 | M4 | OPS-002 | A63；同 commit 的執行結果與規範要求證據 | Planned |
 | M4 | JOB-001 | A64；同 commit 的執行結果與規範要求證據 | Planned |
 | M5 | PLAT-001 | A65；同 commit 的執行結果與規範要求證據 | Planned |
 | M4 | OBS-001 | A66；同 commit 的執行結果與規範要求證據 | Planned |
 | M5 | CLI-001 | A67；同 commit 的執行結果與規範要求證據 | Planned |
-| M1 | REL-001 | A68；同 commit 的執行結果與規範要求證據 | Planned |
-| M1 | REL-002 | A69；同 commit 的執行結果與規範要求證據 | Planned |
+| M1 | REL-001 | A68；同 commit 的執行結果與規範要求證據 | Verified（來源 9eb10df6；見 M1 驗收紀錄） |
+| M1 | REL-002 | A69；同 commit 的執行結果與規範要求證據 | Verified（來源 9eb10df6；見 M1 驗收紀錄） |
 | M6 | REL-003 | A70；同 commit 的執行結果與規範要求證據 | Planned |
-| M1 | REL-004 | A71；同 commit 的執行結果與規範要求證據 | Planned |
+| M1 | REL-004 | A71；同 commit 的執行結果與規範要求證據 | Verified（來源 9eb10df6；見 M1 驗收紀錄） |
 | M6 | REL-005 | A72；同 commit 的執行結果與規範要求證據 | Planned |
 | M2 | SCP-001 | A73；同 commit 的執行結果與規範要求證據 | Planned |
 | M2 | SCP-002 | A74；同 commit 的執行結果與規範要求證據 | Planned |

@@ -98,8 +98,12 @@ def check_imports(packages):
     for package in packages:
         name = package["ImportPath"]
         role = name[len(MODULE):].split("/")
+        framework = name == MODULE or name.startswith(MODULE + "/") and role[1] in {"kernel", "persistence", "security", "events", "tenancy", "platform", "observability", "transport", "modules", "application", "domain"}
         for imported in package.get("Imports", []):
-            concrete = imported in {"database/sql", "net/http"} or imported.startswith(("github.com/jackc/", "github.com/nats-io/", MODULE + "/persistence/postgres", MODULE + "/transport/"))
+            if framework and imported.startswith(MODULE + "/examples/"):
+                raise ValueError("framework imports example: " + name + " -> " + imported)
+            project_role = imported[len(MODULE):].split("/") if imported.startswith(MODULE + "/") else []
+            concrete = imported in {"database/sql", "net/http"} or bool({"infrastructure", "transport"} & set(project_role)) or imported.startswith(("github.com/jackc/", "github.com/nats-io/", MODULE + "/persistence/postgres", MODULE + "/events/nats", MODULE + "/transport/"))
             if "domain" in role and ("." in imported.split("/")[0] and imported != MODULE + "/domain" or concrete):
                 raise ValueError("forbidden Domain import: " + name + " -> " + imported)
             if "application" in role and concrete:
@@ -175,6 +179,8 @@ def check_data(root=ROOT):
 
 
 def check(root=ROOT):
+    import product_version
+    framework_version = product_version.check(root)
     result = check_data(root)
     check_api(load(root / "tests/contract/api.json"), api_surface(root))
     packages = json_stream(command(["go", "list", "-json", "./..."], root))
@@ -183,10 +189,9 @@ def check(root=ROOT):
     tenant = command(["go", "list", "-deps", "./internal/testkit/assemblies/tenant"], root).splitlines()
     if any(name.startswith(MODULE + "/modules/organization") for name in tenant):
         raise ValueError("tenant-only fixture captures organization dependency")
-    modules = json_stream(command(["go", "list", "-m", "-json", "all"], root))
-    if len(modules) != 1 or modules[0]["Path"] != MODULE:
-        raise ValueError("M0 dependency/license inventory changed; review and replace the stdlib-only baseline")
-    return dict(result, api_packages=len(load(root / "tests/contract/api.json")["packages"]), dependencies="stdlib-only")
+    import dependencies
+    dependency_result = dependencies.check()
+    return dict(result, api_packages=len(load(root / "tests/contract/api.json")["packages"]), dependencies=dependency_result, framework_version=framework_version)
 
 
 def revision(root=ROOT):

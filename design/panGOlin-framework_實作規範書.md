@@ -7,14 +7,14 @@ lang: zh-TW
 
 # panGOlin-framework｜實作規範書
 
-> **文件基線：** v1.3；承接整合稿 v1.2，產品目標 v0.1。  
+> **文件基線：** v1.3；承接整合稿 v1.2，產品目標 v0.1.0。<br>
 > **狀態：** 已成文、待實作與證據驗收；文件檢查不代表功能已完成。
 
 <a id="s-0"></a>
 
 ## 0. 狀態、範圍與權威
 
-本文件是 panGOlin-framework v0.1 的實作契約，涵蓋核心 Runtime、Go Port、PostgreSQL、UOW、可靠事件、Tenant／Scope 安全、可選 Organization 模組、平台服務、CLI 與符合性驗收。工程師與實作 Agent 可由本文件取得行為、失敗語意、邊界條件及測試要求；不需研究其他框架原始碼來補定 UOW 語意。
+本文件是 panGOlin-framework v0.1.0 的實作契約，涵蓋核心 Runtime、Go Port、PostgreSQL、UOW、可靠事件、Tenant／Scope 安全、可選 Organization 模組、平台服務、CLI 與符合性驗收。工程師與實作 Agent 可由本文件取得行為、失敗語意、邊界條件及測試要求；不需研究其他框架原始碼來補定 UOW 語意。
 
 <a id="s-0.1"></a>
 
@@ -28,7 +28,7 @@ lang: zh-TW
 | **交付型態** | 公開的 Go packages、範例程式、遷移腳本、CLI、設計文件、測試套件 |
 | **預期使用者** | SaaS API、企業後台、業務中台、具多租戶需求的 Go 團隊 |
 
-產品版本完整範圍只在 §15 定義。v0.1 發布包包含 Enterprise／Organization 的單一可選模組；採用本框架的專案可選 tenant-only，不因此被迫引入組織資料模型。服務拆分是相容方向，首版不提供分散式交易、動態熱插拔或多個正式 DB／Broker Adapter。
+產品版本完整範圍只在 §15 定義。v0.1.0 發布包包含 Enterprise／Organization 的單一可選模組；採用本框架的專案可選 tenant-only，不因此被迫引入組織資料模型。服務拆分是相容方向，首版不提供分散式交易、動態熱插拔或多個正式 DB／Broker Adapter。
 
 <a id="s-0.2"></a>
 
@@ -837,7 +837,7 @@ type TenantResolver interface {
 防護至少兩層：
 
 1. Repository 參數與 SQL 條件必包含 Tenant Scope；查詢沒有 Tenant Context 時拒絕。
-2. v0.1 對全部租戶業務表採 PostgreSQL Row-Level Security（RLS）作第二道防線；在每一 DB Transaction 透過 `SELECT set_config('app.tenant_id', $1, true)` 設定本次租戶，其中 `true` 代表 transaction-local。
+2. v0.1.0 對全部租戶業務表採 PostgreSQL Row-Level Security（RLS）作第二道防線；在每一 DB Transaction 透過 `SELECT set_config('app.tenant_id', $1, true)` 設定本次租戶，其中 `true` 代表 transaction-local。
 
 RLS 不是 SQL 注入的替代防護；任何能控制未受保護 SQL 的漏洞也可能操控 session 參數。RLS 需留意 PostgreSQL table owner 與特權角色可能繞過政策；正式應用連線帳號不得為 superuser、table owner 或持有 `BYPASSRLS`；租戶業務表啟用 `FORCE ROW LEVEL SECURITY`，並建立跨租戶滲透測試。若讀取路徑使用 RLS，必須使用 ReadOnly Transaction 執行 `SET LOCAL`，**不能使用 Pool 上可能遺留在其他請求中的 Session-wide SET**。
 
@@ -1068,7 +1068,7 @@ M0 的公開 DTO／Management Port 凍結於 `modules/organization/contracts/con
 
 替代實作需提供相同 Scope Kinds、管理 Application Port、錯誤分類、版本化公開事件與契約測試；內部可換 schema／Provider，不要求模仿內建類別。中立 Scope Catalog 與業務 owner ID 是穩定資料契約，不隨 Provider 更換重編。遷移包包含 Enterprise／Org ID、parent、member／roles、state、revision、scope catalog 與 pending Job／Event 的對帳；停認領／Drain 後切換、驗證再恢復，不同時讓兩個權威 Provider 回覆同 Kind。
 
-v0.1 的授權與治理變更以本地一致的權威投影及同 DB UOW 為完成邊界。外部目錄 Adapter 若依非同步同步，不能宣稱遠端撤權提交瞬間就已本地生效；它必須先完成／確認本地 revision 更新，才回覆本地治理操作成功。無法證明本地權威新鮮度時拒絕授權。外部 provider 可替換性不引入分散式交易保證。
+v0.1.0 的授權與治理變更以本地一致的權威投影及同 DB UOW 為完成邊界。外部目錄 Adapter 若依非同步同步，不能宣稱遠端撤權提交瞬間就已本地生效；它必須先完成／確認本地 revision 更新，才回覆本地治理操作成功。無法證明本地權威新鮮度時拒絕授權。外部 provider 可替換性不引入分散式交易保證。
 
 未使用組織概念的新專案直接選 tenant-only。已有非 Tenant Scope Catalog、業務 owner、待處理事件／Job 或依賴 scope 能力的模組時，刪除組織 Provider 或改組態不能當作卸載；啟動檢查拒絕，需明示的資料／工作遷移及證據。即使資料已 archive，也不能無聲將 owner 改成 Tenant 公開。完成移轉前保留必要讀取／稽核相容介面。
 
@@ -1173,7 +1173,7 @@ Settings 的 tenant-only 預設覆寫順序：`User > Tenant > Application > Bui
 
 ### 9.3 Caching
 
-快取 Key 格式必須包含 `application/version/tenant/scope_kind/scope_id/module/resource/id`；純 Tenant 的 scope_kind 為 tenant、scope_id 為 TenantID。不得在不同租戶或不同資源 scope 間共用受保護資料；依 user 權限而異的結果另依 §7.10 加 Principal／revision。v0.1 交付 Memory Adapter；Redis Adapter 明確列入 v0.2+；提供 TTL、Stampede 防護、失效事件、Metrics。與資料庫一致性的核心讀取不得假定 Redis 與 PostgreSQL 同一交易；Commit 後刪除快取也可能失敗，需 TTL 與重試／版本策略。
+快取 Key 格式必須包含 `application/version/tenant/scope_kind/scope_id/module/resource/id`；純 Tenant 的 scope_kind 為 tenant、scope_id 為 TenantID。不得在不同租戶或不同資源 scope 間共用受保護資料；依 user 權限而異的結果另依 §7.10 加 Principal／revision。v0.1.0 交付 Memory Adapter；Redis Adapter 明確列入 v0.2+；提供 TTL、Stampede 防護、失效事件、Metrics。與資料庫一致性的核心讀取不得假定 Redis 與 PostgreSQL 同一交易；Commit 後刪除快取也可能失敗，需 TTL 與重試／版本策略。
 
 <a id="s-9.4"></a>
 
@@ -1205,9 +1205,7 @@ Blob Storage 的 Port、Local／S3 Adapter 均列入 v0.2+，本版不定義其�
 pangolin-framework/
 ├── go.mod
 ├── cmd/
-│   ├── pangolin/                   # CLI
-│   ├── bookstore-api/              # 範例 API
-│   └── bookstore-worker/           # 範例 Worker
+│   └── pangolin/                   # 框架 CLI；範例入口歸各自 examples
 ├── kernel/
 │   ├── module/                     # DAG, Lifecycle
 │   ├── di/                         # Provider Registry
@@ -1245,17 +1243,22 @@ pangolin-framework/
 │   ├── settings/
 │   ├── features/
 │   ├── cache/
-│   └── blob/                       # v0.2+，非 v0.1 必建
+│   └── blob/                       # v0.2+，非 v0.1.0 必建
 ├── transport/
-│   ├── http/
+│   ├── http/                       # 共用入口機制，不引用範例業務模型
 │   └── grpc/                       # Future Adapter
 ├── observability/
 ├── examples/
 │   └── bookstore/
+│       ├── cmd/
+│       │   ├── api/                # Bookstore API 入口
+│       │   └── worker/             # Bookstore Worker 入口
+│       ├── bootstrap/              # 範例自身的模組與 Provider 組裝
 │       ├── domain/
 │       ├── application/
 │       ├── infrastructure/
-│       └── transport/
+│       ├── transport/http/         # Bookstore 專用 Handler
+│       └── internal/testkit/cmd/   # 只用於範例的故障／對帳程序
 ├── migrations/
 ├── design/                         # 架構總覽、實作規範、里程碑規劃
 ├── docs/
@@ -1276,6 +1279,8 @@ pangolin-framework/
 
 **Go 命名規則：** 套件名小寫短詞（例如 `uow`, `outbox`），程式碼路徑以實際倉庫設定的 module path 為準。不要把首字母混用或專案品牌名稱硬塞進所有 package；對外宣告的 Interface 名稱以職責命名。`internal/` 可保護非公開實作，待倉庫切分與公共 API 審查時決定最終位置。
 
+**目錄歸屬：** 保留單一根目錄 `go.mod`，共用公開套件不增加 `src` 前綴。範例自己的入口、HTTP Handler、組裝、資料 Adapter 與專用 fixture 歸該範例，框架 production package 不得反向 import `examples/`。同套件單元測試與程式碼並置；跨套件驗收、共用 fixture、工具與執行產物各按用途歸 `tests/`、`internal/testkit/`、`tools/`／`scripts/`、`artifacts/`。此歸屬規則落實 §1.1／ARC-001，不改需求 ID 或產品行為。現況與入口見 [倉庫目錄指南](../docs/guides/repository-layout.md)；上圖仍包含後續里程碑的目標 package，沒有實作時不建立空殼。
+
 <a id="s-11"></a>
 
 ## 11. 技術選型與決策記錄
@@ -1290,7 +1295,7 @@ pangolin-framework/
 | Migration | `goose` 或 `golang-migrate` 擇一 | 開發啟動後須凍結，避免工具混用 |
 | Authentication | OIDC/JWT + JWKS 驗證 | 不在首版自建 IdP |
 | Message Broker | 先一個可替換 Adapter（例如 NATS 或 RabbitMQ） | 不同 Broker 的 ACK/重送語意需獨立測試 |
-| Cache | v0.1 Memory；v0.2+ Redis | 租戶 Key 與失效一致性 |
+| Cache | v0.1.0 Memory；v0.2+ Redis | 租戶 Key 與失效一致性 |
 | Telemetry | OpenTelemetry + Prometheus 相容 Metrics | 觀測工具可替換 |
 | Container | OCI Image、Docker Compose（開發）、Kubernetes（選用） | 提供基本部署與 Readiness |
 
@@ -1552,21 +1557,21 @@ Commit Unknown 時從新連線依同 key 查詢：查到已提交終態可返回
 
 ## 15. 版本與相容性政策（唯一版本範圍）
 
-文件基線 v1.3 是文件修訂號；以下 v0.1／v0.2／v1.0 才是產品版號。P0／P1／P2 為開發優先順序，不自動等同版本；是否必交只以本表為準。
+文件基線 v1.3 是文件修訂號；以下 v0.1.0／v0.2／v1.0 才是產品版號。P0／P1／P2 為開發優先順序，不自動等同版本；是否必交只以本表為準。
 
 | 版本 | 範圍 |
 |---|---|
-| **v0.1** | Kernel／DI／Config；完整 §5 UOW（含 RequiresNew）；PostgreSQL＋pgx/sqlc＋單一 Migration Tool；HTTP／Bookstore；OIDC/JWT／Permission／Tenant／中立 Scope／RLS／Audit；可選單一 organization 模組（Enterprise／Organization／Membership／治理及預設 Adapter）；Local Event／Outbox／Inbox／一個可靠 Broker Adapter；單次／重試 Jobs；Memory Cache／Settings／Features 基線；Logs／Metrics／Tracing；§12.1 全部 CLI 命令、兩種 Profile Template、OpenAPI、Quickstart；框架發布包的全部適用規範需求及 90% gates |
-| **v0.2+，無本次時程承諾** | Redis Adapter、Blob Storage（Local／S3）、進階 Cron、新的 DB／Broker／Transport Adapter、更多平台與 CLI 擴充；不是將 v0.1 未完成項目自動順延 |
+| **v0.1.0** | Kernel／DI／Config；完整 §5 UOW（含 RequiresNew）；PostgreSQL＋pgx/sqlc＋單一 Migration Tool；HTTP／Bookstore；OIDC/JWT／Permission／Tenant／中立 Scope／RLS／Audit；可選單一 organization 模組（Enterprise／Organization／Membership／治理及預設 Adapter）；Local Event／Outbox／Inbox／一個可靠 Broker Adapter；單次／重試 Jobs；Memory Cache／Settings／Features 基線；Logs／Metrics／Tracing；§12.1 全部 CLI 命令、兩種 Profile Template、OpenAPI、Quickstart；框架發布包的全部適用規範需求及 90% gates |
+| **v0.2+，無本次時程承諾** | Redis Adapter、Blob Storage（Local／S3）、進階 Cron、新的 DB／Broker／Transport Adapter、更多平台與 CLI 擴充；不是將 v0.1.0 未完成項目自動順延 |
 | **v1.0** | 公開核心 API、遷移、長期相容性與安全支援政策完成穩定性審查 |
 
-v0.1 可調整尚未穩定的 API，但每次變更附 Release Notes／Migration Plan；已發布 Event Schema 不可無通知破壞。Runtime／Module 使用 SemVer，CLI Template 綁定對應 Runtime；Release Notes 列新增、變更、移除、Breaking Changes、最低 Go／PostgreSQL 版本、風險與升級步驟。
+v0.1.0 可調整尚未穩定的 API，但每次變更附 Release Notes／Migration Plan；已發布 Event Schema 不可無通知破壞。Runtime／Module 使用 SemVer，CLI Template 綁定對應 Runtime；Release Notes 列新增、變更、移除、Breaking Changes、最低 Go／PostgreSQL 版本、風險與升級步驟。
 
 <a id="s-16"></a>
 
 ## 16. 跨子系統規範需求
 
-下列需求與 §5.7 合為 v0.1 行為契約；引用章節中的具體條件由該需求負責驗證。
+下列需求與 §5.7 合為 v0.1.0 行為契約；引用章節中的具體條件由該需求負責驗證。
 
 - ARC-001 — 系統 MUST 以 §1.1 的 package 邊界約束業務依賴，禁止 Domain／Application import 具體 Transport、DB 或 Broker Adapter。
 
@@ -1604,7 +1609,7 @@ v0.1 可調整尚未穩定的 API，但每次變更附 Release Notes／Migration
 
 - TEN-001 — TenantResolver 服務 MUST 將 Route、Header、Job 及 Event 的租戶識別視為候選值，經 Principal／可信生產者授權後才建立 TenantContext。
 
-- TEN-002 — Repository Adapter 服務 MUST 對全部租戶業務表以可信 TenantContext 限制讀寫，並對 v0.1 的租戶業務表啟用 §7.2 RLS。
+- TEN-002 — Repository Adapter 服務 MUST 對全部租戶業務表以可信 TenantContext 限制讀寫，並對 v0.1.0 的租戶業務表啟用 §7.2 RLS。
 
 - TEN-003 — Schema 實作者 MUST 以含 tenant_id 的複合外鍵或等價資料庫約束禁止需要同租戶的跨表關聯指向其他租戶。
 
@@ -1636,7 +1641,7 @@ v0.1 可調整尚未穩定的 API，但每次變更附 Release Notes／Migration
 
 - OBS-001 — Telemetry 服務 MUST 提供 §9.6 指定的 Logs、Trace、Metrics 與 Health，並遮罩 Token、Secrets 及敏感 payload。
 
-- CLI-001 — CLI 服務 MUST 提供 §12.1 的 v0.1 命令、help、可重入行為與非零失敗退出碼，且產物可在乾淨環境建置與測試。
+- CLI-001 — CLI 服務 MUST 提供 §12.1 的 v0.1.0 命令、help、可重入行為與非零失敗退出碼，且產物可在乾淨環境建置與測試。
 
 - REL-001 — CI 服務 MUST 對 §13.3 定義的手寫 Go production statements 達到整體至少 90.00% 且每個關鍵 package 至少 90.00% 的覆蓋率。
 
@@ -1646,7 +1651,7 @@ v0.1 可調整尚未穩定的 API，但每次變更附 Release Notes／Migration
 
 - REL-004 — CI 服務 MUST 在每次交付增量依 §13.5 執行累積回歸並保存同一 commit 的可重現證據。
 
-- REL-005 — Release 服務 MUST 在 v0.1 發布前完成乾淨環境重建、升級／復原演練、安全審查及可重複效能基線。
+- REL-005 — Release 服務 MUST 在 v0.1.0 發布前完成乾淨環境重建、升級／復原演練、安全審查及可重複效能基線。
 
 - SCP-001 — Core Scope 服務 MUST 以 §7.6 的 ScopeRef 識別唯一資源擁有範圍，並將 Tenant 保持為不可跨越的最外層邊界。
 

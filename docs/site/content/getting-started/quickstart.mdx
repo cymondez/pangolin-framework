@@ -1,0 +1,55 @@
+---
+title: 第一個應用
+description: 在自己的專案建立 main.go，啟動第一個 panGOlin 模組並看到執行結果。
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import source from '../_snippets/hello.go';
+
+這一頁會建立一個能直接執行的 console 應用。它啟動一個名為 `hello` 的功能模組、印出訊息，再正常停止。
+
+## 開始前
+
+先完成[安裝與建立專案](installation.md)。以下操作都在你自己的 **`hello-pangolin`** 資料夾進行。
+
+## 1. 建立 main.go
+
+建立 `main.go`，貼上完整程式：
+
+<CodeBlock language="go" title="hello-pangolin/main.go">{source}</CodeBlock>
+
+## 2. 執行應用
+
+```bash
+go mod tidy
+go run .
+```
+
+你應該看到：
+
+```text
+Hello, panGOlin!
+```
+
+程式輸出後正常結束，不需要保持終端機開啟。
+
+## 3. 改成你的訊息
+
+找到 `Start` 裡的 `fmt.Println`，改成：
+
+```go
+fmt.Println("Hello, my application!")
+```
+
+再次執行 `go run .`，確認輸出已改變。
+
+## 剛才用了什麼？
+
+- **Module** 是一個功能單位。這個例子的模組名稱為 `hello`，Start 是它啟動時要執行的工作。
+- **Host** 負責啟動與停止應用。把模組交給 `host.Start`，由它處理啟動順序。
+- **context** 傳遞取消與逾時。結束時呼叫 `host.Stop`，讓應用有時間釋放資源。
+- `uow.*` 四個設定是 Host 需要的操作逾時預設；你可以先保留範例值，它們不會建立資料庫。
+
+## 下一步
+
+接著完成[可設定的問候服務](../tutorials/greeting-application.mdx)，把自己的服務註冊到應用，並從環境變數讀取名字。

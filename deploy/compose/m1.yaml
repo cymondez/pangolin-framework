@@ -1,0 +1,52 @@
+name: pangolin-m1
+x-limits: &limits
+  restart: "no"
+  cpus: 0.5
+  pids_limit: 128
+  labels:
+    dev.pangolin.owner: pangolin-framework
+    dev.pangolin.purpose: m1-test-environment
+    dev.pangolin.source-commit: "${PANGOLIN_SOURCE_COMMIT:-working-tree}"
+services:
+  postgres:
+    <<: *limits
+    image: postgres:18.7-bookworm@sha256:194e55feb2597b1465dbee81cc9fd8d204566cd2eb42c8d22fd6c931a38781b1
+    mem_limit: 256m
+    environment:
+      POSTGRES_DB: pangolin_m0
+      POSTGRES_USER: pangolin_bootstrap
+      POSTGRES_PASSWORD: local-bootstrap-only
+    ports:
+      - "127.0.0.1:${PANGOLIN_M1_PG_PORT:-15542}:5432"
+    volumes:
+      - pg-data:/var/lib/postgresql
+      - ./postgres-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U pangolin_bootstrap -d pangolin_m0"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+  nats:
+    <<: *limits
+    image: nats:2.15.3-alpine@sha256:558394a23dd3c36f2d3a64b51865fd09908010e80a542cea5e75c2af543ed62a
+    mem_limit: 128m
+    command: ["--config", "/etc/nats/nats.conf"]
+    ports:
+      - "127.0.0.1:${PANGOLIN_M1_NATS_PORT:-14322}:4222"
+    volumes:
+      - nats-data:/data
+      - ./nats.conf:/etc/nats/nats.conf:ro
+  test-idp:
+    <<: *limits
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile.test-idp
+    mem_limit: 64m
+    read_only: true
+    environment:
+      PANGOLIN_TEST_ISSUER: "http://127.0.0.1:${PANGOLIN_M1_IDP_PORT:-18180}"
+    ports:
+      - "127.0.0.1:${PANGOLIN_M1_IDP_PORT:-18180}:8080"
+volumes:
+  pg-data:
+  nats-data:

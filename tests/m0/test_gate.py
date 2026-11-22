@@ -8,6 +8,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
 import m0
+import product_version
 
 
 class BaselineChecks(unittest.TestCase):
@@ -18,6 +19,26 @@ class BaselineChecks(unittest.TestCase):
 
     def test_all_named_plans_and_fixture_references(self):
         self.assertEqual(m0.check_data(ROOT), {"groups":95,"named_subtests":421,"profiles":3,"fixture_files":4})
+
+    def test_product_version_rejects_milestone_and_module_drift(self):
+        self.assertEqual(product_version.check(ROOT), "0.1.0")
+        paths = ("VERSION", "examples/bookstore/bootstrap/run.go", "tests/fixtures/modules.json", "docs/site/package.json", "docs/site/package-lock.json")
+        (ROOT / ".cache").mkdir(exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=ROOT / ".cache") as directory:
+            root = Path(directory)
+            for name in paths:
+                target = root / name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes((ROOT / name).read_bytes())
+            self.assertEqual(product_version.check(root), "0.1.0")
+            for name in paths:
+                with self.subTest(path=name):
+                    target = root / name
+                    original = target.read_text(encoding="utf-8-sig")
+                    target.write_text(original.replace("0.1.0", "0.2.0", 1), encoding="utf-8")
+                    with self.assertRaises(ValueError):
+                        product_version.check(root)
+                    target.write_text(original, encoding="utf-8")
 
     def test_missing_duplicate_false_pass_and_na_are_rejected(self):
         mutations = {

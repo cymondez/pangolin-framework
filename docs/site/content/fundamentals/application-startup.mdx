@@ -1,0 +1,43 @@
+---
+title: 應用啟動與停止
+description: 讓 Host 依相依順序啟動多個模組，並在結束時反序停止。
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import source from '../_snippets/lifecycle.go';
+
+當應用有多個模組，Host 會先完成設定與服務組裝，再按照相依順序啟動。結束時反序停止，讓被依賴的資源保持可用直到工作完成。
+
+## 執行範例
+
+從 `pangolin-framework/examples/basics` 執行：
+
+```bash
+go run ./lifecycle
+```
+
+預期結果：
+
+```text
+start storage
+start books
+ready: true
+stop books
+stop storage
+```
+
+storage 在這裡是示範模組名稱，不會連接資料庫。完整程式如下，也可複製到自己的 `main.go` 執行：
+
+<CodeBlock language="go" title="main.go">{source}</CodeBlock>
+
+## Ready 代表什麼？
+
+`host.Start` 成功後 `host.Ready()` 才為 true。HTTP 應用可以把它接到健康檢查，避免尚未準備完成就接收請求。
+
+## 應用仍在處理請求時怎麼停止？
+
+HTTP 或 Worker 可以透過 Participant 接入停止流程：先停止接收新工作（Quiesce）、等現有工作完成（Drain），期限到達時取消。這能避免資料庫先被關閉，請求卻仍在寫入。
+
+用 `runtime.NewWorkGroup()` 追蹤操作；進入時呼叫 Enter，釋放交易等資源後才呼叫回傳的 done。HTTP listener 的 Shutdown 仍需由你的應用接入。
+
+一般 console 程式可先使用本例的 Start／Stop；需要長時間執行的 HTTP 範例請繼續 [Bookstore](../tutorials/bookstore.md)。
