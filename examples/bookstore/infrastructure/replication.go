@@ -124,7 +124,7 @@ func (r *Replicator) Project(ctx context.Context) (bool, error) {
 	if _, e = domain.NewBook(book.ID, book.Title); e != nil {
 		return false, e
 	}
-	if _, e = tx.Exec(ctx, "select set_config('pangolin.tenant_id',$1,true)", event.TenantID); e != nil {
+	if _, e = tx.Exec(ctx, "select set_config('pangolin.tenant_id',$1,true),set_config('app.tenant_id',$1,true),set_config('app.scope_kind',$2,true),set_config('app.scope_id',$3,true)", event.TenantID, event.ScopeKind, event.ScopeID); e != nil {
 		return false, e
 	}
 	if _, e = tx.Exec(ctx, "INSERT INTO pangolin.book_views(tenant_id,id,title,version) VALUES ($1,$2,$3,$4) ON CONFLICT (tenant_id,id) DO NOTHING", event.TenantID, book.ID, book.Title, book.Version); e != nil {
