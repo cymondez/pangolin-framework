@@ -22,8 +22,8 @@ def http(url, token=None, body=None, headers=None):
 
 
 def run(output, project, packages, execute):
-    if not re.fullmatch(r"pangolin-m1[-a-z0-9]*", project):
-        raise ValueError("E2E requires an explicit pangolin-m1 namespace")
+    if not re.fullmatch(r"pangolin-m[12][-a-z0-9]*", project):
+        raise ValueError("E2E requires an explicit pangolin-m1 or pangolin-m2 namespace")
     suffix = ".exe" if os.name == "nt" else ""
     query=output/("m1-query"+suffix)
     execute(["go","build","-o",str(query),"./examples/bookstore/internal/testkit/cmd/m1-query"])
@@ -70,7 +70,7 @@ def run(output, project, packages, execute):
         status, raw = http(api_url + "/books", token, {"id":book_id, "title":"M1 process crash/replay"})
         if status != 201 or json.loads(raw)["id"] != book_id: raise ValueError("HTTP write did not commit")
         if sql("SELECT count(*) FROM pangolin.books WHERE tenant_id='tenant-a' AND id='" + book_id + "'") != "1": raise ValueError("2xx before commit")
-        for headers, expected in [({"X-Tenant-ID":"tenant-b"},403), ({"X-Scope-Kind":"org.organization"},403)]:
+        for headers, expected in [({"X-Tenant-ID":"tenant-b"},403), ({"X-Scope-Kind":"org.organization"},400)]:
             if http(api_url + "/books/" + book_id, token, headers=headers)[0] != expected: raise ValueError("cross-tenant/scope hint accepted")
         if http(api_url + "/books", "forged-token", {"title":"forged"})[0] != 401: raise ValueError("invalid JWT accepted")
         event_id = sql("SELECT event_id FROM pangolin.outbox WHERE convert_from(envelope,'UTF8')::jsonb->'payload'->>'id'='" + book_id + "'")

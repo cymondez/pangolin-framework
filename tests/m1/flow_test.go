@@ -168,9 +168,11 @@ func TestM1Flow(t *testing.T) {
 			if e = executor.QueryRow(other, "SELECT 1").Scan(new(int)); e == nil {
 				t.Fatal("row context")
 			}
-			if _, e = executor.Query(work, "SELECT 1"); e == nil {
-				t.Fatal("unsupported rows")
+			rows, queryErr := executor.Query(work, "SELECT 1")
+			if queryErr != nil {
+				return queryErr
 			}
+			rows.Close()
 			row := executor.QueryRow(work, "SELECT 1")
 			if _, e = executor.Exec(work, "SELECT 1"); e == nil {
 				t.Fatal("concurrent exec")
@@ -179,8 +181,8 @@ func TestM1Flow(t *testing.T) {
 				t.Fatal("concurrent row")
 			}
 			return row.Scan(new(int))
-		}); e != nil {
-			t.Fatal(e)
+		}); !errors.Is(e, uow.ErrRollbackOnly) {
+			t.Fatal("caught executor violations must poison the root", e)
 		}
 		if _, e := escaped.Exec(escapedContext, "SELECT 1"); e == nil {
 			t.Fatal("expired exec")

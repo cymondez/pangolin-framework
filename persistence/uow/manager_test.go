@@ -150,6 +150,12 @@ func TestRollbackUnknownPanicAndHooks(t *testing.T) {
 				}()
 			} else {
 				err := invoke()
+				if mode == "hook-error" {
+					if err != nil || tx.commits != 1 {
+						t.Fatal(err, tx)
+					}
+					return
+				}
 				var failure Error
 				if !errors.As(err, &failure) {
 					t.Fatal(err)
@@ -184,7 +190,7 @@ func TestOptionAndBeginRejections(t *testing.T) {
 	}
 	ctx := testContext(t)
 	m, _ := NewManager(testResource{tx: &testTx{}}, defaults())
-	for _, o := range []Options{{Mode: 99}, {Transaction: 99}, {Transaction: NonTransactional}, {Propagation: RequiresNew}, {Isolation: Serializable}, {Timeout: -1}} {
+	for _, o := range []Options{{Mode: 99}, {Transaction: 99}, {Transaction: NonTransactional}, {Propagation: 99}, {Isolation: 99}, {Timeout: -1}} {
 		if e := m.Within(ctx, o, func(context.Context) error { t.Fatal("invalid callback"); return nil }); e == nil {
 			t.Fatal(o)
 		}

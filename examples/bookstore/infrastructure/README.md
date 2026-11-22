@@ -19,3 +19,5 @@ Receive 驗證服務的 tenant grant、Kind／ID、producer／type／version，�
 `Replicator.Tenants` 是可信啟動設定的 M1 服務 allowlist；不是可變 Scope Provider／membership admission 的完整實作。一般 Outbox／Inbox Store 抽象與全部可靠性矩陣留待 M3。
 
 驗證：依 [M1 指南](../../../docs/guides/m1-development.md) 執行真實 Integration／E2E，包含第二次寫入故障回滾、RLS、非法 Broker 目的地、Inbox 衝突及 Broker ACK 後 crash／重啟。
+
+M2 新增 Update／Delete 的 expected-version 比較與 soft delete。ScopedRepository 使用獨立 scoped-schema.sql／scoped-queries.sql，完整 owner predicates、catalog FK 與 FORCE RLS；tenant-only Repository 拒絕 Org context。sqlc.yaml 同時生成兩個 Adapter；ScopeAware schema 只在明示 profile 安裝，完整組織事件 Worker 仍待 M3。參見 [M2 變更說明](../../../docs/release-notes/m2.md)。

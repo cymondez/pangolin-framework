@@ -5,5 +5,8 @@
   "github.com/cymondez/pangolin-framework/examples/bookstore/internal/testkit/cmd/m1-query/main.go": "test fixture",
   "github.com/cymondez/pangolin-framework/examples/bookstore/infrastructure/internal/bookdb/db.go": "generated: sqlc v1.31.1",
   "github.com/cymondez/pangolin-framework/examples/bookstore/infrastructure/internal/bookdb/models.go": "generated: sqlc v1.31.1",
-  "github.com/cymondez/pangolin-framework/examples/bookstore/infrastructure/internal/bookdb/queries.sql.go": "generated: sqlc v1.31.1"
+  "github.com/cymondez/pangolin-framework/examples/bookstore/infrastructure/internal/bookdb/queries.sql.go": "generated: sqlc v1.31.1",
+  "github.com/cymondez/pangolin-framework/examples/bookstore/infrastructure/internal/scopeddb/db.go": "generated: sqlc v1.31.1",
+  "github.com/cymondez/pangolin-framework/examples/bookstore/infrastructure/internal/scopeddb/models.go": "generated: sqlc v1.31.1",
+  "github.com/cymondez/pangolin-framework/examples/bookstore/infrastructure/internal/scopeddb/scoped-queries.sql.go": "generated: sqlc v1.31.1"
 }

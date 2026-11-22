@@ -29,3 +29,10 @@ type Repository interface {
 	Insert(context.Context, Book) error
 	Get(context.Context, string) (Book, error)
 }
+
+// VersionedRepository prevents lost updates and soft-deletes by expected version.
+type VersionedRepository interface {
+	Repository
+	Update(context.Context, Book, int64) error
+	Delete(context.Context, string, int64) error
+}

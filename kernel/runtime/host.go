@@ -10,6 +10,7 @@ import (
 	"github.com/cymondez/pangolin-framework/kernel/config"
 	"github.com/cymondez/pangolin-framework/kernel/di"
 	"github.com/cymondez/pangolin-framework/kernel/module"
+	"github.com/cymondez/pangolin-framework/security/scope"
 )
 
 // Participant stops admission before draining; cancellation must stop active work.
@@ -152,6 +153,23 @@ func (h *host) Start(ctx context.Context, modules []module.Module) (err error) {
 	h.container, err = providers.Seal(ctx)
 	if err != nil {
 		return err
+	}
+	// Check all declared capabilities before any module can accept work.
+	for _, m := range plan.Ordered {
+		if len(m.RequiredScopeKinds) == 0 {
+			continue
+		}
+		value, resolveErr := h.container.Resolve(ctx, scope.RegistryKey)
+		if resolveErr != nil {
+			return fmt.Errorf("module %s scope registry: %w", m.Name, resolveErr)
+		}
+		registry, ok := value.(*scope.Registry)
+		if !ok || registry == nil {
+			return fmt.Errorf("invalid scope registry")
+		}
+		if err = registry.Require(m.RequiredScopeKinds...); err != nil {
+			return fmt.Errorf("module %s: %w", m.Name, err)
+		}
 	}
 	for _, m := range plan.Ordered {
 		if err = ctx.Err(); err != nil {

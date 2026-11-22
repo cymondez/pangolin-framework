@@ -20,14 +20,20 @@ type Books struct {
 	manager    uow.UnitOfWorkManager
 	repository domain.Repository
 	publisher  distributed.IntegrationEventPublisher
+	scopeAware bool
 }
 
 func NewBooks(manager uow.UnitOfWorkManager, repository domain.Repository, publisher distributed.IntegrationEventPublisher) *Books {
-	return &Books{manager, repository, publisher}
+	return &Books{manager: manager, repository: repository, publisher: publisher}
+}
+
+// NewScopedBooks requires the separately installed ScopeAware schema/adapter.
+func NewScopedBooks(manager uow.UnitOfWorkManager, repository domain.Repository, publisher distributed.IntegrationEventPublisher) *Books {
+	return &Books{manager: manager, repository: repository, publisher: publisher, scopeAware: true}
 }
 func (s *Books) Create(ctx context.Context, id, title string) (domain.Book, error) {
 	binding, ok := scope.Current(ctx)
-	if !ok || binding.Ref.Kind != "tenant" {
+	if !ok || !s.scopeAware && binding.Ref.Kind != "tenant" {
 		return domain.Book{}, ErrDenied
 	}
 	if id == "" {
@@ -50,7 +56,7 @@ func (s *Books) Create(ctx context.Context, id, title string) (domain.Book, erro
 	return book, err
 }
 func (s *Books) Get(ctx context.Context, id string) (book domain.Book, err error) {
-	if _, ok := scope.Current(ctx); !ok {
+	if binding, ok := scope.Current(ctx); !ok || !s.scopeAware && binding.Ref.Kind != "tenant" {
 		return book, ErrDenied
 	}
 	err = s.manager.Within(ctx, uow.Options{Mode: uow.ReadOnly}, func(work context.Context) error { var e error; book, e = s.repository.Get(work, id); return e })

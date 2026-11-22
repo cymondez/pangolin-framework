@@ -129,6 +129,8 @@ M1 後續目錄整理已在來源 `b3bf59c03f4b66ff7389d44d8434356258a85d9a` 通
 - Command 冪等唯一鍵包含 Tenant、Scope Kind／ID、Principal、operation、key；在業務修改前保留，與成功結果／Outbox 同交易提交。併發靠 DB 唯一約束，不以先查後寫取代。
 - Commit Unknown 用原 key 對帳；查無結果不代表確定失敗。結果查詢與重播重新驗證目前權限，不能藉快取或舊成功紀錄繞過撤權。
 
+M2 在 `codex/m2-unit-of-work` 開發中，重現入口見 [M2 開發指南](docs/guides/m2-development.md)。共用 Application 政策在 `application`、交易感知 HTTP／短串流操作在 `transport/http`、可選組織 Provider 組裝在 `modules/organization`；正式完成狀態仍以同版 Gate 與里程碑維護。
+
 ## 機制與模組索引
 
 以下是目標 package 與權威章節；建檔前先確認目前實際結構。

@@ -1,4 +1,4 @@
-// Package uow defines the frozen §5 ports. No UnitOfWorkManager implementation exists in M0.
+// Package uow defines callback-managed units of work and immutable operation views.
 package uow
 
 import (

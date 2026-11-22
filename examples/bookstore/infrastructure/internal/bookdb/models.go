@@ -9,10 +9,11 @@ import (
 )
 
 type PangolinBook struct {
-	TenantID string
-	ID       string
-	Title    string
-	Version  int64
+	TenantID  string
+	ID        string
+	Title     string
+	Version   int64
+	DeletedAt pgtype.Timestamptz
 }
 
 type PangolinBookView struct {

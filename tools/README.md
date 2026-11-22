@@ -4,12 +4,12 @@
 
 | 工作 | 入口 |
 |---|---|
-| Windows 完整 M1 Gate | `./scripts/check.ps1 -Project <隔離名稱>` |
-| Linux 完整 M1 Gate，含 race | `PANGOLIN_M1_PROJECT=<隔離名稱> sh scripts/check.sh` |
+| Windows 完整 M2 Gate | `./scripts/check.ps1 -Project <隔離名稱>` |
+| Linux 完整 M2 Gate，含 race | `PANGOLIN_M2_PROJECT=<隔離名稱> sh scripts/check.sh` |
 | 契約／API／import／依賴盤點 | `python scripts/m0.py check` |
 | 凍結已審查 API 變更 | `python scripts/m0.py freeze-api`；不在 CI 自動執行 |
 | Go 契約／coverage 計數 | [check](check/README.md)：`go run ./tools/check` |
-| M1 同 commit 跨平台 Gate | `python scripts/m1.py gate --commit <full-sha>` |
+| M2 同 commit 跨平台 Gate | `python scripts/m2.py gate --commit <full-sha>` |
 | 測試 IdP 建置、環境 smoke、生成計畫 | [scripts 說明](../scripts/README.md) |
 
-完整 Gate 需要固定版本服務、連線變數與 sqlc，見 [M1 指南](../docs/guides/m1-development.md)。`check.ps1`／`check.sh` 是維護者的統一驗證入口；低階支援程式不另包成產品 CLI。生成物與 report 寫入 artifacts／.cache，不加入手寫 source 目錄。
+完整 Gate 需要固定版本服務、連線變數與 sqlc，見 [M2 指南](../docs/guides/m2-development.md)。`check.ps1`／`check.sh` 是維護者的統一驗證入口；低階支援程式不另包成產品 CLI。生成物與 report 寫入 artifacts／.cache，不加入手寫 source 目錄。

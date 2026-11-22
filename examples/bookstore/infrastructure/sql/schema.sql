@@ -4,6 +4,7 @@ CREATE TABLE pangolin.books (
     id text NOT NULL,
     title text NOT NULL CHECK (length(title) BETWEEN 1 AND 200),
     version bigint NOT NULL DEFAULT 1,
+    deleted_at timestamptz,
     PRIMARY KEY (tenant_id, id)
 );
 CREATE TABLE pangolin.book_views (
@@ -33,18 +34,18 @@ CREATE TABLE pangolin.inbox (
 );
 ALTER TABLE pangolin.books ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pangolin.books FORCE ROW LEVEL SECURITY;
-CREATE POLICY tenant_books ON pangolin.books USING (tenant_id = current_setting('pangolin.tenant_id', true)) WITH CHECK (tenant_id = current_setting('pangolin.tenant_id', true));
+CREATE POLICY tenant_books ON pangolin.books USING (tenant_id = current_setting('pangolin.tenant_id', true) AND current_setting('app.scope_kind', true)='tenant' AND current_setting('app.scope_id', true)=tenant_id) WITH CHECK (tenant_id = current_setting('pangolin.tenant_id', true) AND current_setting('app.scope_kind', true)='tenant' AND current_setting('app.scope_id', true)=tenant_id);
 ALTER TABLE pangolin.book_views ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pangolin.book_views FORCE ROW LEVEL SECURITY;
-CREATE POLICY tenant_views ON pangolin.book_views USING (tenant_id = current_setting('pangolin.tenant_id', true)) WITH CHECK (tenant_id = current_setting('pangolin.tenant_id', true));
+CREATE POLICY tenant_views ON pangolin.book_views USING (tenant_id = current_setting('pangolin.tenant_id', true) AND current_setting('app.scope_kind', true)='tenant' AND current_setting('app.scope_id', true)=tenant_id) WITH CHECK (tenant_id = current_setting('pangolin.tenant_id', true) AND current_setting('app.scope_kind', true)='tenant' AND current_setting('app.scope_id', true)=tenant_id);
 ALTER TABLE pangolin.outbox ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pangolin.outbox FORCE ROW LEVEL SECURITY;
-CREATE POLICY tenant_outbox ON pangolin.outbox USING (tenant_id = current_setting('pangolin.tenant_id', true)) WITH CHECK (tenant_id = current_setting('pangolin.tenant_id', true));
+CREATE POLICY tenant_outbox ON pangolin.outbox USING (tenant_id = current_setting('pangolin.tenant_id', true) AND current_setting('app.scope_kind', true)='tenant' AND current_setting('app.scope_id', true)=tenant_id) WITH CHECK (tenant_id = current_setting('pangolin.tenant_id', true) AND current_setting('app.scope_kind', true)='tenant' AND current_setting('app.scope_id', true)=tenant_id);
 CREATE POLICY worker_outbox ON pangolin.outbox TO pangolin_worker USING (true) WITH CHECK (true);
 ALTER TABLE pangolin.inbox ENABLE ROW LEVEL SECURITY;
 ALTER TABLE pangolin.inbox FORCE ROW LEVEL SECURITY;
 CREATE POLICY worker_inbox ON pangolin.inbox TO pangolin_worker USING (true) WITH CHECK (true);
-GRANT SELECT, INSERT ON pangolin.books TO pangolin_app;
+GRANT SELECT, INSERT, UPDATE ON pangolin.books TO pangolin_app;
 GRANT SELECT ON pangolin.book_views TO pangolin_app;
 GRANT INSERT ON pangolin.outbox TO pangolin_app;
 GRANT SELECT, UPDATE ON pangolin.outbox TO pangolin_worker;

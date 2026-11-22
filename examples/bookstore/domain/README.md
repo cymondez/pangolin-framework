@@ -7,3 +7,5 @@
 Application 先建構合法 Book，再進入 UOW；Repository 不能代替 Domain 檢查。新增模型時維持標準庫邊界，不能 import Application、HTTP、pgx 或 Broker。
 
 驗證：`go test ./...` 的架構檢查與 [M1 整合測試](../../../docs/guides/m1-development.md)；Domain／Application 禁止 import 的真實注入反例位於 `tests/m1/test_gate.py`。
+
+VersionedRepository 擴充 Update／Delete，透過 expected version 防止 lost update；Domain 不依賴資料庫實作。Delete 是 Adapter 的 soft-delete 行為，後續 Get 不返回已刪除資料。

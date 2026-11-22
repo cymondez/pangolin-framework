@@ -9,8 +9,26 @@ import (
 	"context"
 )
 
+const deleteBook = `-- name: DeleteBook :execrows
+UPDATE pangolin.books SET deleted_at=now(),version=version+1 WHERE tenant_id=$1 AND id=$2 AND version=$3 AND deleted_at IS NULL
+`
+
+type DeleteBookParams struct {
+	TenantID string
+	ID       string
+	Version  int64
+}
+
+func (q *Queries) DeleteBook(ctx context.Context, arg DeleteBookParams) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteBook, arg.TenantID, arg.ID, arg.Version)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const getBook = `-- name: GetBook :one
-SELECT id,title,version FROM pangolin.books WHERE tenant_id=$1 AND id=$2
+SELECT id,title,version FROM pangolin.books WHERE tenant_id=$1 AND id=$2 AND deleted_at IS NULL
 `
 
 type GetBookParams struct {
@@ -65,4 +83,28 @@ type InsertOutboxParams struct {
 func (q *Queries) InsertOutbox(ctx context.Context, arg InsertOutboxParams) error {
 	_, err := q.db.Exec(ctx, insertOutbox, arg.EventID, arg.TenantID, arg.Envelope)
 	return err
+}
+
+const updateBook = `-- name: UpdateBook :execrows
+UPDATE pangolin.books SET title=$3,version=version+1 WHERE tenant_id=$1 AND id=$2 AND version=$4 AND deleted_at IS NULL
+`
+
+type UpdateBookParams struct {
+	TenantID string
+	ID       string
+	Title    string
+	Version  int64
+}
+
+func (q *Queries) UpdateBook(ctx context.Context, arg UpdateBookParams) (int64, error) {
+	result, err := q.db.Exec(ctx, updateBook,
+		arg.TenantID,
+		arg.ID,
+		arg.Title,
+		arg.Version,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }

@@ -8,13 +8,52 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/cymondez/pangolin-framework/examples/bookstore/domain"
 	"github.com/cymondez/pangolin-framework/internal/testkit/idp"
 	"github.com/cymondez/pangolin-framework/kernel/runtime"
+	"github.com/cymondez/pangolin-framework/persistence/uow"
 	"github.com/cymondez/pangolin-framework/security/authn"
 	"github.com/cymondez/pangolin-framework/security/scope"
 )
+
+type rootResource struct{}
+
+func (rootResource) Begin(ctx context.Context, _ uow.EffectiveOptions) (context.Context, uow.Transaction, error) {
+	return ctx, rootTransaction{}, nil
+}
+
+type rootTransaction struct{}
+
+func (rootTransaction) Commit(context.Context) error   { return nil }
+func (rootTransaction) Rollback(context.Context) error { return nil }
+func TestRejectsJoinedRoot(t *testing.T) {
+	h, token, books := fixture(t)
+	resolver := scope.NewTenantResolver(func(context.Context) (scope.PrincipalRef, string, bool) {
+		return scope.PrincipalRef{ID: "alice", Kind: "user"}, "tenant-a", true
+	})
+	ctx, e := resolver.Bind(context.Background(), scope.ScopeRef{TenantID: "tenant-a", Kind: "tenant", ID: "tenant-a"})
+	if e != nil {
+		t.Fatal(e)
+	}
+	m, e := uow.NewManager(rootResource{}, uow.DefaultOptions{DefaultTimeout: time.Second, CleanupTimeout: time.Second, HookTimeout: time.Second, MaxRequiresNewDepth: 2})
+	if e != nil {
+		t.Fatal(e)
+	}
+	if e = m.Within(ctx, uow.Options{Mode: uow.ReadWrite}, func(work context.Context) error {
+		r := httptest.NewRequest("POST", "/books", strings.NewReader(`{"title":"book"}`)).WithContext(work)
+		r.Header.Set("Authorization", "Bearer "+token)
+		w := httptest.NewRecorder()
+		h.ServeHTTP(w, r)
+		if w.Code != 500 || books.calls != 0 {
+			t.Fatal(w.Code, books.calls)
+		}
+		return nil
+	}); e != nil {
+		t.Fatal(e)
+	}
+}
 
 type trip func(*http.Request) (*http.Response, error)
 
@@ -72,7 +111,7 @@ func TestCommitBeforeSuccessAndRejections(t *testing.T) {
 		{"missing-auth", "POST", "/books", `{"title":"book"}`, 401, map[string]string{"Authorization": ""}},
 		{"invalid-auth", "POST", "/books", `{"title":"book"}`, 401, map[string]string{"Authorization": "Bearer invalid"}},
 		{"tenant-forgery", "POST", "/books", `{"title":"book"}`, 403, map[string]string{"X-Tenant-ID": "tenant-b"}},
-		{"org-hint", "POST", "/books", `{"title":"book"}`, 403, map[string]string{"X-Scope-Kind": "org.organization"}},
+		{"org-hint", "POST", "/books", `{"title":"book"}`, 400, map[string]string{"X-Scope-Kind": "org.organization"}},
 		{"bad-scope-id", "POST", "/books", `{"title":"book"}`, 403, map[string]string{"X-Scope-ID": "tenant-b"}},
 		{"bad-json", "POST", "/books", `{`, 400, nil},
 		{"unknown-field", "POST", "/books", `{"owner":"other","title":"book"}`, 400, nil},

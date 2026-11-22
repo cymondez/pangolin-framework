@@ -9,6 +9,7 @@ import (
 	"github.com/cymondez/pangolin-framework/examples/bookstore/domain"
 	"github.com/cymondez/pangolin-framework/examples/bookstore/infrastructure/internal/bookdb"
 	"github.com/cymondez/pangolin-framework/persistence/postgres"
+	"github.com/cymondez/pangolin-framework/persistence/uow"
 	"github.com/cymondez/pangolin-framework/security/scope"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -16,8 +17,40 @@ import (
 
 type Repository struct{}
 
+func tenantExecutor(ctx context.Context, write bool) (*postgres.Executor, error) {
+	if b, ok := scope.Current(ctx); ok && b.Ref.Kind != "tenant" {
+		return nil, uow.Fail(ctx, uow.ErrScopeMismatch)
+	}
+	return postgres.Current(ctx, write)
+}
+
+func (Repository) Update(ctx context.Context, b domain.Book, expected int64) error {
+	e, err := tenantExecutor(ctx, true)
+	if err != nil {
+		return err
+	}
+	binding, _ := scope.Current(ctx)
+	n, err := bookdb.New(e).UpdateBook(ctx, bookdb.UpdateBookParams{TenantID: binding.Ref.TenantID, ID: b.ID, Title: b.Title, Version: expected})
+	if err == nil && n != 1 {
+		return domain.ErrConflict
+	}
+	return err
+}
+func (Repository) Delete(ctx context.Context, id string, expected int64) error {
+	e, err := tenantExecutor(ctx, true)
+	if err != nil {
+		return err
+	}
+	binding, _ := scope.Current(ctx)
+	n, err := bookdb.New(e).DeleteBook(ctx, bookdb.DeleteBookParams{TenantID: binding.Ref.TenantID, ID: id, Version: expected})
+	if err == nil && n != 1 {
+		return domain.ErrConflict
+	}
+	return err
+}
+
 func (Repository) Insert(ctx context.Context, b domain.Book) error {
-	e, err := postgres.Current(ctx, true)
+	e, err := tenantExecutor(ctx, true)
 	if err != nil {
 		return err
 	}
@@ -30,7 +63,7 @@ func (Repository) Insert(ctx context.Context, b domain.Book) error {
 	return err
 }
 func (Repository) Get(ctx context.Context, id string) (domain.Book, error) {
-	e, err := postgres.Current(ctx, false)
+	e, err := tenantExecutor(ctx, false)
 	if err != nil {
 		return domain.Book{}, err
 	}
@@ -42,7 +75,7 @@ func (Repository) Get(ctx context.Context, id string) (domain.Book, error) {
 	return domain.Book{ID: b.ID, Title: b.Title, Version: b.Version}, err
 }
 func (Repository) Publish(ctx context.Context, value any) error {
-	e, err := postgres.Current(ctx, true)
+	e, err := tenantExecutor(ctx, true)
 	if err != nil {
 		return err
 	}

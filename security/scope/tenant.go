@@ -27,6 +27,12 @@ func (r *tenantResolver) Bind(ctx context.Context, ref ScopeRef) (context.Contex
 	if ctx == nil || r.identity == nil {
 		return nil, fmt.Errorf("scope identity required")
 	}
+	if e := Validate(ref); e != nil {
+		return nil, e
+	}
+	if ref.Kind != "tenant" {
+		return nil, ErrKindUnsupported
+	}
 	p, tenant, ok := r.identity(ctx)
 	if !ok || p.ID == "" || tenant == "" || ref.TenantID != tenant || ref.Kind != "tenant" || ref.ID != tenant {
 		return nil, fmt.Errorf("scope access denied")
