@@ -1,0 +1,45 @@
+---
+title: 應用設定
+description: 設定預設值、讀取環境變數並驗證必要欄位。
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import source from '../_snippets/configuration.go';
+
+你的應用通常需要在本機與部署環境使用不同名稱、連線與逾時。`kernel/config` 將這些來源合併成只讀設定。
+
+## 完整使用範例
+
+從 `pangolin-framework/examples/basics` 執行 `go run ./configuration`，預設會看到 `Application: My App`。以下程式也可直接作為[你自己專案](../getting-started/installation.md)的 `main.go`：
+
+<CodeBlock language="go" title="main.go">{source}</CodeBlock>
+
+Windows PowerShell 改變設定：
+
+```powershell
+$env:APP_NAME = 'Bookstore'
+go run ./configuration
+Remove-Item Env:APP_NAME
+```
+
+macOS／Linux：
+
+```bash
+APP_NAME=Bookstore go run ./configuration
+```
+
+此時應輸出 `Application: Bookstore`。如果程式放在自己的專案，將命令中的 `go run ./configuration` 改成 `go run .`。
+
+## 覆寫順序
+
+`defaults < file < environment < cli`，右邊的來源優先。同一名稱的來源只能提供一次。
+
+Loader 接收的是 Source.Values；檔案讀取、環境變數名稱與 flags 由你的應用選擇。範例使用 `os.LookupEnv` 明確把 APP_NAME 對應到 app.name。
+
+## 驗證輸入
+
+`Required: true` 代表必要設定不能缺少或為空。網址可以使用 `config.URL("postgres", "postgresql")` 驗證允許的 scheme。
+
+請先處理 Load 的錯誤，再使用 Lookup。連線密碼與 Token 等機密由可信環境提供，不放進程式碼或輸出到記錄。
+
+要將設定交給整個應用，請接著閱讀[問候服務教學](../tutorials/greeting-application.mdx)。

@@ -1,0 +1,26 @@
+{
+  "name": "pangolin-framework-docs",
+  "version": "0.1.0",
+  "private": true,
+  "description": "panGOlin Framework 官方版本化文件",
+  "engines": {"node": ">=22 <23"},
+  "scripts": {
+    "start": "node scripts/sync-snippets.mjs && docusaurus start --host 127.0.0.1 --no-open",
+    "build": "node scripts/check-version.mjs && node scripts/sync-snippets.mjs && docusaurus build && node scripts/check-build.mjs",
+    "serve": "docusaurus serve --host 127.0.0.1 --no-open",
+    "docusaurus": "node scripts/sync-snippets.mjs && docusaurus",
+    "test": "node --test scripts/*.test.mjs",
+    "docker": "node scripts/docker.mjs"
+  },
+  "dependencies": {
+    "@docusaurus/core": "3.10.2",
+    "@docusaurus/preset-classic": "3.10.2",
+    "@docusaurus/theme-common": "3.10.2",
+    "@easyops-cn/docusaurus-search-local": "0.55.3",
+    "@mdx-js/react": "3.1.1",
+    "clsx": "2.1.1",
+    "prism-react-renderer": "2.4.1",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  }
+}

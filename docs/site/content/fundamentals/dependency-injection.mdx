@@ -1,0 +1,47 @@
+---
+title: 依賴注入
+description: 註冊自己的介面與實作，取得服務並選擇適合的存活期間。
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import source from '../_snippets/dependency-injection.go';
+
+依賴注入（DI）讓你的業務程式接收需要的服務，而不是到處自行建立服務。本例定義 `Greeter` 介面，並註冊 `EnglishGreeter` 實作。
+
+## 執行範例
+
+從套件來源的 `examples/basics` 執行：
+
+```bash
+go run ./dependency-injection
+```
+
+預期輸出 `Hello, Alice!`。也可以在[已建立的專案](../getting-started/installation.md)中，把以下完整程式存成 `main.go`，執行 `go run .`。
+
+<CodeBlock language="go" title="main.go">{source}</CodeBlock>
+
+## 如何使用
+
+1. `di.NewKey[Greeter]("greeter")` 為服務定義一個含 Go 型別的識別鍵。
+2. `Provide` 註冊實作；Factory 回傳建立好的服務。
+3. `Seal` 完成組裝，之後即可 Resolve。
+4. 取得的結果轉回 Greeter，再呼叫自己的方法。
+5. 應用結束時 Close Container，讓它釋放擁有的資源。
+
+在 Module 內使用 DI 時，把 Provide 放在 Configure，並在 Start 透過 `app.Services()` 取得服務。[問候服務教學](../tutorials/greeting-application.mdx)提供完整組合方式。
+
+## 選擇存活期間
+
+| 選項 | 何時使用 |
+|---|---|
+| Singleton | 整個應用共用的服務，例如可安全並行使用的連線池 |
+| Transient | 每次取得都要建立新物件 |
+| Operation | 同一次操作共用，操作結束即清理 |
+
+Operation 使用 `container.OpenScope(ctx)` 建立範圍，透過 scope.Resolve 取得服務，最後 scope.Close。Singleton 不能保留 Operation 服務，避免跨請求共用本來應該隔離的狀態。
+
+## 服務有依賴或資源時
+
+Factory 需要其他服務時，在 Provider.DependsOn 宣告所有使用的 Key，再從傳入的 Resolver 取得。重複、遺漏或循環相依會回報錯誤。
+
+如果 Factory 建立了需關閉的資源，就回傳 Cleanup。Cleanup 接到的 context 有清理期限，你的關閉動作也要遵守它。

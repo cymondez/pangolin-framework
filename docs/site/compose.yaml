@@ -1,0 +1,31 @@
+name: pangolin-docs
+services:
+  docs:
+    image: "pangolin-docs:${PANGOLIN_VERSION:?Use node docs/site/scripts/docker.mjs to read VERSION}"
+    build:
+      context: ../..
+      dockerfile: docs/site/Dockerfile
+      args:
+        FRAMEWORK_VERSION: "${PANGOLIN_VERSION:?Use the version injection script}"
+        DOCS_URL: "${DOCS_URL:-http://localhost:18088}"
+        DOCS_BASE_URL: "${DOCS_BASE_URL:-/}"
+    ports:
+      - "127.0.0.1:${PANGOLIN_DOCS_PORT:-18088}:8080"
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m,mode=1777
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 64m
+    cpus: 0.5
+    pids_limit: 64
+    restart: "no"
+    labels:
+      dev.pangolin.owner: pangolin-framework
+      dev.pangolin.purpose: framework-docs
+    healthcheck:
+      test: [CMD, wget, -q, -O, /dev/null, "http://127.0.0.1:8080${DOCS_BASE_URL:-/}version-manifest.json"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s

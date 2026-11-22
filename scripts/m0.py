@@ -179,6 +179,8 @@ def check_data(root=ROOT):
 
 
 def check(root=ROOT):
+    import product_version
+    framework_version = product_version.check(root)
     result = check_data(root)
     check_api(load(root / "tests/contract/api.json"), api_surface(root))
     packages = json_stream(command(["go", "list", "-json", "./..."], root))
@@ -189,7 +191,7 @@ def check(root=ROOT):
         raise ValueError("tenant-only fixture captures organization dependency")
     import dependencies
     dependency_result = dependencies.check()
-    return dict(result, api_packages=len(load(root / "tests/contract/api.json")["packages"]), dependencies=dependency_result)
+    return dict(result, api_packages=len(load(root / "tests/contract/api.json")["packages"]), dependencies=dependency_result, framework_version=framework_version)
 
 
 def revision(root=ROOT):

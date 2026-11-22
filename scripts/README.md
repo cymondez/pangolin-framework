@@ -9,6 +9,8 @@
 | `m1_e2e.py` | Gate 內部支援；建置並啟動範例自己的 API／Worker／故障程序 |
 | `m0.py` | 現行契約／API／import／依賴盤點，以及綁定舊來源的 M0 evidence 流程 |
 | `dependencies.py` | 完整 module／checksum／license allowlist 檢查，由盤點呼叫 |
+| `product_version.py` | 由 `m0.py check` 檢查 VERSION、現行自有 Module 與基線 fixture 均為 0.1.0；不改第三方或 schema 版本 |
+| `docs_examples.py` | 在獨立 Go consumer 專案執行公開教學的完整程式、環境覆寫與文件程式片段 |
 | `build-test-idp.ps1` | 以固定 Go 工具鏈產生 Linux 測試 IdP；不啟動 Docker |
 | `smoke.py` | 已確認歸屬的 M0 服務 smoke／故障裝置；不代替正式 Runtime 驗收 |
 | `contract_matrix.py` | 421 個具名驗收計畫與 Profile manifest 的生成來源 |

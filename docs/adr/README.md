@@ -14,5 +14,7 @@
 | [ADR08](ADR08-distribution.md) | module path、版本與發行平台 | 技術負責人／Go C |
 | [ADR09](ADR09-scope-profiles.md) | 組織模組與替換 fixture | Go C／QA |
 | [ADR10](ADR10-source-ownership.md) | M1 後續：程式碼歸屬、範例集中與搬移相容性 | 技術負責人／Go A |
+| [ADR11](ADR11-product-version.md) | M1–M6 的產品版本固定 0.1.0，與文件／工具／schema 版本分離 | 技術負責人／Go A |
+| [ADR12](ADR12-documentation-site.md) | Docusaurus 官方文件、版本快照、本機搜尋與 Docker | 技術負責人／Go A |
 
 責任角色尚未指派實際人員。核心公開 Port 已凍結為可編譯宣告並以 API surface gate 保護；95 組案例已拆成 421 個具名子情境，fixture、Profile 適用性、排程假設及驗證入口已固定。同 commit 的 M0 gate 證據由 `scripts/m0.py` 收集。Runtime 功能依原正式交付節點實作，不以 M0 通過取代。

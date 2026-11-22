@@ -7,12 +7,12 @@ lang: zh-TW
 
 # panGOlin-framework｜里程碑規劃書
 
-> **文件基線：** v1.3；承接整合稿 v1.2，產品目標 v0.1。  
+> **文件基線：** v1.3；承接整合稿 v1.2，產品目標 v0.1.0。<br>
 > **狀態：** 已成文、待實作與證據驗收；文件檢查不代表功能已完成。
 
 ## 0. 計畫權威與目前狀態
 
-本文件依[實作規範書 v1.3](panGOlin-framework_實作規範書.md)安排全框架 v0.1 的交付，包含可選的 Enterprise／Organization 單一模組。需求正式句、介面、產品行為、版本範圍、A01–A95 及品質門檻只由實作規範定義；本文件不重新定義它們。
+本文件依[實作規範書 v1.3](panGOlin-framework_實作規範書.md)安排全框架 v0.1.0 的交付，包含可選的 Enterprise／Organization 單一模組。需求正式句、介面、產品行為、版本範圍、A01–A95 及品質門檻只由實作規範定義；本文件不重新定義它們。
 
 **2026-11-21：M0 已 Verified（來源 commit `a0b1ad099fdf7bd28240514a24c34590220019a1`）；M1 已 Verified（來源 `9eb10df6cd848b87fda964f0b6b61d60dc12b0a6`），M2–M6 與其餘 86 項產品需求保持 Planned。** 已建立的底座及未完成條件見 §2.1。文件、CI 配置或品質工具測試不等於 M0 通過，也不等於 Runtime 已驗收或全框架達成 90% coverage。只有指定 commit 的 Exit 證據完整且 Gate 通過才能改為 Verified。
 
@@ -20,9 +20,9 @@ lang: zh-TW
 
 ### 1.1 發布集合與延期項目
 
-v0.1 交付集合為實作規範 §5.7 與 §16 的全部 95 項需求；唯一逐項清單在本文件 §5。產品範圍以[實作規範 §15](panGOlin-framework_實作規範書.md#s-15)為準。v0.2+ 的 Redis、Blob、進階 Cron 及新增 Adapter 未分配本版工作量，也沒有虛構的已交付 ID；若納入，先修改規範、案例與估算。
+v0.1.0 交付集合為實作規範 §5.7 與 §16 的全部 95 項需求；唯一逐項清單在本文件 §5。產品範圍以[實作規範 §15](panGOlin-framework_實作規範書.md#s-15)為準。v0.2+ 的 Redis、Blob、進階 Cron 及新增 Adapter 未分配本版工作量，也沒有虛構的已交付 ID；若納入，先修改規範、案例與估算。
 
-Organization 模組對採用框架的專案可選，對 v0.1 框架發行包仍是交付項。純 Tenant、組織啟用與替換契約三種組裝依[實作規範 §13.4](panGOlin-framework_實作規範書.md#s-13.4)驗證。
+Organization 模組對採用框架的專案可選，對 v0.1.0 框架發行包仍是交付項。純 Tenant、組織啟用與替換契約三種組裝依[實作規範 §13.4](panGOlin-framework_實作規範書.md#s-13.4)驗證。
 
 ### 1.2 工期基線與容量假設
 
@@ -219,7 +219,7 @@ flowchart LR
 **Tasks**
 
 1. 完成 Memory Cache／Settings／Features、Scope key／繼承／失效及 Audit 整合回歸。
-2. 完成 CLI 全部 v0.1 命令、兩種 Profile Template、OpenAPI 與 Quickstart。
+2. 完成 CLI 全部 v0.1.0 命令、兩種 Profile Template、OpenAPI 與 Quickstart。
 3. 在乾淨 runner 生成、build／test／啟動兩種 Bookstore；重跑安全與 UOW 契約。
 
 **Exit：** 本節正式案例全過；新專案預設 tenant-only，明示選項啟用完整 organization 模組；命令重入不毀損已有檔案。  

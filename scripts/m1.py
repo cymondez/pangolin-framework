@@ -118,7 +118,7 @@ def verify(args):
     report={"milestone":"M1","commit":commit,"source_sha256":source,"working_tree_dirty":dirty,"baseline":"v1.3","platform":platform,"seed":20261121,"project":args.project,"status":"failed","commands":[]}
     mapping=m0.load(ROOT/"tests/contract/m1.json");validate_mapping(mapping)
     check_module_docs(mapping)
-    report["inputs"]={name:m0.digest(ROOT/name) for name in ("go.mod","go.sum","deploy/toolchain.json","deploy/profiles/local.json","deploy/dependencies.json","tests/fixtures/manifest.json","tests/contract/api.json","tests/contract/m1.json")}
+    report["inputs"]={name:m0.digest(ROOT/name) for name in ("VERSION","go.mod","go.sum","deploy/toolchain.json","deploy/profiles/local.json","deploy/dependencies.json","tests/fixtures/manifest.json","tests/contract/api.json","tests/contract/m1.json")}
     def execute(argv,name=None):
         index=len(report["commands"]);name=name or "e2e-step";log=output/f"{index:02d}-{name}.log";started=time.monotonic()
         result=subprocess.run(argv,cwd=ROOT,env=m0.go_environment(ROOT),capture_output=True,text=True,encoding="utf-8",errors="replace")

@@ -2,6 +2,8 @@
 
 以擁有者決定位置，再於擁有者內分層。根目錄 go.mod 定義唯一 module，公開 framework package 直接位於其下；不增加 src。只有實際交付的目錄才建立，規範 §10 的完整目標結構不等於當前檔案清單。
 
+官方靜態文件網站集中在 [docs/site](../site/README.md)，教學歸 `content/`、UI 歸站點自身的 `src/`。這是獨立前端工具的慣例；Go 公開 package 位置維持不變。
+
 ```text
 kernel/、persistence/、security/、events/   共用框架公開能力
 modules/organization/contracts/            尚待完整模組實作的穩定管理 Port

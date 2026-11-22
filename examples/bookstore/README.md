@@ -2,6 +2,8 @@
 
 此範例展示 HTTP → Application → Required Tx → PostgreSQL／Outbox，再由獨立 Worker 經 JetStream → Inbox → Read Model。純 tenant-only，不建立假 Organization；完整組織範本由 M5 交付。
 
+套件使用者可從[Bookstore 教學](../../docs/site/content/tutorials/bookstore.md)開始；[demo.ps1](scripts/README.md) 提供自己的本機服務初始化／停止，不需要呼叫內部測試 harness。
+
 | 目錄 | 責任與說明 |
 |---|---|
 | [domain](domain/README.md) | Book 不變條件、Repository Port，無外部 Adapter import |

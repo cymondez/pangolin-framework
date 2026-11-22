@@ -6,7 +6,7 @@ panGOlin-framework 是 Go 模組化應用框架，先以模組化單體交付，
 
 ## 目前狀態與文件權威
 
-**核對日期：2026-11-21。** M0 已 Verified，來源 commit `a0b1ad099fdf7bd28240514a24c34590220019a1`，見 [M0 驗收紀錄](docs/evidence/M0.md)。M1 已 Verified，來源 `9eb10df6cd848b87fda964f0b6b61d60dc12b0a6`，見 [M1 驗收紀錄](docs/evidence/M1.md)：交付 Kernel／DI／Config／Drain 與 tenant-only Bookstore Required 交易、JWT／RLS／分程序事件薄片，Windows／Linux（含 race）同版 Gate 通過，20 份模組 README 已補齊。完整 UOW／安全／通用 Adapter、CLI 與 Organization 仍依 M2–M6 交付。文件基線 v1.3、產品目標 v0.1；狀態由里程碑規劃書維護，重現方式見 [M1 開發指南](docs/guides/m1-development.md)。
+**核對日期：2026-11-21。** M0 已 Verified，來源 commit `a0b1ad099fdf7bd28240514a24c34590220019a1`，見 [M0 驗收紀錄](docs/evidence/M0.md)。M1 已 Verified，來源 `9eb10df6cd848b87fda964f0b6b61d60dc12b0a6`，見 [M1 驗收紀錄](docs/evidence/M1.md)：交付 Kernel／DI／Config／Drain 與 tenant-only Bookstore Required 交易、JWT／RLS／分程序事件薄片，Windows／Linux（含 race）同版 Gate 通過，20 份模組 README 已補齊。完整 UOW／安全／通用 Adapter、CLI 與 Organization 仍依 M2–M6 交付。文件基線 v1.3、產品目標 v0.1.0；狀態由里程碑規劃書維護，重現方式見 [M1 開發指南](docs/guides/m1-development.md)。
 
 本檔下文的 package、介面與執行流程都是既定設計的導覽，不表示對應目錄或功能已存在。實作開始後應同步更新這段狀態；不能由文件完成推論 Runtime 可執行或品質門檻已通過。
 
@@ -148,7 +148,7 @@ M1 後續目錄整理已在來源 `b3bf59c03f4b66ff7389d44d8434356258a85d9a` 通
 | Logs／Metrics／Tracing／Health | `observability` | §9.6；敏感內容遮罩，不以無界租戶／組織 labels 建 Metrics |
 | CLI、兩種 Profile 範本與 Bookstore | `cmd/pangolin`（後續 CLI）、`examples/bookstore/cmd/{api,worker}`、`examples/bookstore` | §10、§12、§13.4 |
 
-v0.1 的正式範圍只由[實作規範 §15](design/panGOlin-framework_實作規範書.md#s-15)決定。Organization 對應用可選，但仍是框架發行包交付項。Redis、Blob Storage、進階 Cron、新的 DB／Broker／Transport Adapter 列在 v0.2+，沒有本次時程承諾。
+v0.1.0 的正式範圍只由[實作規範 §15](design/panGOlin-framework_實作規範書.md#s-15)決定。Organization 對應用可選，但仍是框架發行包交付項。Redis、Blob Storage、進階 Cron、新的 DB／Broker／Transport Adapter 列在 v0.2+，沒有本次時程承諾。
 
 ## 常見開發工作
 
@@ -204,14 +204,20 @@ go test -race ./...
 - Node 使用 `node`，npm／npx 優先使用 `npm.cmd`／`npx.cmd`。遵守專案指定版本與虛擬環境。
 - PATH 不完整時可查實際安裝位置：Python 為 `C:\Python313\python.exe` 或 `C:\Users\cymondez\AppData\Local\Programs\Python\Python312\python.exe`；Node/npm/npx 為 `C:\Users\cymondez\AppData\Local\Author Software\nvm\.nodejs`；Docker 為 `C:\Users\cymondez\AppData\Local\Programs\DockerDesktop\resources\bin`。
 - Docker／Compose 已安裝；連接 `npipe:////./pipe/dockerDesktopLinuxEngine` 遭拒是 engine 權限問題，不是未安裝。僅針對已授權工作的實際存取需求走正常核准流程。
+- 代理自行建立的一次性測試環境，工作完成後預設清除容器、network、測試 volumes 與確認未被使用的專用測試映像；重用明確的隔離 project 名稱，避免累積環境。除非使用者明示保留，不只停止容器或留下測試資料。清理前確認歸屬，不使用全域 prune；workspace 的驗證結果與 logs 保留。
+- 使用者要求開啟供瀏覽的 docs 服務須提供可直接使用的網址並保持運行，不在完成回覆前當作一次性 QA 關閉。
 - 絕對 executable path 只選擇安裝位置，不增加 sandbox 權限；不要為了 PATH 或命令名稱問題修改核准規則。
 
 ## 維護導覽
+
+- 官方文件網站位於 `docs/site/`，使用者教學歸 `content/`；操作與檢查見 [網站 README](docs/site/README.md)。新增／修改模組時同步教學並標示已交付範圍。站點自己的 `src/` 是 Docusaurus UI 慣例，不改 Go 目錄政策；正式發布後才保存版本快照。
+- **網站以套件使用者／初學者為讀者。** 導覽採開始使用、循序教學、套件使用範例、功能指南及參考；交代前置條件、操作目錄、完整程式、預期輸出與下一步。Spec、內部里程碑、Gate／驗收證據與討論紀錄留在維護文件，不放公開導覽。範例須實際執行，完成後再以完全不熟悉框架的初學者角色走查。
+- **M1–M6 的 Framework 產品版本固定為 `0.1.0`。** 以根目錄 [VERSION](VERSION) 為準；里程碑推進不升版，自有 Module、CLI／Template 與產品發行標籤須一致。文件基線、第三方工具／依賴、事件 schema 與 SemVer 負測試值各自維持原版本，詳見 [ADR11](docs/adr/ADR11-product-version.md)。
 
 - **模組實作必須附說明文件。** 新增或變更模組／production package 時，在該目錄維護 `README.md`，說明責任、公開 API／組裝與設定、錯誤及清理行為、測試方式與目前交付邊界；同一變更完成，不能只更新根目錄摘要。M1 文件索引由 `tests/contract/m1.json` 與 Gate 檢查。
 
 - 新增或修改模組、依賴、公開 Port、入口政策、交易／安全機制時，同一變更更新相應文件與本檔索引；刪除或改名也同步修正。
 - 本檔保持摘要與導覽用途。產品規範留在實作規範書，交付映射留在里程碑規劃書，不複製另一份需求清單或排程。
 - 有程式碼與證據後更新「目前狀態」；新增詳細指南時才加入實際檔案連結，不宣稱不存在的規則檔會自動載入。
-- 現行指南描述目前有效設計，升級差異放 Release Notes／Migration Plan；ADR 保留決策理由與歷史。v0.1 API 變更仍需變更與遷移說明，已發布 Event Schema 不可無通知破壞。
+- 現行指南描述目前有效設計，升級差異放 Release Notes／Migration Plan；ADR 保留決策理由與歷史。v0.1.0 API 變更仍需變更與遷移說明，已發布 Event Schema 不可無通知破壞。
 - 最終回報說明修改內容、驗證結果與未完成限制；不把規劃、片段編譯或工具可用性寫成產品交付完成。
