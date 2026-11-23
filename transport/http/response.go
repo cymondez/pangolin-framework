@@ -10,7 +10,11 @@ import (
 	"net/http"
 
 	"github.com/cymondez/pangolin-framework/application"
+	"github.com/cymondez/pangolin-framework/persistence/idempotency"
 	"github.com/cymondez/pangolin-framework/persistence/uow"
+	"github.com/cymondez/pangolin-framework/security/authn"
+	"github.com/cymondez/pangolin-framework/security/scope"
+	"github.com/cymondez/pangolin-framework/tenancy"
 )
 
 // Problem exposes safe metadata without SQL, DSN, token or raw error text.
@@ -29,6 +33,16 @@ type Problem struct {
 func WriteError(w http.ResponseWriter, r *http.Request, err error) {
 	status, code := 500, "INTERNAL"
 	id, outcome := "", ""
+	for _, entry := range []struct {
+		err    error
+		status int
+	}{
+		{authn.ErrUnauthenticated, 401}, {scope.ErrDenied, 403}, {scope.ErrInvalid, 400}, {scope.ErrRequired, 400}, {scope.ErrHintConflict, 400}, {scope.ErrKindUnsupported, 400}, {tenancy.ErrHintConflict, 400}, {scope.ErrAuthorityUnavailable, 503}, {ErrValidation, 400}, {ErrBodyTooLarge, 413},
+	} {
+		if errors.Is(err, entry.err) {
+			status, code = entry.status, entry.err.Error()
+		}
+	}
 	if errors.Is(err, context.DeadlineExceeded) {
 		status, code = 504, "TIMEOUT"
 	}
@@ -40,12 +54,50 @@ func WriteError(w http.ResponseWriter, r *http.Request, err error) {
 	var failure uow.Error
 	if errors.As(err, &failure) {
 		id = failure.OperationID()
-		code = failure.Code()
+		if code == "INTERNAL" {
+			code = failure.Code()
+		}
 		if failure.Outcome() == uow.Unknown {
 			status, code, outcome = 503, failure.Code(), "unknown"
 		}
 	}
+	var classified interface {
+		HTTPStatus() int
+		Code() string
+	}
+	if outcome != "unknown" && errors.As(err, &classified) {
+		if s := classified.HTTPStatus(); s >= 400 && s <= 599 {
+			status, code = s, classified.Code()
+		}
+	}
+	if outcome != "unknown" {
+		for _, sentinel := range []error{idempotency.ErrConflict, idempotency.ErrInProgress, idempotency.ErrExpired} {
+			if errors.Is(err, sentinel) {
+				status, code = 409, sentinel.Error()
+			}
+		}
+	}
 	writeProblem(w, r, status, code, id, outcome)
+}
+
+func writeResult(w http.ResponseWriter, r *http.Request, result any) {
+	raw, err := marshalResponse(result)
+	if err != nil {
+		WriteError(w, r, err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_, _ = w.Write(raw)
+}
+func marshalResponse(value any) (raw []byte, err error) {
+	defer func() {
+		if recover() != nil {
+			raw = nil
+			err = errors.New("response serialization failed")
+		}
+	}()
+	return json.Marshal(value)
 }
 func writeProblem(w http.ResponseWriter, r *http.Request, status int, code, id, outcome string) {
 	w.Header().Set("Content-Type", "application/problem+json")
@@ -56,6 +108,9 @@ func writeProblem(w http.ResponseWriter, r *http.Request, status int, code, id, 
 // Command owns a top-level write boundary. A surrounding UOW is rejected so a
 // joined Required callback cannot accidentally send success before its root commits.
 func Command(m uow.UnitOfWorkManager, work func(context.Context) (any, error)) http.Handler {
+	return command(m, work, nil)
+}
+func command(m uow.UnitOfWorkManager, work func(context.Context) (any, error), rejected func(context.Context, error)) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if m == nil || work == nil {
 			WriteError(w, r, uow.ErrOptionsInvalid)
@@ -76,10 +131,11 @@ func Command(m uow.UnitOfWorkManager, work func(context.Context) (any, error)) h
 			return e
 		})
 		if err != nil {
+			notifyRejected(rejected, r.Context(), err)
 			WriteError(w, r, err)
 			return
 		}
-		raw, err := json.Marshal(result)
+		raw, err := marshalResponse(result)
 		if err != nil {
 			writeProblem(w, r, 500, "INTERNAL", id, "committed")
 			return

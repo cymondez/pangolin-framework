@@ -23,3 +23,5 @@ Receive 驗證服務的 tenant grant、Kind／ID、producer／type／version，�
 M2 新增 Update／Delete 的 expected-version 比較與 soft delete。ScopedRepository 使用獨立 scoped-schema.sql／scoped-queries.sql，完整 owner predicates、catalog FK 與 FORCE RLS；tenant-only Repository 拒絕 Org context。sqlc.yaml 同時生成兩個 Adapter；ScopeAware schema 只在明示 profile 安裝，完整組織事件 Worker 仍待 M3。參見 [M2 變更說明](../../../docs/release-notes/m2.md)。
 
 Tenant-only Worker 在已驗證 Envelope 之後，於處理交易設定完整 app.tenant_id／scope_kind／scope_id，與 Read Model 的 RLS 一致；不接受未受信的 owner 值。
+
+ScopeUpgrade embedded migration 是部署用的 tenant→scope 前向升級：回填為 tenant/TenantID、原子替換所有 permissive RLS，最後把 books 改為既有 ScopedRepository 的 scope_books。舊 tenant-only API 的 schema probe 因而拒絕啟動；新組裝需使用 ScopedRepository 與 events/outbox.Publisher。M1 Replicator 保留為歷史薄片／累積回歸，完整可靠 queue Adapter 位於 events/postgres，不宣稱舊 Replicator 可處理組織事件。

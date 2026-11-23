@@ -16,7 +16,9 @@ func TestTenantResolver(t *testing.T) {
 	if _, e := r.Bind(nil, ScopeRef{}); e == nil {
 		t.Fatal("nil identity")
 	}
-	r = NewTenantResolver(func(context.Context) (PrincipalRef, string, bool) { return PrincipalRef{ID: "alice"}, "tenant-a", true })
+	r = NewTenantResolver(func(context.Context) (PrincipalRef, string, bool) {
+		return PrincipalRef{ID: "alice", Kind: "user"}, "tenant-a", true
+	})
 	for _, ref := range []ScopeRef{{}, {"tenant-b", "tenant", "tenant-b"}, {"tenant-a", "org.organization", "org-a"}, {"tenant-a", "tenant", "wrong"}} {
 		if _, e := r.Bind(context.Background(), ref); e == nil {
 			t.Fatal(ref)

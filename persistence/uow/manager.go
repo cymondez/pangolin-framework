@@ -184,6 +184,13 @@ func (m *manager) Within(ctx context.Context, o Options, callback func(context.C
 		if p.root.depth >= m.defaults.MaxRequiresNewDepth {
 			return reject(ErrDepthExceeded, nil)
 		}
+	} else {
+		admitted, admissionErr := scope.Admit(ctx)
+		if admissionErr != nil {
+			return reject(admissionErr, admissionErr)
+		}
+		ctx = admitted
+		b, _ = scope.Current(ctx)
 	}
 	mode := o.Mode
 	if mode == AccessDefault {

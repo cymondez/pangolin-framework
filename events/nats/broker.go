@@ -42,6 +42,13 @@ func (b *Broker) Send(ctx context.Context, e distributed.Envelope) error {
 	if err != nil {
 		return err
 	}
+	info, err := b.js.StreamInfo(b.stream, nats.Context(ctx))
+	if err != nil {
+		return err
+	}
+	if info == nil || info.Config.Storage != nats.FileStorage {
+		return fmt.Errorf("JetStream file persistence required")
+	}
 	message := nats.NewMsg(b.subject)
 	message.Data = raw
 	message.Header.Set(nats.MsgIdHdr, e.ID)
@@ -62,6 +69,9 @@ type Delivery struct {
 
 func (d *Delivery) Ack(ctx context.Context) error { return d.message.AckSync(nats.Context(ctx)) }
 func (b *Broker) Subscribe(durable string) (*Subscription, error) {
+	if durable == "" {
+		return nil, fmt.Errorf("durable consumer required")
+	}
 	s, e := b.js.PullSubscribe(b.subject, durable, nats.BindStream(b.stream), nats.ManualAck(), nats.AckExplicit(), nats.MaxDeliver(8), nats.AckWait(5*time.Second))
 	if e != nil {
 		return nil, e

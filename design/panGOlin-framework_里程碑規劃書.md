@@ -185,6 +185,8 @@ flowchart LR
 
 ### M3 — 安全、Organization 與可靠事件完整
 
+**狀態：In progress；分支 `codex/m3-security-reliable-events`。** 40 項正式需求與 185 個具名情境已接入實作及 manifest，目標驗收已通過，正在收集乾淨同 commit 的 Windows／Linux 累積 Gate。尚未標 Verified；操作入口見 [M3 開發指南](../docs/guides/m3-development.md)。
+
 **原節奏：** W11–W14；**責任：** Go C 主責安全／組織，Go B 主責事件，Go A 主責資料與冪等；QA／SRE 共同驗收。  
 **Delivers：** `UOW-004`、`UOW-018`、`UOW-032`、`API-002`、`EVT-001`、`EVT-002`、`EVT-003`、`EVT-004`、`EVT-005`、`EVT-006`、`EVT-007`、`EVT-008`、`EVT-009`、`TEN-001`、`TEN-002`、`TEN-003`、`SEC-001`、`SEC-002`、`SEC-003`、`DATA-002`、`IDEM-001`、`IDEM-002`、`IDEM-003`、`AUD-001`、`SCP-003`、`SCP-005`、`SCP-006`、`SCP-007`、`SCP-009`、`ORG-002`、`ORG-003`、`ORG-004`、`ORG-005`、`ORG-006`、`ORG-007`、`ORG-008`、`ORG-009`、`ORG-010`、`ORG-011`、`ORG-012`。
 

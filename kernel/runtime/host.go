@@ -40,6 +40,12 @@ func New(options Options, sources []config.Source, participants ...Participant) 
 		return nil, fmt.Errorf("runtime timeouts must be positive")
 	}
 	h := &host{options: options, participants: append([]Participant(nil), participants...)}
+	h.options.StartupChecks = append([]func(context.Context, module.Runtime) error(nil), options.StartupChecks...)
+	for _, check := range h.options.StartupChecks {
+		if check == nil {
+			return nil, fmt.Errorf("nil startup check")
+		}
+	}
 	for _, p := range participants {
 		if p == nil {
 			return nil, fmt.Errorf("nil drain participant")
@@ -155,6 +161,11 @@ func (h *host) Start(ctx context.Context, modules []module.Module) (err error) {
 		return err
 	}
 	// Check all declared capabilities before any module can accept work.
+	for _, check := range h.options.StartupChecks {
+		if err = check(ctx, view{h.container, h.reader}); err != nil {
+			return fmt.Errorf("startup compatibility: %w", err)
+		}
+	}
 	for _, m := range plan.Ordered {
 		if len(m.RequiredScopeKinds) == 0 {
 			continue

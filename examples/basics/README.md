@@ -12,6 +12,7 @@
 | `go run ./dependency-injection` | 以介面注入服務與關閉 Container |
 | `go run ./lifecycle` | 模組相依、啟動與反序停機 |
 | `go run ./event-envelope` | 建立、編碼與讀回 Integration Event |
+| `go run ./authorization` | Tenant／Scope 授權、User deny 優先與 Feature 不授權 |
 
 完整教學位於 [官方文件來源](../../docs/site/content/intro.md)，網站建置時從這些原始碼生成展示片段，不手動維護另一份程式副本；正式文件快照保存對應的程式碼。各範例的 README 說明執行、設定與預期輸出。`python scripts/docs_examples.py` 從 repository root 在獨立使用者專案執行所有範例，驗證文件中的完整操作。
 

@@ -18,3 +18,5 @@
 Docker 啟停前先盤點專案／ports／volumes／資源，只操作本次隔離名稱；不重啟 Engine 或全域 prune。歷史腳本／命令的相容性以當時來源 commit 為準，現行完整 Gate 見 [工具索引](../tools/README.md)。
 
 M2 現行累積入口為 m2.py，重用 m1.py 的工程檢查及分程序 E2E，再合併 M2 真實驗收。連線與清理見 [M2 指南](../docs/guides/m2-development.md)。
+
+M3 完整入口為 `m3.py verify --project pangolin-m3-dev`；`m3_fixture.py` 提供 host-owned NATS 重啟 barrier，`m3_linux.py`／`m3_linux_entry.py` 在固定 OCI runner 複製相同原始 bytes 並跑 race；`m3.py gate --commit <SHA>` 核對雙平台同版證據。Windows check.ps1／Linux check.sh 目前指向 M3 累積 Gate，M1/M2 歷史入口保留。

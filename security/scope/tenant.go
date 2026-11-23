@@ -6,6 +6,28 @@ import (
 )
 
 type bindingKey struct{}
+type admitterKey struct{}
+
+// Admit refreshes the authoritative binding installed by the trusted resolver.
+// Only a new root calls it; nested UOWs keep their admission snapshot.
+func Admit(ctx context.Context) (context.Context, error) {
+	b, ok := Current(ctx)
+	if !ok {
+		return nil, ErrDenied
+	}
+	a, ok := ctx.Value(admitterKey{}).(ScopeAdmitter)
+	if !ok {
+		return nil, ErrAuthorityUnavailable
+	}
+	current, err := a.Admit(ctx, b)
+	if err != nil {
+		return nil, err
+	}
+	if current.Ref != b.Ref || current.Principal != b.Principal || current.AuthorityRevision == "" {
+		return nil, ErrDenied
+	}
+	return context.WithValue(ctx, bindingKey{}, current), nil
+}
 
 // Current returns only bindings installed by an authorized resolver.
 func Current(ctx context.Context) (ScopeBinding, bool) {
@@ -34,10 +56,22 @@ func (r *tenantResolver) Bind(ctx context.Context, ref ScopeRef) (context.Contex
 		return nil, ErrKindUnsupported
 	}
 	p, tenant, ok := r.identity(ctx)
-	if !ok || p.ID == "" || tenant == "" || ref.TenantID != tenant || ref.Kind != "tenant" || ref.ID != tenant {
+	if !ok || p.ID == "" || (p.Kind != "user" && p.Kind != "service") || tenant == "" || ref.TenantID != tenant || ref.Kind != "tenant" || ref.ID != tenant {
 		return nil, fmt.Errorf("scope access denied")
 	}
 	b := ScopeBinding{Ref: ref, Principal: p, AuthorityRevision: "tenant-only-m1"}
-	return context.WithValue(ctx, bindingKey{}, b), nil
+	return context.WithValue(context.WithValue(ctx, admitterKey{}, r), bindingKey{}, b), nil
 }
 func (r *tenantResolver) Current(ctx context.Context) (ScopeBinding, bool) { return Current(ctx) }
+
+func (r *tenantResolver) Admit(ctx context.Context, b ScopeBinding) (ScopeBinding, error) {
+	bound, err := r.Bind(ctx, b.Ref)
+	if err != nil {
+		return ScopeBinding{}, err
+	}
+	current, _ := Current(bound)
+	if current.Principal != b.Principal {
+		return ScopeBinding{}, ErrDenied
+	}
+	return current, nil
+}

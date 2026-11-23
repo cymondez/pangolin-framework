@@ -223,3 +223,5 @@ go test -race ./...
 - 有程式碼與證據後更新「目前狀態」；新增詳細指南時才加入實際檔案連結，不宣稱不存在的規則檔會自動載入。
 - 現行指南描述目前有效設計，升級差異放 Release Notes／Migration Plan；ADR 保留決策理由與歷史。v0.1.0 API 變更仍需變更與遷移說明，已發布 Event Schema 不可無通知破壞。
 - 最終回報說明修改內容、驗證結果與未完成限制；不把規劃、片段編譯或工具可用性寫成產品交付完成。
+
+M3 正在 `codex/m3-security-reliable-events` 開發與累積驗收；目前入口為 [M3 開發指南](docs/guides/m3-development.md) 與 tests/contract/m3.json。新增的 Tenant 權威、Policy、Audit、事件與治理 Adapter 各附 README；正式交付狀態仍以里程碑及同 commit Gate 為準。網站只在 M3 Runtime 驗收完成後更新。

@@ -11,6 +11,9 @@ import (
 type Options struct {
 	DrainTimeout   time.Duration
 	CleanupTimeout time.Duration
+	// StartupChecks run after providers are sealed and before any Start. Persistence
+	// assemblies register schema compatibility and complete Scope inventory here.
+	StartupChecks []func(context.Context, module.Runtime) error
 }
 
 type Host interface {

@@ -1,0 +1,33 @@
+"""Copy exact source bytes into a Linux checkout before the cumulative gate."""
+from pathlib import Path
+import os
+import shutil
+import subprocess
+import sys
+
+original=Path("/source");target=Path("/work/repository")
+target.parent.mkdir(parents=True,exist_ok=True)
+subprocess.run(["git","-c","safe.directory=/source","clone","--no-hardlinks",str(original),str(target)],check=True)
+subprocess.run(["git","-C",str(target),"config","core.filemode","false"],check=True)
+paths=subprocess.check_output(["git","-c","safe.directory=/source","-C",str(original),"ls-files","--cached","--others","--exclude-standard","-z"]).decode().split("\0")
+for name in filter(None,paths):
+    source=original/name;destination=target/name
+    if source.is_file():destination.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(source,destination)
+    elif destination.is_file():destination.unlink()
+(target/".cache").symlink_to("/cache",target_is_directory=True)
+(target/"artifacts").symlink_to(original/"artifacts",target_is_directory=True)
+# Directory-only ignore patterns do not match these Linux symlinks. Ignore
+# only the runner's two links in this disposable checkout, never source files.
+with (target/".git/info/exclude").open("a") as excludes:
+    excludes.write("\n/.cache\n/artifacts\n")
+Path("/cache/go-mod").symlink_to("/gomod",target_is_directory=True) if not Path("/cache/go-mod").exists() else None
+Path("/cache/go-tmp").mkdir(parents=True,exist_ok=True)
+Path("/cache/bin").mkdir(parents=True,exist_ok=True)
+shutil.copyfile(original/".cache/linux-bin/sqlc","/cache/bin/sqlc");Path("/cache/bin/sqlc").chmod(0o755)
+sys.path.insert(0,str(target/"scripts"))
+import m1
+expected=os.environ["PANGOLIN_EXPECTED_SOURCE"]
+if m1.source_hash()!=expected:raise RuntimeError("Linux exact source copy mismatch")
+os.chdir(target)
+os.environ.update(GOCACHE="/cache/go-build",PANGOLIN_SQLC="/cache/bin/sqlc")
+os.execvp("python3",["python3","scripts/m3.py","verify","--project",os.environ["PANGOLIN_M3_PROJECT"],"--race","--external-broker-fixture"])
