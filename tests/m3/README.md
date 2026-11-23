@@ -1,5 +1,7 @@
 # M3 真實服務與契約驗收
 
+M4 累積回歸另以 `persistent_jobs_test.go` 擴充原有 Organization／replacement fixture：真實持久化 Job 在 Provider 替換後保持原 owner／ID，服務 grant 撤銷後拒絕副作用；共用現有治理測試底座，不把契約 harness 當作 Worker 完成證據。
+
 正式 M3 映射在 [m3.json](../contract/m3.json)，40 項需求、185 個具名情境；執行前讀 [開發指南](../../docs/guides/m3-development.md)。測試缺配置直接失敗，不使用 skip 取代驗收。
 
 各套件使用專用 PostgreSQL 中的獨立資料庫，透過 pgx／Goose 與非特權 app／worker role 執行；結束後只刪除該測試建立的資料庫。`fixture_test.go` 提供共用 Port 與原始組裝；組織／事件／冪等各自的 fixture 不共用業務狀態。驗收結束由 host 清除本次 Compose volumes／network／專用映像，保留 workspace logs。

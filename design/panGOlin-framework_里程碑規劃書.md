@@ -14,7 +14,7 @@ lang: zh-TW
 
 本文件依[實作規範書 v1.3](panGOlin-framework_實作規範書.md)安排全框架 v0.1.0 的交付，包含可選的 Enterprise／Organization 單一模組。需求正式句、介面、產品行為、版本範圍、A01–A95 及品質門檻只由實作規範定義；本文件不重新定義它們。
 
-**2026-11-23：M0 已 Verified（來源 commit `a0b1ad099fdf7bd28240514a24c34590220019a1`）；M1 已 Verified（來源 `9eb10df6cd848b87fda964f0b6b61d60dc12b0a6`），M2 已 Verified（來源 `23651f654389af99d8c427b11909c07bc70f58cc`）；M3 已 Verified（來源 `7f17ecc76a84e65ec4d64fb39b0900fb6bb50ba7`）；M4–M6 的其餘 10 項產品需求保持 Planned。** 已建立的底座及未完成條件見 §2.1。文件、CI 配置或品質工具測試不等於 M0 通過，也不等於 Runtime 已驗收或全框架達成 90% coverage。只有指定 commit 的 Exit 證據完整且 Gate 通過才能改為 Verified。
+**2026-11-23：M0 已 Verified（來源 commit `a0b1ad099fdf7bd28240514a24c34590220019a1`）；M1 已 Verified（來源 `9eb10df6cd848b87fda964f0b6b61d60dc12b0a6`），M2 已 Verified（來源 `23651f654389af99d8c427b11909c07bc70f58cc`）；M3 已 Verified（來源 `7f17ecc76a84e65ec4d64fb39b0900fb6bb50ba7`）；M4 的 OPS-002／JOB-001／OBS-001 已在 `codex/m4-platform-services` 開始實作，Windows 開發 Gate 已通過，狀態 Evidence ready，待乾淨來源的雙平台驗收；M5–M6 的其餘 7 項產品需求保持 Planned。** 已建立的底座及未完成條件見 §2.1。文件、CI 配置或品質工具測試不等於 M0 通過，也不等於 Runtime 已驗收或全框架達成 90% coverage。只有指定 commit 的 Exit 證據完整且 Gate 通過才能改為 Verified。
 
 ## 1. 範圍、估算與角色
 
@@ -336,10 +336,10 @@ flowchart LR
 | M3 | IDEM-003 | A61；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
 | M3 | AUD-001 | A62；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
 | M1 | OPS-001 | A15；同 commit 的執行結果與規範要求證據 | Verified（來源 9eb10df6；見 M1 驗收紀錄） |
-| M4 | OPS-002 | A63；同 commit 的執行結果與規範要求證據 | Planned |
-| M4 | JOB-001 | A64；同 commit 的執行結果與規範要求證據 | Planned |
+| M4 | OPS-002 | A63；同 commit 的執行結果與規範要求證據 | Evidence ready |
+| M4 | JOB-001 | A64；同 commit 的執行結果與規範要求證據 | Evidence ready |
 | M5 | PLAT-001 | A65；同 commit 的執行結果與規範要求證據 | Planned |
-| M4 | OBS-001 | A66；同 commit 的執行結果與規範要求證據 | Planned |
+| M4 | OBS-001 | A66；同 commit 的執行結果與規範要求證據 | Evidence ready |
 | M5 | CLI-001 | A67；同 commit 的執行結果與規範要求證據 | Planned |
 | M1 | REL-001 | A68；同 commit 的執行結果與規範要求證據 | Verified（來源 9eb10df6；見 M1 驗收紀錄） |
 | M1 | REL-002 | A69；同 commit 的執行結果與規範要求證據 | Verified（來源 9eb10df6；見 M1 驗收紀錄） |

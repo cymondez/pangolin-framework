@@ -27,3 +27,7 @@ Resource 由 DI 綁定 DatabaseKey，PostgreSQL 以 Pool 身分預設；同根�
 驗收與邊界見 [M2 指南](../../docs/guides/m2-development.md)，API 變更見 [遷移說明](../../docs/release-notes/m2.md)。
 
 每個新根在取得 DB 資源與 callback 前，透過 `scope.Admit` 重新查驗當前權威，Ref／Principal 不可改寫，只更新一致 revision。Bind 後撤權因此拒絕新操作；Required／RequiresNew 使用父操作已 admission 的 binding／期限。Manager 不解析 Organization 私有資料。`events/postgres.Resource` 可明示組裝 Local／Outbox 完成階段，必要稽核與成功結果仍用同一 Executor。
+
+## 運維與追蹤整合
+
+明確注入 observability context 時，Within 建立 UOW span 與有限 cardinality 的結果／duration Metrics。只記安全錯誤碼，Telemetry 故障不改寫 Commit outcome；未注入時不建立全域 Provider。

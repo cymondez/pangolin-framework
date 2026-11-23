@@ -9,3 +9,7 @@
 `NewMaintenance(store, authorize, audit).ReplayDead` 要求已有可信 owner 的可寫 UOW、獨立重送 Permission 與必要 Audit callback；同交易鎖定 dead 項目、寫稽核後重設 pending。它保留 Event ID、完整 Envelope 與 owner，拒絕將 processed 重設為 pending。Audit 失敗使整個重送回滾。
 
 `Store.Purge(ctx, Retention)` 僅由專用 Queue Infrastructure 工作呼叫，清除超過政策的 sent／processed 終態；dead 與 pending 保留。Inbox 保留期必須同時涵蓋 Broker 保留與人工重播窗口，超過期限不宣稱防重。Retry／Complete 依版本或每次不同的 lease token 更新，舊 Worker 不能覆寫新的處理結果；敏感原始錯誤不保存為 last_error。
+
+## 運維與追蹤整合
+
+NewBoundedStore(pool, policy, Capacity{Outbox, Inbox}) 啟用全域資料庫容量 admission，部署時另合併 CapacityMigrations 的 capacity_migrations 目錄。窄化 SECURITY DEFINER function 使用 transaction advisory lock，只回傳容量是否允許；Migration owner 與 app role 分離。容量包含保留終態；超限回 EVENT_CAPACITY_EXCEEDED（HTTP 429），合法 Inbox 重複仍可 ACK。Stats 回傳 pending／processing／dead／oldest 聚合，配合 observability.Queue 告警。舊 NewStore 保留既有組裝相容性；需要有界容量的部署必須選 NewBoundedStore。

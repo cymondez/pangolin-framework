@@ -6,7 +6,7 @@ panGOlin-framework 是 Go 模組化應用框架，先以模組化單體交付，
 
 ## 目前狀態與文件權威
 
-**核對日期：2026-11-23。** M0 已 Verified，來源 commit `a0b1ad099fdf7bd28240514a24c34590220019a1`，見 [M0 驗收紀錄](docs/evidence/M0.md)。M1 已 Verified，來源 `9eb10df6cd848b87fda964f0b6b61d60dc12b0a6`，見 [M1 驗收紀錄](docs/evidence/M1.md)：交付 Kernel／DI／Config／Drain 與 tenant-only Bookstore Required 交易、JWT／RLS／分程序事件薄片，Windows／Linux（含 race）同版 Gate 通過，20 份模組 README 已補齊。M2 已於來源 `23651f654389af99d8c427b11909c07bc70f58cc` 通過 UOW／Persistence／中立 Scope 核心驗收，見 [M2 驗收紀錄](docs/evidence/M2.md)。M3 已於來源 `7f17ecc76a84e65ec4d64fb39b0900fb6bb50ba7` 通過完整安全／組織治理／可靠事件／遷移及冪等的同版 Windows／Linux（含 race）驗收，見 [M3 驗收紀錄](docs/evidence/M3.md)。CLI、持久化 Job Worker 與其餘平台服務仍依 M4–M6 交付。文件基線 v1.3、產品目標 v0.1.0；狀態由里程碑規劃書維護，重現方式見 [M1 開發指南](docs/guides/m1-development.md)。
+**核對日期：2026-11-23。** M0 已 Verified，來源 commit `a0b1ad099fdf7bd28240514a24c34590220019a1`，見 [M0 驗收紀錄](docs/evidence/M0.md)。M1 已 Verified，來源 `9eb10df6cd848b87fda964f0b6b61d60dc12b0a6`，見 [M1 驗收紀錄](docs/evidence/M1.md)：交付 Kernel／DI／Config／Drain 與 tenant-only Bookstore Required 交易、JWT／RLS／分程序事件薄片，Windows／Linux（含 race）同版 Gate 通過，20 份模組 README 已補齊。M2 已於來源 `23651f654389af99d8c427b11909c07bc70f58cc` 通過 UOW／Persistence／中立 Scope 核心驗收，見 [M2 驗收紀錄](docs/evidence/M2.md)。M3 已於來源 `7f17ecc76a84e65ec4d64fb39b0900fb6bb50ba7` 通過完整安全／組織治理／可靠事件／遷移及冪等的同版 Windows／Linux（含 race）驗收，見 [M3 驗收紀錄](docs/evidence/M3.md)。M4 已開始實作持久化 Jobs／容量及觀測，分支 `codex/m4-platform-services`，驗收入口見 [M4 開發指南](docs/guides/m4-development.md) 與 `tests/contract/m4.json`；尚未通過同版 Gate，保持 In progress。CLI 與其餘平台服務仍依 M5–M6 交付。文件基線 v1.3、產品目標 v0.1.0；狀態由里程碑規劃書維護，重現方式見 [M1 開發指南](docs/guides/m1-development.md)。
 
 本檔下文的 package、介面與執行流程都是既定設計的導覽，不表示對應目錄或功能已存在。實作開始後應同步更新這段狀態；不能由文件完成推論 Runtime 可執行或品質門檻已通過。
 

@@ -35,4 +35,4 @@ expected=os.environ["PANGOLIN_EXPECTED_SOURCE"]
 if m1.source_hash()!=expected:raise RuntimeError("Linux exact source copy mismatch")
 os.chdir(target)
 os.environ.update(GOCACHE="/cache/go-build",PANGOLIN_SQLC="/cache/bin/sqlc")
-os.execvp("python3",["python3","scripts/m3.py","verify","--project",os.environ["PANGOLIN_M3_PROJECT"],"--race","--external-broker-fixture"])
+os.execvp("python3",["python3","scripts/m"+os.environ.get("PANGOLIN_MILESTONE","3")+".py","verify","--project",os.environ["PANGOLIN_M3_PROJECT"],"--race","--external-broker-fixture"])

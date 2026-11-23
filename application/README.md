@@ -7,3 +7,7 @@ callback 僅使用傳入的 context。返回 nil 是要求完成，仍可能因 
 敏感 Use Case 使用 `AuthorizedCommand(ctx, manager, authorizer, action, resourcePolicy, work)`：在建立交易前拒絕入口權限，再於 admission 後的交易內重驗 action 與 Resource Policy，直接 Application 呼叫同樣受保護。Authorizer 為中立 Port，由 constructor 注入；未設定或缺可信 Scope 預設拒絕。Feature 開啟不授權。底層 Command／Query 僅表示交易政策，應用不能把它們當作權限檢查。
 
 驗證：`go test ./application`。背景工作持久化仍由後續交付；可靠 Consumer 使用相同交易政策與明示服務授權。
+
+## 運維與追蹤整合
+
+Command／Query 會在明確注入的 observability context 建立 Use Case span；未注入時維持無觀測副作用。持久化 Job Worker 已在 platform/jobs 提供，Handler 仍明示交易政策與目前服務授權。

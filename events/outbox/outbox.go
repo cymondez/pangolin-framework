@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/cymondez/pangolin-framework/events/distributed"
+	"github.com/cymondez/pangolin-framework/observability"
 	"github.com/cymondez/pangolin-framework/persistence/uow"
 	"github.com/cymondez/pangolin-framework/security/scope"
 )
@@ -104,6 +105,9 @@ func (p *Publisher) Publish(ctx context.Context, event any) error {
 	if !ok {
 		return uow.Fail(ctx, distributed.ErrSchemaUnsupported)
 	}
+	if e.TraceParent == "" {
+		e.TraceParent = observability.TraceParent(ctx)
+	}
 	b, _ := scope.Current(ctx)
 	if e.TenantID != b.Ref.TenantID || e.ScopeKind != b.Ref.Kind || e.ScopeID != b.Ref.ID {
 		return uow.Fail(ctx, scope.ErrDenied)
@@ -155,11 +159,15 @@ func NewWorker(store Store, broker distributed.BrokerPublisher, policy Policy, n
 	}
 	return &Worker{store, broker, policy, name, authorize}, nil
 }
-func (w *Worker) Dispatch(ctx context.Context) (bool, error) {
+func (w *Worker) Dispatch(ctx context.Context) (sent bool, dispatchErr error) {
 	claim, err := w.store.Claim(ctx, w.name, w.policy)
 	if err != nil || claim == nil {
 		return false, err
 	}
+	ctx = observability.WithOperation(observability.Restore(ctx, claim.Envelope.TraceParent), claim.Envelope.CorrelationID)
+	ctx = observability.WithMessage(ctx, "event", claim.Envelope.ID)
+	ctx, finish := observability.Start(ctx, "outbox")
+	defer func() { finish(dispatchErr) }()
 	err = w.authorize(ctx, claim.Envelope)
 	if err == nil {
 		send, cancel := context.WithTimeout(ctx, w.policy.SendTimeout)

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/cymondez/pangolin-framework/events/distributed"
+	"github.com/cymondez/pangolin-framework/observability"
 	"github.com/cymondez/pangolin-framework/persistence/uow"
 	"github.com/cymondez/pangolin-framework/security/scope"
 )
@@ -96,6 +97,10 @@ func (w *Worker) Process(ctx context.Context) (processed bool, err error) {
 	if err != nil || candidate == nil {
 		return false, err
 	}
+	ctx = observability.WithOperation(observability.Restore(ctx, candidate.Envelope.TraceParent), candidate.Envelope.CorrelationID)
+	ctx = observability.WithMessage(ctx, "event", candidate.Envelope.ID)
+	ctx, finish := observability.Start(ctx, "consumer")
+	defer func() { finish(err) }()
 	bound, err := w.bind(ctx, *candidate)
 	if err != nil {
 		slog.ErrorContext(ctx, "inbox scope authorization rejected", "event_id", candidate.ID, "consumer_group", w.group)

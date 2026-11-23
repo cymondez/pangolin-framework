@@ -7,3 +7,7 @@
 外部 API 不在本地交易內：`ExternalKey(group,event,operation)` 提供跨重試穩定鍵，接收端必須真正支援冪等；否則透過本地 Outbox 派送，不宣稱 exactly-once。Store／Manager／Broker 生命週期由組裝端擁有。去重保留期須涵蓋 Broker／人工重播窗口，超出不宣稱防重。驗證：`go test -tags=integration ./tests/m3`。
 
 對可信持久化候選，Bind／binding 驗證或 root admission 拒絕也會以原 fingerprint／version 有界延期並累計 dead 門檻，避免永遠堵住同群組較新的合法事件。重試 metadata 使用獨立有界清理 context；Unknown／已 processed 或較新版本不被重寫。
+
+## 運維與追蹤整合
+
+Worker 從持久化 Envelope 還原 W3C traceparent，使用 CorrelationID 關聯原操作；目前服務身分仍由 Bind 重新授權。容量不足時 Receiver 不 ACK，來源保留訊息並有界重試，不在記憶體累積 payload。
