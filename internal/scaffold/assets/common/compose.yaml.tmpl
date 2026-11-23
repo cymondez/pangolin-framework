@@ -1,0 +1,41 @@
+services:
+  postgres:
+    image: postgres:18.7-bookworm@sha256:194e55feb2597b1465dbee81cc9fd8d204566cd2eb42c8d22fd6c931a38781b1
+    environment:
+      POSTGRES_DB: pangolin_m0
+      POSTGRES_USER: pangolin_bootstrap
+      POSTGRES_PASSWORD: local-bootstrap-only
+    ports: ["127.0.0.1:${PANGOLIN_PG_PORT:-15642}:5432"]
+    volumes: ["pg-data:/var/lib/postgresql", "./deploy/init:/docker-entrypoint-initdb.d:ro"]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U pangolin_bootstrap -d pangolin_m0"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+  idp:
+    build: .
+    command: [/bin/devidp]
+    environment:
+      PANGOLIN_ISSUER: http://localhost:${PANGOLIN_IDP_PORT:-18280}
+    ports: ["127.0.0.1:${PANGOLIN_IDP_PORT:-18280}:8080"]
+  migrate:
+    build: .
+    command: [/bin/migrate, --seed]
+    environment:
+      PANGOLIN_MIGRATION_DSN: postgres://pangolin_bootstrap:local-bootstrap-only@postgres:5432/pangolin_m0?sslmode=disable
+    depends_on:
+      postgres: {condition: service_healthy}
+  api:
+    build: .
+    environment:
+      PANGOLIN_LISTEN: 0.0.0.0:8080
+      PANGOLIN_DSN: postgres://pangolin_app:local-app-only@postgres:5432/pangolin_m0?sslmode=disable
+      PANGOLIN_AUTHORITY_DSN: postgres://pangolin_worker:local-worker-only@postgres:5432/pangolin_m0?sslmode=disable
+      PANGOLIN_ISSUER: http://localhost:${PANGOLIN_IDP_PORT:-18280}
+      PANGOLIN_JWKS_URL: http://idp:8080/jwks.json
+    ports: ["127.0.0.1:${PANGOLIN_API_PORT:-18281}:8080"]
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+      idp: {condition: service_started}
+volumes:
+  pg-data:

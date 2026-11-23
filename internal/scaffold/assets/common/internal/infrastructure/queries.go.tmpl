@@ -1,0 +1,9 @@
+package infrastructure
+
+import _ "embed"
+
+//go:embed queries/insert.sql
+var insertSQL string
+
+//go:embed queries/get.sql
+var getSQL string

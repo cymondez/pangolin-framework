@@ -22,7 +22,7 @@ class BaselineChecks(unittest.TestCase):
 
     def test_product_version_rejects_milestone_and_module_drift(self):
         self.assertEqual(product_version.check(ROOT), "0.1.0")
-        paths = ("VERSION", "examples/bookstore/bootstrap/run.go", "tests/fixtures/modules.json", "docs/site/package.json", "docs/site/package-lock.json")
+        paths = ("VERSION", "examples/bookstore/bootstrap/run.go", "tests/fixtures/modules.json", "docs/site/package.json", "docs/site/package-lock.json", "internal/scaffold/cli.go")
         (ROOT / ".cache").mkdir(exist_ok=True)
         with tempfile.TemporaryDirectory(dir=ROOT / ".cache") as directory:
             root = Path(directory)

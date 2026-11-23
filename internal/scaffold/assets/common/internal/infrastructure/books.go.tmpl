@@ -1,0 +1,77 @@
+package infrastructure
+
+import (
+	"context"
+	"crypto/rand"
+	"encoding/json"
+	"errors"
+	"github.com/cymondez/pangolin-framework/events/distributed"
+	eventpg "github.com/cymondez/pangolin-framework/events/postgres"
+	"github.com/cymondez/pangolin-framework/persistence/postgres"
+	"github.com/cymondez/pangolin-framework/platform/audit"
+	"github.com/cymondez/pangolin-framework/security/scope"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
+	"time"
+	"{{MODULE}}/internal/domain"
+)
+
+type Failure struct {
+	status int
+	code   string
+	cause  error
+}
+
+func (e Failure) Error() string   { return e.code }
+func (e Failure) Unwrap() error   { return e.cause }
+func (e Failure) HTTPStatus() int { return e.status }
+func (e Failure) Code() string    { return e.code }
+
+type Repository struct{}
+
+func (Repository) Insert(ctx context.Context, b domain.Book) error {
+	e, err := postgres.Current(ctx, true)
+	if err != nil {
+		return err
+	}
+	owner, _ := scope.Current(ctx)
+	_, err = e.Exec(ctx, insertSQL, owner.Ref.TenantID, owner.Ref.Kind, owner.Ref.ID, b.ID, b.Title)
+	var p *pgconn.PgError
+	if errors.As(err, &p) && p.Code == "23505" {
+		return Failure{409, "CONFLICT", err}
+	}
+	return err
+}
+func (Repository) Get(ctx context.Context, id string) (domain.Book, error) {
+	e, err := postgres.Current(ctx, false)
+	if err != nil {
+		return domain.Book{}, err
+	}
+	owner, _ := scope.Current(ctx)
+	var b domain.Book
+	err = e.QueryRow(ctx, getSQL, owner.Ref.TenantID, owner.Ref.Kind, owner.Ref.ID, id).Scan(&b.ID, &b.Title)
+	if errors.Is(err, pgx.ErrNoRows) {
+		err = Failure{404, "NOT_FOUND", err}
+	}
+	return b, err
+}
+
+type Effects struct{ Store *eventpg.Store }
+
+func (e Effects) Event(ctx context.Context, eventType string, payload json.RawMessage) error {
+	b, _ := scope.Current(ctx)
+	id := rand.Text()
+	event := distributed.Envelope{ID: id, Type: eventType, SchemaVersion: 1, OccurredAt: time.Now().UTC(), TenantID: b.Ref.TenantID, ScopeKind: b.Ref.Kind, ScopeID: b.Ref.ID, CorrelationID: id, CausationID: id, Producer: "bookstore", Payload: payload}
+	raw, err := distributed.Encode(event)
+	if err != nil {
+		return err
+	}
+	return e.Store.Append(ctx, event, raw)
+}
+func (e Effects) Created(ctx context.Context, b domain.Book) error {
+	if err := (audit.Recorder{}).Record(ctx, audit.Record{Action: "books.created", Resource: "book", Result: "success", Trace: rand.Text()}); err != nil {
+		return err
+	}
+	payload, _ := json.Marshal(b)
+	return e.Event(ctx, "bookstore.book.created", payload)
+}

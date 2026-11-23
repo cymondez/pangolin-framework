@@ -1,0 +1,11 @@
+FROM golang:1.27.4-bookworm@sha256:4fa7c968ba93f1635670522dbb01a2c78150443e1385746924566079f36570ea AS build
+WORKDIR /app
+COPY . .
+RUN go mod tidy && CGO_ENABLED=0 go build -o /bin/api ./cmd/api && CGO_ENABLED=0 go build -o /bin/migrate ./cmd/migrate && CGO_ENABLED=0 go build -o /bin/devidp ./cmd/devidp
+FROM golang:1.27.4-bookworm@sha256:4fa7c968ba93f1635670522dbb01a2c78150443e1385746924566079f36570ea
+WORKDIR /app
+COPY --from=build /bin/api /bin/migrate /bin/devidp /bin/
+COPY pangolin.json /app/
+COPY modules /app/modules
+USER 65532:65532
+CMD ["/bin/api"]

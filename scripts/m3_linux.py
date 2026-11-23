@@ -11,7 +11,7 @@ import m3_fixture
 def main(milestone=3):
     p=argparse.ArgumentParser(description=__doc__);p.add_argument("--project",required=True);args=p.parse_args()
     project=args.project
-    if milestone not in (3,4) or not re.fullmatch(r"pangolin-m"+str(milestone)+r"-[a-z0-9-]+",project):p.error("dedicated milestone project required")
+    if milestone not in (3,4,5) or not re.fullmatch(r"pangolin-m"+str(milestone)+r"-[a-z0-9-]+",project):p.error("dedicated milestone project required")
     image=m0.load(m0.ROOT/"deploy/toolchain.json")["go_image"]
     network=project+"_default";cache=project+"-linux-cache"
     # Named cache belongs to this test project and is removed by its cleanup.

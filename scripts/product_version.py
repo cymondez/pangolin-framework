@@ -19,6 +19,10 @@ def check(root=ROOT):
     declared = re.findall(r'\bVersion:\s*"([^"]+)"', source)
     if not declared or any(value != version for value in declared):
         raise ValueError("framework-owned Bookstore module versions differ from VERSION")
+    cli=root/'internal/scaffold/cli.go'
+    if cli.exists():
+        match=re.search(r'const Version\s*=\s*"([^"]+)"',cli.read_text(encoding='utf-8-sig'))
+        if not match or match[1]!=version:raise ValueError('CLI/runtime product version differs from VERSION')
     fixture = json.loads((root / "tests/fixtures/modules.json").read_text(encoding="utf-8-sig"))
     if any(module["version"] != version for module in fixture["modules"]):
         raise ValueError("baseline module fixture versions differ from VERSION")

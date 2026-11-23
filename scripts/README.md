@@ -1,6 +1,6 @@
 # 操作腳本
 
-目前完整入口為 `m4.py verify`／`m4_linux.py`，同版雙平台 Gate 為 `m4.py gate --commit <SHA>`；包含 M0–M3 累積回歸。`m3_fixture.py` 預設保持 M3 restart 契約，M4 明示 milestone=4 才開放專用 NATS stop／start 演練。詳見 [M4 指南](../docs/guides/m4-development.md)。
+目前完整入口為 `m5.py verify`／`m5_linux.py`，同版雙平台 Gate 為 `m5.py gate --commit <SHA>`；包含 M0–M4 累積回歸。`m3_fixture.py` 預設保持 M3 restart 契約，M4 明示 milestone=4 才開放專用 NATS stop／start 演練。詳見 [M4 指南](../docs/guides/m4-development.md)。
 
 從 repository root 執行；Windows shell 使用 login=false。完整測試入口為 check.ps1／check.sh，環境與必要變數見 [M1 指南](../docs/guides/m1-development.md)。此目錄放操作腳本，Go 程式碼與測試 fixture 仍歸其擁有者。
 
@@ -22,3 +22,5 @@ Docker 啟停前先盤點專案／ports／volumes／資源，只操作本次隔�
 M2 現行累積入口為 m2.py，重用 m1.py 的工程檢查及分程序 E2E，再合併 M2 真實驗收。連線與清理見 [M2 指南](../docs/guides/m2-development.md)。
 
 M3 完整入口為 `m3.py verify --project pangolin-m3-dev`；`m3_fixture.py` 提供 host-owned NATS 重啟 barrier，`m3_linux.py`／`m3_linux_entry.py` 在固定 OCI runner 複製相同原始 bytes 並跑 race；`m3.py gate --commit <SHA>` 核對雙平台同版證據。Windows check.ps1／Linux check.sh 目前指向 M3 累積 Gate，M1/M2 歷史入口保留。
+
+M5 新增 m5_templates.py（兩種生成物的真實 SQL／HTTP／UOW）、m5_compose.py（host 上的兩種生成 Compose 並清理）、template_bundle.py（同版 Runtime 再生成及 drift Gate）、template_openapi.py（完整 Profile route/schema 文件）。入口、版本與證據限制見 [M5 指南](../docs/guides/m5-development.md)。

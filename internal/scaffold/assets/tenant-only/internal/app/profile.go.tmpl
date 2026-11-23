@@ -1,0 +1,26 @@
+package app
+
+import (
+	"context"
+	"database/sql"
+	"github.com/cymondez/pangolin-framework/persistence/idempotency"
+	"github.com/cymondez/pangolin-framework/persistence/migration"
+	"github.com/cymondez/pangolin-framework/persistence/uow"
+	"github.com/cymondez/pangolin-framework/security/authn"
+	"github.com/cymondez/pangolin-framework/security/scope"
+	"github.com/cymondez/pangolin-framework/tenancy"
+	tenantpg "github.com/cymondez/pangolin-framework/tenancy/postgres"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"io/fs"
+	"net/http"
+	"{{MODULE}}/internal/infrastructure"
+)
+
+const profileName = "tenant-only"
+
+func profile(_ context.Context, _ uow.UnitOfWorkManager, _ *pgxpool.Pool, authority tenantpg.Authority, _ *idempotency.Store, _ infrastructure.Effects, _ *tenancy.Resolver, _ *authn.Validator) (*scope.Registry, http.Handler, error) {
+	r, err := scope.NewRegistry(tenancy.Identity, tenancy.Provider{Authority: authority, Permission: permission})
+	return r, nil, err
+}
+func profileMigrations() (map[string]fs.FS, []migration.ModuleMigrations) { return nil, nil }
+func seedProfile(context.Context, *sql.DB) error                          { return nil }

@@ -1,0 +1,51 @@
+package application
+
+import (
+	"context"
+	"encoding/json"
+	"github.com/cymondez/pangolin-framework/security/policy"
+	"{{MODULE}}/internal/domain"
+)
+
+type Repository interface {
+	Insert(context.Context, domain.Book) error
+	Get(context.Context, string) (domain.Book, error)
+}
+type Idempotency interface {
+	Execute(context.Context, string, string, []byte, func(context.Context) ([]byte, error)) ([]byte, bool, error)
+}
+type Effects interface {
+	Created(context.Context, domain.Book) error
+}
+type Books struct {
+	Repository  Repository
+	Authorizer  policy.Authorizer
+	Idempotency Idempotency
+	Effects     Effects
+}
+
+func (s Books) Create(ctx context.Context, b domain.Book, key string) (json.RawMessage, error) {
+	if err := policy.Require(ctx, s.Authorizer, "books.write", nil); err != nil {
+		return nil, err
+	}
+	if err := b.Validate(); err != nil {
+		return nil, err
+	}
+	body, _ := json.Marshal(b)
+	result, _, err := s.Idempotency.Execute(ctx, "books.write", key, body, func(c context.Context) ([]byte, error) {
+		if err := s.Repository.Insert(c, b); err != nil {
+			return nil, err
+		}
+		if err := s.Effects.Created(c, b); err != nil {
+			return nil, err
+		}
+		return body, nil
+	})
+	return result, err
+}
+func (s Books) Get(ctx context.Context, id string) (domain.Book, error) {
+	if err := policy.Require(ctx, s.Authorizer, "books.read", nil); err != nil {
+		return domain.Book{}, err
+	}
+	return s.Repository.Get(ctx, id)
+}

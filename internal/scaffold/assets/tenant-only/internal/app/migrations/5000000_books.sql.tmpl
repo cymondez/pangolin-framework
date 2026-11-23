@@ -1,0 +1,19 @@
+-- +goose Up
+CREATE SCHEMA bookstore;
+CREATE TABLE bookstore.profile(name text PRIMARY KEY CHECK(name='tenant-only'));
+INSERT INTO bookstore.profile VALUES('tenant-only');
+GRANT SELECT ON bookstore.profile TO pangolin_app;
+CREATE TABLE bookstore.books(
+ tenant_id text NOT NULL,scope_kind text NOT NULL CHECK(scope_kind='tenant'),scope_id text NOT NULL,
+ id text NOT NULL,title text NOT NULL,PRIMARY KEY(tenant_id,scope_kind,scope_id,id),CHECK(scope_id=tenant_id),
+ FOREIGN KEY(tenant_id,scope_kind,scope_id) REFERENCES pangolin.resource_scopes(tenant_id,scope_kind,scope_id)
+);
+ALTER TABLE bookstore.books ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bookstore.books FORCE ROW LEVEL SECURITY;
+CREATE POLICY exact_owner ON bookstore.books TO pangolin_app
+ USING(tenant_id=current_setting('app.tenant_id',true) AND scope_kind=current_setting('app.scope_kind',true) AND scope_id=current_setting('app.scope_id',true))
+ WITH CHECK(tenant_id=current_setting('app.tenant_id',true) AND scope_kind=current_setting('app.scope_kind',true) AND scope_id=current_setting('app.scope_id',true));
+GRANT USAGE ON SCHEMA bookstore TO pangolin_app;
+GRANT SELECT,INSERT ON bookstore.books TO pangolin_app;
+-- +goose Down
+SELECT 1;

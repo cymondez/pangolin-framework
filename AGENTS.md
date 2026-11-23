@@ -148,7 +148,7 @@ M2 已於來源 `23651f654389af99d8c427b11909c07bc70f58cc` 通過同版 Windows�
 | 快取 | `platform/cache` | §9.3；key 含 application／version／tenant／完整 scope，權限相關結果另含 principal／revision |
 | 背景工作 | `platform/jobs` | §9.4、§14.3 |
 | Logs／Metrics／Tracing／Health | `observability` | §9.6；敏感內容遮罩，不以無界租戶／組織 labels 建 Metrics |
-| CLI、兩種 Profile 範本與 Bookstore | `cmd/pangolin`（後續 CLI）、`examples/bookstore/cmd/{api,worker}`、`examples/bookstore` | §10、§12、§13.4 |
+| CLI、兩種 Profile 範本與 Bookstore | `cmd/pangolin`（M5 開發中）、`examples/bookstore/cmd/{api,worker}`、`examples/bookstore` | §10、§12、§13.4 |
 
 v0.1.0 的正式範圍只由[實作規範 §15](design/panGOlin-framework_實作規範書.md#s-15)決定。Organization 對應用可選，但仍是框架發行包交付項。Redis、Blob Storage、進階 Cron、新的 DB／Broker／Transport Adapter 列在 v0.2+，沒有本次時程承諾。
 
@@ -178,7 +178,7 @@ v0.1.0 的正式範圍只由[實作規範 §15](design/panGOlin-framework_實作
 
 依據：[實作規範 §13](design/panGOlin-framework_實作規範書.md#s-13)、[里程碑規劃書](design/panGOlin-framework_里程碑規劃書.md)。
 
-目前完整入口為 M4 累積 Gate；Windows 使用 `scripts/check.ps1`，Linux 使用 `scripts/check.sh`，依 [M4 開發指南](docs/guides/m4-development.md) 設定連線並先盤點共用環境。`m0.py check` 保留契約盤點，M0 歷史 verify 不代替 M1 Gate。文件修改仍需檢查連結、章節、ID 與敘述一致性；品質工具測試不能代替 Runtime 驗收。從實際 module／workspace 執行適用的基礎檢查：
+目前工程驗證入口為開發中的 M5 累積 Gate；Windows 使用 `scripts/check.ps1`，Linux 使用 `scripts/check.sh`，依 [M4 開發指南](docs/guides/m4-development.md) 設定連線並先盤點共用環境。`m0.py check` 保留契約盤點，M0 歷史 verify 不代替 M1 Gate。文件修改仍需檢查連結、章節、ID 與敘述一致性；品質工具測試不能代替 Runtime 驗收。從實際 module／workspace 執行適用的基礎檢查：
 
 ```powershell
 go env GOMOD GOWORK
@@ -227,3 +227,5 @@ go test -race ./...
 M3 已 Verified；實作分支 `codex/m3-security-reliable-events`，入口見 [M3 開發指南](docs/guides/m3-development.md) 與 tests/contract/m3.json。Tenant 權威、Policy、Audit、可靠事件與治理 Adapter 各附 README；正式證據見 [M3 驗收紀錄](docs/evidence/M3.md)。
 
 M4 已 Verified；`platform/jobs`、`platform/jobs/postgres` 與 `observability` 均附 README，18 個正式情境見 `tests/contract/m4.json`；容量／恢復／停機操作見 [運維手冊](docs/runbooks/operations.md)，Docusaurus 使用者指南於 Runtime Gate 通過後更新。CLI、Settings／Features／Cache 仍依 M5 交付。
+
+M5 開發中；分支 `codex/m5-cli-platform-services`。新增 `platform/cache`、`platform/settings`、`platform/features`、`cmd/pangolin` 與 `internal/scaffold`，各附 README；25 個情境由 tests/contract/m5.json 管理，操作見 [M5 指南](docs/guides/m5-development.md)。正式完成狀態待同版 Windows／Linux Gate，網站內容在驗收後更新。

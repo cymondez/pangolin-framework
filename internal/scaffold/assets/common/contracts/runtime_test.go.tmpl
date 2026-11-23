@@ -1,0 +1,92 @@
+//go:build integration
+
+package contracts
+
+import (
+	"context"
+	"errors"
+	"github.com/cymondez/pangolin-framework/persistence/postgres"
+	"github.com/cymondez/pangolin-framework/persistence/uow"
+	"github.com/cymondez/pangolin-framework/security/scope"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"os"
+	"testing"
+	"time"
+	"{{MODULE}}/internal/domain"
+	"{{MODULE}}/internal/infrastructure"
+)
+
+func TestGeneratedUOWContract(t *testing.T) {
+	dsn := os.Getenv("PANGOLIN_DSN")
+	if dsn == "" {
+		t.Fatal("PANGOLIN_DSN required")
+	}
+	ctx := context.Background()
+	pool, err := pgxpool.New(ctx, dsn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer pool.Close()
+	manager, err := uow.NewManager(&postgres.Resource{Pool: pool}, uow.DefaultOptions{DefaultTimeout: 2 * time.Second, CleanupTimeout: time.Second, HookTimeout: time.Second, MaxRequiresNewDepth: 2})
+	if err != nil {
+		t.Fatal(err)
+	}
+	resolver := scope.NewTenantResolver(func(context.Context) (scope.PrincipalRef, string, bool) {
+		return scope.PrincipalRef{ID: "alice", Kind: "user"}, "tenant-a", true
+	})
+	ctx, err = resolver.Bind(ctx, scope.ScopeRef{TenantID: "tenant-a", Kind: "tenant", ID: "tenant-a"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	repo := infrastructure.Repository{}
+	t.Run("no-scope", func(t *testing.T) {
+		if _, err := repo.Get(ctx, "id"); err == nil {
+			t.Fatal("repository bypass")
+		}
+	})
+	t.Run("read-only", func(t *testing.T) {
+		err := manager.Within(ctx, uow.Options{Mode: uow.ReadOnly}, func(c context.Context) error { return repo.Insert(c, domain.Book{ID: "read-only", Title: "blocked"}) })
+		if err == nil {
+			t.Fatal("read-only write")
+		}
+	})
+	t.Run("required-rollback-only", func(t *testing.T) {
+		sentinel := errors.New("child failure")
+		err := manager.Within(ctx, uow.Options{Mode: uow.ReadWrite}, func(c context.Context) error {
+			if err := repo.Insert(c, domain.Book{ID: "rollback", Title: "rollback"}); err != nil {
+				return err
+			}
+			_ = manager.Within(c, uow.Options{Mode: uow.ReadWrite}, func(context.Context) error { return sentinel })
+			return nil
+		})
+		if err == nil {
+			t.Fatal("caught child committed")
+		}
+		if err = manager.Within(ctx, uow.Options{}, func(c context.Context) error {
+			_, err := repo.Get(c, "rollback")
+			if err == nil {
+				t.Fatal("rollback data visible")
+			}
+			return nil
+		}); err != nil {
+			t.Fatal(err)
+		}
+	})
+	t.Run("requires-new", func(t *testing.T) {
+		sentinel := errors.New("parent rollback")
+		err := manager.Within(ctx, uow.Options{Mode: uow.ReadWrite}, func(c context.Context) error {
+			if err := manager.Within(c, uow.Options{Mode: uow.ReadWrite, Propagation: uow.RequiresNew}, func(c context.Context) error {
+				return repo.Insert(c, domain.Book{ID: "independent", Title: "committed"})
+			}); err != nil {
+				return err
+			}
+			return sentinel
+		})
+		if !errors.Is(err, sentinel) {
+			t.Fatal(err)
+		}
+		if err = manager.Within(ctx, uow.Options{}, func(c context.Context) error { _, err := repo.Get(c, "independent"); return err }); err != nil {
+			t.Fatal(err)
+		}
+	})
+}
