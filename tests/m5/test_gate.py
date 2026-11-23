@@ -6,7 +6,7 @@ import sys
 import unittest
 ROOT=Path(__file__).resolve().parents[2]
 sys.path.insert(0,str(ROOT/'scripts'))
-import m0,m1,m5,m5_templates,template_openapi,template_bundle
+import m0,m1,m1_e2e,m5,m5_templates,template_openapi,template_bundle
 
 class M5Gates(unittest.TestCase):
     def test_mapping_and_docs(self):
@@ -31,5 +31,11 @@ class M5Gates(unittest.TestCase):
             with self.assertRaises(ValueError):m5_templates.validate_openapi(document,org)
     def test_runtime_bundle_same_source(self):
         for path,expected in template_bundle.bundle().items():self.assertEqual((template_bundle.DEST/path).read_bytes(),expected,path)
+    def test_e2e_namespace_guard(self):
+        class Accepted(Exception):pass
+        def stop(*args):raise Accepted()
+        with self.assertRaises(Accepted):m1_e2e.run(ROOT/'artifacts','pangolin-m5-guard','',stop)
+        for project in ('pangolin-docs','pangolin-m6-dev'):
+            with self.assertRaises(ValueError):m1_e2e.run(ROOT/'artifacts',project,'',stop)
 
 if __name__=='__main__':unittest.main()
