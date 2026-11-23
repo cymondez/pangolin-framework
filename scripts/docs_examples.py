@@ -68,6 +68,14 @@ def main():
     setup=project/'setup';setup.mkdir()
     guide=(ROOT/'docs/site/content/security/resource-scopes.md').read_text(encoding='utf-8')
     (setup/'organization.go').write_text(re.search(r'```go\n(.*?)```',guide,re.S).group(1),encoding='utf-8')
+    for document, folder, name in [
+        ('data/idempotency.md', 'orders', 'service.go'),
+        ('data/migrations.md', 'setup', 'deployment.go'),
+        ('events/reliable-delivery.md', 'setup', 'events.go'),
+    ]:
+        guide=(ROOT/'docs/site/content'/document).read_text(encoding='utf-8')
+        destination=project/folder;destination.mkdir(exist_ok=True)
+        (destination/name).write_text(re.search(r'```go\n(.*?)```',guide,re.S).group(1),encoding='utf-8')
     shutil.copyfile(ROOT/'examples/basics/transactions/main.go',project/'main.go')
     run(['go', 'mod', 'tidy'])
     run(['go', 'build', './...'])

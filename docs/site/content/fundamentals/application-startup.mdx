@@ -34,6 +34,8 @@ storage 在這裡是示範模組名稱，不會連接資料庫。完整程式如
 
 `host.Start` 成功後 `host.Ready()` 才為 true。HTTP 應用可以把它接到健康檢查，避免尚未準備完成就接收請求。
 
+持久化應用在 `runtime.Options.StartupChecks` 註冊 schema 相容性與完整 Scope inventory 檢查。檢查在 Provider seal 後、任何模組 Start 前執行；缺少必要 Provider 或保留中的 owner Kind 就拒絕 Ready，詳見[部署遷移](../data/migrations.md)。
+
 ## 應用仍在處理請求時怎麼停止？
 
 HTTP 或 Worker 可以透過 Participant 接入停止流程：先停止接收新工作（Quiesce）、等現有工作完成（Drain），期限到達時取消。這能避免資料庫先被關閉，請求卻仍在寫入。

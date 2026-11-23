@@ -14,7 +14,7 @@ lang: zh-TW
 
 本文件依[實作規範書 v1.3](panGOlin-framework_實作規範書.md)安排全框架 v0.1.0 的交付，包含可選的 Enterprise／Organization 單一模組。需求正式句、介面、產品行為、版本範圍、A01–A95 及品質門檻只由實作規範定義；本文件不重新定義它們。
 
-**2026-11-21：M0 已 Verified（來源 commit `a0b1ad099fdf7bd28240514a24c34590220019a1`）；M1 已 Verified（來源 `9eb10df6cd848b87fda964f0b6b61d60dc12b0a6`），M2 已 Verified（來源 `23651f654389af99d8c427b11909c07bc70f58cc`）；M3–M6 的其餘 50 項產品需求保持 Planned。** 已建立的底座及未完成條件見 §2.1。文件、CI 配置或品質工具測試不等於 M0 通過，也不等於 Runtime 已驗收或全框架達成 90% coverage。只有指定 commit 的 Exit 證據完整且 Gate 通過才能改為 Verified。
+**2026-11-23：M0 已 Verified（來源 commit `a0b1ad099fdf7bd28240514a24c34590220019a1`）；M1 已 Verified（來源 `9eb10df6cd848b87fda964f0b6b61d60dc12b0a6`），M2 已 Verified（來源 `23651f654389af99d8c427b11909c07bc70f58cc`）；M3 已 Verified（來源 `7f17ecc76a84e65ec4d64fb39b0900fb6bb50ba7`）；M4–M6 的其餘 10 項產品需求保持 Planned。** 已建立的底座及未完成條件見 §2.1。文件、CI 配置或品質工具測試不等於 M0 通過，也不等於 Runtime 已驗收或全框架達成 90% coverage。只有指定 commit 的 Exit 證據完整且 Gate 通過才能改為 Verified。
 
 ## 1. 範圍、估算與角色
 
@@ -185,7 +185,7 @@ flowchart LR
 
 ### M3 — 安全、Organization 與可靠事件完整
 
-**狀態：In progress；分支 `codex/m3-security-reliable-events`。** 40 項正式需求與 185 個具名情境已接入實作及 manifest，目標驗收已通過，正在收集乾淨同 commit 的 Windows／Linux 累積 Gate。尚未標 Verified；操作入口見 [M3 開發指南](../docs/guides/m3-development.md)。
+**狀態：Verified；分支 `codex/m3-security-reliable-events`。** 40 項正式需求、185 個具名情境與累積回歸在來源 `7f17ecc76a84e65ec4d64fb39b0900fb6bb50ba7` 通過同版 Windows／Linux（含 race）Gate，證據見 [M3 驗收紀錄](../docs/evidence/M3.md)；重現入口見 [開發指南](../docs/guides/m3-development.md)。
 
 **原節奏：** W11–W14；**責任：** Go C 主責安全／組織，Go B 主責事件，Go A 主責資料與冪等；QA／SRE 共同驗收。  
 **Delivers：** `UOW-004`、`UOW-018`、`UOW-032`、`API-002`、`EVT-001`、`EVT-002`、`EVT-003`、`EVT-004`、`EVT-005`、`EVT-006`、`EVT-007`、`EVT-008`、`EVT-009`、`TEN-001`、`TEN-002`、`TEN-003`、`SEC-001`、`SEC-002`、`SEC-003`、`DATA-002`、`IDEM-001`、`IDEM-002`、`IDEM-003`、`AUD-001`、`SCP-003`、`SCP-005`、`SCP-006`、`SCP-007`、`SCP-009`、`ORG-002`、`ORG-003`、`ORG-004`、`ORG-005`、`ORG-006`、`ORG-007`、`ORG-008`、`ORG-009`、`ORG-010`、`ORG-011`、`ORG-012`。
@@ -277,7 +277,7 @@ flowchart LR
 | M2 | UOW-001 | A17；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
 | M2 | UOW-002 | A18；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
 | M2 | UOW-003 | A19；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
-| M3 | UOW-004 | A09；同 commit 的執行結果與規範要求證據 | Planned |
+| M3 | UOW-004 | A09；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
 | M2 | UOW-005 | A20；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
 | M2 | UOW-006 | A03；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
 | M2 | UOW-007 | A21；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
@@ -291,7 +291,7 @@ flowchart LR
 | M2 | UOW-015 | A29；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
 | M2 | UOW-016 | A30；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
 | M2 | UOW-017 | A31；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
-| M3 | UOW-018 | A04；同 commit 的執行結果與規範要求證據 | Planned |
+| M3 | UOW-018 | A04；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
 | M2 | UOW-019 | A32；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
 | M2 | UOW-020 | A05；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
 | M2 | UOW-021 | A33；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
@@ -305,36 +305,36 @@ flowchart LR
 | M2 | UOW-029 | A41；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
 | M2 | UOW-030 | A42；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
 | M2 | UOW-031 | A43；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
-| M3 | UOW-032 | A44；同 commit 的執行結果與規範要求證據 | Planned |
+| M3 | UOW-032 | A44；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
 | M1 | ARC-001 | A45；同 commit 的執行結果與規範要求證據 | Verified（來源 9eb10df6；見 M1 驗收紀錄） |
 | M1 | MOD-001 | A01；同 commit 的執行結果與規範要求證據 | Verified（來源 9eb10df6；見 M1 驗收紀錄） |
 | M1 | MOD-002 | A02；同 commit 的執行結果與規範要求證據 | Verified（來源 9eb10df6；見 M1 驗收紀錄） |
 | M1 | MOD-003 | A46；同 commit 的執行結果與規範要求證據 | Verified（來源 9eb10df6；見 M1 驗收紀錄） |
 | M1 | CFG-001 | A47；同 commit 的執行結果與規範要求證據 | Verified（來源 9eb10df6；見 M1 驗收紀錄） |
 | M2 | API-001 | A14；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
-| M3 | API-002 | A48；同 commit 的執行結果與規範要求證據 | Planned |
+| M3 | API-002 | A48；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
 | M2 | API-003 | A49；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
-| M3 | EVT-001 | A50；同 commit 的執行結果與規範要求證據 | Planned |
-| M3 | EVT-002 | A51；同 commit 的執行結果與規範要求證據 | Planned |
-| M3 | EVT-003 | A11；同 commit 的執行結果與規範要求證據 | Planned |
-| M3 | EVT-004 | A52；同 commit 的執行結果與規範要求證據 | Planned |
-| M3 | EVT-005 | A53；同 commit 的執行結果與規範要求證據 | Planned |
-| M3 | EVT-006 | A06；同 commit 的執行結果與規範要求證據 | Planned |
-| M3 | EVT-007 | A54；同 commit 的執行結果與規範要求證據 | Planned |
-| M3 | EVT-008 | A55；同 commit 的執行結果與規範要求證據 | Planned |
-| M3 | EVT-009 | A16；同 commit 的執行結果與規範要求證據 | Planned |
-| M3 | TEN-001 | A08；同 commit 的執行結果與規範要求證據 | Planned |
-| M3 | TEN-002 | A56；同 commit 的執行結果與規範要求證據 | Planned |
-| M3 | TEN-003 | A57；同 commit 的執行結果與規範要求證據 | Planned |
-| M3 | SEC-001 | A12；同 commit 的執行結果與規範要求證據 | Planned |
-| M3 | SEC-002 | A13；同 commit 的執行結果與規範要求證據 | Planned |
-| M3 | SEC-003 | A58；同 commit 的執行結果與規範要求證據 | Planned |
+| M3 | EVT-001 | A50；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
+| M3 | EVT-002 | A51；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
+| M3 | EVT-003 | A11；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
+| M3 | EVT-004 | A52；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
+| M3 | EVT-005 | A53；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
+| M3 | EVT-006 | A06；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
+| M3 | EVT-007 | A54；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
+| M3 | EVT-008 | A55；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
+| M3 | EVT-009 | A16；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
+| M3 | TEN-001 | A08；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
+| M3 | TEN-002 | A56；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
+| M3 | TEN-003 | A57；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
+| M3 | SEC-001 | A12；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
+| M3 | SEC-002 | A13；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
+| M3 | SEC-003 | A58；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
 | M2 | DATA-001 | A10；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
-| M3 | DATA-002 | A59；同 commit 的執行結果與規範要求證據 | Planned |
-| M3 | IDEM-001 | A07；同 commit 的執行結果與規範要求證據 | Planned |
-| M3 | IDEM-002 | A60；同 commit 的執行結果與規範要求證據 | Planned |
-| M3 | IDEM-003 | A61；同 commit 的執行結果與規範要求證據 | Planned |
-| M3 | AUD-001 | A62；同 commit 的執行結果與規範要求證據 | Planned |
+| M3 | DATA-002 | A59；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
+| M3 | IDEM-001 | A07；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
+| M3 | IDEM-002 | A60；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
+| M3 | IDEM-003 | A61；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
+| M3 | AUD-001 | A62；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
 | M1 | OPS-001 | A15；同 commit 的執行結果與規範要求證據 | Verified（來源 9eb10df6；見 M1 驗收紀錄） |
 | M4 | OPS-002 | A63；同 commit 的執行結果與規範要求證據 | Planned |
 | M4 | JOB-001 | A64；同 commit 的執行結果與規範要求證據 | Planned |
@@ -348,25 +348,25 @@ flowchart LR
 | M6 | REL-005 | A72；同 commit 的執行結果與規範要求證據 | Planned |
 | M2 | SCP-001 | A73；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
 | M2 | SCP-002 | A74；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
-| M3 | SCP-003 | A75；同 commit 的執行結果與規範要求證據 | Planned |
+| M3 | SCP-003 | A75；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
 | M2 | SCP-004 | A76；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
-| M3 | SCP-005 | A77；同 commit 的執行結果與規範要求證據 | Planned |
-| M3 | SCP-006 | A78；同 commit 的執行結果與規範要求證據 | Planned |
-| M3 | SCP-007 | A79；同 commit 的執行結果與規範要求證據 | Planned |
+| M3 | SCP-005 | A77；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
+| M3 | SCP-006 | A78；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
+| M3 | SCP-007 | A79；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
 | M5 | SCP-008 | A80；同 commit 的執行結果與規範要求證據 | Planned |
-| M3 | SCP-009 | A81；同 commit 的執行結果與規範要求證據 | Planned |
+| M3 | SCP-009 | A81；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
 | M2 | ORG-001 | A82；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
-| M3 | ORG-002 | A83；同 commit 的執行結果與規範要求證據 | Planned |
-| M3 | ORG-003 | A84；同 commit 的執行結果與規範要求證據 | Planned |
-| M3 | ORG-004 | A85；同 commit 的執行結果與規範要求證據 | Planned |
-| M3 | ORG-005 | A86；同 commit 的執行結果與規範要求證據 | Planned |
-| M3 | ORG-006 | A87；同 commit 的執行結果與規範要求證據 | Planned |
-| M3 | ORG-007 | A88；同 commit 的執行結果與規範要求證據 | Planned |
-| M3 | ORG-008 | A89；同 commit 的執行結果與規範要求證據 | Planned |
-| M3 | ORG-009 | A90；同 commit 的執行結果與規範要求證據 | Planned |
-| M3 | ORG-010 | A91；同 commit 的執行結果與規範要求證據 | Planned |
-| M3 | ORG-011 | A92；同 commit 的執行結果與規範要求證據 | Planned |
-| M3 | ORG-012 | A93；同 commit 的執行結果與規範要求證據 | Planned |
+| M3 | ORG-002 | A83；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
+| M3 | ORG-003 | A84；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
+| M3 | ORG-004 | A85；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
+| M3 | ORG-005 | A86；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
+| M3 | ORG-006 | A87；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
+| M3 | ORG-007 | A88；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
+| M3 | ORG-008 | A89；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
+| M3 | ORG-009 | A90；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
+| M3 | ORG-010 | A91；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
+| M3 | ORG-011 | A92；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
+| M3 | ORG-012 | A93；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
 | M5 | ORG-013 | A94；同 commit 的執行結果與規範要求證據 | Planned |
 | M6 | ORG-014 | A95；同 commit 的執行結果與規範要求證據 | Planned |
 

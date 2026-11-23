@@ -4,7 +4,7 @@ Go 模組化應用框架，採模組化單體、明確 DI、UOW、Tenant／Scope
 
 M1–M6 同屬 [VERSION](VERSION) 指定的 **0.1.0 開發週期**，里程碑推進不改套件版本；完整發布仍須通過 M6 Gate。版本對齊及獨立版本領域見 [ADR11](docs/adr/ADR11-product-version.md)。
 
-**M0／M1／M2 已通過 Gate。** M1 分支為 `codex/m1-vertical-flow`，同版 Windows／Linux（含 race）證據見 [M1 驗收紀錄](docs/evidence/M1.md)。 新增 Kernel／DI／Config／Drain 與 tenant-only Bookstore 真實交易及分程序事件薄片，見 [M1 開發與驗證](docs/guides/m1-development.md)、[API 增量](docs/release-notes/M1.md)。M2 來源 `23651f65` 已通過同版 Windows／Linux（含 race）Gate，見 [M2 驗收紀錄](docs/evidence/M2.md)，開發分支為 `codex/m2-unit-of-work`，操作入口為 [M2 指南](docs/guides/m2-development.md)；完整安全／治理、通用事件、CLI 仍依 M3–M6 交付。
+**M0／M1／M2／M3 已通過 Gate。** M1 分支為 `codex/m1-vertical-flow`，同版 Windows／Linux（含 race）證據見 [M1 驗收紀錄](docs/evidence/M1.md)。 新增 Kernel／DI／Config／Drain 與 tenant-only Bookstore 真實交易及分程序事件薄片，見 [M1 開發與驗證](docs/guides/m1-development.md)、[API 增量](docs/release-notes/M1.md)。M2 來源 `23651f65` 已通過同版 Windows／Linux（含 race）Gate，見 [M2 驗收紀錄](docs/evidence/M2.md)，開發分支為 `codex/m2-unit-of-work`，操作入口為 [M2 指南](docs/guides/m2-development.md)；M3 來源 `7f17ecc7` 已通過同版 Windows／Linux（含 race）Gate，完成安全／治理、通用可靠事件、遷移與冪等，見 [驗收紀錄](docs/evidence/M3.md)及 [M3 指南](docs/guides/m3-development.md)；CLI／完整 Job Worker 與其餘平台服務依 M4–M6 交付。
 
 ## 本機檢查
 
@@ -15,24 +15,24 @@ M1–M6 同屬 [VERSION](VERSION) 指定的 **0.1.0 開發週期**，里程碑�
 | 領域 | 模組說明 |
 |---|---|
 | Kernel | [Module](kernel/module/README.md)、[DI](kernel/di/README.md)、[Config](kernel/config/README.md)、[Runtime](kernel/runtime/README.md) |
-| Persistence | [UOW](persistence/uow/README.md)、[PostgreSQL](persistence/postgres/README.md) |
-| Security | [Authentication](security/authn/README.md)、[Scope](security/scope/README.md) |
-| Events | [Envelope／Codec](events/distributed/README.md)、[NATS JetStream](events/nats/README.md) |
+| Persistence | [UOW](persistence/uow/README.md)、[PostgreSQL](persistence/postgres/README.md)、[Migration](persistence/migration/README.md)、[Idempotency](persistence/idempotency/README.md) |
+| Security | [Authentication](security/authn/README.md)、[Scope](security/scope/README.md)、[Permission](security/policy/README.md)、[Tenant](tenancy/README.md)、[Audit](platform/audit/README.md) |
+| Events | [Envelope／Codec](events/distributed/README.md)、[NATS JetStream](events/nats/README.md)、[Local](events/local/README.md)、[Outbox](events/outbox/README.md)、[Inbox](events/inbox/README.md)、[PostgreSQL](events/postgres/README.md) |
 | HTTP／範例 | [HTTP](examples/bookstore/transport/http/README.md)、[Bookstore 分層與組裝](examples/bookstore/README.md) |
 | Application／Transport | [Command／Query](application/README.md)、[HTTP／串流](transport/http/README.md) |
 | 可選組織 | [單一組織模組](modules/organization/README.md)、[管理 Port](modules/organization/contracts/README.md) |
 | 工程 Gate | [品質計數](internal/quality/README.md)、[check 命令](tools/check/README.md)、[M1 重現指南](docs/guides/m1-development.md) |
 
-使用 Go 1.27.4、Python 3.11+、sqlc v1.31.1 及真實 PostgreSQL／NATS／測試 IdP。先依 [M2 指南](docs/guides/m2-development.md) 啟動隔離環境與設定連線，再執行 Windows PowerShell：
+使用 Go 1.27.4、Python 3.11+、sqlc v1.31.1 及真實 PostgreSQL／NATS／測試 IdP。先依 [M3 指南](docs/guides/m3-development.md) 啟動隔離環境與設定連線，再執行 Windows PowerShell：
 
 ```powershell
-./scripts/check.ps1 -Project pangolin-m2-dev
+./scripts/check.ps1 -Project pangolin-m3-dev
 ```
 
 Linux（race 需要 C compiler／CGO）：
 
 ```sh
-PANGOLIN_M2_PROJECT=pangolin-m2-dev sh scripts/check.sh
+PANGOLIN_M3_PROJECT=pangolin-m3-dev sh scripts/check.sh
 ```
 
 `python scripts/m0.py check` 另檢查公開 API surface、421 個具名驗收計畫、三種 Profile 的適用性、fixture、import 邊界與 固定依賴／license allowlist。API 變更須先同步規範／ADR，再明示執行 `python scripts/m0.py freeze-api`；CI 不自動更新快照來放過漂移。
@@ -64,4 +64,4 @@ python scripts/smoke.py
 - [M0 ADR](docs/adr/README.md)
 - [驗收底稿](tests/contract/README.md)
 
-尚未設定 v0.1.0 release workflow。GitHub Actions 已配置完整 Linux M2 Gate 與 Windows portability tests；完整跨平台 milestone gate 另要求 Windows 真實服務 report。實際 push／執行後才有遠端 workflow 證據。
+尚未設定 v0.1.0 release workflow。GitHub Actions 已配置完整 Linux M3 Gate 與 Windows portability tests；完整跨平台 milestone gate 另要求 Windows 真實服務 report。實際 push／執行後才有遠端 workflow 證據。

@@ -30,4 +30,4 @@ panGOlin 是用來開發 **Go 應用程式**的框架。你可以用它組織功
 
 ## 使用這一版前
 
-這是 **0.1.0 預覽版**。目前可使用本文列出的核心功能與範例；Required／RequiresNew 與進階隔離選項已提供；完整組織治理與自動建立專案的 CLI 尚未提供。採用前請查看[功能相容性](reference/compatibility.md)。
+這是 **0.1.0 預覽版**。目前可使用本文列出的核心功能與範例；Required／RequiresNew 與進階隔離選項已提供；可選組織治理、當前資格授權及通用可靠事件已提供；自動建立專案的 CLI 與完整持久化 Job Worker 尚未提供。採用前請查看[功能相容性](reference/compatibility.md)。

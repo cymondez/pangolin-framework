@@ -36,4 +36,6 @@ if err != nil {
 
 接著[建立 Tenant Scope](multi-tenancy.md)，再呼叫資料操作。登入成功表示身份可信，不代表能存取任意租戶或資源。
 
+服務入口可透過 `authn.NewServiceAuthenticator(verifier)` 注入部署選定的服務憑證驗證器，取得獨立 service Principal；不能把使用者 ID 改名成服務身分。Event／Job 每次以目前 grant 重建 context，見[可靠配送](../events/reliable-delivery.md)。
+
 目前支援 RS256／JWKS，檢查簽章、issuer、audience、有效期限、sub 與 tenant_id。過期、來源無法取得或非法 Token 都拒絕；不要把 Token 放進記錄或錯誤回應。

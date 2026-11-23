@@ -22,6 +22,7 @@ cd pangolin-framework/examples/basics
 | 讀取預設與環境設定 | `go run ./configuration` | `Application: My App` | [設定範例](../fundamentals/configuration.mdx) |
 | 透過介面注入服務 | `go run ./dependency-injection` | `Hello, Alice!` | [DI 範例](../fundamentals/dependency-injection.mdx) |
 | 管理多模組啟停 | `go run ./lifecycle` | 啟動 storage、books，再反序停止 | [啟停範例](../fundamentals/application-startup.mdx) |
+| 判斷權限與明確拒絕 | `go run ./authorization` | read allowed、write denied | [授權範例](../security/authorization.mdx) |
 | 建立與讀回事件訊息 | `go run ./event-envelope` | 事件 ID、型別、schema 與書籍 JSON | [事件範例](../events/integration-events.mdx) |
 
 若你設定過 `APP_NAME`，設定／問候範例會使用該值；移除它即可看到表中的預設輸出。

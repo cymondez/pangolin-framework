@@ -6,7 +6,7 @@ panGOlin-framework 是 Go 模組化應用框架，先以模組化單體交付，
 
 ## 目前狀態與文件權威
 
-**核對日期：2026-11-22。** M0 已 Verified，來源 commit `a0b1ad099fdf7bd28240514a24c34590220019a1`，見 [M0 驗收紀錄](docs/evidence/M0.md)。M1 已 Verified，來源 `9eb10df6cd848b87fda964f0b6b61d60dc12b0a6`，見 [M1 驗收紀錄](docs/evidence/M1.md)：交付 Kernel／DI／Config／Drain 與 tenant-only Bookstore Required 交易、JWT／RLS／分程序事件薄片，Windows／Linux（含 race）同版 Gate 通過，20 份模組 README 已補齊。M2 已於來源 `23651f654389af99d8c427b11909c07bc70f58cc` 通過 UOW／Persistence／中立 Scope 核心驗收，見 [M2 驗收紀錄](docs/evidence/M2.md)。完整安全／可靠事件、組織治理、CLI 與平台服務仍依 M3–M6 交付。文件基線 v1.3、產品目標 v0.1.0；狀態由里程碑規劃書維護，重現方式見 [M1 開發指南](docs/guides/m1-development.md)。
+**核對日期：2026-11-23。** M0 已 Verified，來源 commit `a0b1ad099fdf7bd28240514a24c34590220019a1`，見 [M0 驗收紀錄](docs/evidence/M0.md)。M1 已 Verified，來源 `9eb10df6cd848b87fda964f0b6b61d60dc12b0a6`，見 [M1 驗收紀錄](docs/evidence/M1.md)：交付 Kernel／DI／Config／Drain 與 tenant-only Bookstore Required 交易、JWT／RLS／分程序事件薄片，Windows／Linux（含 race）同版 Gate 通過，20 份模組 README 已補齊。M2 已於來源 `23651f654389af99d8c427b11909c07bc70f58cc` 通過 UOW／Persistence／中立 Scope 核心驗收，見 [M2 驗收紀錄](docs/evidence/M2.md)。M3 已於來源 `7f17ecc76a84e65ec4d64fb39b0900fb6bb50ba7` 通過完整安全／組織治理／可靠事件／遷移及冪等的同版 Windows／Linux（含 race）驗收，見 [M3 驗收紀錄](docs/evidence/M3.md)。CLI、持久化 Job Worker 與其餘平台服務仍依 M4–M6 交付。文件基線 v1.3、產品目標 v0.1.0；狀態由里程碑規劃書維護，重現方式見 [M1 開發指南](docs/guides/m1-development.md)。
 
 本檔下文的 package、介面與執行流程都是既定設計的導覽，不表示對應目錄或功能已存在。實作開始後應同步更新這段狀態；不能由文件完成推論 Runtime 可執行或品質門檻已通過。
 
@@ -178,7 +178,7 @@ v0.1.0 的正式範圍只由[實作規範 §15](design/panGOlin-framework_實作
 
 依據：[實作規範 §13](design/panGOlin-framework_實作規範書.md#s-13)、[里程碑規劃書](design/panGOlin-framework_里程碑規劃書.md)。
 
-目前完整入口為 M2 累積 Gate；Windows 使用 `scripts/check.ps1`，Linux 使用 `scripts/check.sh`，依 [M2 開發指南](docs/guides/m2-development.md) 設定連線並先盤點共用環境。`m0.py check` 保留契約盤點，M0 歷史 verify 不代替 M1 Gate。文件修改仍需檢查連結、章節、ID 與敘述一致性；品質工具測試不能代替 Runtime 驗收。從實際 module／workspace 執行適用的基礎檢查：
+目前完整入口為 M3 累積 Gate；Windows 使用 `scripts/check.ps1`，Linux 使用 `scripts/check.sh`，依 [M3 開發指南](docs/guides/m3-development.md) 設定連線並先盤點共用環境。`m0.py check` 保留契約盤點，M0 歷史 verify 不代替 M1 Gate。文件修改仍需檢查連結、章節、ID 與敘述一致性；品質工具測試不能代替 Runtime 驗收。從實際 module／workspace 執行適用的基礎檢查：
 
 ```powershell
 go env GOMOD GOWORK
@@ -224,4 +224,4 @@ go test -race ./...
 - 現行指南描述目前有效設計，升級差異放 Release Notes／Migration Plan；ADR 保留決策理由與歷史。v0.1.0 API 變更仍需變更與遷移說明，已發布 Event Schema 不可無通知破壞。
 - 最終回報說明修改內容、驗證結果與未完成限制；不把規劃、片段編譯或工具可用性寫成產品交付完成。
 
-M3 正在 `codex/m3-security-reliable-events` 開發與累積驗收；目前入口為 [M3 開發指南](docs/guides/m3-development.md) 與 tests/contract/m3.json。新增的 Tenant 權威、Policy、Audit、事件與治理 Adapter 各附 README；正式交付狀態仍以里程碑及同 commit Gate 為準。網站只在 M3 Runtime 驗收完成後更新。
+M3 已 Verified；實作分支 `codex/m3-security-reliable-events`，入口見 [M3 開發指南](docs/guides/m3-development.md) 與 tests/contract/m3.json。Tenant 權威、Policy、Audit、可靠事件與治理 Adapter 各附 README；正式證據見 [M3 驗收紀錄](docs/evidence/M3.md)。

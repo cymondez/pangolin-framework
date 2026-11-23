@@ -39,7 +39,7 @@ func OrganizationModule(authority organization.Authority) (module.Module, error)
 }
 ```
 
-Authority 必須從受信任、前後一致的來源讀取 membership、狀態與權限。這一版提供 Provider／Module 邊界與 ScopeAware Bookstore 資料 Adapter；完整組織管理 API、預設持久化治理、撤權整合與部署遷移尚未提供，因此上述函式需搭配你明示注入的 Authority，不能單獨啟動成組織管理服務。
+Authority 必須從受信任、前後一致的來源讀取 membership、狀態與權限。內建 `organization.NewStore(StoreOptions)` 提供 PostgreSQL Authority 與完整 Management；將建立好的 Store 傳入上述函式。必要相依、HTTP 路由、ownerless 復原與 Provider 替換見[組織治理指南](organizations.md)。
 
 應用 Module 可在 RequiredScopeKinds 宣告必要能力。Host 在所有模組 Start 前核對 Registry，缺少 Provider 時不會 Ready；不支援的 Kind 回 SCOPE_KIND_UNSUPPORTED，不會退回 Tenant。
 
@@ -47,4 +47,6 @@ Authority 必須從受信任、前後一致的來源讀取 membership、狀態�
 
 預設 Bookstore Repository 只接受 tenant binding。`ScopedRepository` 配合 `NewScopedBooks` 與獨立的 ScopeAware schema，SQL 及 RLS 都比對完整 owner，並參照中立 resource_scopes catalog。不能只把組織 ID 填進原本的 Tenant Repository。
 
-Schema 安裝應由你明示的部署步驟負責；API 啟動不自動改表。ScopeAware 範例目前保存同交易的事件紀錄，完整組織事件 Worker 配送尚未提供。採用前請核對[相容性](../reference/compatibility.md)與[升級說明](../reference/upgrading.md)的邊界。
+Schema 由[部署遷移](../data/migrations.md)安裝，API 啟動只做相容性與完整 inventory 檢查。需要可靠配送時，以[通用 Outbox／Inbox](../events/reliable-delivery.md)接入 UOW；原 ScopeAware Bookstore Adapter 不會自動變成完整治理服務。採用前核對[相容性](../reference/compatibility.md)與[升級說明](../reference/upgrading.md)。
+
+每個新根 UOW 在 callback 前重新確認權威 revision，防止 Bind 後撤權仍沿用舊 allow。已 admission 的短 UOW 按快照完成；Required／RequiresNew 保留父 binding 與期限。
