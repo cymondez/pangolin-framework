@@ -68,6 +68,12 @@ func TestM4PersistentOrganizationJobs(t *testing.T) {
 		return jobs.Job{ID: rand.Text(), Type: "project", Version: 1, Owner: org.Ref, Actor: binding.Principal, Payload: json.RawMessage(`{}`), DueAt: time.Now().Add(-time.Second), Deadline: time.Now().Add(time.Minute)}
 	}
 	first, second, revoked := makeJob(), makeJob(), makeJob()
+	// PostgreSQL timestamps use microsecond precision. Explicit due times make
+	// this scenario independent of clock resolution and random ID ordering.
+	anchor := time.Now().Add(-3 * time.Second)
+	first.DueAt = anchor
+	second.DueAt = anchor.Add(time.Second)
+	revoked.DueAt = anchor.Add(2 * time.Second)
 	enqueue := func(j jobs.Job) {
 		if e := g.options.Manager.Within(bound, uow.Options{Mode: uow.ReadWrite}, func(c context.Context) error { return store.Enqueue(c, j) }); e != nil {
 			t.Fatal(e)
