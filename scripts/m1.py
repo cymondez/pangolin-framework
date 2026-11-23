@@ -161,7 +161,7 @@ def verify(args, increment=None):
         if milestone=="M5":
             execute([sys.executable,"scripts/template_bundle.py","--check"],"template-source")
             cli=output/("pangolin.exe" if os.name=="nt" else "pangolin")
-            execute(["go","build","-cover","-coverpkg="+packages,"-o",str(cli),"./cmd/pangolin"],"cli-build")
+            execute(["go","build","-cover","-covermode=atomic","-coverpkg="+packages,"-o",str(cli),"./cmd/pangolin"],"cli-build")
             covered=output/"cli-cov";covered.mkdir(exist_ok=True)
             previous=os.environ.get("GOCOVERDIR");os.environ["GOCOVERDIR"]=str(covered)
             try:execute([sys.executable,"scripts/m5_templates.py","--output",str(output),"--cli",str(cli)],"templates")
