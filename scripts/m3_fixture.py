@@ -9,8 +9,8 @@ import time
 import m0
 
 @contextlib.contextmanager
-def broker_restart(project, directory):
-    if not re.fullmatch(r"pangolin-m3-[a-z0-9-]+",project or ""):
+def broker_restart(project, directory, milestone=3):
+    if milestone not in (3,4) or not re.fullmatch(r"pangolin-m"+str(milestone)+r"-[a-z0-9-]+",project or ""):
         raise ValueError("M3 broker restart requires a dedicated pangolin-m3-* project")
     directory=Path(directory).resolve();directory.mkdir(parents=True,exist_ok=True)
     if not directory.is_relative_to((m0.ROOT/"artifacts").resolve()):
@@ -29,9 +29,12 @@ def broker_restart(project, directory):
             for request in directory.glob("*.request"):
                 if request.name in seen: continue
                 if not re.fullmatch(r"[a-zA-Z0-9_-]+\.request",request.name):continue
-                if request.read_text().strip()!="RESTART_NATS":continue
+                action=request.read_text().strip()
+                actions={"RESTART_NATS":["restart",identifier]}
+                if milestone==4:actions.update(STOP_NATS=["stop","--time","1",identifier],START_NATS=["start",identifier])
+                if action not in actions:continue
                 seen.add(request.name)
-                result=subprocess.run(["docker","restart",identifier],capture_output=True,text=True,timeout=30)
+                result=subprocess.run(["docker",*actions[action]],capture_output=True,text=True,timeout=30)
                 # Allow the process to reopen its durable store/listener.
                 stop.wait(.5)
                 response=request.with_suffix(".done")

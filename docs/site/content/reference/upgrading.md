@@ -39,3 +39,9 @@ pwsh ./examples/bookstore/scripts/demo.ps1 up
 Runtime Options 新增 StartupChecks，請將 positional literal 改成具名欄位。使用可撤權的 Tenant Resolver／當前 Authority，Provider.Authorize 傳入 context 中相同的可信 binding。ScopeAware schema 升級、完整 inventory 與舊程序拒絕條件見[部署遷移](../data/migrations.md)；通用事件表與 Bookstore 薄片分開，需明示改接 Resource／Publisher／Worker。
 
 未知 Scope Kind 在預設 Bookstore 由舊的 403 改為 400／SCOPE_KIND_UNSUPPORTED。組織範例改用獨立 ScopeAware Repository，不能直接沿用 TenantOnly 資料表。
+
+## 加入背景工作與觀測
+
+升級預覽來源後，部署 Jobs migration 與事件 CapacityMigrations，再更新 schema 相容版本範圍。事件 store 改用 NewBoundedStore 並設定容量；舊 NewStore 保留既有組裝相容性。完整[接線與上限](../platform/jobs.md)需要目前服務 grant 和 Handler 冪等。
+
+Envelope 新增可省略 traceparent，舊格式仍可讀取，已發布 payload schema 不重寫。人工 replay 保留實際持久化的原始 Envelope，不重新生成 owner、事件 ID 或 traceparent。OpenTelemetry 採明確注入，應用負責 SDK 有界 Shutdown。

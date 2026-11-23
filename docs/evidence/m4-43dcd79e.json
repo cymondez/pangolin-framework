@@ -1,0 +1,954 @@
+{
+  "milestone": "M4",
+  "status": "verified",
+  "baseline": "v1.3",
+  "framework_version": "0.1.0",
+  "source_commit": "43dcd79e24f5ed74a544a760301f4fec95dc2ca2",
+  "source_sha256": "ceb979103e9e9ab1249d974d2c11aa2530590834967a9c1103f70a92f1d2eb41",
+  "gate_sha256": "2102699c39ec04134567c004a37554e040c4486648efe7b668ddd153c2a61844",
+  "runners": {
+    "windows-amd64": {
+      "coverage": {
+        "overall": {
+          "covered_statements": 4024,
+          "total_statements": 4303
+        },
+        "packages": {
+          "github.com/cymondez/pangolin-framework/application": {
+            "covered_statements": 23,
+            "total_statements": 24
+          },
+          "github.com/cymondez/pangolin-framework/events/distributed": {
+            "covered_statements": 84,
+            "total_statements": 88
+          },
+          "github.com/cymondez/pangolin-framework/events/inbox": {
+            "covered_statements": 61,
+            "total_statements": 62
+          },
+          "github.com/cymondez/pangolin-framework/events/local": {
+            "covered_statements": 59,
+            "total_statements": 60
+          },
+          "github.com/cymondez/pangolin-framework/events/nats": {
+            "covered_statements": 42,
+            "total_statements": 44
+          },
+          "github.com/cymondez/pangolin-framework/events/outbox": {
+            "covered_statements": 79,
+            "total_statements": 81
+          },
+          "github.com/cymondez/pangolin-framework/events/postgres": {
+            "covered_statements": 228,
+            "total_statements": 248
+          },
+          "github.com/cymondez/pangolin-framework/examples/bookstore/application": {
+            "covered_statements": 19,
+            "total_statements": 25
+          },
+          "github.com/cymondez/pangolin-framework/examples/bookstore/bootstrap": {
+            "covered_statements": 125,
+            "total_statements": 145
+          },
+          "github.com/cymondez/pangolin-framework/examples/bookstore/cmd/api": {
+            "covered_statements": 3,
+            "total_statements": 5
+          },
+          "github.com/cymondez/pangolin-framework/examples/bookstore/cmd/worker": {
+            "covered_statements": 3,
+            "total_statements": 5
+          },
+          "github.com/cymondez/pangolin-framework/examples/bookstore/domain": {
+            "covered_statements": 3,
+            "total_statements": 4
+          },
+          "github.com/cymondez/pangolin-framework/examples/bookstore/infrastructure": {
+            "covered_statements": 135,
+            "total_statements": 170
+          },
+          "github.com/cymondez/pangolin-framework/examples/bookstore/transport/http": {
+            "covered_statements": 73,
+            "total_statements": 79
+          },
+          "github.com/cymondez/pangolin-framework/internal/quality": {
+            "covered_statements": 132,
+            "total_statements": 132
+          },
+          "github.com/cymondez/pangolin-framework/kernel/config": {
+            "covered_statements": 45,
+            "total_statements": 45
+          },
+          "github.com/cymondez/pangolin-framework/kernel/di": {
+            "covered_statements": 179,
+            "total_statements": 182
+          },
+          "github.com/cymondez/pangolin-framework/kernel/module": {
+            "covered_statements": 152,
+            "total_statements": 159
+          },
+          "github.com/cymondez/pangolin-framework/kernel/runtime": {
+            "covered_statements": 173,
+            "total_statements": 178
+          },
+          "github.com/cymondez/pangolin-framework/modules/organization": {
+            "covered_statements": 719,
+            "total_statements": 790
+          },
+          "github.com/cymondez/pangolin-framework/modules/organization/transport/http": {
+            "covered_statements": 74,
+            "total_statements": 75
+          },
+          "github.com/cymondez/pangolin-framework/observability": {
+            "covered_statements": 112,
+            "total_statements": 119
+          },
+          "github.com/cymondez/pangolin-framework/persistence/idempotency": {
+            "covered_statements": 94,
+            "total_statements": 98
+          },
+          "github.com/cymondez/pangolin-framework/persistence/migration": {
+            "covered_statements": 195,
+            "total_statements": 203
+          },
+          "github.com/cymondez/pangolin-framework/persistence/postgres": {
+            "covered_statements": 142,
+            "total_statements": 150
+          },
+          "github.com/cymondez/pangolin-framework/persistence/uow": {
+            "covered_statements": 330,
+            "total_statements": 354
+          },
+          "github.com/cymondez/pangolin-framework/platform/audit": {
+            "covered_statements": 28,
+            "total_statements": 28
+          },
+          "github.com/cymondez/pangolin-framework/platform/jobs": {
+            "covered_statements": 120,
+            "total_statements": 132
+          },
+          "github.com/cymondez/pangolin-framework/platform/jobs/postgres": {
+            "covered_statements": 104,
+            "total_statements": 115
+          },
+          "github.com/cymondez/pangolin-framework/security/authn": {
+            "covered_statements": 71,
+            "total_statements": 72
+          },
+          "github.com/cymondez/pangolin-framework/security/policy": {
+            "covered_statements": 29,
+            "total_statements": 29
+          },
+          "github.com/cymondez/pangolin-framework/security/scope": {
+            "covered_statements": 136,
+            "total_statements": 145
+          },
+          "github.com/cymondez/pangolin-framework/tenancy": {
+            "covered_statements": 46,
+            "total_statements": 47
+          },
+          "github.com/cymondez/pangolin-framework/tenancy/postgres": {
+            "covered_statements": 11,
+            "total_statements": 11
+          },
+          "github.com/cymondez/pangolin-framework/tools/check": {
+            "covered_statements": 48,
+            "total_statements": 51
+          },
+          "github.com/cymondez/pangolin-framework/transport/http": {
+            "covered_statements": 147,
+            "total_statements": 148
+          }
+        }
+      },
+      "report_sha256": "ee4cdc15aba6cbbedfde1d8a7f55c9c70f724d47f37713315c857eadca9cac80",
+      "load": {
+        "concurrency": 64,
+        "drain_ms": 4,
+        "p95_us": 219394,
+        "p99_us": 248944,
+        "reconciled": 10000,
+        "records": 10000,
+        "scope": {
+          "TenantID": "tenant-a",
+          "Kind": "tenant",
+          "ID": "tenant-a"
+        },
+        "worker_concurrency": 4
+      },
+      "heap_bytes_min": 6225072,
+      "heap_bytes_max": 12021776,
+      "recovery": {
+        "curve": [
+          {
+            "attempts": 1,
+            "dead": 0,
+            "elapsed_ms": 1049,
+            "oldest_ms": 1035,
+            "pending": 4,
+            "phase": "offline",
+            "processing": 0
+          },
+          {
+            "attempts": 2,
+            "dead": 0,
+            "elapsed_ms": 1065,
+            "oldest_ms": 1051,
+            "pending": 4,
+            "phase": "retry",
+            "processing": 0
+          },
+          {
+            "attempts": 3,
+            "dead": 1,
+            "elapsed_ms": 1074,
+            "oldest_ms": 1048,
+            "pending": 3,
+            "phase": "retry",
+            "processing": 0
+          },
+          {
+            "attempts": 4,
+            "dead": 1,
+            "elapsed_ms": 1083,
+            "oldest_ms": 1057,
+            "pending": 3,
+            "phase": "retry",
+            "processing": 0
+          },
+          {
+            "attempts": 5,
+            "dead": 1,
+            "elapsed_ms": 1092,
+            "oldest_ms": 1066,
+            "pending": 3,
+            "phase": "retry",
+            "processing": 0
+          },
+          {
+            "attempts": 6,
+            "dead": 2,
+            "elapsed_ms": 1101,
+            "oldest_ms": 1068,
+            "pending": 2,
+            "phase": "retry",
+            "processing": 0
+          },
+          {
+            "attempts": 7,
+            "dead": 2,
+            "elapsed_ms": 1110,
+            "oldest_ms": 1077,
+            "pending": 2,
+            "phase": "retry",
+            "processing": 0
+          },
+          {
+            "attempts": 8,
+            "dead": 2,
+            "elapsed_ms": 1120,
+            "oldest_ms": 1086,
+            "pending": 2,
+            "phase": "retry",
+            "processing": 0
+          },
+          {
+            "attempts": 9,
+            "dead": 3,
+            "elapsed_ms": 1128,
+            "oldest_ms": 1088,
+            "pending": 1,
+            "phase": "retry",
+            "processing": 0
+          },
+          {
+            "attempts": 10,
+            "dead": 3,
+            "elapsed_ms": 1138,
+            "oldest_ms": 1097,
+            "pending": 1,
+            "phase": "retry",
+            "processing": 0
+          },
+          {
+            "attempts": 11,
+            "dead": 3,
+            "elapsed_ms": 1148,
+            "oldest_ms": 1107,
+            "pending": 1,
+            "phase": "retry",
+            "processing": 0
+          },
+          {
+            "attempts": 12,
+            "dead": 4,
+            "elapsed_ms": 1157,
+            "oldest_ms": 0,
+            "pending": 0,
+            "phase": "retry",
+            "processing": 0
+          },
+          {
+            "attempts": 12,
+            "dead": 4,
+            "elapsed_ms": 1162,
+            "oldest_ms": 0,
+            "pending": 0,
+            "phase": "retry",
+            "processing": 0
+          },
+          {
+            "attempts": 4,
+            "dead": 0,
+            "elapsed_ms": 2040,
+            "oldest_ms": 0,
+            "pending": 0,
+            "phase": "recovered",
+            "processing": 0
+          }
+        ],
+        "lost": 0,
+        "recovery_rto_ms": 840,
+        "sent": 4
+      },
+      "drain": {
+        "normal": {
+          "database_last": true,
+          "drain_ms": 6,
+          "final_state": "succeeded",
+          "forced": false
+        },
+        "deadline": {
+          "database_last": true,
+          "drain_ms": 56,
+          "final_state": "pending",
+          "forced": true
+        }
+      },
+      "commands": [
+        {
+          "name": "inventory",
+          "exit_code": 0,
+          "seconds": 9.136
+        },
+        {
+          "name": "build",
+          "exit_code": 0,
+          "seconds": 2.612
+        },
+        {
+          "name": "vet",
+          "exit_code": 0,
+          "seconds": 2.03
+        },
+        {
+          "name": "go-module-verify",
+          "exit_code": 0,
+          "seconds": 1.06
+        },
+        {
+          "name": "m0-regression",
+          "exit_code": 0,
+          "seconds": 0.213
+        },
+        {
+          "name": "m1-regression",
+          "exit_code": 0,
+          "seconds": 0.738
+        },
+        {
+          "name": "m2-regression",
+          "exit_code": 0,
+          "seconds": 2.838
+        },
+        {
+          "name": "m3-regression",
+          "exit_code": 0,
+          "seconds": 0.122
+        },
+        {
+          "name": "m4-regression",
+          "exit_code": 0,
+          "seconds": 0.119
+        },
+        {
+          "name": "unit",
+          "exit_code": 0,
+          "seconds": 7.428
+        },
+        {
+          "name": "integration",
+          "exit_code": 0,
+          "seconds": 101.08
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "seconds": 0.742
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "seconds": 0.076
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "seconds": 1.032
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "seconds": 1.025
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "seconds": 0.851
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "seconds": 0.022
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "seconds": 0.024
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "seconds": 0.026
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "seconds": 0.021
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "seconds": 0.019
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "seconds": 0.021
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "seconds": 0.019
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "seconds": 0.023
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "seconds": 0.021
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "seconds": 0.182
+        },
+        {
+          "name": "e2e",
+          "exit_code": 0
+        },
+        {
+          "name": "generation-version",
+          "exit_code": 0,
+          "seconds": 0.049
+        },
+        {
+          "name": "generation",
+          "exit_code": 0,
+          "seconds": 0.823
+        },
+        {
+          "name": "coverage",
+          "exit_code": 0,
+          "seconds": 2.452
+        },
+        {
+          "name": "coverage-html",
+          "exit_code": 0,
+          "seconds": 0.428
+        }
+      ]
+    },
+    "linux-amd64": {
+      "coverage": {
+        "overall": {
+          "covered_statements": 4023,
+          "total_statements": 4303
+        },
+        "packages": {
+          "github.com/cymondez/pangolin-framework/application": {
+            "covered_statements": 23,
+            "total_statements": 24
+          },
+          "github.com/cymondez/pangolin-framework/events/distributed": {
+            "covered_statements": 84,
+            "total_statements": 88
+          },
+          "github.com/cymondez/pangolin-framework/events/inbox": {
+            "covered_statements": 61,
+            "total_statements": 62
+          },
+          "github.com/cymondez/pangolin-framework/events/local": {
+            "covered_statements": 59,
+            "total_statements": 60
+          },
+          "github.com/cymondez/pangolin-framework/events/nats": {
+            "covered_statements": 42,
+            "total_statements": 44
+          },
+          "github.com/cymondez/pangolin-framework/events/outbox": {
+            "covered_statements": 79,
+            "total_statements": 81
+          },
+          "github.com/cymondez/pangolin-framework/events/postgres": {
+            "covered_statements": 228,
+            "total_statements": 248
+          },
+          "github.com/cymondez/pangolin-framework/examples/bookstore/application": {
+            "covered_statements": 19,
+            "total_statements": 25
+          },
+          "github.com/cymondez/pangolin-framework/examples/bookstore/bootstrap": {
+            "covered_statements": 124,
+            "total_statements": 145
+          },
+          "github.com/cymondez/pangolin-framework/examples/bookstore/cmd/api": {
+            "covered_statements": 3,
+            "total_statements": 5
+          },
+          "github.com/cymondez/pangolin-framework/examples/bookstore/cmd/worker": {
+            "covered_statements": 3,
+            "total_statements": 5
+          },
+          "github.com/cymondez/pangolin-framework/examples/bookstore/domain": {
+            "covered_statements": 3,
+            "total_statements": 4
+          },
+          "github.com/cymondez/pangolin-framework/examples/bookstore/infrastructure": {
+            "covered_statements": 135,
+            "total_statements": 170
+          },
+          "github.com/cymondez/pangolin-framework/examples/bookstore/transport/http": {
+            "covered_statements": 73,
+            "total_statements": 79
+          },
+          "github.com/cymondez/pangolin-framework/internal/quality": {
+            "covered_statements": 132,
+            "total_statements": 132
+          },
+          "github.com/cymondez/pangolin-framework/kernel/config": {
+            "covered_statements": 45,
+            "total_statements": 45
+          },
+          "github.com/cymondez/pangolin-framework/kernel/di": {
+            "covered_statements": 179,
+            "total_statements": 182
+          },
+          "github.com/cymondez/pangolin-framework/kernel/module": {
+            "covered_statements": 152,
+            "total_statements": 159
+          },
+          "github.com/cymondez/pangolin-framework/kernel/runtime": {
+            "covered_statements": 173,
+            "total_statements": 178
+          },
+          "github.com/cymondez/pangolin-framework/modules/organization": {
+            "covered_statements": 719,
+            "total_statements": 790
+          },
+          "github.com/cymondez/pangolin-framework/modules/organization/transport/http": {
+            "covered_statements": 74,
+            "total_statements": 75
+          },
+          "github.com/cymondez/pangolin-framework/observability": {
+            "covered_statements": 112,
+            "total_statements": 119
+          },
+          "github.com/cymondez/pangolin-framework/persistence/idempotency": {
+            "covered_statements": 94,
+            "total_statements": 98
+          },
+          "github.com/cymondez/pangolin-framework/persistence/migration": {
+            "covered_statements": 195,
+            "total_statements": 203
+          },
+          "github.com/cymondez/pangolin-framework/persistence/postgres": {
+            "covered_statements": 142,
+            "total_statements": 150
+          },
+          "github.com/cymondez/pangolin-framework/persistence/uow": {
+            "covered_statements": 330,
+            "total_statements": 354
+          },
+          "github.com/cymondez/pangolin-framework/platform/audit": {
+            "covered_statements": 28,
+            "total_statements": 28
+          },
+          "github.com/cymondez/pangolin-framework/platform/jobs": {
+            "covered_statements": 120,
+            "total_statements": 132
+          },
+          "github.com/cymondez/pangolin-framework/platform/jobs/postgres": {
+            "covered_statements": 104,
+            "total_statements": 115
+          },
+          "github.com/cymondez/pangolin-framework/security/authn": {
+            "covered_statements": 71,
+            "total_statements": 72
+          },
+          "github.com/cymondez/pangolin-framework/security/policy": {
+            "covered_statements": 29,
+            "total_statements": 29
+          },
+          "github.com/cymondez/pangolin-framework/security/scope": {
+            "covered_statements": 136,
+            "total_statements": 145
+          },
+          "github.com/cymondez/pangolin-framework/tenancy": {
+            "covered_statements": 46,
+            "total_statements": 47
+          },
+          "github.com/cymondez/pangolin-framework/tenancy/postgres": {
+            "covered_statements": 11,
+            "total_statements": 11
+          },
+          "github.com/cymondez/pangolin-framework/tools/check": {
+            "covered_statements": 48,
+            "total_statements": 51
+          },
+          "github.com/cymondez/pangolin-framework/transport/http": {
+            "covered_statements": 147,
+            "total_statements": 148
+          }
+        }
+      },
+      "report_sha256": "ad44c0cd4d2f71b6c8da344c88c83c0f672a0477f9116eef5db0bb531e7e8086",
+      "load": {
+        "concurrency": 64,
+        "drain_ms": 7,
+        "p95_us": 189407,
+        "p99_us": 240225,
+        "reconciled": 10000,
+        "records": 10000,
+        "scope": {
+          "TenantID": "tenant-a",
+          "Kind": "tenant",
+          "ID": "tenant-a"
+        },
+        "worker_concurrency": 4
+      },
+      "heap_bytes_min": 5360344,
+      "heap_bytes_max": 10505216,
+      "recovery": {
+        "curve": [
+          {
+            "attempts": 1,
+            "dead": 0,
+            "elapsed_ms": 1074,
+            "oldest_ms": 1060,
+            "pending": 4,
+            "phase": "offline",
+            "processing": 0
+          },
+          {
+            "attempts": 2,
+            "dead": 0,
+            "elapsed_ms": 1082,
+            "oldest_ms": 1069,
+            "pending": 4,
+            "phase": "retry",
+            "processing": 0
+          },
+          {
+            "attempts": 3,
+            "dead": 1,
+            "elapsed_ms": 1088,
+            "oldest_ms": 1066,
+            "pending": 3,
+            "phase": "retry",
+            "processing": 0
+          },
+          {
+            "attempts": 4,
+            "dead": 1,
+            "elapsed_ms": 1094,
+            "oldest_ms": 1071,
+            "pending": 3,
+            "phase": "retry",
+            "processing": 0
+          },
+          {
+            "attempts": 5,
+            "dead": 1,
+            "elapsed_ms": 1099,
+            "oldest_ms": 1077,
+            "pending": 3,
+            "phase": "retry",
+            "processing": 0
+          },
+          {
+            "attempts": 6,
+            "dead": 2,
+            "elapsed_ms": 1105,
+            "oldest_ms": 1078,
+            "pending": 2,
+            "phase": "retry",
+            "processing": 0
+          },
+          {
+            "attempts": 7,
+            "dead": 2,
+            "elapsed_ms": 1111,
+            "oldest_ms": 1084,
+            "pending": 2,
+            "phase": "retry",
+            "processing": 0
+          },
+          {
+            "attempts": 8,
+            "dead": 2,
+            "elapsed_ms": 1116,
+            "oldest_ms": 1089,
+            "pending": 2,
+            "phase": "retry",
+            "processing": 0
+          },
+          {
+            "attempts": 9,
+            "dead": 3,
+            "elapsed_ms": 1121,
+            "oldest_ms": 1091,
+            "pending": 1,
+            "phase": "retry",
+            "processing": 0
+          },
+          {
+            "attempts": 10,
+            "dead": 3,
+            "elapsed_ms": 1127,
+            "oldest_ms": 1097,
+            "pending": 1,
+            "phase": "retry",
+            "processing": 0
+          },
+          {
+            "attempts": 11,
+            "dead": 3,
+            "elapsed_ms": 1132,
+            "oldest_ms": 1102,
+            "pending": 1,
+            "phase": "retry",
+            "processing": 0
+          },
+          {
+            "attempts": 12,
+            "dead": 4,
+            "elapsed_ms": 1138,
+            "oldest_ms": 0,
+            "pending": 0,
+            "phase": "retry",
+            "processing": 0
+          },
+          {
+            "attempts": 12,
+            "dead": 4,
+            "elapsed_ms": 1140,
+            "oldest_ms": 0,
+            "pending": 0,
+            "phase": "retry",
+            "processing": 0
+          },
+          {
+            "attempts": 4,
+            "dead": 0,
+            "elapsed_ms": 2068,
+            "oldest_ms": 0,
+            "pending": 0,
+            "phase": "recovered",
+            "processing": 0
+          }
+        ],
+        "lost": 0,
+        "recovery_rto_ms": 909,
+        "sent": 4
+      },
+      "drain": {
+        "normal": {
+          "database_last": true,
+          "drain_ms": 4,
+          "final_state": "succeeded",
+          "forced": false
+        },
+        "deadline": {
+          "database_last": true,
+          "drain_ms": 55,
+          "final_state": "pending",
+          "forced": true
+        }
+      },
+      "commands": [
+        {
+          "name": "inventory",
+          "exit_code": 0,
+          "seconds": 48.88
+        },
+        {
+          "name": "build",
+          "exit_code": 0,
+          "seconds": 20.422
+        },
+        {
+          "name": "vet",
+          "exit_code": 0,
+          "seconds": 12.626
+        },
+        {
+          "name": "go-module-verify",
+          "exit_code": 0,
+          "seconds": 110.204
+        },
+        {
+          "name": "m0-regression",
+          "exit_code": 0,
+          "seconds": 0.121
+        },
+        {
+          "name": "m1-regression",
+          "exit_code": 0,
+          "seconds": 2.825
+        },
+        {
+          "name": "m2-regression",
+          "exit_code": 0,
+          "seconds": 4.408
+        },
+        {
+          "name": "m3-regression",
+          "exit_code": 0,
+          "seconds": 0.062
+        },
+        {
+          "name": "m4-regression",
+          "exit_code": 0,
+          "seconds": 0.057
+        },
+        {
+          "name": "unit",
+          "exit_code": 0,
+          "seconds": 18.731
+        },
+        {
+          "name": "integration",
+          "exit_code": 0,
+          "seconds": 88.938
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "seconds": 1.938
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "seconds": 0.114
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "seconds": 3.389
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "seconds": 2.904
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "seconds": 2.428
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "seconds": 0.075
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "seconds": 0.073
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "seconds": 0.07
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "seconds": 0.081
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "seconds": 0.087
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "seconds": 0.077
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "seconds": 0.072
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "seconds": 0.679
+        },
+        {
+          "name": "e2e",
+          "exit_code": 0
+        },
+        {
+          "name": "race",
+          "exit_code": 0,
+          "seconds": 177.239
+        },
+        {
+          "name": "generation-version",
+          "exit_code": 0,
+          "seconds": 0.016
+        },
+        {
+          "name": "generation",
+          "exit_code": 0,
+          "seconds": 0.022
+        },
+        {
+          "name": "coverage",
+          "exit_code": 0,
+          "seconds": 2.31
+        },
+        {
+          "name": "coverage-html",
+          "exit_code": 0,
+          "seconds": 2.286
+        }
+      ]
+    }
+  }
+}

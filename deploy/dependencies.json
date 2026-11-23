@@ -1,5 +1,5 @@
 {
-  "reviewed_at": "2026-11-22",
+  "reviewed_at": "2026-11-23",
   "modules": [
     {
       "module": "filippo.io/edwards25519",
@@ -250,6 +250,14 @@
       "license": "BSD-3-Clause"
     },
     {
+      "module": "github.com/google/go-cmp",
+      "version": "v0.7.0",
+      "sum": "h1:wk8382ETsv4JYUZwIsn6YpYiWiBsYLSJiTsyBybVuN8=",
+      "license_file": "LICENSE",
+      "license_sha256": "17b5d209ba8f9684257ecfcff87df6ceda6194143a8fbd074f29727cff6f0c40",
+      "license": "BSD-3-Clause"
+    },
+    {
       "module": "github.com/google/uuid",
       "version": "v1.6.0",
       "sum": "h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=",
@@ -315,8 +323,8 @@
     },
     {
       "module": "github.com/kr/pretty",
-      "version": "v0.3.0",
-      "sum": "h1:WgNl7dwNpEZ6jJ9k1snq4pZsg7DOEN8hP9Xw0Tsjwk0=",
+      "version": "v0.3.1",
+      "sum": "h1:flRD4NNwYAUpkphVc1HcthR4KEIFJ65n8Mw5qdRn3LE=",
       "license_file": "LICENSE",
       "license_sha256": "283c28b781bc7487bd7bcaf453cbd811f5ee8d7ce625cfcf8dcacae6ba1f4bb5",
       "license": "MIT"
@@ -490,6 +498,14 @@
       "license": "BSD-3-Clause"
     },
     {
+      "module": "github.com/rogpeppe/go-internal",
+      "version": "v1.14.1",
+      "sum": "h1:UQB4HGPB6osV0SQTLymcB4TgvyWu6ZyliaW0tI/otEQ=",
+      "license_file": "LICENSE",
+      "license_sha256": "4835612df0098ca95f8e7d9e3bffcb02358d435dbb38057c844c99d7f725eb20",
+      "license": "BSD-3-Clause"
+    },
+    {
       "module": "github.com/segmentio/asm",
       "version": "v1.2.1",
       "sum": "h1:DTNbBqs57ioxAD4PrArqftgypG4/qNpXoJx8TVXxPR0=",
@@ -642,12 +658,44 @@
       "license": "Apache-2.0"
     },
     {
+      "module": "go.opentelemetry.io/otel/metric/x",
+      "version": "v0.69.0",
+      "sum": "h1:DjRLr15H83v+hCW7JA9NoJvOkYTtmq5YoDRbe9deYpM=",
+      "license_file": "LICENSE",
+      "license_sha256": "1ae07514be1d7bb33f0698f8d91fb51b8b9fe1463157ec1c72081a49b9bc6f40",
+      "license": "Apache-2.0"
+    },
+    {
+      "module": "go.opentelemetry.io/otel/sdk",
+      "version": "v1.47.0",
+      "sum": "h1:zWXEr4j2lFefG87TU6Yg8a7ngfohIKFZHKp0Hf5hC6I=",
+      "license_file": "LICENSE",
+      "license_sha256": "1ae07514be1d7bb33f0698f8d91fb51b8b9fe1463157ec1c72081a49b9bc6f40",
+      "license": "Apache-2.0"
+    },
+    {
+      "module": "go.opentelemetry.io/otel/sdk/metric",
+      "version": "v1.47.0",
+      "sum": "h1:lfISg2j93VT6yqdk9OfUaZmw/GfcZqCCV3jdXtsPnKw=",
+      "license_file": "LICENSE",
+      "license_sha256": "1ae07514be1d7bb33f0698f8d91fb51b8b9fe1463157ec1c72081a49b9bc6f40",
+      "license": "Apache-2.0"
+    },
+    {
       "module": "go.opentelemetry.io/otel/trace",
       "version": "v1.47.0",
       "sum": "h1:JOjX/Oci8K94QHddo+bbfya/Ai/nf6/dt9ZfrFNWSrM=",
       "license_file": "LICENSE",
       "license_sha256": "1ae07514be1d7bb33f0698f8d91fb51b8b9fe1463157ec1c72081a49b9bc6f40",
       "license": "Apache-2.0"
+    },
+    {
+      "module": "go.uber.org/goleak",
+      "version": "v1.3.0",
+      "sum": "h1:2K3zAYmnTNqV73imy9J1T3WC+gmCePx2hEGkimedGto=",
+      "license_file": "LICENSE",
+      "license_sha256": "cea390bdf643a06fbdd99fbab18c50e82c34e7bead0d55bf1168bd0d65b9fa32",
+      "license": "MIT"
     },
     {
       "module": "go.uber.org/multierr",

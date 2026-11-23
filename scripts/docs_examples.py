@@ -47,6 +47,7 @@ def main():
         'dependency-injection': 'Hello, Alice!',
         'lifecycle': 'start storage\nstart books\nready: true\nstop books\nstop storage',
         'event-envelope': 'event-1 / bookstore.book_created / schema 1\n{"id":"book-1","title":"Go in Action"}',
+        'observability': 'Trace correlated: true\n/livez: 204\n/readyz: 204\nJSON log recorded: true',
         'authorization': 'read allowed\nwrite denied\nfeature enabled: write denied',
     }
     for sample, expected in samples.items():
@@ -72,6 +73,7 @@ def main():
         ('data/idempotency.md', 'orders', 'service.go'),
         ('data/migrations.md', 'setup', 'deployment.go'),
         ('events/reliable-delivery.md', 'setup', 'events.go'),
+        ('platform/jobs.md', 'setup', 'jobs.go'),
     ]:
         guide=(ROOT/'docs/site/content'/document).read_text(encoding='utf-8')
         destination=project/folder;destination.mkdir(exist_ok=True)

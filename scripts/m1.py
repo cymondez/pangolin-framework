@@ -109,7 +109,7 @@ def gate(commit):
 
 def verify(args, increment=None):
     milestone=increment["milestone"] if increment else "M1"
-    increments=([m0.load(ROOT/"tests/contract/m2.json"),increment] if milestone=="M3" else [increment]) if increment else []
+    increments=([m0.load(ROOT/("tests/contract/m"+str(n)+".json")) for n in range(2,int(milestone[1:]))]+[increment]) if increment else []
     commit=m0.revision();source=source_hash();dirty=not m0.clean()
     platform=json.loads(m0.command(["go","env","-json","GOOS","GOARCH","GOVERSION","CGO_ENABLED"]))
     if platform["GOVERSION"]!="go"+m0.load(ROOT/"deploy/toolchain.json")["go"]:raise ValueError("unexpected toolchain")
@@ -117,6 +117,7 @@ def verify(args, increment=None):
     # Dirty development runs are inspectable but cannot become Verified evidence.
     output=ROOT/"artifacts"/(milestone.lower()+"-development-"+source[:12]+"/"+label if dirty else commit+"/"+milestone.lower()+"/"+label)
     output.mkdir(parents=True,exist_ok=True)
+    if milestone=="M4":os.environ["PANGOLIN_M4_METRICS_DIR"]=str(output)
     report={"milestone":milestone,"commit":commit,"source_sha256":source,"working_tree_dirty":dirty,"baseline":"v1.3","platform":platform,"seed":20261121,"project":args.project,"status":"failed","commands":[]}
     mapping=m0.load(ROOT/"tests/contract/m1.json");validate_mapping(mapping)
     check_module_docs(mapping)
@@ -131,7 +132,7 @@ def verify(args, increment=None):
         log.write_text(result.stdout+result.stderr,encoding="utf-8")
         report["commands"].append({"name":name,"argv":argv,"exit_code":result.returncode,"log":log.name,"sha256":m0.digest(log),"seconds":round(time.monotonic()-started,3)})
         if result.returncode: raise ValueError("gate failed: "+name+"; see "+str(log))
-        if name in {"m0-regression","m1-regression","m2-regression","m3-regression"}:
+        if name in {"m0-regression","m1-regression","m2-regression","m3-regression","m4-regression"}:
             required=mapping["python_tests"].values() if name=="m1-regression" else next((x["python_tests"].values() for x in increments if name==x["milestone"].lower()+"-regression"),())
             validate_python_output(result.stdout+result.stderr,required)
         print("PASS",name,flush=True)
@@ -157,7 +158,7 @@ def verify(args, increment=None):
         report["e2e"]=m1_e2e.run(output,args.project,packages,execute)
         report["commands"].append({"name":"e2e","exit_code":0})
         if args.race:
-            race=execute(["go","test","-count=1","-json","-race","-tags=integration","./..."],"race");validate_tests(race)
+            race=execute(["go","test","-p=1","-count=1","-json","-race","-tags=integration","./..."],"race");validate_tests(race)
         sqlc=os.getenv("PANGOLIN_SQLC",str(ROOT/".cache/bin"/("sqlc.exe" if os.name=="nt" else "sqlc")))
         if execute([sqlc,"version"],"generation-version").strip()!="v1.31.1":raise ValueError("wrong sqlc version")
         generated=list((ROOT/"examples/bookstore/infrastructure/internal").glob("*/*.go"));before={str(p.relative_to(ROOT)):m0.digest(p) for p in generated}

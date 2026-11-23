@@ -19,3 +19,5 @@
 `jetstream` 是 Bookstore 教學環境的明確初始化工具，需要真實 NATS；不屬於上述無外部服務的入門範例。
 
 `transactions` 是使用真實 PostgreSQL 的 [交易傳播教學](transactions/README.md)，需先準備 Bookstore 資料庫與 PANGOLIN_DSN。以 `python scripts/docs_examples.py --database` 在獨立 consumer 專案實際執行；一般命令則仍編譯該程式與組織組裝指南，不假報資料庫操作成功。
+
+`observability` 是不需外部服務的完整 OpenTelemetry／JSON log／Health 範例，執行方式與邊界見 [README](observability/README.md)。

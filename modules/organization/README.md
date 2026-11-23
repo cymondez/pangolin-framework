@@ -47,6 +47,6 @@ go test ./modules/organization/...
 go test -tags=integration ./tests/m3 -run 'TestA8[3-9]|TestA90|TestA91|TestA81Governance|TestGovernance|TestProvider'
 ```
 
-真實 PostgreSQL 驗收涵蓋角色矩陣、雙 Org、撤權 admission／已 admission 快照、轉移、ownerless／復原、SQL／Audit／Outbox 故障原子性、獨立 replacement schema 匯入及既有 Envelope 對帳。模組已有實作與測試，M3 是否正式 Verified 仍由同 commit、兩平台累積 Gate／證據決定；完整背景 Job Worker 屬後續里程碑，這裡只依賴中立 inventory 與 grant 契約。
+真實 PostgreSQL 驗收涵蓋角色矩陣、雙 Org、撤權 admission／已 admission 快照、轉移、ownerless／復原、SQL／Audit／Outbox 故障原子性、獨立 replacement schema 匯入及既有 Envelope 對帳。模組已有實作與測試，M3 是否正式 Verified 仍由同 commit、兩平台累積 Gate／證據決定；完整背景 Job Worker 由 [platform/jobs](../../platform/jobs/README.md) 提供；本模組仍只提供中立 inventory 與 grant 契約，M4 已用真實持久化 Job 驗證替代 Provider 與當前 grant 撤銷。
 
 Tenant 投影撤權由 optional migration 的 qualification hook 同交易鎖定受影響 Catalog 並更新 revision。最後有效 owner 消失時，Catalog／私有狀態持久標為 ownerless；Tenant 重新啟用、JoinAsOwner 或 Resume 都不會自動復活，只有具 tenant.scope.recover 的 Recover 重新建立有效 owner 並留下必要 Effects。雙 owner 同時撤權按 Catalog 鎖序列化。替換私有 schema 時須一併安裝同等 qualification hook，不能只搬三張主要表；Tenant 控制面原操作的必要稽核由可信同步入口負責。

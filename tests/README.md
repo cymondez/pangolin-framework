@@ -1,6 +1,8 @@
 # 測試與驗收索引
 
-從 repository root 執行 Go 命令；完整 M2 累積 Gate 的服務與環境變數依 [M2 指南](../docs/guides/m2-development.md) 設定。
+從 repository root 執行 Go 命令；目前完整 M4 累積 Gate 的服務與環境變數依 [M4 指南](../docs/guides/m4-development.md) 設定。
+
+[M4 驗收](m4/README.md) 保存持久化 Jobs、Broker 容量恢復、10,000 筆負載、活躍停機與 OpenTelemetry 案例；目前各項是否 Verified 仍由同版 Gate 決定。
 
 | 位置／入口 | 責任 |
 |---|---|

@@ -54,3 +54,5 @@ Bookstore 專用 main 及 Handler 已集中於範例。根目錄 cmd 將保留�
 M2 共用呼叫政策位於 application，共用 HTTP／串流邊界位於 transport/http；organization 模組根目錄現在提供可選 Provider 組裝薄片。跨套件驗收新增 tests/m2，完整操作入口見 [M2 開發指南](m2-development.md)。
 
 M3 新增 tenancy 與 PostgreSQL 資格投影、security/policy、platform/audit、完整 events/{local,outbox,inbox,postgres}、persistence/{migration,idempotency}，組織治理與 HTTP 保持單一 modules/organization 擁有者。各 package README 與 [M3 指南](m3-development.md) 說明組裝及驗收；Docusaurus 使用導覽於 Runtime Gate 通過後更新。
+
+M4 的背景工作契約與 Worker 在 platform/jobs，PostgreSQL queue Adapter／migration 在 platform/jobs/postgres；observability 提供明確注入的 OpenTelemetry／JSON logs／Health。跨套件驗收在 tests/m4，重用組織治理 fixture 的持久化 Job 替換回歸保留於 tests/m3/persistent_jobs_test.go。完整入口見 [M4 指南](m4-development.md)。

@@ -1,5 +1,17 @@
 # 官方網站的初學者走查
 
+## 背景工作與觀測增量（2026-11-23）
+
+Runtime 來源 `43dcd79e24f5ed74a544a760301f4fec95dc2ca2` 通過同版 Windows／Linux（含 race）驗收後，更新公開網站。新增「背景工作與維運」導覽及持久化 Jobs、完整 OpenTelemetry／Health 程式、容量／恢復指南；補上 Migration、容量錯誤、升級與功能相容性。公開導覽未加入內部里程碑或驗收連結。
+
+`python scripts/docs_examples.py --database` 在全新獨立 consumer module 執行全部九份完整程式，包含真實 PostgreSQL 交易與新的觀測範例；網站內 ReceiptWorker、事件容量組裝及其他完整 Go 檔案全部編譯通過。新觀測範例印出 Trace correlated: true、/livez: 204、/readyz: 204、JSON log recorded: true。程式及操作紀錄保留於 `artifacts/docs/beginner-examples.json`。
+
+Windows 與 Docker Linux 的 Docusaurus production build／站點測試均通過，36 頁、1767 個站內連結／錨點及本機搜尋索引有效。既有 `pangolin-docs` 服務已更新並保持運行於 `http://localhost:18088/`。
+
+從初次使用者角度實際經 Jobs 的下一步進入觀測、再到恢復指南；頁面有前置條件、操作目錄、完整程式、預期結果與下一步。瀏覽器中三頁主體、程式碼與表格正常，當前 897px viewport 的 scrollWidth 等於 clientWidth，沒有整頁水平溢出。中文搜尋「背景工作」以新 Jobs 頁為第一個結果，能導向該頁；收合導覽可展開「背景工作與維運」並找到三個新頁。相容性頁的全部功能維持同一張 15 列表格。
+
+本增量沒有調整配色、建立正式版本快照或發行 tag。部署／還原的 RPO 與正式容量 SLA 仍須由實際環境量測，未用本機 fixture 的成功替代。
+
 日期：2026-11-22。讀者假設：能寫基本 Go，第一次接觸 panGOlin；沒有讀過本倉庫 spec、里程碑或維護 README。這份走查是維護紀錄，不放進公開網站。
 
 ## 章節設計與參考

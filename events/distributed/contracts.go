@@ -19,6 +19,7 @@ type Envelope struct {
 	CausationID   string
 	Producer      string
 	Payload       json.RawMessage
+	TraceParent   string
 }
 type IntegrationEventPublisher interface {
 	Publish(context.Context, any) error

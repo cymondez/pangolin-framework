@@ -21,3 +21,7 @@ restored, err := distributed.Decode(raw)
 驗證：`go test ./events/distributed`，包含完整欄位 round-trip、固定 wire 命名、非法／缺漏欄位及大小上限。
 
 Execution 在入口及新根 admission 之後各自驗證目前 Permission 與代理使用者資格；權威 revision 更新不會重用 admission 前的 allow。已開始短操作的授權快照語意仍由 UOW／Provider 維持。
+
+## 運維與追蹤整合
+
+Envelope 新增可省略的 TraceParent，wire 欄位 traceparent 使用 omitempty；舊版無此欄位的 bytes 與解碼語意維持不變。此欄位只用於 W3C Trace Context，不是身分或授權憑據。

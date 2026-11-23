@@ -1,5 +1,7 @@
 # 操作腳本
 
+目前完整入口為 `m4.py verify`／`m4_linux.py`，同版雙平台 Gate 為 `m4.py gate --commit <SHA>`；包含 M0–M3 累積回歸。`m3_fixture.py` 預設保持 M3 restart 契約，M4 明示 milestone=4 才開放專用 NATS stop／start 演練。詳見 [M4 指南](../docs/guides/m4-development.md)。
+
 從 repository root 執行；Windows shell 使用 login=false。完整測試入口為 check.ps1／check.sh，環境與必要變數見 [M1 指南](../docs/guides/m1-development.md)。此目錄放操作腳本，Go 程式碼與測試 fixture 仍歸其擁有者。
 
 | 腳本 | 用途 |

@@ -19,7 +19,9 @@ description: 選擇適合目前預覽版的功能，了解現有 API 支援與�
 | 稽核與冪等 | 同交易必要 Audit／成功結果、獨立安全記錄、同鍵重播及 Unknown 對帳 | 結果保護與保留期限由部署明示設定 |
 | 遷移 | Goose、全域 session 鎖、API 相容性檢查、ScopeAware 前向升級 | 部署與 API 角色分開，API 不執行 DDL |
 | 事件 | 版本化 Registry、Local FIFO、通用 PostgreSQL Outbox／Inbox、租約 fencing、JetStream 持久確認 | 明示 Resource／Worker 組裝；at-least-once，外部副作用需冪等 |
+| 背景工作 | 持久化單次／延後工作、版本 Registry、租約、取消、有界重試、Audit 重送 | 至少一次執行；Handler 需冪等，複雜 Cron 未提供 |
+| 觀測與維運 | 明確注入 OpenTelemetry、JSON logs、Health、全域容量及積壓告警 | 應用明示 exporter／sampling／retention，Metrics 不放 owner labels |
 
-CLI 專案產生器、完整持久化 Job Worker、Settings／Features／Cache 平台服務與其他 DB／Broker Adapter 目前尚未提供。請先依[安裝頁](../getting-started/installation.md)建立普通 Go 專案，再選擇需要的公開套件。
+CLI 專案產生器、Settings／Features／Cache 平台服務與其他 DB／Broker Adapter 目前尚未提供。請先依[安裝頁](../getting-started/installation.md)建立普通 Go 專案，再選擇需要的公開套件。
 
 Go 使用 1.27.4；真實資料範例使用 PostgreSQL 18.7 與 NATS 2.15.3。初次學習核心功能時不需要安裝這兩個服務。

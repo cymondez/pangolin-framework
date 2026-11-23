@@ -28,6 +28,8 @@ panGOlin 是用來開發 **Go 應用程式**的框架。你可以用它組織功
 
 已經知道要用哪個功能？直接從[套件使用範例](samples/index.md)選擇可以執行的程式。
 
+需要可靠背景任務時，接著閱讀[持久化工作](platform/jobs.md)；需要追查失敗與積壓時，使用[觀測與 Health](platform/observability.mdx)。
+
 ## 使用這一版前
 
-這是 **0.1.0 預覽版**。目前可使用本文列出的核心功能與範例；Required／RequiresNew 與進階隔離選項已提供；可選組織治理、當前資格授權及通用可靠事件已提供；自動建立專案的 CLI 與完整持久化 Job Worker 尚未提供。採用前請查看[功能相容性](reference/compatibility.md)。
+這是 **0.1.0 預覽版**。目前可使用本文列出的核心功能與範例；Required／RequiresNew 與進階隔離選項已提供；可選組織治理、當前資格授權及通用可靠事件已提供；持久化背景工作、容量控制及觀測已提供；自動建立專案的 CLI 尚未提供。採用前請查看[功能相容性](reference/compatibility.md)。

@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
+	"github.com/cymondez/pangolin-framework/observability"
 	"log/slog"
 	"sync"
 
@@ -142,6 +143,11 @@ func valid(o Options) bool {
 	return o.Timeout >= 0 && o.Mode <= ReadWrite && o.Transaction <= NonTransactional && o.Propagation <= RequiresNew && o.Isolation <= Serializable
 }
 func (m *manager) Within(ctx context.Context, o Options, callback func(context.Context) error) (err error) {
+	if ctx != nil {
+		var finish func(error)
+		ctx, finish = observability.Start(ctx, "uow")
+		defer func() { finish(err) }()
+	}
 	p := currentView(ctx)
 	reject := func(code, cause error) error {
 		id := ""

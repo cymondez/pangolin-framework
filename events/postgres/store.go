@@ -13,6 +13,7 @@ import (
 	"github.com/cymondez/pangolin-framework/events/distributed"
 	"github.com/cymondez/pangolin-framework/events/inbox"
 	"github.com/cymondez/pangolin-framework/events/outbox"
+	"github.com/cymondez/pangolin-framework/observability"
 	persistence "github.com/cymondez/pangolin-framework/persistence/postgres"
 	"github.com/cymondez/pangolin-framework/security/scope"
 	"github.com/jackc/pgx/v5"
@@ -23,8 +24,9 @@ import (
 var Migrations embed.FS
 
 type Store struct {
-	pool   *pgxpool.Pool
-	policy outbox.Policy
+	pool     *pgxpool.Pool
+	policy   outbox.Policy
+	capacity Capacity
 }
 
 func NewStore(pool *pgxpool.Pool, policy outbox.Policy) (*Store, error) {
@@ -34,7 +36,7 @@ func NewStore(pool *pgxpool.Pool, policy outbox.Policy) (*Store, error) {
 	if err := policy.Validate(); err != nil {
 		return nil, err
 	}
-	return &Store{pool, policy}, nil
+	return &Store{pool: pool, policy: policy}, nil
 }
 func (s *Store) Append(ctx context.Context, e distributed.Envelope, raw []byte) error {
 	encoded, encodeErr := distributed.Encode(e)
@@ -48,6 +50,15 @@ func (s *Store) Append(ctx context.Context, e distributed.Envelope, raw []byte) 
 	ex, err := persistence.Current(ctx, true)
 	if err != nil {
 		return err
+	}
+	if s.capacity.Outbox > 0 {
+		var admitted bool
+		if err = ex.QueryRow(ctx, `SELECT pangolin_events.admit('outbox',$1,'','')`, s.capacity.Outbox).Scan(&admitted); err != nil {
+			return err
+		}
+		if !admitted {
+			return ErrCapacity
+		}
 	}
 	_, err = ex.Exec(ctx, `INSERT INTO pangolin_events.outbox(event_id,tenant_id,scope_kind,scope_id,envelope) VALUES($1,$2,$3,$4,$5)`, e.ID, e.TenantID, e.ScopeKind, e.ScopeID, raw)
 	return err
@@ -122,7 +133,16 @@ func (s *Store) Persist(ctx context.Context, group string, e distributed.Envelop
 	}
 	defer rollback(tx)
 	hash := sha256.Sum256(raw)
-	_, err = tx.Exec(ctx, `INSERT INTO pangolin_events.inbox(consumer_group,event_id,tenant_id,scope_kind,scope_id,envelope,fingerprint,verified_producer) VALUES($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT(consumer_group,event_id) DO NOTHING`, group, e.ID, e.TenantID, e.ScopeKind, e.ScopeID, raw, hash[:], producer)
+	if s.capacity.Inbox > 0 {
+		var admitted bool
+		if err = tx.QueryRow(ctx, `SELECT pangolin_events.admit('inbox',$1,$2,$3)`, s.capacity.Inbox, group, e.ID).Scan(&admitted); err != nil {
+			return err
+		}
+		if !admitted {
+			return ErrCapacity
+		}
+	}
+	tag, err := tx.Exec(ctx, `INSERT INTO pangolin_events.inbox(consumer_group,event_id,tenant_id,scope_kind,scope_id,envelope,fingerprint,verified_producer) VALUES($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT(consumer_group,event_id) DO NOTHING`, group, e.ID, e.TenantID, e.ScopeKind, e.ScopeID, raw, hash[:], producer)
 	if err != nil {
 		return err
 	}
@@ -134,6 +154,9 @@ func (s *Store) Persist(ctx context.Context, group string, e distributed.Envelop
 	}
 	if !bytes.Equal(raw, stored) || !bytes.Equal(hash[:], storedHash) || producer != trusted {
 		return inbox.ErrContentConflict
+	}
+	if tag.RowsAffected() == 0 {
+		observability.Record(ctx, "inbox_duplicate")
 	}
 	return tx.Commit(ctx)
 }

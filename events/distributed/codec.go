@@ -20,6 +20,7 @@ type wireEnvelope struct {
 	CausationID   string          `json:"causation_id"`
 	Producer      string          `json:"producer"`
 	Payload       json.RawMessage `json:"payload"`
+	TraceParent   string          `json:"traceparent,omitempty"`
 }
 
 func validate(e Envelope) error {
