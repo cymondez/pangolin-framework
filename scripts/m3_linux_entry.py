@@ -9,6 +9,7 @@ original=Path("/source");target=Path("/work/repository")
 target.parent.mkdir(parents=True,exist_ok=True)
 subprocess.run(["git","-c","safe.directory=/source","clone","--no-hardlinks",str(original),str(target)],check=True)
 subprocess.run(["git","-C",str(target),"config","core.filemode","false"],check=True)
+subprocess.run(["git","-C",str(target),"config","core.autocrlf","input"],check=True)
 paths=subprocess.check_output(["git","-c","safe.directory=/source","-C",str(original),"ls-files","--cached","--others","--exclude-standard","-z"]).decode().split("\0")
 for name in filter(None,paths):
     source=original/name;destination=target/name
@@ -20,6 +21,10 @@ for name in filter(None,paths):
 # only the runner's two links in this disposable checkout, never source files.
 with (target/".git/info/exclude").open("a") as excludes:
     excludes.write("\n/.cache\n/artifacts\n")
+# Exact CRLF bytes can leave Git's stat cache dirty although the normalized
+# blobs equal HEAD. Recompute tracked blobs; real source changes stay visible
+# as staged differences, so dirty development runs cannot become evidence.
+subprocess.run(["git","-C",str(target),"add","--renormalize","--","."],check=True)
 Path("/cache/go-mod").symlink_to("/gomod",target_is_directory=True) if not Path("/cache/go-mod").exists() else None
 Path("/cache/go-tmp").mkdir(parents=True,exist_ok=True)
 Path("/cache/bin").mkdir(parents=True,exist_ok=True)
