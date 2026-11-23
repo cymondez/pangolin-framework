@@ -1,5 +1,7 @@
 # M5 開發與驗收
 
+M5 已於來源 `88f32eb6f2aa02c601dbc930f3f5a7b76911e185` 通過雙平台 Gate，見 [驗收紀錄](../evidence/M5.md)。以下命令用於重現驗收。
+
 開發分支 `codex/m5-cli-platform-services`，Framework 版本固定 0.1.0。正式責任 PLAT-001／CLI-001／SCP-008／ORG-013；25 個具名情境見 tests/contract/m5.json。工作樹測試不代替同 commit 的雙平台 Gate。
 
 先依 [M3 指南](m3-development.md) 盤點 Docker／ports／volumes，使用 `pangolin-m5-dev` 專用環境。Go 1.27.4、PostgreSQL 18.7、NATS 2.15.3、Goose 3.30.0、sqlc 1.31.1 沿用既有固定版本；連線變數沿用 PANGOLIN_M1_*，不可操作其他專案或使用者的 docs 服務。
@@ -11,6 +13,8 @@ python scripts/m5.py verify --project pangolin-m5-dev
 python scripts/m5_linux.py --project pangolin-m5-dev
 python scripts/m5.py gate --commit <完整來源 SHA>
 ```
+
+Windows 預設使用 `.cache/bin/sqlc.exe`，固定 OCI runner 需要 `.cache/linux-bin/sqlc`；也可用 PANGOLIN_SQLC 指定目前平台的固定版本工具。每次正式驗收使用全新輸出目錄，先保留既有結果再重跑，避免重用已生成的專案。
 
 先執行 development run，修正後以乾淨 commit 收集 Windows／固定 OCI Linux 同一 source bytes 的證據。Linux 必跑 race。完整 Gate 包含 M0–M4 累積反例、真實 SQL／Broker／分程序 E2E、sqlc 再生成、依賴／license、CLI 子程序插樁 coverage，整體與各關鍵 package 分別以原始計數比較 90.00%。
 

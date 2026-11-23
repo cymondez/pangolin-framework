@@ -3,7 +3,7 @@ title: 0.1.0 功能相容性
 description: 選擇適合目前預覽版的功能，了解現有 API 支援與限制。
 ---
 
-本文件對應 0.1.0 預覽套件。採用某項功能前，可以先從下表確認適用範圍。
+本文件對應 0.1.0 預覽套件；目前沒有正式發布的版本 tag，套件先以本機來源安裝。採用某項功能前，可以先從下表確認適用範圍。
 
 | 功能 | 目前可使用 | 使用前注意 |
 |---|---|---|
@@ -21,7 +21,12 @@ description: 選擇適合目前預覽版的功能，了解現有 API 支援與�
 | 事件 | 版本化 Registry、Local FIFO、通用 PostgreSQL Outbox／Inbox、租約 fencing、JetStream 持久確認 | 明示 Resource／Worker 組裝；at-least-once，外部副作用需冪等 |
 | 背景工作 | 持久化單次／延後工作、版本 Registry、租約、取消、有界重試、Audit 重送 | 至少一次執行；Handler 需冪等，複雜 Cron 未提供 |
 | 觀測與維運 | 明確注入 OpenTelemetry、JSON logs、Health、全域容量及積壓告警 | 應用明示 exporter／sampling／retention，Metrics 不放 owner labels |
+| CLI | `new` 生成 tenant-only／organization 兩種 Profile、`module add`、`migrate`、`doctor`、`generate openapi` | 預覽版從 Framework checkout 建置；生成專案以本機 replace 固定 Runtime |
+| 分層設定與 Features | 使用者／租戶／組織層級覆寫、JSON 陣列 key、Boolean／Quota／Enum、Ceiling 上限、Permission 優先 | 持久化 Provider 與值驗證由應用組裝；Memory Provider 只存在目前程序 |
+| Scoped Cache | Memory Adapter：完整 Tenant／Scope key、TTL、載入合併、失效通知 | Redis 等跨程序 Adapter 尚未提供；刪除失敗不代表業務回滾 |
 
-CLI 專案產生器、Settings／Features／Cache 平台服務與其他 DB／Broker Adapter 目前尚未提供。請先依[安裝頁](../getting-started/installation.md)建立普通 Go 專案，再選擇需要的公開套件。
+CLI 生成的 Bookstore 與套件內的範例 API 是不同專案：生成的建立與讀取都回 HTTP 200，欄位為 `id`／`title`；[套件內範例](bookstore-api.md)建立回 201 且回應另含 `version` 欄位。選用前見[生成教學](../tutorials/generated-bookstore.md)與 [CLI 參考](cli.md)。
+
+其他 DB／Broker Adapter 與 Redis Cache Adapter 目前尚未提供。可以依[安裝頁](../getting-started/installation.md)手動建立 Go 專案，或用 [pangolin CLI](cli.md)生成完整專案；正式 tag 發布前，兩種方式都以本機來源固定 0.1.0 預覽套件。
 
 Go 使用 1.27.4；真實資料範例使用 PostgreSQL 18.7 與 NATS 2.15.3。初次學習核心功能時不需要安裝這兩個服務。

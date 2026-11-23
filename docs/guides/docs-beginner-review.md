@@ -1,5 +1,19 @@
 # 官方網站的初學者走查
 
+## CLI 與設定／功能／快取增量（2026-11-24）
+
+Runtime 來源 `88f32eb6f2aa02c601dbc930f3f5a7b76911e185` 通過同版 Windows／Linux（含 race）Gate 後，才整合 Copilot CLI 使用 `litellm-zenlinkos/glm-5.3:cloud` 準備的網站與範例修改。主代理另行審查差異與驗收，沒有修改實作規範。
+
+新增生成 Bookstore 循序教學、CLI 參考、Settings／Features／Cache 指南；說明 checkout 舊範例與生成 API 的回應差異、完整組織 Profile、同版 Runtime bundle 及升級限制。各教學交代前置條件、操作目錄、完整程式、預期結果及下一步；公開導覽不加入里程碑或 Gate 文件。
+
+`python scripts/docs_examples.py --database` 在全新 consumer module 執行十份程式，包含真實 PostgreSQL 交易。新 platform-services 範例實際印出七行，驗證 Tenant cache 隔離、JSON 陣列設定、quota 上限、Permission 優先與通知失敗後版本收斂。結果保存於 `artifacts/docs/beginner-examples.json`。
+
+Windows 與 Docker Linux 的站點測試及 production build 都通過：41 頁、2127 個站內連結／錨點、一份本機搜尋索引。Windows 首次靜態輸出遇到 sandbox EPERM，以相同命令取得所需權限後通過，沒有變更 ACL。
+
+瀏覽器實際由生成 Bookstore 教學進入 Settings，確認七行預期輸出及完整程式可讀；搜尋 Channels 出現新增 JSON 設定段落與範例。收合導覽能找到「設定、功能與快取」三頁及 CLI 參考，並實際開啟 CLI 命令表。當前約 897px viewport 的標題、程式與表格顯示正常。本次沒有額外重做配色或完整裝置矩陣。
+
+既有 `pangolin-docs` 已重建且健康，持續提供 `http://localhost:18088/`。版本仍為 0.1.0 預覽；沒有建立正式版本快照或發行 tag。
+
 ## 背景工作與觀測增量（2026-11-23）
 
 Runtime 來源 `43dcd79e24f5ed74a544a760301f4fec95dc2ca2` 通過同版 Windows／Linux（含 race）驗收後，更新公開網站。新增「背景工作與維運」導覽及持久化 Jobs、完整 OpenTelemetry／Health 程式、容量／恢復指南；補上 Migration、容量錯誤、升級與功能相容性。公開導覽未加入內部里程碑或驗收連結。

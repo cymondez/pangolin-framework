@@ -5,6 +5,8 @@ description: 啟動 Bookstore、取得登入 Token、建立書籍並驗證租戶
 
 這個教學會帶你跑一個真實 API，並實際使用身分驗證、資料庫交易、多租戶隔離與背景事件。
 
+本頁使用**套件內既有的範例 API**：建立書籍回 HTTP 201，回應含 `version` 欄位。CLI 生成的 Bookstore 是另一種選擇：生成專案的建立與讀取都回 HTTP 200，欄位只有 `id`／`title`，見[用 CLI 建立自己的 Bookstore](generated-bookstore.md)。
+
 完成後，你可以取得登入 Token、建立書籍，再用同一位使用者讀回。API 與背景 Worker 分開執行。
 
 ## 需要準備什麼？

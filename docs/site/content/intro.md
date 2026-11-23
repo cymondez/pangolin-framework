@@ -18,6 +18,9 @@ panGOlin 是用來開發 **Go 應用程式**的框架。你可以用它組織功
 | 一次完成多個資料寫入，失敗時一起回滾 | 工作單元（UOW） | [使用交易](data/unit-of-work.md) |
 | 讓不同客戶只能存取自己的資料 | 身分驗證、Tenant Scope 與 RLS | [多租戶應用](security/multi-tenancy.md) |
 | 把資料變更交給背景程序處理 | Integration Event、Outbox／Inbox | [使用事件](events/integration-events.mdx) |
+| 依使用者、租戶或組織分層管理偏好與配額 | Settings 與 Features | [分層設定與 Features](platform/settings.mdx) |
+| 快取各租戶／範圍重複讀取的資料 | Scoped Cache | [Scoped Memory Cache](platform/cache.md) |
+| 不用手動組裝，直接生成完整獨立專案 | pangolin CLI | [用 CLI 建立自己的 Bookstore](tutorials/generated-bookstore.md) |
 
 ## 第一次使用的建議順序
 
@@ -25,6 +28,9 @@ panGOlin 是用來開發 **Go 應用程式**的框架。你可以用它組織功
 2. [第一個應用](getting-started/quickstart.mdx)：執行完整程式，看到 `Hello, panGOlin!`。
 3. [循序教學：可設定的問候服務](tutorials/greeting-application.mdx)：把設定、服務與模組組合起來。
 4. [Bookstore 教學](tutorials/bookstore.md)：實際呼叫有登入驗證、資料庫與背景事件的 API。
+5. [用 CLI 建立自己的 Bookstore](tutorials/generated-bookstore.md)：生成屬於自己的獨立專案；之後可用[分層設定與 Features](platform/settings.mdx)加入使用者偏好與產品配額。
+
+閱讀時請區分兩種 Bookstore 範例：上述教學使用**套件內既有的範例 API**，建立書籍回 HTTP 201 且回應含 `version` 欄位；CLI **生成的 Bookstore** 建立與讀取都回 HTTP 200，欄位只有 `id` 與 `title`。兩者的命令與環境見各自的頁面。
 
 已經知道要用哪個功能？直接從[套件使用範例](samples/index.md)選擇可以執行的程式。
 
@@ -32,4 +38,4 @@ panGOlin 是用來開發 **Go 應用程式**的框架。你可以用它組織功
 
 ## 使用這一版前
 
-這是 **0.1.0 預覽版**。目前可使用本文列出的核心功能與範例；Required／RequiresNew 與進階隔離選項已提供；可選組織治理、當前資格授權及通用可靠事件已提供；持久化背景工作、容量控制及觀測已提供；自動建立專案的 CLI 尚未提供。採用前請查看[功能相容性](reference/compatibility.md)。
+這是 **0.1.0 預覽版**，目前沒有正式發布的版本 tag，套件先以本機來源安裝。目前可使用本文列出的核心功能與範例；Required／RequiresNew 與進階隔離選項已提供；可選組織治理、當前資格授權及通用可靠事件已提供；持久化背景工作、容量控制及觀測已提供；生成專案的 CLI、分層設定、產品功能與 Scoped Cache 也已提供。採用前請查看[功能相容性](reference/compatibility.md)。

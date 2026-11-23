@@ -6,7 +6,7 @@ panGOlin-framework 是 Go 模組化應用框架，先以模組化單體交付，
 
 ## 目前狀態與文件權威
 
-**核對日期：2026-11-23。** M0 已 Verified，來源 commit `a0b1ad099fdf7bd28240514a24c34590220019a1`，見 [M0 驗收紀錄](docs/evidence/M0.md)。M1 已 Verified，來源 `9eb10df6cd848b87fda964f0b6b61d60dc12b0a6`，見 [M1 驗收紀錄](docs/evidence/M1.md)：交付 Kernel／DI／Config／Drain 與 tenant-only Bookstore Required 交易、JWT／RLS／分程序事件薄片，Windows／Linux（含 race）同版 Gate 通過，20 份模組 README 已補齊。M2 已於來源 `23651f654389af99d8c427b11909c07bc70f58cc` 通過 UOW／Persistence／中立 Scope 核心驗收，見 [M2 驗收紀錄](docs/evidence/M2.md)。M3 已於來源 `7f17ecc76a84e65ec4d64fb39b0900fb6bb50ba7` 通過完整安全／組織治理／可靠事件／遷移及冪等的同版 Windows／Linux（含 race）驗收，見 [M3 驗收紀錄](docs/evidence/M3.md)。M4 已於來源 `43dcd79e24f5ed74a544a760301f4fec95dc2ca2` 通過 Jobs／容量背壓／觀測與活躍停機的同版 Windows／Linux（含 race）Gate，見 [M4 驗收紀錄](docs/evidence/M4.md)；分支 `codex/m4-platform-services`，重現入口見 [M4 開發指南](docs/guides/m4-development.md)。CLI 與其餘平台服務仍依 M5–M6 交付。文件基線 v1.3、產品目標 v0.1.0；狀態由里程碑規劃書維護，重現方式見 [M1 開發指南](docs/guides/m1-development.md)。
+**核對日期：2026-11-23。** M0 已 Verified，來源 commit `a0b1ad099fdf7bd28240514a24c34590220019a1`，見 [M0 驗收紀錄](docs/evidence/M0.md)。M1 已 Verified，來源 `9eb10df6cd848b87fda964f0b6b61d60dc12b0a6`，見 [M1 驗收紀錄](docs/evidence/M1.md)：交付 Kernel／DI／Config／Drain 與 tenant-only Bookstore Required 交易、JWT／RLS／分程序事件薄片，Windows／Linux（含 race）同版 Gate 通過，20 份模組 README 已補齊。M2 已於來源 `23651f654389af99d8c427b11909c07bc70f58cc` 通過 UOW／Persistence／中立 Scope 核心驗收，見 [M2 驗收紀錄](docs/evidence/M2.md)。M3 已於來源 `7f17ecc76a84e65ec4d64fb39b0900fb6bb50ba7` 通過完整安全／組織治理／可靠事件／遷移及冪等的同版 Windows／Linux（含 race）驗收，見 [M3 驗收紀錄](docs/evidence/M3.md)。M4 已於來源 `43dcd79e24f5ed74a544a760301f4fec95dc2ca2` 通過 Jobs／容量背壓／觀測與活躍停機的同版 Windows／Linux（含 race）Gate，見 [M4 驗收紀錄](docs/evidence/M4.md)；分支 `codex/m4-platform-services`，重現入口見 [M4 開發指南](docs/guides/m4-development.md)。M5 已於來源 `88f32eb6f2aa02c601dbc930f3f5a7b76911e185` 通過 Cache／Settings／Features、CLI 與兩種生成 Profile 的同版 Windows／Linux（含 race）Gate，見 [M5 驗收紀錄](docs/evidence/M5.md)；M6 全量發布驗收仍待交付。文件基線 v1.3、產品目標 v0.1.0；狀態由里程碑規劃書維護，重現方式見 [M1 開發指南](docs/guides/m1-development.md)。
 
 本檔下文的 package、介面與執行流程都是既定設計的導覽，不表示對應目錄或功能已存在。實作開始後應同步更新這段狀態；不能由文件完成推論 Runtime 可執行或品質門檻已通過。
 
@@ -148,7 +148,7 @@ M2 已於來源 `23651f654389af99d8c427b11909c07bc70f58cc` 通過同版 Windows�
 | 快取 | `platform/cache` | §9.3；key 含 application／version／tenant／完整 scope，權限相關結果另含 principal／revision |
 | 背景工作 | `platform/jobs` | §9.4、§14.3 |
 | Logs／Metrics／Tracing／Health | `observability` | §9.6；敏感內容遮罩，不以無界租戶／組織 labels 建 Metrics |
-| CLI、兩種 Profile 範本與 Bookstore | `cmd/pangolin`（M5 開發中）、`examples/bookstore/cmd/{api,worker}`、`examples/bookstore` | §10、§12、§13.4 |
+| CLI、兩種 Profile 範本與 Bookstore | `cmd/pangolin`（M5 已交付）、`examples/bookstore/cmd/{api,worker}`、`examples/bookstore` | §10、§12、§13.4 |
 
 v0.1.0 的正式範圍只由[實作規範 §15](design/panGOlin-framework_實作規範書.md#s-15)決定。Organization 對應用可選，但仍是框架發行包交付項。Redis、Blob Storage、進階 Cron、新的 DB／Broker／Transport Adapter 列在 v0.2+，沒有本次時程承諾。
 
@@ -178,7 +178,7 @@ v0.1.0 的正式範圍只由[實作規範 §15](design/panGOlin-framework_實作
 
 依據：[實作規範 §13](design/panGOlin-framework_實作規範書.md#s-13)、[里程碑規劃書](design/panGOlin-framework_里程碑規劃書.md)。
 
-目前工程驗證入口為開發中的 M5 累積 Gate；Windows 使用 `scripts/check.ps1`，Linux 使用 `scripts/check.sh`，依 [M4 開發指南](docs/guides/m4-development.md) 設定連線並先盤點共用環境。`m0.py check` 保留契約盤點，M0 歷史 verify 不代替 M1 Gate。文件修改仍需檢查連結、章節、ID 與敘述一致性；品質工具測試不能代替 Runtime 驗收。從實際 module／workspace 執行適用的基礎檢查：
+目前完整工程驗證入口為已通過的 M5 累積 Gate；Windows 使用 `scripts/check.ps1`，Linux 使用 `scripts/check.sh`，依 [M5 開發指南](docs/guides/m5-development.md) 設定連線並先盤點共用環境。`m0.py check` 保留契約盤點，M0 歷史 verify 不代替 M1 Gate。文件修改仍需檢查連結、章節、ID 與敘述一致性；品質工具測試不能代替 Runtime 驗收。從實際 module／workspace 執行適用的基礎檢查：
 
 ```powershell
 go env GOMOD GOWORK
@@ -226,6 +226,6 @@ go test -race ./...
 
 M3 已 Verified；實作分支 `codex/m3-security-reliable-events`，入口見 [M3 開發指南](docs/guides/m3-development.md) 與 tests/contract/m3.json。Tenant 權威、Policy、Audit、可靠事件與治理 Adapter 各附 README；正式證據見 [M3 驗收紀錄](docs/evidence/M3.md)。
 
-M4 已 Verified；`platform/jobs`、`platform/jobs/postgres` 與 `observability` 均附 README，18 個正式情境見 `tests/contract/m4.json`；容量／恢復／停機操作見 [運維手冊](docs/runbooks/operations.md)，Docusaurus 使用者指南於 Runtime Gate 通過後更新。CLI、Settings／Features／Cache 仍依 M5 交付。
+M4 已 Verified；`platform/jobs`、`platform/jobs/postgres` 與 `observability` 均附 README，18 個正式情境見 `tests/contract/m4.json`；容量／恢復／停機操作見 [運維手冊](docs/runbooks/operations.md)，Docusaurus 使用者指南於 Runtime Gate 通過後更新。CLI、Settings／Features／Cache 已於 M5 交付，見 [M5 驗收紀錄](docs/evidence/M5.md)。
 
-M5 開發中；分支 `codex/m5-cli-platform-services`。新增 `platform/cache`、`platform/settings`、`platform/features`、`cmd/pangolin` 與 `internal/scaffold`，各附 README；25 個情境由 tests/contract/m5.json 管理，操作見 [M5 指南](docs/guides/m5-development.md)。正式完成狀態待同版 Windows／Linux Gate，網站內容在驗收後更新。
+M5 已 Verified，來源 `88f32eb6f2aa02c601dbc930f3f5a7b76911e185`；分支 `codex/m5-cli-platform-services`。新增 `platform/cache`、`platform/settings`、`platform/features`、`cmd/pangolin` 與 `internal/scaffold`，各附 README；25 個情境由 tests/contract/m5.json 管理，操作見 [M5 指南](docs/guides/m5-development.md)。同版 Windows／Linux（含 race）Gate 與 25 個正式情境均通過，證據見 [M5 驗收紀錄](docs/evidence/M5.md)；Docusaurus 使用者內容在驗收後更新。

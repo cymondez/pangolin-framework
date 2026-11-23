@@ -5,6 +5,8 @@ description: Bookstore 的登入要求、書籍操作與錯誤回應。
 
 先依 [Bookstore 教學](../tutorials/bookstore.md)啟動 API 並取得 Token。除 readiness 外，請求都需要 `Authorization: Bearer ...`。
 
+本頁描述套件內的範例 API：建立回 201 且回應含 `version` 欄位。CLI 生成的 Bookstore 建立與讀取都回 HTTP 200、欄位只有 `id`／`title`，其路由與設定見 [pangolin CLI](cli.md)與[生成教學](../tutorials/generated-bookstore.md)。
+
 | 方法與路徑 | 成功狀態 | 用途 |
 |---|---|---|
 | `GET /readyz` | 204 | 檢查 API 是否能接受請求，未準備完成時為 503 |

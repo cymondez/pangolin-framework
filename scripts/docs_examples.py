@@ -49,6 +49,7 @@ def main():
         'event-envelope': 'event-1 / bookstore.book_created / schema 1\n{"id":"book-1","title":"Go in Action"}',
         'observability': 'Trace correlated: true\n/livez: 204\n/readyz: 204\nJSON log recorded: true',
         'authorization': 'read allowed\nwrite denied\nfeature enabled: write denied',
+        'platform-services': 'Tenant cache isolated: true\nTenant setting: "blue"\nJSON array setting: "mail"\nEffective quota: 10\nFeature cannot grant permission: true\nStored update despite notification failure: true\nVersion converged: true',
     }
     for sample, expected in samples.items():
         shutil.copyfile(ROOT / f'examples/basics/{sample}/main.go', project / 'main.go')
