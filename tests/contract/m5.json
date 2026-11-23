@@ -95,5 +95,13 @@
     "internal/scaffold/README.md",
     "cmd/pangolin/README.md",
     "tests/m5/README.md"
+  ],
+  "regression_tests": [
+    "github.com/cymondez/pangolin-framework/kernel/config:TestJSONConfiguration",
+    "github.com/cymondez/pangolin-framework/platform/settings:TestA65JSONConfiguration/json-flatmap",
+    "github.com/cymondez/pangolin-framework/platform/settings:TestA65JSONConfiguration/configuration-fallback",
+    "github.com/cymondez/pangolin-framework/platform/settings:TestA65JSONConfiguration/configuration-overrides-cache-update",
+    "github.com/cymondez/pangolin-framework/platform/settings:TestJSONConfigurationScopeInheritance",
+    "github.com/cymondez/pangolin-framework/platform/cache:TestScopedFillInvalidation"
   ]
 }

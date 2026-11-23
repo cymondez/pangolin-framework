@@ -22,6 +22,7 @@ def validate_report(report,commit,directory,mapping):
     if not {'m5-regression','template-source','cli-build','templates','cli-coverage'}<={c['name'] for c in report['commands']}:raise ValueError('M5 generated-template commands missing')
     for field,key in [('tests','unit_tests'),('integration_tests','integration_tests')]:
         if not set(mapping[key].values())<=set(report[field]):raise ValueError('M5 case evidence missing')
+    if not set(mapping.get('regression_tests',[]))<=set(report['tests']):raise ValueError('M5 JSON configuration regression missing')
     path='tests/contract/m5.json'
     if report['inputs'].get(path)!=m0.digest(ROOT/path):raise ValueError('M5 map changed')
     if not {'cli.out','templates.json'}<=report['artifacts'].keys():raise ValueError('M5 CLI/template raw evidence missing')

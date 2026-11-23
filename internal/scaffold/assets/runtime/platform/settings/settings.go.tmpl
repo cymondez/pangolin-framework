@@ -30,8 +30,9 @@ type Definition struct {
 	Validate func(json.RawMessage) error
 }
 type Snapshot struct {
-	Version uint64
-	Values  []json.RawMessage
+	Version  uint64
+	Values   []json.RawMessage
+	Revision string
 }
 type Provider interface {
 	Read(context.Context, []Layer, string) (Snapshot, error)
@@ -128,10 +129,11 @@ func (s *Service) Resolve(ctx context.Context, key string) (Result, error) {
 	}
 	if hit && cacheErr == nil {
 		var cached struct {
-			Result Result
-			Layers []Layer
+			Result   Result
+			Layers   []Layer
+			Revision string
 		}
-		if json.Unmarshal(raw, &cached) == nil && cached.Result.Version == snapshot.Version && slices.Equal(cached.Layers, layers) {
+		if json.Unmarshal(raw, &cached) == nil && cached.Result.Version == snapshot.Version && cached.Revision == snapshot.Revision && slices.Equal(cached.Layers, layers) {
 			return cached.Result, nil
 		}
 	}
@@ -145,9 +147,10 @@ func (s *Service) Resolve(ctx context.Context, key string) (Result, error) {
 	result.Candidates = append(result.Candidates, append(json.RawMessage(nil), d.Default...))
 	result.Value = append(json.RawMessage(nil), result.Candidates[0]...)
 	encoded, _ := json.Marshal(struct {
-		Result Result
-		Layers []Layer
-	}{result, layers})
+		Result   Result
+		Layers   []Layer
+		Revision string
+	}{result, layers, snapshot.Revision})
 	// Cache is optional acceleration; authoritative reads remain usable.
 	_ = s.cache.Set(ctx, r, encoded, s.ttl)
 	return result, nil

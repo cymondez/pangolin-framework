@@ -17,3 +17,7 @@ reader, err := config.NewLoader([]config.Rule{
 Runtime 使用 `StartupRules()` 要求 `uow.default_timeout`、`uow.cleanup_timeout`、`uow.hook_timeout` 為正 duration，以及 `uow.max_requires_new_depth` 為正整數。Adapter 必須另宣告自己的必要欄位；Bookstore 的實際組裝見 [bootstrap](../../examples/bookstore/bootstrap/README.md)。Secrets 只從可信環境／密鑰來源注入。
 
 驗證：`go test ./kernel/config ./kernel/runtime`。A47 涵蓋四層優先序、必要值、封存與敏感值遮罩。
+
+`ParseJSON(bytes)` 在 Configuration 層產生不可變 Reader：冒號階層、零起算十進位陣列 index（含多位數／巢狀陣列）、點號 literal、OrdinalIgnoreCase 比對與重複攤平 key 拒絕。依 .NET 10 JSON Configuration，null／空物件沒有字串值，空陣列為空字串，bool 為 True／False，number 保留原文字；支援 comments／trailing comma 與深度 64。空 container 最後賦值覆蓋既有值，後續 scalar 重複則拒絕，與原解析器一致。它不改寫既有 Source／Loader API；組裝者可直接把 Reader 注入 Settings Configuration Provider。測試由真實 JSON 輸入開始。
+
+對照來源：[.NET 10 JSON Configuration parser](https://github.com/dotnet/runtime/blob/v10.0.0/src/libraries/Microsoft.Extensions.Configuration.Json/src/JsonConfigurationFileParser.cs)。

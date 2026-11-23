@@ -215,6 +215,43 @@ func TestInvalidationEvents(t *testing.T) {
 		t.Fatal("event crossed scope")
 	}
 }
+
+func TestScopedFillInvalidation(t *testing.T) {
+	a, b := bound(t, "t", "org.organization", "a", "u", "1"), bound(t, "t", "org.organization", "b", "u", "1")
+	m, _ := NewMemory("app", "v", 8)
+	r := Resource{Module: "m", Kind: "r", ID: "id"}
+	entered, release, done := make(chan struct{}), make(chan struct{}), make(chan struct{})
+	go func() {
+		defer close(done)
+		_, _ = m.Load(b, r, time.Hour, func(context.Context) ([]byte, error) { close(entered); <-release; return []byte("b"), nil })
+	}()
+	<-entered
+	if err := m.Delete(a, r); err != nil {
+		t.Fatal(err)
+	}
+	close(release)
+	<-done
+	if value, hit, _ := m.Get(b, r); !hit || string(value) != "b" {
+		t.Fatal("another scope's fill was invalidated")
+	}
+	_ = m.Delete(b, r)
+	entered, release, done = make(chan struct{}), make(chan struct{}), make(chan struct{})
+	go func() {
+		defer close(done)
+		_, _ = m.Load(b, r, time.Hour, func(context.Context) ([]byte, error) { close(entered); <-release; return []byte("old"), nil })
+	}()
+	<-entered
+	_ = m.Delete(b, r)
+	value, err := m.Load(b, r, time.Hour, func(context.Context) ([]byte, error) { return []byte("new"), nil })
+	if err != nil || string(value) != "new" {
+		t.Fatal(value, err)
+	}
+	close(release)
+	<-done
+	if value, hit, _ := m.Get(b, r); !hit || string(value) != "new" {
+		t.Fatal("old fill overwrote new fill")
+	}
+}
 func TestCacheErrors(t *testing.T) {
 	if _, err := NewMemory("", "v", 1); err == nil {
 		t.Fatal("invalid config")

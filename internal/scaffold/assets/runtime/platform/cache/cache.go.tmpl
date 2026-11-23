@@ -52,10 +52,10 @@ type entry struct {
 	expires time.Time
 }
 type flight struct {
-	done  chan struct{}
-	value []byte
-	err   error
-	epoch uint64
+	done   chan struct{}
+	value  []byte
+	err    error
+	fenced bool
 }
 type Memory struct {
 	mu                   sync.Mutex
@@ -64,7 +64,6 @@ type Memory struct {
 	now                  func() time.Time
 	entries              map[string]entry
 	flights              map[string]*flight
-	epoch                uint64
 	stats                Stats
 	publisher            Publisher
 }
@@ -128,7 +127,9 @@ func (m *Memory) Set(ctx context.Context, r Resource, value []byte, ttl time.Dur
 	}
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	m.epoch++
+	if f := m.flights[k]; f != nil {
+		f.fenced = true
+	}
 	m.put(k, value, ttl)
 	return nil
 }
@@ -143,7 +144,9 @@ func (m *Memory) Delete(ctx context.Context, r Resource) error {
 		return err
 	}
 	m.mu.Lock()
-	m.epoch++
+	if f := m.flights[k]; f != nil {
+		f.fenced = true
+	}
 	delete(m.entries, k)
 	m.stats.Invalidations++
 	m.mu.Unlock()
@@ -173,7 +176,11 @@ func (m *Memory) Apply(ctx context.Context, event Invalidation) error {
 	}
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	m.epoch++
+	for key, f := range m.flights {
+		if key == k || strings.HasPrefix(key, k+"/") {
+			f.fenced = true
+		}
+	}
 	for key := range m.entries {
 		if key == k || strings.HasPrefix(key, k+"/") {
 			delete(m.entries, key)
@@ -199,7 +206,7 @@ func (m *Memory) Load(ctx context.Context, r Resource, ttl time.Duration, load f
 		m.mu.Unlock()
 		return append([]byte(nil), e.value...), nil
 	}
-	if f := m.flights[k]; f != nil {
+	if f := m.flights[k]; f != nil && !f.fenced {
 		m.stats.Coalesced++
 		m.mu.Unlock()
 		select {
@@ -209,7 +216,7 @@ func (m *Memory) Load(ctx context.Context, r Resource, ttl time.Duration, load f
 			return append([]byte(nil), f.value...), f.err
 		}
 	}
-	f := &flight{done: make(chan struct{}), epoch: m.epoch}
+	f := &flight{done: make(chan struct{})}
 	m.flights[k] = f
 	m.stats.Loads++
 	m.mu.Unlock()
@@ -231,10 +238,12 @@ func (m *Memory) finish(k string, f *flight, value []byte, err error, ttl time.D
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	f.value, f.err = append([]byte(nil), value...), err
-	if err == nil && f.epoch == m.epoch {
+	if err == nil && !f.fenced {
 		m.put(k, value, ttl)
 	}
-	delete(m.flights, k)
+	if m.flights[k] == f {
+		delete(m.flights, k)
+	}
 	close(f.done)
 }
 func (m *Memory) Stats() Stats { m.mu.Lock(); defer m.mu.Unlock(); return m.stats }
