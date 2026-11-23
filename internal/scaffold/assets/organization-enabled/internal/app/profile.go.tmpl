@@ -2,8 +2,8 @@ package app
 
 import (
 	"context"
-	"crypto/rand"
 	"database/sql"
+	"github.com/cymondez/pangolin-framework/events/distributed"
 	"github.com/cymondez/pangolin-framework/modules/organization"
 	orghttp "github.com/cymondez/pangolin-framework/modules/organization/transport/http"
 	"github.com/cymondez/pangolin-framework/persistence/idempotency"
@@ -40,7 +40,11 @@ func profile(_ context.Context, manager uow.UnitOfWorkManager, pool *pgxpool.Poo
 		}
 		return scope.ErrDenied
 	}), Effects: organization.EffectsFunc(func(c context.Context, v organization.Change) error {
-		if err := (audit.Recorder{}).Record(c, audit.Record{Action: v.Action, Resource: "organization", Result: "success", Trace: rand.Text()}); err != nil {
+		operation, err := effects.Operation(c)
+		if err != nil {
+			return err
+		}
+		if err := (audit.Recorder{}).Record(c, audit.Record{Action: v.Action, Resource: v.Target.ID, Result: "success", Trace: operation}); err != nil {
 			return err
 		}
 		return effects.Event(c, v.Action, v.Payload)
@@ -77,6 +81,13 @@ func profile(_ context.Context, manager uow.UnitOfWorkManager, pool *pgxpool.Poo
 }
 func profileMigrations() (map[string]fs.FS, []migration.ModuleMigrations) {
 	return map[string]fs.FS{"organization": organization.Migrations()}, []migration.ModuleMigrations{{Module: "organization", Directory: "organization", DependsOn: []string{"scope", "tenant"}}}
+}
+func profileSchemas() []distributed.Schema {
+	result := []distributed.Schema{}
+	for _, name := range []string{"enterprise.created", "organization.created", "organization.membership.changed", "organization.membership.removed", "enterprise.role.changed", "organization.transferred", "scope.suspended", "scope.active", "scope.archived", "organization.provider.imported"} {
+		result = append(result, distributed.Schema{Type: name, Version: 1})
+	}
+	return result
 }
 
 // Seeds are explicit disposable development data, never production migrations.

@@ -59,6 +59,13 @@ func main() {
 			}
 		}
 		var elevated, forced bool
+		var linked int
+		if err = db.QueryRow(ctx, `SELECT count(*) FROM pangolin_events.outbox o JOIN pangolin_audit.records a ON a.tenant_id=o.tenant_id AND a.scope_kind=o.scope_kind AND a.scope_id=o.scope_id AND a.trace=convert_from(o.envelope,'UTF8')::jsonb->>'correlation_id'`).Scan(&linked); err != nil {
+			panic(err)
+		}
+		if linked != expected {
+			panic("audit/event operation correlation missing")
+		}
 		var organizationSchema *string
 		if err = db.QueryRow(ctx, "SELECT rolsuper OR rolbypassrls FROM pg_roles WHERE rolname='pangolin_app'").Scan(&elevated); err != nil {
 			panic(err)

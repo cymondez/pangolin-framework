@@ -39,6 +39,14 @@ func TestA67(t *testing.T) {
 		if _, err = os.Stat(filepath.Join(dir, "framework", "modules", "organization")); !os.IsNotExist(err) {
 			t.Fatal("optional implementation emitted")
 		}
+		root := t.TempDir()
+		if code, out := invoke(t, root, "new", "bookstore-org", "--with", "organization"); code != 0 {
+			t.Fatal(out)
+		}
+		p, err = (CLI{Dir: filepath.Join(root, "bookstore-org")}).project()
+		if err != nil || p.Name != "bookstore-org" {
+			t.Fatal(p, err)
+		}
 	})
 	t.Run("module", func(t *testing.T) {
 		dir := create(t, false)

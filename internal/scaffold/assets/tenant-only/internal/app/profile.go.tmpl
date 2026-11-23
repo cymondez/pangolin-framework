@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"database/sql"
+	"github.com/cymondez/pangolin-framework/events/distributed"
 	"github.com/cymondez/pangolin-framework/persistence/idempotency"
 	"github.com/cymondez/pangolin-framework/persistence/migration"
 	"github.com/cymondez/pangolin-framework/persistence/uow"
@@ -23,4 +24,5 @@ func profile(_ context.Context, _ uow.UnitOfWorkManager, _ *pgxpool.Pool, author
 	return r, nil, err
 }
 func profileMigrations() (map[string]fs.FS, []migration.ModuleMigrations) { return nil, nil }
+func profileSchemas() []distributed.Schema                                { return nil }
 func seedProfile(context.Context, *sql.DB) error                          { return nil }

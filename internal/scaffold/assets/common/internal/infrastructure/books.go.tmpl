@@ -3,11 +3,14 @@ package infrastructure
 import (
 	"context"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/cymondez/pangolin-framework/events/distributed"
-	eventpg "github.com/cymondez/pangolin-framework/events/postgres"
+	"github.com/cymondez/pangolin-framework/events/outbox"
 	"github.com/cymondez/pangolin-framework/persistence/postgres"
+	"github.com/cymondez/pangolin-framework/persistence/uow"
 	"github.com/cymondez/pangolin-framework/platform/audit"
 	"github.com/cymondez/pangolin-framework/security/scope"
 	"github.com/jackc/pgx/v5"
@@ -56,20 +59,38 @@ func (Repository) Get(ctx context.Context, id string) (domain.Book, error) {
 	return b, err
 }
 
-type Effects struct{ Store *eventpg.Store }
+type Effects struct {
+	Publisher *outbox.Publisher
+	Manager   uow.UnitOfWorkManager
+}
+
+func (e Effects) Operation(ctx context.Context) (string, error) {
+	if e.Manager == nil {
+		return "", uow.ErrRequired
+	}
+	s, ok := e.Manager.Current(ctx)
+	if !ok {
+		return "", uow.ErrRequired
+	}
+	return s.ID(), nil
+}
 
 func (e Effects) Event(ctx context.Context, eventType string, payload json.RawMessage) error {
 	b, _ := scope.Current(ctx)
 	id := rand.Text()
-	event := distributed.Envelope{ID: id, Type: eventType, SchemaVersion: 1, OccurredAt: time.Now().UTC(), TenantID: b.Ref.TenantID, ScopeKind: b.Ref.Kind, ScopeID: b.Ref.ID, CorrelationID: id, CausationID: id, Producer: "bookstore", Payload: payload}
-	raw, err := distributed.Encode(event)
+	operation, err := e.Operation(ctx)
 	if err != nil {
 		return err
 	}
-	return e.Store.Append(ctx, event, raw)
+	event := distributed.Envelope{ID: id, Type: eventType, SchemaVersion: 1, OccurredAt: time.Now().UTC(), TenantID: b.Ref.TenantID, ScopeKind: b.Ref.Kind, ScopeID: b.Ref.ID, CorrelationID: operation, CausationID: operation, Producer: "bookstore", Payload: payload}
+	return e.Publisher.Publish(ctx, event)
 }
 func (e Effects) Created(ctx context.Context, b domain.Book) error {
-	if err := (audit.Recorder{}).Record(ctx, audit.Record{Action: "books.created", Resource: "book", Result: "success", Trace: rand.Text()}); err != nil {
+	operation, err := e.Operation(ctx)
+	if err != nil {
+		return err
+	}
+	if err := (audit.Recorder{}).Record(ctx, audit.Record{Action: "books.created", Resource: fmt.Sprintf("book:%x", sha256.Sum256([]byte(b.ID))), Result: "success", Trace: operation}); err != nil {
 		return err
 	}
 	payload, _ := json.Marshal(b)

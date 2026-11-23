@@ -9,3 +9,5 @@ v0.1.0 尚未發行時用 bundled runtime 的本機 replace，版本與 SHA-256 
 沒有常駐資源。CLI 擁有自己的 sql.DB，status 返回時關閉；呼叫者擁有 context／輸出。驗證：go test ./internal/scaffold、python scripts/template_bundle.py --check；完整生成物驗收由 scripts/m5_templates.py 執行。
 
 生成 API 將實際 Scope Registry 註冊進 Runtime DI，tenant／完整組織模組宣告 RequiredScopeKinds，封存時檢查能力。資料庫 profile marker 在 Ready 前核對；組織 DB 不能直接接到 tenant-only 生成物。生成契約另用獨立管理連線核對 book／Audit／Outbox／冪等結果數、FORCE RLS 與應用角色權限。
+
+專案名稱支援小寫字母、數字、底線及連字號（例如規範的 bookstore-org）；模組名稱使用合法 Go package 識別字。生成物驗收直接使用規範的 bookstore／bookstore-org 命令，實際建置含連字號的 module import path。

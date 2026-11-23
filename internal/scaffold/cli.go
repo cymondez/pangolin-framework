@@ -51,6 +51,7 @@ type CLI struct {
 }
 
 var namePattern = regexp.MustCompile(`^[a-z][a-z0-9_]{0,47}$`)
+var projectPattern = regexp.MustCompile(`^[a-z][a-z0-9_-]{0,47}$`)
 
 func (c CLI) Run(ctx context.Context, args []string) int {
 	if c.Out == nil {
@@ -132,6 +133,18 @@ func splitName(args []string) (string, []string, error) {
 	}
 	return args[0], args[1:], nil
 }
+func splitProjectName(args []string) (string, []string, error) {
+	if len(args) == 0 {
+		return "", nil, errors.New("project name required")
+	}
+	if args[0] == "--help" {
+		return "", nil, flag.ErrHelp
+	}
+	if !projectPattern.MatchString(args[0]) {
+		return "", nil, errors.New("project name must start with a lowercase letter and contain lowercase letters, digits, underscore or hyphen")
+	}
+	return args[0], args[1:], nil
+}
 func (c CLI) project() (Project, error) {
 	var p Project
 	info, err := os.Lstat(filepath.Join(c.Dir, "pangolin.json"))
@@ -142,7 +155,7 @@ func (c CLI) project() (Project, error) {
 	if err != nil {
 		return p, errors.New("run inside a pangolin project")
 	}
-	if json.Unmarshal(raw, &p) != nil || !namePattern.MatchString(p.Name) || p.Version != Version || p.Profile != "tenant-only" && p.Profile != "organization-enabled" || p.Modules == nil {
+	if json.Unmarshal(raw, &p) != nil || !projectPattern.MatchString(p.Name) || p.Version != Version || p.Profile != "tenant-only" && p.Profile != "organization-enabled" || p.Modules == nil {
 		return p, errors.New("invalid or incompatible pangolin.json")
 	}
 	if err = validateModules(p.Modules); err != nil {
@@ -208,7 +221,7 @@ func (c CLI) safeDirectory(relative string) error {
 	return nil
 }
 func (c CLI) newProject(args []string) error {
-	name, rest, err := splitName(args)
+	name, rest, err := splitProjectName(args)
 	if err != nil {
 		if errors.Is(err, flag.ErrHelp) {
 			fmt.Fprintln(c.Out, "new NAME --template modular-monolith [--with organization]")

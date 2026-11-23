@@ -11,6 +11,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/cymondez/pangolin-framework/events/distributed"
 	"github.com/cymondez/pangolin-framework/events/outbox"
 	eventpg "github.com/cymondez/pangolin-framework/events/postgres"
 	"github.com/cymondez/pangolin-framework/kernel/config"
@@ -65,6 +66,16 @@ type Application struct {
 	http.Handler
 	scopes *scope.Registry
 }
+type requestError struct {
+	cause  error
+	status int
+	code   string
+}
+
+func (e requestError) Error() string   { return e.code }
+func (e requestError) Unwrap() error   { return e.cause }
+func (e requestError) HTTPStatus() int { return e.status }
+func (e requestError) Code() string    { return e.code }
 
 func Handler(ctx context.Context, pool, authorityPool *pgxpool.Pool) (*Application, error) {
 	db, err := openSQL(os.Getenv("PANGOLIN_DSN"))
@@ -90,10 +101,6 @@ func Handler(ctx context.Context, pool, authorityPool *pgxpool.Pool) (*Applicati
 	if installedProfile != profileName {
 		return nil, scope.ErrMigrationRequired
 	}
-	manager, err := uow.NewManager(&postgres.Resource{Pool: pool}, uow.DefaultOptions{DefaultTimeout: 5 * time.Second, CleanupTimeout: 2 * time.Second, HookTimeout: time.Second, MaxRequiresNewDepth: 4})
-	if err != nil {
-		return nil, err
-	}
 	authority := tenantpg.Authority{Pool: authorityPool}
 	tenants, err := tenancy.NewResolver(authn.Identity, authority)
 	if err != nil {
@@ -104,7 +111,20 @@ func Handler(ctx context.Context, pool, authorityPool *pgxpool.Pool) (*Applicati
 	if err != nil {
 		return nil, err
 	}
-	effects := infrastructure.Effects{Store: eventStore}
+	schemas := append([]distributed.Schema{{Type: "bookstore.book.created", Version: 1, Required: []string{"id", "title"}}}, profileSchemas()...)
+	serializer, err := distributed.NewRegistry(schemas...)
+	if err != nil {
+		return nil, err
+	}
+	publisher, err := outbox.NewPublisher(serializer, eventStore)
+	if err != nil {
+		return nil, err
+	}
+	manager, err := uow.NewManager(&eventpg.Resource{Base: &postgres.Resource{Pool: pool}, Publisher: publisher}, uow.DefaultOptions{DefaultTimeout: 5 * time.Second, CleanupTimeout: 2 * time.Second, HookTimeout: time.Second, MaxRequiresNewDepth: 4})
+	if err != nil {
+		return nil, err
+	}
+	effects := infrastructure.Effects{Publisher: publisher, Manager: manager}
 	var scopes *scope.Registry
 	copyBytes := func(b []byte) ([]byte, error) { return append([]byte(nil), b...), nil }
 	idem, err := idempotency.New(idempotency.Config{MaxKeyBytes: 128, MaxBodyBytes: 1 << 20, RetryWindow: 24 * time.Hour, Retention: 168 * time.Hour, Protect: copyBytes, Unprotect: copyBytes}, func(c context.Context, a string) error { return scopes.Authorize(c, a) })
@@ -153,17 +173,23 @@ func Handler(ctx context.Context, pool, authorityPool *pgxpool.Pool) (*Applicati
 			}, Decode: func(raw []byte) (any, error) {
 				if route.read {
 					if len(raw) != 0 {
-						return nil, scope.ErrInvalid
+						return nil, requestError{scope.ErrInvalid, 400, "MALFORMED_REQUEST"}
 					}
 					return nil, nil
 				}
 				var b domain.Book
 				d := json.NewDecoder(bytes.NewReader(raw))
 				d.DisallowUnknownFields()
-				if d.Decode(&b) != nil || !json.Valid(raw) || key == "" {
-					return nil, scope.ErrInvalid
+				if err := d.Decode(&b); err != nil {
+					return nil, requestError{err, 400, "MALFORMED_REQUEST"}
 				}
-				return b, b.Validate()
+				if !json.Valid(raw) || key == "" {
+					return nil, requestError{scope.ErrInvalid, 400, "MALFORMED_REQUEST"}
+				}
+				if err := b.Validate(); err != nil {
+					return nil, requestError{err, 422, "VALIDATION_FAILED"}
+				}
+				return b, nil
 			}, Work: func(c context.Context, dto any) (any, error) {
 				if route.read {
 					return books.Get(c, r.PathValue("id"))

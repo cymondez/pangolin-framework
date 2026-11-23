@@ -28,7 +28,7 @@ def validate_report(report,commit,directory,mapping):
     data=m0.load(directory/'templates.json')
     if data['status']!='passed' or data['version']!='0.1.0' or {p['profile'] for p in data['profiles']}!={'tenant-only','organization-enabled'}:raise ValueError('both generated profiles required')
     for p in data['profiles']:
-        if not p['build_test_start'] or not p['custom_migration_applied'] or not {'write-tenant-a','write-tenant-b','tenant-hint-denied','owner-dto-rejected','key-conflict'}<=set(p['checks']):raise ValueError('generated security/UOW contracts missing')
+        if not p['build_test_start'] or not p['custom_migration_applied'] or not {'write-tenant-a','write-tenant-b','tenant-hint-denied','owner-dto-rejected','key-conflict','semantic-validation'}<=set(p['checks']):raise ValueError('generated security/UOW contracts missing')
         if p['profile']=='organization-enabled' and not {'org-write-2','org-write-3','complete-control-plane','profile-downgrade-blocked'}<=set(p['checks']):raise ValueError('complete organization template not exercised')
         if not p['reconciliation']['force_rls'] or not p['reconciliation']['non_privileged_app'] or p['reconciliation']['organization_schema']!=(p['profile']=='organization-enabled'):raise ValueError('generated privilege/RLS reconciliation failed')
         expected=6 if p['profile']=='organization-enabled' else 2

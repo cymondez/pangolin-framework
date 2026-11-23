@@ -14,7 +14,7 @@ def run(output,project):
     if not re.fullmatch(r'pangolin-m5-[a-z0-9-]+',project):raise ValueError('dedicated M5 project required')
     output=Path(output).resolve();reports=[]
     for name in ('tenant','organization'):
-        directory=output/'templates'/name
+        directory=output/'templates'/('bookstore-org' if name=='organization' else 'bookstore')
         owned=project+'-template-'+name
         compose=['docker','compose','-p',owned,'-f',str(directory/'compose.yaml')]
         commands=[]

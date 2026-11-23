@@ -74,11 +74,12 @@ def run(output,cli):
     execute(['go','build','-o',fixture,'./internal/testkit/cmd/template-db'])
     reports=[]
     for name,org in [('tenant',False),('organization',True)]:
-        directory=work/name
+        project_name='bookstore-org' if org else 'bookstore'
+        directory=work/project_name
         if directory.exists():raise ValueError('template output must be a clean runner directory')
-        execute([cli,'new',name,*(['--with','organization'] if org else [])],cwd=work)
+        execute([cli,'new',project_name,'--template','modular-monolith',*(['--with','organization'] if org else [])],cwd=work)
         before={p.relative_to(directory).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in directory.rglob('*') if p.is_file()}
-        execute([cli,'new',name],cwd=work,expect=1)
+        execute([cli,'new',project_name],cwd=work,expect=1)
         if before!={p.relative_to(directory).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in directory.rglob('*') if p.is_file()}:raise ValueError('new reentry corrupted output')
         execute([cli,'module','add','catalog','--depends','persistence,authorization'],cwd=directory)
         execute([cli,'migrate','create','add_catalog','--module','catalog'],cwd=directory)
@@ -126,7 +127,10 @@ def run(output,cli):
                 value=check('read-'+tenant,'GET','/books/same-book',tenant)
                 if value['title']!=tenant:raise ValueError('tenant data crossed owner')
             check('key-conflict','POST','/books',body={'id':'changed','title':'changed'},headers={'Idempotency-Key':'same-key'},status=409)
-            check('owner-dto-rejected','POST','/books',body={'id':'x','title':'x','tenant_id':'tenant-b'},headers={'Idempotency-Key':'body-owner'},status=400)
+            malformed=check('owner-dto-rejected','POST','/books',body={'id':'x','title':'x','tenant_id':'tenant-b'},headers={'Idempotency-Key':'body-owner'},status=400)
+            if malformed['code']!='MALFORMED_REQUEST':raise ValueError('malformed request code mismatch')
+            invalid=check('semantic-validation','POST','/books',body={'id':'invalid','title':''},headers={'Idempotency-Key':'semantic'},status=422)
+            if invalid['code']!='VALIDATION_FAILED':raise ValueError('semantic validation code mismatch')
             check('tenant-hint-denied','GET','/books/same-book',headers={'X-Tenant-ID':'tenant-b'},status=403)
             if request(base,'/books/same-book')[0]!=401:raise ValueError('unauthenticated request accepted')
             if org:
@@ -143,7 +147,7 @@ def run(output,cli):
             else:check('unsupported-org','GET','/books/same-book',headers={'X-Scope-Kind':'org.organization','X-Scope-ID':'00000000-0000-4000-8000-000000000002'},status=400)
             reconciliation=json.loads(execute([fixture,'reconcile',db,name]))
             if org:
-                tenant_dir=work/'tenant';tenant_api=tenant_dir/('api.exe' if os.name=='nt' else 'api')
+                tenant_dir=work/'bookstore';tenant_api=tenant_dir/('api.exe' if os.name=='nt' else 'api')
                 execute([tenant_api],cwd=tenant_dir,env=environment,expect=1,timeout=8)
                 checks.append('profile-downgrade-blocked')
             reports.append({'profile':'organization-enabled' if org else 'tenant-only','checks':checks,'runtime_files':len(manifest),'custom_migration_applied':True,'build_test_start':True,'reconciliation':reconciliation})
