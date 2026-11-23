@@ -17,6 +17,8 @@ description: 用 Goose 與全域部署鎖套用 schema，讓 API 啟動只做相
 | 可選組織治理 | organization.Migrations() |
 | 可靠事件 | events/postgres.Migrations |
 | Command 冪等 | idempotency.Migrations |
+| 背景工作 | platform/jobs/postgres.Migrations |
+| 事件容量 | events/postgres.CapacityMigrations，子目錄 capacity_migrations |
 
 tenant-only 不載入 Organization migration。使用 `migration.JoinFS` 將來源掛到各自目錄，再以 `ModuleMigrations{Module, Directory, DependsOn}` 宣告相依。版本號在整個應用唯一，依賴模組的版本須早於使用者；缺依賴、循環、重複或倒序在 DDL 前失敗。
 

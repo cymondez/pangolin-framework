@@ -48,3 +48,11 @@ Required 共用同一交易，內層失敗後，外層捕捉錯誤也不會讓�
 ## UOW_BUSY、UOW_CLOSED 或 UOW_RESOURCE_MISMATCH
 
 同一 Executor 只依序執行 SQL，Query 的 Rows 必須關閉，QueryRow 必須 Scan。callback 結束後使用新操作的 context；同一根操作不要混用不同資料庫 key。捕捉這些錯誤不會讓已失敗的根交易恢復提交。
+
+## 收到 JOB_CAPACITY_EXCEEDED 或 EVENT_CAPACITY_EXCEEDED
+
+容量已滿，HTTP 回 429；保留同一冪等鍵並退避。查看 pending／dead、retention 與 Pool，先讓積壓排空或按保留政策清理成功終態；不要刪除仍受重送保證的資料。見[容量與恢復](../platform/operations.md)。
+
+## Job 仍是 pending 或進入 dead
+
+核對 DueAt／Deadline、schema version、目前服務 grant、可用 Scope Provider 與 MaxAttempts。代理工作另需使用者目前資格；不要重用已結束的 HTTP context。人工重送只接受仍在 Deadline 內的 dead，並在目前 owner 的授權 UOW 留下 Audit。見[背景工作](../platform/jobs.md)。

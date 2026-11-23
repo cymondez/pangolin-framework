@@ -31,3 +31,9 @@ JWT audience 為 `pangolin-bookstore`。請將密碼與 Token 放在可信環境
 ## 自己的應用設定
 
 你的應用不必使用 Bookstore 的環境變數名稱。使用 [Configuration](../fundamentals/configuration.mdx)將你選擇的名稱映射成 Source.Values，並提供必要欄位與格式驗證。
+
+## Jobs 與觀測
+
+Jobs 的 Lease／執行／清理期限可先用 30s／20s／5s，並行 4、認領上限 32、重試 8 次、退避 250ms–30s、jitter 0.2、容量 100000、retention 720h。這些是明示起始設定，仍需依自己的負載與保留窗口量測。完整欄位與組裝見[背景工作](../platform/jobs.md)。
+
+OpenTelemetry Provider 由應用建立，部署明示 sampling、exporter 與 log／trace retention；Health Timeout 可從 2s 開始。定期採集 queue Stats 與 Pool，詳見[觀測](../platform/observability.mdx)。

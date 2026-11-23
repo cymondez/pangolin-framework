@@ -1,0 +1,62 @@
+---
+title: 觀測與健康檢查
+description: 用明確注入的 OpenTelemetry 追查操作，提供存活與必要相依的健康檢查。
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import source from '../_snippets/observability.go';
+
+本頁先用不需要資料庫的完整程式，觀察 Trace Context、JSON log 與 Health。完成後再把同一組 Telemetry 接到 HTTP、Use Case、SQL 與可靠事件。
+
+## 執行範例
+
+前置需求是 Go 1.27.4，以及已依[安裝頁](../getting-started/installation.md)建立的獨立 Go 專案與本機 replace。請在自己的專案目錄，用以下完整程式取代 `main.go`：
+
+<CodeBlock language="go" title="main.go">{source}</CodeBlock>
+
+執行：
+
+```powershell
+go mod tidy
+go run .
+```
+
+預期輸出：
+
+```text
+Trace correlated: true
+/livez: 204
+/readyz: 204
+JSON log recorded: true
+```
+
+程式以記憶體 writer 檢查 JSON log，沒有開啟網路 listener；結束時自行關閉 SDK Provider。Trace Context 還原後保留同一 trace ID，但不包含身分、租戶權限或任意 baggage。
+
+## 接到自己的應用
+
+`observability.New(tracerProvider, meterProvider, writer, module)` 使用你建立的 Provider。部署時替 SDK 加上適合的 exporter，明示 sampling、trace／log retention 與有界 shutdown；框架不偷偷建立全域 Provider。範例採 100% sampling 方便理解，正式環境依流量與保留成本調整。
+
+| 位置 | 接線方式 |
+|---|---|
+| HTTP | `telemetry.HTTP(handler)` 建立 operation ID、讀取 W3C traceparent、記錄結果與延遲 |
+| Use Case | 在帶有 `telemetry.Context(ctx)` 的 context 呼叫 application.Command／Query；自訂邊界可用 Start |
+| UOW | Within 自動使用 context 中的 Telemetry，保留已確認 Commit outcome |
+| PostgreSQL | 建立 Pool 前將 `poolConfig.ConnConfig.Tracer` 設為 telemetry；SQL 和 args 不會被記錄 |
+| Outbox／Consumer | 驅動 Worker 時傳入 telemetry.Context(workerContext)，持久化 Envelope 的 traceparent 連回原操作 |
+| Jobs | Bind 完成目前服務授權後回傳 telemetry.Context(bound)，Worker 保留 Job ID、OperationID 與 TraceParent |
+
+同一操作的 Trace／log 以 operation ID 關聯；可靠事件另保留 Event ID，工作保留 Job ID。必要 Audit 使用獨立的稽核服務，不能因為取樣沒有收集 Trace 就省略。
+
+## Metrics 與告警
+
+框架記錄固定 vocabulary 的操作數、延遲和結果。從 queue Store 的 Stats 定期讀取 pending／processing／dead／oldest，再呼叫 `telemetry.Queue(ctx, name, pending, dead, oldest, countLimit, ageLimit)`。name 只接受 outbox、inbox、jobs。達到積壓數或最老時間閾值、或出現 dead 時，寫入 `QUEUE_PRESSURE` 告警。
+
+`telemetry.Pool(ctx, stat.AcquiredConns(), stat.MaxConns())` 記錄全域 Pool 使用量。Metrics 不把每個 Tenant、Organization、Principal 或 Event ID 當 label；需要定位單一操作時使用帶安全 ID 的 log／Trace。不要把 token、payload、SQL、原始錯誤或私人資料塞入觀測內容。
+
+## 存活與 Readiness
+
+`Health{Ready: host.Ready, Required: checks, Timeout: 2*time.Second}` 可掛到 `/livez` 與 `/readyz`。Required 只放該程序接單必須正常的相依，例如 DB Ping；check 必須遵守 context。
+
+`/livez` 不查外部服務。`/readyz` 要同時滿足 Host Ready 與必要相依；任一失敗回 503。純 API 使用可選 Broker 時，Broker 短暫離線不必直接讓所有 API 不 Ready，應觀察 Outbox lag 與容量。Shutdown 先撤回 Ready，再停止認領並 Drain。
+
+下一步：[容量、停機與恢復](operations.md)，為積壓與重試訂定處置方式。

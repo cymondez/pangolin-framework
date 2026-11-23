@@ -23,6 +23,7 @@ cd pangolin-framework/examples/basics
 | 透過介面注入服務 | `go run ./dependency-injection` | `Hello, Alice!` | [DI 範例](../fundamentals/dependency-injection.mdx) |
 | 管理多模組啟停 | `go run ./lifecycle` | 啟動 storage、books，再反序停止 | [啟停範例](../fundamentals/application-startup.mdx) |
 | 判斷權限與明確拒絕 | `go run ./authorization` | read allowed、write denied | [授權範例](../security/authorization.mdx) |
+| 追蹤操作與健康檢查 | `go run ./observability` | Trace correlated、livez／readyz 與 JSON log | [觀測範例](../platform/observability.mdx) |
 | 建立與讀回事件訊息 | `go run ./event-envelope` | 事件 ID、型別、schema 與書籍 JSON | [事件範例](../events/integration-events.mdx) |
 
 若你設定過 `APP_NAME`，設定／問候範例會使用該值；移除它即可看到表中的預設輸出。

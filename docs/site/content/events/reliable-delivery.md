@@ -24,8 +24,8 @@ import (
 )
 
 func EventServices(appPool, queuePool *pgxpool.Pool, registry *distributed.Registry,
-    bus *local.Bus, retry outbox.Policy) (uow.UnitOfWorkManager, *outbox.Publisher, *eventpg.Store, error) {
-    store, err := eventpg.NewStore(queuePool, retry)
+    bus *local.Bus, retry outbox.Policy, capacity eventpg.Capacity) (uow.UnitOfWorkManager, *outbox.Publisher, *eventpg.Store, error) {
+    store, err := eventpg.NewBoundedStore(queuePool, retry, capacity)
     if err != nil { return nil, nil, nil, err }
     publisher, err := outbox.NewPublisher(registry, store)
     if err != nil { return nil, nil, nil, err }
@@ -41,7 +41,7 @@ func EventServices(appPool, queuePool *pgxpool.Pool, registry *distributed.Regis
 }
 ```
 
-將檔案放進自己的 Go module，執行 `go build ./...` 可檢查組裝。建立 Registry 時明示註冊 `distributed.Schema{Type, Version, Required, Validate}`；已發布的 type／version 不重寫。retry 的 Lease、SendTimeout、RetryInitial、RetryMax、MaxAttempts 都需正值，JitterFraction 為 0–1。
+將檔案放進自己的 Go module，執行 `go build ./...` 可檢查組裝。容量需明示正整數的 Outbox／Inbox 上限，部署時合併 CapacityMigrations 的 capacity_migrations 子目錄；滿額回 429，整筆業務交易回滾。建立 Registry 時明示註冊 `distributed.Schema{Type, Version, Required, Validate}`；已發布的 type／version 不重寫。retry 的 Lease、SendTimeout、RetryInitial、RetryMax、MaxAttempts 都需正值，JitterFraction 為 0–1。
 
 在可寫 UOW callback 內先保存業務，再 `publisher.Publish(ctx, envelope)`。Envelope 的 Tenant／完整 Scope 必須等於可信 binding。沒有可寫交易或沒有上述 Resource 接線就拒絕，不會改成直接 Send。
 
@@ -63,12 +63,12 @@ NATS Stream 必須使用 FileStorage，subject／stream／durable consumer 需�
 
 `inbox.NewWorker(store, manager, group, bind, handler, maxAttempts, retry)` 的 bind 每次建立新的服務 context，重新驗證當前 Scope。Worker 在同一業務交易持有 Inbox 行鎖，執行 handler 與 processed；授權拒絕、已確認回滾都有界延期／隔離，避免無法處理的第一筆阻塞後續工作。Commit Unknown 不宣稱失敗或重設狀態。
 
-Event／Job 可用 `distributed.Execution.Run` 重新綁定服務身分與 Scope，並在新根 admission 後重驗 action；代理型 Job 另驗使用者目前資格。這個執行契約沒有提供完整持久化 Job 排程器。
+Event／Job 可用 `distributed.Execution.Run` 重新綁定服務身分與 Scope，並在新根 admission 後重驗 action；代理型 Job 另驗使用者目前資格。持久化排程與 Worker 使用[背景工作服務](../platform/jobs.md)。
 
 ## 重送與保留
 
 配送是 at-least-once。外部副作用使用 `inbox.ExternalKey(group, event, operation)` 的穩定鍵及支援冪等的 Provider，或再寫 Outbox；Inbox 不保證端到端 exactly-once。
 
-人工重送透過 `eventpg.NewMaintenance(...).ReplayDead`，要求可信 owner、獨立 Permission 與同交易 Audit，保留 EventID、版本及完整 Envelope；processed 不能重設。Purge 只清理超期 sent／processed，pending／dead 保留。Inbox retention 需涵蓋 Broker 保留與人工重送窗口。
+重送控制面使用 queue role 的獨立維運 UOW；仍須先授權並使用完整 owner 條件，此 pool 不交給一般業務 Repository。人工重送透過 `eventpg.NewMaintenance(...).ReplayDead`，要求可信 owner、獨立 Permission 與同交易 Audit，保留 EventID、版本及完整 Envelope；processed 不能重設。Purge 只清理超期 sent／processed，pending／dead 保留。Inbox retention 需涵蓋 Broker 保留與人工重送窗口。
 
 下一步：[Command 冪等](../data/idempotency.md)，處理使用者重試與提交結果未知。

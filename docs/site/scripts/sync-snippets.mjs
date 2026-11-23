@@ -5,8 +5,8 @@ import {fileURLToPath} from 'node:url';
 const site = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const snippets = path.join(site, 'content/_snippets');
 mkdirSync(snippets, {recursive: true});
-for (const sample of ['hello', 'greeting-app', 'configuration', 'dependency-injection', 'lifecycle', 'event-envelope', 'transactions', 'authorization']) {
+for (const sample of ['hello', 'greeting-app', 'configuration', 'dependency-injection', 'lifecycle', 'event-envelope', 'transactions', 'authorization', 'observability']) {
   copyFileSync(path.resolve(site, '../../examples/basics', sample, 'main.go'), path.join(snippets, `${sample}.go`));
 }
 // Local imports let Docusaurus freeze the code assets together with each manual.
-console.log('Synced eight current examples; release snapshots retain their own code assets.');
+console.log('Synced nine current examples; release snapshots retain their own code assets.');
