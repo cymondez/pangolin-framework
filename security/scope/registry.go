@@ -45,7 +45,7 @@ func NewRegistry(identity IdentityReader, providers ...ScopeProvider) (*Registry
 			return nil, ErrInvalid
 		}
 		for _, kind := range p.Kinds() {
-			if kind == "" || kind == "*" {
+			if kind == "" || kind == "*" || strings.TrimSpace(kind) != kind {
 				return nil, ErrInvalid
 			}
 			if _, ok := r.providers[kind]; ok {
@@ -86,7 +86,7 @@ func (r *Registry) Bind(ctx context.Context, ref ScopeRef) (context.Context, err
 	if b.Ref != ref || b.Principal != p || b.AuthorityRevision == "" {
 		return nil, ErrDenied
 	}
-	return context.WithValue(ctx, bindingKey{}, b), nil
+	return context.WithValue(context.WithValue(ctx, admitterKey{}, r), bindingKey{}, b), nil
 }
 func (r *Registry) Current(ctx context.Context) (ScopeBinding, bool) { return Current(ctx) }
 func (r *Registry) Authorize(ctx context.Context, permission string) error {
@@ -101,6 +101,13 @@ func (r *Registry) Authorize(ctx context.Context, permission string) error {
 	return p.Authorize(ctx, b, permission)
 }
 func (r *Registry) Admit(ctx context.Context, b ScopeBinding) (ScopeBinding, error) {
+	if ctx == nil {
+		return ScopeBinding{}, ErrDenied
+	}
+	principal, tenant, trusted := r.identity(ctx)
+	if !trusted || principal != b.Principal || tenant != b.Ref.TenantID || Validate(b.Ref) != nil {
+		return ScopeBinding{}, ErrDenied
+	}
 	p := r.providers[b.Ref.Kind]
 	if p == nil {
 		return ScopeBinding{}, ErrKindUnsupported
@@ -136,9 +143,16 @@ func (p TenantScopeProvider) Authorize(ctx context.Context, b ScopeBinding, perm
 	if permission == "" || p.Permission == nil {
 		return ErrDenied
 	}
-	_, err := p.Resolve(ctx, b.Principal, b.Ref)
+	current, bound := Current(ctx)
+	if !bound || current != b {
+		return ErrDenied
+	}
+	latest, err := p.Resolve(ctx, b.Principal, b.Ref)
 	if err != nil {
 		return err
+	}
+	if latest != b {
+		return ErrDenied
 	}
 	return p.Permission(ctx, b, permission)
 }

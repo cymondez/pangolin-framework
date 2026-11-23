@@ -48,3 +48,15 @@ Native production build 與 Docker build 都通過 27 頁、1233 個站內連結
 瀏覽器實際讀取新交易教學的前置條件、命令、輸出與完整程式；搜尋 RequiresNew 出現新教學與疑難排解，透過側邊欄到達資源 Scope 指南，確認完整治理尚未提供的邊界說明。兩頁在預設桌面 viewport 無頁面水平溢出；未因本次文字更新重做手機／配色測試。截圖為 artifacts/docs/m2-transactions.jpg 與 m2-scopes.jpg，摘要為 artifacts/docs/m2-qa.json。
 
 既有 pangolin-docs 服務已重建為更新後內容，維持 `http://localhost:18088/`。
+
+## 授權、治理與可靠事件增量走查（2026-11-23）
+
+在 M3 Runtime 來源 `7f17ecc76a84e65ec4d64fb39b0900fb6bb50ba7` 通過乾淨同版雙平台 Gate 後，新增授權、組織治理、HTTP／稽核、可靠配送、Command 冪等與部署遷移六篇使用指南；同步 Tenant／Scope、相容性、升級、啟動與範例索引。公開導覽仍以套件使用者為讀者，不加入內部里程碑或驗收入口。
+
+`python scripts/docs_examples.py --database` 在新的獨立 consumer module 實際執行八份完整程式，含 authorization 的三行拒絕／允許輸出與真實 PostgreSQL 交易五項結果。原手冊的 Service／Repository／Organization 組裝，以及新增冪等 Service、事件 Resource 與部署 Runner 完整檔案均編譯通過。結果保存在 `artifacts/docs/beginner-examples.json`。
+
+Native／Docker production build 都通過 33 頁、1559 個站內連結／錨點及一份搜尋索引。原生版本快照、對應頁切換、current／封存內容與程式碼／搜尋隔離、子路徑回歸通過 62 頁、3095 個連結及兩份索引；正式 checkout 沒有建立發行快照。Native 建置首次遇到輸出目錄 EPERM，以相同命令取得必要執行權限後完整通過，沒有修改 ACL。
+
+瀏覽器從首頁的使用範例進入新授權指南，確認操作目錄、完整 main.go、預期輸出、教學身分的邊界與下一步。搜尋 ownerless 能找到組織治理並跳到相關章節，實際讀取 ownerless／Recover 與替換 Provider 的說明，再進入可靠配送指南確認前置條件及完整組裝檔。桌面 viewport 1280px、documentWidth 1265px，沒有頁面水平溢出；本次未重做手機與配色測試。摘要保存於 `artifacts/docs/m3-qa.json`。
+
+本次專用 PostgreSQL／NATS／IdP、network、兩個測試 volumes、Linux runner cache volume 及專用 IdP 映像已核對歸屬後清除，其他專案未受影響。既有 docs 服務已更新且健康，持續提供 `http://localhost:18088/`。

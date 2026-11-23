@@ -17,3 +17,5 @@ RLS 與 schema 權限由部署／fixture 建立；此 Resource 不執行 DDL、�
 驗證：依 [M1 指南](../../docs/guides/m1-development.md) 設定服務後執行 `go test -tags=integration ./tests/m1`，涵蓋真實提交、取消 Begin、第二次 SQL 失敗、RLS、過期 context 與併發拒絕。
 
 已消耗的資料庫錯誤、busy 與資源不相容即使被呼叫端捕捉仍使根回滾。清理不安全的連線以 Hijack／關閉移出 Pool；只有收到 PostgreSQL 明確回滾證據才分類 RolledBack，無法確認的 Commit 保留 Unknown。Resource 不支持非交易 RLS 操作。驗收見 [M2 指南](../../docs/guides/m2-development.md)。
+
+`ScopeInventory{Pool,Tables}.RequiredKinds` 是部署啟動的專用 metadata Port，descriptor 明示 Schema／Table／KindColumn，僅列出 owner Kind。普通 app 連線若受 RLS 過濾就不能證明完整性，Adapter 直接拒絕。組裝者需提供完整 metadata 可見性且限制其查詢權限，或實作受控治理函式的 Inventory；不把這條連線交給業務 Repository。任何表缺漏／讀取錯誤均阻擋 Ready。

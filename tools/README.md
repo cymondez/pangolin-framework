@@ -13,3 +13,5 @@
 | 測試 IdP 建置、環境 smoke、生成計畫 | [scripts 說明](../scripts/README.md) |
 
 完整 Gate 需要固定版本服務、連線變數與 sqlc，見 [M2 指南](../docs/guides/m2-development.md)。`check.ps1`／`check.sh` 是維護者的統一驗證入口；低階支援程式不另包成產品 CLI。生成物與 report 寫入 artifacts／.cache，不加入手寫 source 目錄。
+
+M3 累積 Gate 與雙平台 runner 見 [M3 開發指南](../docs/guides/m3-development.md)。工具不把模組可編譯、文件盤點或單一案例成功當作 Runtime 驗收。

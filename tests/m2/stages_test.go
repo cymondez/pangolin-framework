@@ -80,7 +80,11 @@ func TestM2BeforeCommitFaults(t *testing.T) {
 				t.Fatal(e)
 			}
 			invoke := func() error {
-				return m.Within(binding(t), uow.Options{Mode: uow.ReadWrite, Timeout: 30 * time.Millisecond}, func(ctx context.Context) error { calls++; return insert(ctx, id) })
+				timeout := time.Second
+				if mode == "deadline" {
+					timeout = 30 * time.Millisecond
+				}
+				return m.Within(binding(t), uow.Options{Mode: uow.ReadWrite, Timeout: timeout}, func(ctx context.Context) error { calls++; return insert(ctx, id) })
 			}
 			if mode == "panic" {
 				func() {

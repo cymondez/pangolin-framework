@@ -109,6 +109,7 @@ def gate(commit):
 
 def verify(args, increment=None):
     milestone=increment["milestone"] if increment else "M1"
+    increments=([m0.load(ROOT/"tests/contract/m2.json"),increment] if milestone=="M3" else [increment]) if increment else []
     commit=m0.revision();source=source_hash();dirty=not m0.clean()
     platform=json.loads(m0.command(["go","env","-json","GOOS","GOARCH","GOVERSION","CGO_ENABLED"]))
     if platform["GOVERSION"]!="go"+m0.load(ROOT/"deploy/toolchain.json")["go"]:raise ValueError("unexpected toolchain")
@@ -119,16 +120,20 @@ def verify(args, increment=None):
     report={"milestone":milestone,"commit":commit,"source_sha256":source,"working_tree_dirty":dirty,"baseline":"v1.3","platform":platform,"seed":20261121,"project":args.project,"status":"failed","commands":[]}
     mapping=m0.load(ROOT/"tests/contract/m1.json");validate_mapping(mapping)
     check_module_docs(mapping)
-    if increment: check_module_docs(increment)
+    for extra in increments: check_module_docs(extra)
     report["inputs"]={name:m0.digest(ROOT/name) for name in ("VERSION","go.mod","go.sum","deploy/toolchain.json","deploy/profiles/local.json","deploy/dependencies.json","tests/fixtures/manifest.json","tests/contract/api.json","tests/contract/m1.json")}
-    if increment: report["inputs"]["tests/contract/m2.json"]=m0.digest(ROOT/"tests/contract/m2.json")
+    for extra in increments:
+        name="tests/contract/"+extra["milestone"].lower()+".json"
+        report["inputs"][name]=m0.digest(ROOT/name)
     def execute(argv,name=None):
         index=len(report["commands"]);name=name or "e2e-step";log=output/f"{index:02d}-{name}.log";started=time.monotonic()
         result=subprocess.run(argv,cwd=ROOT,env=m0.go_environment(ROOT),capture_output=True,text=True,encoding="utf-8",errors="replace")
         log.write_text(result.stdout+result.stderr,encoding="utf-8")
         report["commands"].append({"name":name,"argv":argv,"exit_code":result.returncode,"log":log.name,"sha256":m0.digest(log),"seconds":round(time.monotonic()-started,3)})
         if result.returncode: raise ValueError("gate failed: "+name+"; see "+str(log))
-        if name in {"m0-regression","m1-regression","m2-regression"}:validate_python_output(result.stdout+result.stderr,mapping["python_tests"].values() if name=="m1-regression" else increment["python_tests"].values() if name=="m2-regression" else ())
+        if name in {"m0-regression","m1-regression","m2-regression","m3-regression"}:
+            required=mapping["python_tests"].values() if name=="m1-regression" else next((x["python_tests"].values() for x in increments if name==x["milestone"].lower()+"-regression"),())
+            validate_python_output(result.stdout+result.stderr,required)
         print("PASS",name,flush=True)
         return result.stdout
     try:
@@ -141,12 +146,14 @@ def verify(args, increment=None):
         execute(["go","mod","verify"],"go-module-verify")
         execute([sys.executable,"-m","unittest","discover","-v","-s","tests/m0","-p","test_*.py"],"m0-regression")
         execute([sys.executable,"-m","unittest","discover","-v","-s","tests/m1","-p","test_*.py"],"m1-regression")
-        if increment: execute([sys.executable,"-m","unittest","discover","-v","-s","tests/m2","-p","test_*.py"],"m2-regression")
+        for extra in increments:
+            name=extra["milestone"].lower()
+            execute([sys.executable,"-m","unittest","discover","-v","-s","tests/"+name,"-p","test_*.py"],name+"-regression")
         packages=",".join(p for p in m0.command(["go","list","./..."]).splitlines() if "/internal/testkit/" not in p and "/infrastructure/internal/" not in p)
         unit=execute(["go","test","-count=1","-json","-covermode=atomic","-coverpkg="+packages,"-coverprofile="+str(output/"unit.out"),"./..."],"unit")
-        report["tests"]=validate_tests(unit,[*mapping["go_tests"].values(),*(increment["unit_tests"].values() if increment else [])])
-        integration=execute(["go","test","-p=1","-count=1","-json","-tags=integration","-covermode=atomic","-coverpkg="+packages,"-coverprofile="+str(output/"integration.out"),"./tests/m1",*(["./tests/m2"] if increment else [])],"integration")
-        report["integration_tests"]=validate_tests(integration,[m0.MODULE+"/tests/m1:TestM1Flow",*(increment["integration_tests"].values() if increment else [])])
+        report["tests"]=validate_tests(unit,[*mapping["go_tests"].values(),*(test for extra in increments for test in extra["unit_tests"].values())])
+        integration=execute(["go","test","-p=1","-count=1","-json","-tags=integration","-covermode=atomic","-coverpkg="+packages,"-coverprofile="+str(output/"integration.out"),"./tests/m1",*("./tests/"+extra["milestone"].lower() for extra in increments)],"integration")
+        report["integration_tests"]=validate_tests(integration,[m0.MODULE+"/tests/m1:TestM1Flow",*(test for extra in increments for test in extra["integration_tests"].values())])
         report["e2e"]=m1_e2e.run(output,args.project,packages,execute)
         report["commands"].append({"name":"e2e","exit_code":0})
         if args.race:

@@ -20,7 +20,7 @@ Docusaurus 3.10.2、React 與 Markdown／MDX，使用 `@easyops-cn/docusaurus-se
 | `Dockerfile`、`compose.yaml` | Node 建置 → 非 root Nginx 執行 |
 | `versioned_docs/`、`versioned_sidebars/`、`versions.json` | 首次正式發布後才產生並追蹤的快照 |
 
-新增交易傳播教學使用第七份程式 transactions；設定 disposable Bookstore 的 PANGOLIN_DSN 後執行 `python scripts/docs_examples.py --database`，實際驗證父回滾／子提交。
+共有八份完整程式，authorization 不需外部服務；transactions 需先設定 disposable Bookstore 的 PANGOLIN_DSN，再執行 `python scripts/docs_examples.py --database`，實際驗證父回滾／子提交。
 
 Go 模組 README 仍維護該 package 的責任／API／設定／測試；網站維護使用者流程。變更模組時同步修改對應教學，不將規劃中的 API 寫成已可執行。ADR／evidence 留在各自目錄，網站不直接複製或發布全部維護檔案。
 

@@ -14,9 +14,12 @@ description: 選擇適合目前預覽版的功能，了解現有 API 支援與�
 | PostgreSQL | pgx Pool、受控 Exec／QueryRow／Query、完整 Scope RLS | Rows 必須關閉；沒有 Batch 入口 |
 | Application／HTTP | 明示 Command／Query、提交後回應、每次串流短操作 | 先建立可信身分與 Scope；HTTP Command 不加入外層 UOW |
 | 登入驗證 | RS256 JWT／JWKS | 自行設定可信 issuer／JWKS；不提供完整登入 UI |
-| 多租戶 | tenant Scope、中立 Kind Registry、可選組織 Provider／ScopeAware 範例 | 組織 Authority 須明示注入；完整治理／撤權整合尚未提供 |
-| 事件 | Envelope 編解碼、JetStream Adapter、Bookstore Outbox／Inbox 範例 | 目前需程序重啟恢復斷線；不提供通用任意業務的 Outbox 自動接線 |
+| 多租戶與授權 | 當前 Tenant 資格、admission、Permission／Resource Policy、完整 Scope RLS | 權威故障拒絕；新根重新驗證；不接受 DTO 自行授權 |
+| 組織治理 | 可選 PostgreSQL Authority、Management／HTTP、ownerless 復原與 Provider 匯入對帳 | 明示注入 Permission／Effects／inventory，父層無內容聯集 |
+| 稽核與冪等 | 同交易必要 Audit／成功結果、獨立安全記錄、同鍵重播及 Unknown 對帳 | 結果保護與保留期限由部署明示設定 |
+| 遷移 | Goose、全域 session 鎖、API 相容性檢查、ScopeAware 前向升級 | 部署與 API 角色分開，API 不執行 DDL |
+| 事件 | 版本化 Registry、Local FIFO、通用 PostgreSQL Outbox／Inbox、租約 fencing、JetStream 持久確認 | 明示 Resource／Worker 組裝；at-least-once，外部副作用需冪等 |
 
-CLI 專案產生器、組織管理、完整平台服務與其他 DB／Broker Adapter 目前尚未提供。請先依[安裝頁](../getting-started/installation.md)建立普通 Go 專案，再選擇需要的公開套件。
+CLI 專案產生器、完整持久化 Job Worker、Settings／Features／Cache 平台服務與其他 DB／Broker Adapter 目前尚未提供。請先依[安裝頁](../getting-started/installation.md)建立普通 Go 專案，再選擇需要的公開套件。
 
 Go 使用 1.27.4；真實資料範例使用 PostgreSQL 18.7 與 NATS 2.15.3。初次學習核心功能時不需要安裝這兩個服務。

@@ -5,7 +5,19 @@
   "postgres": "18.7",
   "nats": "2.15.3",
   "toxiproxy": "2.13.0",
-  "migration": {"module": "github.com/pressly/goose/v3", "version": "v3.30.0", "integration_status": "planned"},
-  "query_generator": {"name": "sqlc", "version": "v1.31.1", "integration_status": "selected-generator-integration-in-M1", "source": "https://github.com/sqlc-dev/sqlc/releases/tag/v1.31.1"},
-  "platforms": ["linux/amd64", "windows/amd64"]
+  "migration": {
+    "module": "github.com/pressly/goose/v3",
+    "version": "v3.30.0",
+    "integration_status": "integrated-in-M3"
+  },
+  "query_generator": {
+    "name": "sqlc",
+    "version": "v1.31.1",
+    "integration_status": "selected-generator-integration-in-M1",
+    "source": "https://github.com/sqlc-dev/sqlc/releases/tag/v1.31.1"
+  },
+  "platforms": [
+    "linux/amd64",
+    "windows/amd64"
+  ]
 }

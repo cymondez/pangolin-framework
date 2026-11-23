@@ -1,8 +1,10 @@
 package distributed
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/cymondez/pangolin-framework/security/scope"
 	"time"
 )
 
@@ -21,7 +23,7 @@ type wireEnvelope struct {
 }
 
 func validate(e Envelope) error {
-	if e.ID == "" || e.Type == "" || e.SchemaVersion <= 0 || e.OccurredAt.IsZero() || e.TenantID == "" || e.ScopeKind == "" || e.ScopeID == "" || e.CorrelationID == "" || e.CausationID == "" || e.Producer == "" || !json.Valid(e.Payload) {
+	if e.ID == "" || e.Type == "" || e.SchemaVersion <= 0 || e.OccurredAt.IsZero() || scope.Validate(scope.ScopeRef{TenantID: e.TenantID, Kind: e.ScopeKind, ID: e.ScopeID}) != nil || e.CorrelationID == "" || e.Producer == "" || !json.Valid(e.Payload) || !bytes.HasPrefix(bytes.TrimSpace(e.Payload), []byte("{")) {
 		return fmt.Errorf("invalid event envelope")
 	}
 	return nil
@@ -32,7 +34,18 @@ func Encode(e Envelope) ([]byte, error) {
 	if err := validate(e); err != nil {
 		return nil, err
 	}
-	raw, err := json.Marshal(wireEnvelope(e))
+	// An absent cause is an explicit JSON null, never an invented operation.
+	var raw []byte
+	var err error
+	if e.CausationID == "" {
+		w := struct {
+			wireEnvelope
+			Cause any `json:"causation_id"`
+		}{wireEnvelope: wireEnvelope(e)}
+		raw, err = json.Marshal(w)
+	} else {
+		raw, err = json.Marshal(wireEnvelope(e))
+	}
 	if len(raw) > 1<<20 {
 		return nil, fmt.Errorf("event too large")
 	}

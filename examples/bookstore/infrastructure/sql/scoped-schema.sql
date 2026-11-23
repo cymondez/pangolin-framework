@@ -1,5 +1,5 @@
 -- Optional organization-enabled Bookstore fixture; never installed tenant-only.
-CREATE TABLE pangolin.resource_scopes (
+CREATE TABLE IF NOT EXISTS pangolin.resource_scopes (
  tenant_id text NOT NULL,scope_kind text NOT NULL,scope_id text NOT NULL,
  state text NOT NULL DEFAULT 'active',version bigint NOT NULL DEFAULT 1,
  PRIMARY KEY(tenant_id,scope_kind,scope_id)

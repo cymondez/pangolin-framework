@@ -17,3 +17,5 @@ M1 的第一個真實切片：HTTP → CreateBook → Required Tx → PostgreSQL
 `tests/coverage/exclusions.json` 逐檔排除測試 fixture 與可重現的 sqlc 生成物。手寫品質工具仍在分母；尚未有 executable statements 的根 package 為 N/A，不回報 100%。這不是全框架已達 90% 的證據。
 
 `m1.json` 是 M1 可執行案例／模組 README 的映射索引；執行結果仍從 report 取得，不能只修改其 status 就宣告 Verified。完整產品 Profile matrix 依後續里程碑交付。
+
+`m2.json`／`m3.json` 延續相同原則，保留 Runtime 來源當時的實作映射狀態；目前正式完成狀態由里程碑及同 commit evidence 維護。M3 的 185 個具名情境與 M0–M2 累積案例已通過雙平台 Gate，見 [M3 驗收紀錄](../../docs/evidence/M3.md)。

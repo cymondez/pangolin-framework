@@ -1,4 +1,4 @@
-name: M2 cumulative gates
+name: M3 cumulative gates
 on:
   push:
     branches: [main, develop, 'codex/**']
@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  m2:
+  m3:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -35,15 +35,15 @@ jobs:
           go mod download all
           go install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.31.1
           CGO_ENABLED=0 go build -o artifacts/test-idp ./internal/testkit/cmd/idp
-      - name: Start this job's isolated M2 services
+      - name: Start this job's isolated M3 services
         env:
           PANGOLIN_SOURCE_COMMIT: ${{ github.sha }}
         run: |
-          docker compose -p pangolin-m2-ci -f deploy/compose/m1.yaml config --quiet
-          docker compose -p pangolin-m2-ci -f deploy/compose/m1.yaml up -d --build --wait --wait-timeout 60
+          docker compose -p pangolin-m3-ci -f deploy/compose/m1.yaml config --quiet
+          docker compose -p pangolin-m3-ci -f deploy/compose/m1.yaml up -d --build --wait --wait-timeout 60
       - name: Cumulative cases, real integration/E2E, coverage, race and licenses
         env:
-          PANGOLIN_M2_PROJECT: pangolin-m2-ci
+          PANGOLIN_M3_PROJECT: pangolin-m3-ci
           PANGOLIN_M1_ADMIN_DSN: postgres://pangolin_bootstrap:local-bootstrap-only@127.0.0.1:15542/pangolin_m0?sslmode=disable
           PANGOLIN_M1_APP_DSN: postgres://pangolin_app:local-app-only@127.0.0.1:15542/pangolin_m0?sslmode=disable
           PANGOLIN_M1_WORKER_DSN: postgres://pangolin_worker:local-worker-only@127.0.0.1:15542/pangolin_m0?sslmode=disable
@@ -52,16 +52,16 @@ jobs:
         run: sh scripts/check.sh
       - name: Capture this project's logs
         if: always()
-        run: docker compose -p pangolin-m2-ci -f deploy/compose/m1.yaml logs --no-color > artifacts/compose.log
+        run: docker compose -p pangolin-m3-ci -f deploy/compose/m1.yaml logs --no-color > artifacts/compose.log
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
-          name: m2-linux-amd64
+          name: m3-linux-amd64
           path: artifacts/
           if-no-files-found: error
       - name: Stop only this job's disposable environment
         if: always()
-        run: docker compose -p pangolin-m2-ci -f deploy/compose/m1.yaml down --volumes --rmi local
+        run: docker compose -p pangolin-m3-ci -f deploy/compose/m1.yaml down --volumes --rmi local
   windows-portability:
     runs-on: windows-2025
     steps:
@@ -81,4 +81,4 @@ jobs:
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
           python -c "import sys; sys.path.insert(0,'scripts'); import m1; m1.validate_tests(open('windows-tests.json',encoding='utf-8-sig').read())"
       # Full Windows integration/E2E/coverage is collected on a Windows + Docker
-      # runner with m2.py verify and is mandatory for the cross-platform M2 gate.
+      # runner with m3.py verify and is mandatory for the cross-platform M3 gate.

@@ -37,10 +37,12 @@ go run ./event-envelope
 
 使用 Outbox：在同一筆業務交易保存資料與待送事件。交易提交後，由 Worker 將事件送到 Broker。Consumer 再使用 Inbox 記錄處理過的 EventID，避免重送導致重複效果。
 
-Bookstore 已示範這條完整流程，請依[教學](../tutorials/bookstore.md)同時啟動 API 與 Worker。Broker 的 publish ACK 代表訊息已被接受，並不代表接收端的業務已完成。
+要在自己的業務使用通用 Local／Outbox／Inbox，請依[可靠配送組裝](reliable-delivery.md)接到 UOW Resource。Registry 明示註冊型別、版本、必要欄位與驗證器；只有明示 LegacyTenant 的舊 schema 可以補成 tenant owner。
+
+Bookstore 以專用薄片示範這條流程，請依[教學](../tutorials/bookstore.md)同時啟動 API 與 Worker。Broker 的 publish ACK 代表訊息已被接受，並不代表接收端的業務已完成。
 
 ## 使用 NATS Adapter
 
-`events/nats` 的 Connect 建立連線，Provision 明確建立串流，Send 等待 JetStream 的可靠確認。Subscribe／Next 接收事件，業務與 Inbox 持久化完成後才 Ack。
+`events/nats` 的 Connect 建立連線，Provision 明確建立串流，Send 等待 JetStream 的可靠確認。Subscribe／Next 接收事件，通用 Receiver 在驗證並持久化完整 Inbox 後 Ack，再由獨立處理端以同一交易完成業務與 processed。Bookstore 薄片的 Worker 使用自己的同交易處理方式。
 
 Bookstore 教學的環境準備會建立自己的 `BOOKSTORE_DEMO` 串流。自行組裝時要讓 stream／subject／consumer 配置一致，並保留連線的唯一清理擁有者。連線中斷時目前由程序重啟恢復，不會自動重跑你的業務 callback。

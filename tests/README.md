@@ -17,3 +17,5 @@
 共用 IdP／Profile fixture 位於 [internal/testkit](../internal/testkit/README.md)。Bookstore 專用 crash-worker／m1-query 在 [範例 testkit](../examples/bookstore/internal/testkit/README.md)，不散放在產品 cmd，也不供 production 使用。
 
 執行結果只寫入 artifacts/<commit>，不放回 tests。每次搬移都回歸先前已交付案例；舊來源版本的驗收紀錄與 hash 留在 [docs/evidence](../docs/evidence/M1.md)。完整操作入口見 [工具索引](../tools/README.md)。
+
+[M3](m3/README.md) 新增 185 個具名情境、Tenant／Scope 安全、治理／替換、可靠事件與冪等／遷移；正式入口為 scripts/m3.py。測試計畫與 pass evidence 分開，缺案例／skip／同版 hash 不一致均不能通過 Gate。

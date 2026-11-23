@@ -1,0 +1,45 @@
+---
+title: 權限與資源政策
+description: 執行完整授權範例，理解明確拒絕、目前資格與敏感 Use Case 的檢查位置。
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import source from '../_snippets/authorization.go';
+
+登入回答「誰在呼叫」，授權回答「現在能對這個 Scope 做什麼」。先閱讀[登入驗證](authentication.md)與[多租戶](multi-tenancy.md)，再練習本頁。
+
+## 執行完整範例
+
+從安裝時取得的 `pangolin-framework/examples/basics` 目錄執行；只需要 Go，不需要資料庫或登入服務：
+
+```bash
+go run ./authorization
+```
+
+預期輸出：
+
+```text
+read allowed
+write denied
+feature enabled: write denied
+```
+
+程式明示使用教學身分與資格來源。這兩個 fixture 只讓你練習 Permission，沒有驗證真實憑證。HTTP 應用改用 JWT 驗證後的身分，以及你部署的當前資格來源。
+
+<CodeBlock language="go" title="authorization/main.go">{source}</CodeBlock>
+
+## 如何判斷允許？
+
+`policy.Allowed` 先處理 User 明確 deny，再依 User、Role、Tenant、System 的決策尋找 allow；沒有 allow 就拒絕。這些 Rules 必須來自可信的當前權威，不能接受請求傳入的角色。
+
+Feature 或 Settings 開啟功能，不會授予 Permission。Enterprise 治理角色也不會取得 Organization 的內容權限；完整 owner 邊界見[資源 Scope](resource-scopes.md)。
+
+## 在自己的 Use Case 檢查
+
+`policy.Require(ctx, registry, action, resourcePolicy)` 同時要求可信 Scope、動作 Permission，以及可選 Resource Policy。Resource Policy 用來判斷特定資源，例如「只有草稿作者可以編輯」，需要在 UOW 裡載入資料後執行。
+
+敏感寫入可使用 `application.AuthorizedCommand`：constructor 傳入 Manager、Authorizer、action、Resource Policy 與 work。它在入口及新根 UOW admission 後重新檢查，直接呼叫 Application 也會受保護。callback 只使用傳入的 context，全部完成及 Commit 成功才回 nil。
+
+新頂層 UOW 在取得 DB 資源前重新確認當前資格 revision。已 admission 的短操作可依快照完成；Required／RequiresNew 不延長授權，也不能切換 Tenant、Principal 或 Scope。
+
+下一步：[HTTP 與稽核](http-and-audit.md)，將驗證、授權、交易與安全記錄接到入口。

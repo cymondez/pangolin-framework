@@ -1,5 +1,5 @@
 // Package organization owns the optional Enterprise/Organization capability.
-// Management mutations and the default persistent authority follow in M3.
+// Store implements the PostgreSQL authority and transactional Management Port.
 package organization
 
 import (
@@ -34,14 +34,18 @@ func (p *Provider) Resolve(ctx context.Context, principal scope.PrincipalRef, re
 	if scope.Validate(ref) != nil || (ref.Kind != contracts.EnterpriseKind && ref.Kind != contracts.OrganizationKind) {
 		return scope.ScopeBinding{}, scope.ErrDenied
 	}
-	compact := strings.ReplaceAll(ref.ID, "-", "")
-	if len(ref.ID) != 36 || ref.ID[8] != '-' || ref.ID[13] != '-' || ref.ID[18] != '-' || ref.ID[23] != '-' || len(compact) != 32 {
-		return scope.ScopeBinding{}, scope.ErrDenied
-	}
-	if _, err := hex.DecodeString(compact); err != nil {
+	if !validOrganizationID(ref.ID) {
 		return scope.ScopeBinding{}, scope.ErrDenied
 	}
 	return p.authority.Resolve(ctx, principal, ref)
+}
+func validOrganizationID(id string) bool {
+	compact := strings.ReplaceAll(id, "-", "")
+	if len(id) != 36 || id[8] != '-' || id[13] != '-' || id[18] != '-' || id[23] != '-' || len(compact) != 32 {
+		return false
+	}
+	_, err := hex.DecodeString(compact)
+	return err == nil
 }
 func (p *Provider) Authorize(ctx context.Context, b scope.ScopeBinding, permission string) error {
 	if permission == "" {

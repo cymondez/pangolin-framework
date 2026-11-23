@@ -131,7 +131,7 @@ func TestRollbackUnknownPanicAndHooks(t *testing.T) {
 						return s.OnDisposed(nil)
 					case "binding-mismatch":
 						other := scope.NewTenantResolver(func(context.Context) (scope.PrincipalRef, string, bool) {
-							return scope.PrincipalRef{ID: "mallory"}, "tenant-a", true
+							return scope.PrincipalRef{ID: "mallory", Kind: "user"}, "tenant-a", true
 						})
 						bad, _ := other.Bind(work, scope.ScopeRef{TenantID: "tenant-a", Kind: "tenant", ID: "tenant-a"})
 						return Check(bad, false)

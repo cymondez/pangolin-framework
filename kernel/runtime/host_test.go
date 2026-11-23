@@ -17,7 +17,7 @@ func settings() []config.Source {
 }
 func makeHost(t *testing.T, p ...Participant) Host {
 	t.Helper()
-	h, e := New(Options{time.Second, time.Second}, settings(), p...)
+	h, e := New(Options{DrainTimeout: time.Second, CleanupTimeout: time.Second}, settings(), p...)
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -84,7 +84,7 @@ func TestA15(t *testing.T) {
 	for _, kind := range []string{"active-http", "active-worker", "drain-timeout"} {
 		t.Run(kind, func(t *testing.T) {
 			g := NewWorkGroup()
-			h, e := New(Options{30 * time.Millisecond, time.Second}, settings(), g)
+			h, e := New(Options{DrainTimeout: 30 * time.Millisecond, CleanupTimeout: time.Second}, settings(), g)
 			if e != nil {
 				t.Fatal(e)
 			}
@@ -150,7 +150,7 @@ func TestHostFailureGuards(t *testing.T) {
 	if _, e := New(Options{}, nil); e == nil {
 		t.Fatal("invalid options")
 	}
-	if _, e := New(Options{time.Second, time.Second}, nil, nil); e == nil {
+	if _, e := New(Options{DrainTimeout: time.Second, CleanupTimeout: time.Second}, nil, nil); e == nil {
 		t.Fatal("nil participant")
 	}
 	for _, failure := range []string{"graph", "pre", "configure", "post", "config", "seal", "panic", "cancel"} {
@@ -169,7 +169,7 @@ func TestHostFailureGuards(t *testing.T) {
 			case "post":
 				m.PostConfigure = bad
 			case "config":
-				h, _ = New(Options{time.Second, time.Second}, nil)
+				h, _ = New(Options{DrainTimeout: time.Second, CleanupTimeout: time.Second}, nil)
 			case "seal":
 				m.Configure = func(b module.Builder) error {
 					return b.Provide(di.Provider{Key: di.NewKey[int]("a"), Factory: func(context.Context, di.Resolver) (any, di.Cleanup, error) { return nil, nil, cause }})

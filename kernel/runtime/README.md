@@ -21,3 +21,5 @@ defer done() // 必須在 Tx／cursor／lease 釋放後才呼叫
 驗證：`go test ./kernel/runtime`。A02／A15 涵蓋全階段順序、Start 失敗回收、活躍 HTTP／Worker、有界取消、反序關閉與 close-once。清理錯誤影響退出結果。
 
 Scope 能力由 scope.RegistryKey 的 singleton Registry 提供；Start 之前核對所有模組 RequiredScopeKinds。缺少 Registry／Kind 或重複 Provider 皆不能 Ready。測試包含 tenant-only、organization-enabled 與替代 Provider 組裝。
+
+`Options.StartupChecks` 在封存 Provider 後、任何 Module.Start 前依序執行。持久化應用在此註冊 Goose Schema Compatibility 與完整 Scope Inventory；失敗回收已取得資源，不能 Ready。檢查 slice 在建構時複製，nil callback 拒絕；具體 DB／組織查驗經注入 Port，Runtime 不 import Adapter。

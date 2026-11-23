@@ -47,6 +47,7 @@ def main():
         'dependency-injection': 'Hello, Alice!',
         'lifecycle': 'start storage\nstart books\nready: true\nstop books\nstop storage',
         'event-envelope': 'event-1 / bookstore.book_created / schema 1\n{"id":"book-1","title":"Go in Action"}',
+        'authorization': 'read allowed\nwrite denied\nfeature enabled: write denied',
     }
     for sample, expected in samples.items():
         shutil.copyfile(ROOT / f'examples/basics/{sample}/main.go', project / 'main.go')
@@ -67,6 +68,14 @@ def main():
     setup=project/'setup';setup.mkdir()
     guide=(ROOT/'docs/site/content/security/resource-scopes.md').read_text(encoding='utf-8')
     (setup/'organization.go').write_text(re.search(r'```go\n(.*?)```',guide,re.S).group(1),encoding='utf-8')
+    for document, folder, name in [
+        ('data/idempotency.md', 'orders', 'service.go'),
+        ('data/migrations.md', 'setup', 'deployment.go'),
+        ('events/reliable-delivery.md', 'setup', 'events.go'),
+    ]:
+        guide=(ROOT/'docs/site/content'/document).read_text(encoding='utf-8')
+        destination=project/folder;destination.mkdir(exist_ok=True)
+        (destination/name).write_text(re.search(r'```go\n(.*?)```',guide,re.S).group(1),encoding='utf-8')
     shutil.copyfile(ROOT/'examples/basics/transactions/main.go',project/'main.go')
     run(['go', 'mod', 'tidy'])
     run(['go', 'build', './...'])

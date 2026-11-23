@@ -36,4 +36,6 @@ docker compose -p pangolin-bookstore-demo -f deploy/compose/m1.yaml down --volum
 pwsh ./examples/bookstore/scripts/demo.ps1 up
 ```
 
+Runtime Options 新增 StartupChecks，請將 positional literal 改成具名欄位。使用可撤權的 Tenant Resolver／當前 Authority，Provider.Authorize 傳入 context 中相同的可信 binding。ScopeAware schema 升級、完整 inventory 與舊程序拒絕條件見[部署遷移](../data/migrations.md)；通用事件表與 Bookstore 薄片分開，需明示改接 Resource／Publisher／Worker。
+
 未知 Scope Kind 在預設 Bookstore 由舊的 403 改為 400／SCOPE_KIND_UNSUPPORTED。組織範例改用獨立 ScopeAware Repository，不能直接沿用 TenantOnly 資料表。

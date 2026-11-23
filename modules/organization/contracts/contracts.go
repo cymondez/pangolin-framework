@@ -1,5 +1,5 @@
 // Package contracts defines replaceable organization management ports.
-// The organization module implementation is delivered in M2/M3, not M0.
+// DTOs are data contracts; callers still require trusted context authorization.
 package contracts
 
 import (
