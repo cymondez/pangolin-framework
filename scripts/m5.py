@@ -29,8 +29,8 @@ def validate_mapping(mapping):
     field=mapping.get('regression_integration_tests',{})
     if any(not name for name in (field.values() if isinstance(field,dict) else field)):raise ValueError('M5 regression integration mapping incomplete')
 
-def validate_report(report,commit,directory,mapping):
-    m4.validate_report(report,commit,directory,m0.load(ROOT/'tests/contract/m4.json'),milestone='M5')
+def validate_report(report,commit,directory,mapping,milestone='M5'):
+    m4.validate_report(report,commit,directory,m0.load(ROOT/'tests/contract/m4.json'),milestone=milestone)
     if not {'m5-regression','template-source','cli-build','templates','cli-coverage'}<={c['name'] for c in report['commands']}:raise ValueError('M5 generated-template commands missing')
     for field,key in [('tests','unit_tests'),('integration_tests','integration_tests')]:
         if not set(mapping[key].values())<=set(report[field]):raise ValueError('M5 case evidence missing')

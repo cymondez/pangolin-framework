@@ -1,11 +1,15 @@
 # 操作腳本
 
-目前完整入口為 `m5.py verify`／`m5_linux.py`，同版雙平台 Gate 為 `m5.py gate --commit <SHA>`；包含 M0–M4 累積回歸。`m3_fixture.py` 預設保持 M3 restart 契約，M4 明示 milestone=4 才開放專用 NATS stop／start 演練。詳見 [M4 指南](../docs/guides/m4-development.md)。
+目前完整入口為 `m6.py verify`／`m6_linux.py`，同版雙平台發布 Gate 為 `m6.py gate --commit <SHA>`；包含 M0–M5 累積回歸、三引擎補正與兩種生成 Profile。M6 另收集五項發布演練、版本與交付清單、逐 Profile 子情境證據索引。詳見 [M6 指南](../docs/guides/m6-development.md)。歷史入口保留各自的驗收責任。
 
 從 repository root 執行；Windows shell 使用 login=false。完整測試入口為 check.ps1／check.sh，環境與必要變數見 [M1 指南](../docs/guides/m1-development.md)。此目錄放操作腳本，Go 程式碼與測試 fixture 仍歸其擁有者。
 
 | 腳本 | 用途 |
 |---|---|
+| `m6.py`／`m6_linux.py` | 全量累積驗收與同來源雙平台發布 Gate；Linux 使用固定 Go／PostgreSQL client 的專用 runner，必跑完整 race |
+| `m6_drills.py` | 真實乾淨重建、前向升級、pg_dump／restore、延遲基線及可執行安全審查；失敗與缺漏證據均拒絕 |
+| `release_manifest.py` | 95 項需求／421 情境閉合、交付物、Runtime／CLI／Template／Event schema 版本及 raw-count coverage 驗證 |
+| `m6_index.py` | 將三種 Profile 的適用子情境連到實際 logs／hash；共用契約證據明示共用，不冒稱獨立執行 |
 | `check.ps1`／`check.sh` | 完整累積 Gate；Windows 可明示 Race，Linux 必跑 race |
 | `m1.py` | M1 Unit／Integration／E2E／coverage／生成檢查與同 commit Gate |
 | `m1_e2e.py` | Gate 內部支援；建置並啟動範例自己的 API／Worker／故障程序 |

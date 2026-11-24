@@ -14,7 +14,7 @@ lang: zh-TW
 
 本文件依[實作規範書 v1.3](panGOlin-framework_實作規範書.md)安排全框架 v0.1.0 的交付，包含可選的 Enterprise／Organization 單一模組。需求正式句、介面、產品行為、版本範圍、A01–A95 及品質門檻只由實作規範定義；本文件不重新定義它們。
 
-**2026-11-23：M0 已 Verified（來源 commit `a0b1ad099fdf7bd28240514a24c34590220019a1`）；M1 已 Verified（來源 `9eb10df6cd848b87fda964f0b6b61d60dc12b0a6`），M2 已 Verified（來源 `23651f654389af99d8c427b11909c07bc70f58cc`）；M3 已 Verified（來源 `7f17ecc76a84e65ec4d64fb39b0900fb6bb50ba7`）；M4 已 Verified（來源 `43dcd79e24f5ed74a544a760301f4fec95dc2ca2`，見 [M4 驗收紀錄](../docs/evidence/M4.md)）；M5 已 Verified（後續修正來源 `0d811a21f8b599196f0bad2dd2ee9033d1aa184b`，見 [M5 修正驗收](../docs/evidence/M5-corrections.md)）；M6 的其餘需求保持 Planned。** 已建立的底座及未完成條件見 §2.1。文件、CI 配置或品質工具測試不等於 M0 通過，也不等於 Runtime 已驗收或全框架達成 90% coverage。只有指定 commit 的 Exit 證據完整且 Gate 通過才能改為 Verified。
+**2026-11-23：M0 已 Verified（來源 commit `a0b1ad099fdf7bd28240514a24c34590220019a1`）；M1 已 Verified（來源 `9eb10df6cd848b87fda964f0b6b61d60dc12b0a6`），M2 已 Verified（來源 `23651f654389af99d8c427b11909c07bc70f58cc`）；M3 已 Verified（來源 `7f17ecc76a84e65ec4d64fb39b0900fb6bb50ba7`）；M4 已 Verified（來源 `43dcd79e24f5ed74a544a760301f4fec95dc2ca2`，見 [M4 驗收紀錄](../docs/evidence/M4.md)）；M5 已 Verified（後續修正來源 `0d811a21f8b599196f0bad2dd2ee9033d1aa184b`，見 [M5 修正驗收](../docs/evidence/M5-corrections.md)）；M6 已進入 In progress，尚待同版發布驗收。** 已建立的底座及未完成條件見 §2.1。文件、CI 配置或品質工具測試不等於 M0 通過，也不等於 Runtime 已驗收或全框架達成 90% coverage。只有指定 commit 的 Exit 證據完整且 Gate 通過才能改為 Verified。
 
 ## 1. 範圍、估算與角色
 
@@ -235,6 +235,8 @@ flowchart LR
 
 ### M6 — 全量驗收與發布證據
 
+**2026-11-24：In progress。** 開發分支 `codex/m6-release-acceptance`；WP18 的發布 Gate、三組 Profile 阻擋檢查及重建／升級／備份復原／安全／效能證據正在實作。M0–M5 的歷史 Verified 證據保留；M6 尚未具備同版雙平台 Exit 證據，不能推論發布驗收完成。重現與清理入口見 [M6 開發指南](../docs/guides/m6-development.md)。
+
 **原節奏：** W23–W24；**責任：** 技術負責人、QA、SRE；各工程師補足所負責的證據。  
 **Delivers：** `REL-003`、`REL-005`、`ORG-014`。
 
@@ -347,9 +349,9 @@ flowchart LR
 | M5 | CLI-001 | A67；同 commit 的執行結果與規範要求證據 | Verified |
 | M1 | REL-001 | A68；同 commit 的執行結果與規範要求證據 | Verified（來源 9eb10df6；見 M1 驗收紀錄） |
 | M1 | REL-002 | A69；同 commit 的執行結果與規範要求證據 | Verified（來源 9eb10df6；見 M1 驗收紀錄） |
-| M6 | REL-003 | A70；同 commit 的執行結果與規範要求證據 | Planned |
+| M6 | REL-003 | A70；同 commit 的執行結果與規範要求證據 | In progress |
 | M1 | REL-004 | A71；同 commit 的執行結果與規範要求證據 | Verified（來源 9eb10df6；見 M1 驗收紀錄） |
-| M6 | REL-005 | A72；同 commit 的執行結果與規範要求證據 | Planned |
+| M6 | REL-005 | A72；同 commit 的執行結果與規範要求證據 | In progress |
 | M2 | SCP-001 | A73；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
 | M2 | SCP-002 | A74；同 commit 的執行結果與規範要求證據 | Verified（來源 23651f65；見 M2 驗收紀錄） |
 | M3 | SCP-003 | A75；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
@@ -372,7 +374,7 @@ flowchart LR
 | M3 | ORG-011 | A92；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
 | M3 | ORG-012 | A93；同 commit 的執行結果與規範要求證據 | Verified（來源 7f17ecc7；見 M3 驗收紀錄） |
 | M5 | ORG-013 | A94；同 commit 的執行結果與規範要求證據 | Verified |
-| M6 | ORG-014 | A95；同 commit 的執行結果與規範要求證據 | Planned |
+| M6 | ORG-014 | A95；同 commit 的執行結果與規範要求證據 | In progress |
 
 <a id="work-items"></a>
 

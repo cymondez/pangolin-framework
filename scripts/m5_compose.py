@@ -11,7 +11,7 @@ import m0
 from m5_templates import request
 
 def run(output,project):
-    if not re.fullmatch(r'pangolin-m5-[a-z0-9-]+',project):raise ValueError('dedicated M5 project required')
+    if not re.fullmatch(r'pangolin-m[56]-[a-z0-9-]+',project):raise ValueError('dedicated M5/M6 project required')
     output=Path(output).resolve();reports=[]
     for name in ('tenant','organization'):
         directory=output/'templates'/('bookstore-org' if name=='organization' else 'bookstore')

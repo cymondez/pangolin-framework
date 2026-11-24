@@ -19,7 +19,7 @@ func run(args []string, out io.Writer) error {
 	flags := flag.NewFlagSet("check", flag.ContinueOnError)
 	flags.SetOutput(out)
 	root := flags.String("root", ".", "repository root")
-	release := flags.Bool("release", false, "require runtime release evidence (not available in M0)")
+	release := flags.Bool("release", false, "reject static-only release certification; use the same-commit M6 evidence gate")
 	profile := flags.String("coverage", "", "single atomic profile from this source/platform/build")
 	if err := flags.Parse(args); err != nil {
 		return err
@@ -35,7 +35,7 @@ func run(args []string, out io.Writer) error {
 			return err
 		}
 	}
-	_, err := fmt.Fprintln(out, "M0 inventory valid: 95 requirements, 95 planned case groups, 95 unique deliveries; runtime acceptance pending")
+	_, err := fmt.Fprintln(out, "M0 inventory valid: 95 requirements, 95 planned case groups, 95 unique deliveries; runtime evidence is checked by the M6 gate")
 	return err
 }
 

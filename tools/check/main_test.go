@@ -16,7 +16,7 @@ func TestCheckCLI(t *testing.T) {
 	if err := run([]string{"-root", root}, &output); err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(output.String(), "runtime acceptance pending") {
+	if !strings.Contains(output.String(), "runtime evidence is checked by the M6 gate") {
 		t.Fatal(output.String())
 	}
 	for _, args := range [][]string{{"-root", root, "-release"}, {"-bad-flag"}, {"unexpected"}, {"-root", t.TempDir()}, {"-root", root, "-coverage", "missing.out"}} {
