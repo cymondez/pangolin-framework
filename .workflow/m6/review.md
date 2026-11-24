@@ -52,3 +52,9 @@ Final interface recheck: drill report platform object vs string; --allow-dirty s
 - The fixture now honors the existing `PANGOLIN_M1_TOKEN_URL` for token transport and retains the issuer claim for API validation, with HTTP regression tests for endpoint separation/fallback and an updated test README. This correction requires a new source commit and both platforms to run again; no evidence from `35386a2` is relabeled as the corrected source.
 - During focused validation the four owned fixture services were found stopped (Exited 255); they were inventoried and restarted. This environment interruption is distinct from executable acceptance and is not reported as a pass.
 - Website draft remains ignored and unapplied until the final same-source gate. Its restore flow derives a unique target database URI from one management endpoint to avoid mismatched restore connections.
+
+## Final acceptance resolution
+
+Corrected source `1d7ef1cf0dfdb7ee7b0211d04ad3380329883cb1` passed both full platform gates and independent release-report/index checks. Linux ran full integration race with native pinned PostgreSQL clients. All 95 requirements, 421 named subtests, profile applicability, raw-count coverage and release artifact hashes passed the final gate; this supersedes the pending state described above.
+
+Only then were the five public website files applied. Lead review accepted the safe new-database restore flow and profile/event boundaries. The real guide commands, ten consumer examples, site test/build and browser navigation/search passed. Owned test resources were removed and the updated docs service was retained. No unresolved review finding remains in the M6 scope; production recovery/performance limits are recorded in the evidence and user guide.

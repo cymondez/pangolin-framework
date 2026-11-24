@@ -41,4 +41,6 @@ Handler 必須遵守 context；不要把 Request context 留給背景程序。�
 
 在自己的隔離環境演練 Broker 故障、積壓恢復和活躍停機，保存 lag／pool／retry／drain 曲線。RTO 從故障到完成對帳量測；RPO 需以 DB／schema／可靠訊息的實際備份還原結果決定，不能從一次成功重送推論零資料損失。
 
+資料庫版本升級或服務復原前，依[備份、還原與升級檢查](backup-restore.md)在新資料庫完成還原與 owner／RLS／待處理工作核對。
+
 下一步：[疑難排解](../reference/troubleshooting.md)。
