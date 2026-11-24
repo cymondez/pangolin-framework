@@ -29,6 +29,13 @@ func TestRequireAllPolicies(t *testing.T) {
 	if e := Require(ctx, allow, "read", func(context.Context) error { return scope.ErrDenied }); !errors.Is(e, scope.ErrDenied) {
 		t.Fatal(e)
 	}
+	if e := Require(ctx, allow, "", nil); !errors.Is(e, scope.ErrDenied) {
+		t.Fatal("empty permission must deny", e)
+	}
+	offline := errors.New("authority offline")
+	if e := Require(ctx, authFunc(func(context.Context, string) error { return offline }), "read", nil); !errors.Is(e, offline) {
+		t.Fatal("ordinary permission must deny while preserving the authorization cause", e)
+	}
 	boom := errors.New("required host audit unavailable")
 	h := Host{Identity: func(context.Context) (scope.PrincipalRef, string, bool) {
 		return scope.PrincipalRef{ID: "admin", Kind: "user"}, "host", true

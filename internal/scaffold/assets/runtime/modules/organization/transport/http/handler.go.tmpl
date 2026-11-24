@@ -15,6 +15,7 @@ import (
 	"github.com/cymondez/pangolin-framework/modules/organization"
 	"github.com/cymondez/pangolin-framework/modules/organization/contracts"
 	"github.com/cymondez/pangolin-framework/persistence/uow"
+	"github.com/cymondez/pangolin-framework/security/identity"
 	"github.com/cymondez/pangolin-framework/security/scope"
 	transport "github.com/cymondez/pangolin-framework/transport/http"
 )
@@ -25,11 +26,19 @@ type Governance interface {
 	Recover(context.Context, contracts.Command, scope.PrincipalRef) error
 }
 type Options struct {
-	Management    Governance
-	Manager       uow.UnitOfWorkManager
-	Timeout       time.Duration
-	MaxBodyBytes  int64
-	Authenticate  func(context.Context, string) (context.Context, error)
+	Management   Governance
+	Manager      uow.UnitOfWorkManager
+	Timeout      time.Duration
+	MaxBodyBytes int64
+	// Authenticate is the legacy Bearer token entry point.
+	Authenticate func(context.Context, string) (context.Context, error)
+	// AuthenticateCredential verifies a full extracted credential; use it with
+	// Credentials for pluggable request authentication. Exactly one of the
+	// two authenticators must be configured.
+	AuthenticateCredential func(context.Context, identity.Credential) (context.Context, error)
+	// Credentials is the request credential extractor forwarded to the common
+	// pipeline; nil keeps the default Bearer extraction.
+	Credentials   transport.CredentialExtractor
 	ResolveTenant func(context.Context, *http.Request) (context.Context, error)
 	ResolveScope  func(context.Context, *http.Request) (context.Context, error)
 	Authorize     func(context.Context, string) error
@@ -70,7 +79,7 @@ func mapped(err error) error {
 // NewHandler registers only the optional organization control plane. The caller
 // owns all pools, services and HTTP server shutdown; this adapter owns none.
 func NewHandler(o Options) (http.Handler, error) {
-	if o.Management == nil || o.Manager == nil || o.Timeout <= 0 || o.MaxBodyBytes <= 0 || o.Authenticate == nil || o.ResolveTenant == nil || o.ResolveScope == nil || o.Authorize == nil {
+	if o.Management == nil || o.Manager == nil || o.Timeout <= 0 || o.MaxBodyBytes <= 0 || (o.Authenticate == nil) == (o.AuthenticateCredential == nil) || o.ResolveTenant == nil || o.ResolveScope == nil || o.Authorize == nil {
 		return nil, scope.ErrInvalid
 	}
 	mux := http.NewServeMux()
@@ -94,7 +103,7 @@ func NewHandler(o Options) (http.Handler, error) {
 	} {
 		mux.HandleFunc(route.pattern, func(w http.ResponseWriter, r *http.Request) {
 			key := r.Header.Get("Idempotency-Key")
-			p, _ := transport.NewPipeline(transport.PipelineOptions{Timeout: o.Timeout, MaxBodyBytes: o.MaxBodyBytes, Manager: o.Manager, ReadOnly: route.read, Authenticate: o.Authenticate, ResolveTenant: o.ResolveTenant, ResolveScope: o.ResolveScope, Rejected: o.Rejected,
+			p, _ := transport.NewPipeline(transport.PipelineOptions{Timeout: o.Timeout, MaxBodyBytes: o.MaxBodyBytes, Manager: o.Manager, ReadOnly: route.read, Authenticate: o.Authenticate, AuthenticateCredential: o.AuthenticateCredential, Credentials: o.Credentials, ResolveTenant: o.ResolveTenant, ResolveScope: o.ResolveScope, Rejected: o.Rejected,
 				Entry: func(c context.Context) error { return mapped(o.Authorize(c, route.action)) },
 				Decode: func(raw []byte) (any, error) {
 					if kind := r.PathValue("kind"); kind != "" && kind != contracts.OrganizationKind && kind != contracts.EnterpriseKind {

@@ -10,6 +10,8 @@ panGOlin-framework 是 Go 模組化應用框架，先以模組化單體交付，
 
 本檔下文的 package、介面與執行流程都是既定設計的導覽，不表示對應目錄或功能已存在。實作開始後應同步更新這段狀態；不能由文件完成推論 Runtime 可執行或品質門檻已通過。
 
+2026-11-24 後續修正在 `codex/m5-settings-multidatabase` 進行：Settings 明確五至七層、Feature 受 Permission 限制、中立資料存取及可擴充 Authentication。既有 M5 證據僅綁定原始來源，不能作為本次修正的驗收證據。修正以實際程式、package README 與同版 Gate 為準，進行中不標 Verified。
+
 M1 後續目錄整理已在來源 `b3bf59c03f4b66ff7389d44d8434356258a85d9a` 通過同版 Windows／Linux（含 race）回歸：共用框架 import 保留，Bookstore 專用入口／HTTP／fixture 已集中；現行位置見 [目錄指南](docs/guides/repository-layout.md)，證據見 [回歸紀錄](docs/evidence/source-layout.md)。
 
 | 文件 | 唯一責任 | 何時閱讀 |
@@ -139,7 +141,7 @@ M2 已於來源 `23651f654389af99d8c427b11909c07bc70f58cc` 通過同版 Windows�
 |---|---|---|
 | 模組 DAG、DI、組態、啟停 | `kernel/module`、`kernel/di`、`kernel/config`、`kernel/runtime` | 實作規範 §2、§14.3 |
 | Use Case、Domain、HTTP 與錯誤 | `application`、`domain`、`transport/http`、`kernel/errors` | §1、§3、§4、§5.6 |
-| 工作單元、Repository、SQL、遷移 | `persistence/uow`、`persistence/postgres`、`persistence/migration` | §5、§8 |
+| 工作單元、Repository、SQL、遷移 | `persistence/uow`、中立 `persistence/database`、各引擎 Adapter `persistence/{postgres,mysql,sqlite}`、`persistence/migration` | §5、§8；跨引擎補正見 ADR14 |
 | 身分、Permission、Tenant、Scope | `security/*`、`tenancy` | §7.1–§7.5、§7.7、§7.9–§7.10 |
 | Enterprise／Organization／Membership | `modules/organization` | §7.6–§7.12 |
 | Local／Integration Event、Outbox／Inbox | `events/local`、`events/distributed`、`events/outbox`、`events/inbox` | §6 |

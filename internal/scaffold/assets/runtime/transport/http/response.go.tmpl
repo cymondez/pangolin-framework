@@ -12,7 +12,7 @@ import (
 	"github.com/cymondez/pangolin-framework/application"
 	"github.com/cymondez/pangolin-framework/persistence/idempotency"
 	"github.com/cymondez/pangolin-framework/persistence/uow"
-	"github.com/cymondez/pangolin-framework/security/authn"
+	"github.com/cymondez/pangolin-framework/security/identity"
 	"github.com/cymondez/pangolin-framework/security/scope"
 	"github.com/cymondez/pangolin-framework/tenancy"
 )
@@ -37,7 +37,7 @@ func WriteError(w http.ResponseWriter, r *http.Request, err error) {
 		err    error
 		status int
 	}{
-		{authn.ErrUnauthenticated, 401}, {scope.ErrDenied, 403}, {scope.ErrInvalid, 400}, {scope.ErrRequired, 400}, {scope.ErrHintConflict, 400}, {scope.ErrKindUnsupported, 400}, {tenancy.ErrHintConflict, 400}, {scope.ErrAuthorityUnavailable, 503}, {ErrValidation, 400}, {ErrBodyTooLarge, 413},
+		{identity.ErrUnauthenticated, 401}, {identity.ErrChallengeRequired, 401}, {identity.ErrPending, 401}, {scope.ErrDenied, 403}, {scope.ErrInvalid, 400}, {scope.ErrRequired, 400}, {scope.ErrHintConflict, 400}, {scope.ErrKindUnsupported, 400}, {tenancy.ErrHintConflict, 400}, {scope.ErrAuthorityUnavailable, 503}, {ErrAmbiguousCredential, 400}, {ErrCookieUnsafeMethod, 403}, {ErrValidation, 400}, {ErrBodyTooLarge, 413},
 	} {
 		if errors.Is(err, entry.err) {
 			status, code = entry.status, entry.err.Error()

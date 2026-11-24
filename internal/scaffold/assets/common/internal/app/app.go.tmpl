@@ -24,6 +24,7 @@ import (
 	"github.com/cymondez/pangolin-framework/persistence/uow"
 	"github.com/cymondez/pangolin-framework/platform/audit"
 	"github.com/cymondez/pangolin-framework/security/authn"
+	"github.com/cymondez/pangolin-framework/security/identity"
 	"github.com/cymondez/pangolin-framework/security/scope"
 	"github.com/cymondez/pangolin-framework/tenancy"
 	tenantpg "github.com/cymondez/pangolin-framework/tenancy/postgres"
@@ -102,7 +103,7 @@ func Handler(ctx context.Context, pool, authorityPool *pgxpool.Pool) (*Applicati
 		return nil, scope.ErrMigrationRequired
 	}
 	authority := tenantpg.Authority{Pool: authorityPool}
-	tenants, err := tenancy.NewResolver(authn.Identity, authority)
+	tenants, err := tenancy.NewResolver(identity.Identity, authority)
 	if err != nil {
 		return nil, err
 	}
@@ -168,7 +169,9 @@ func Handler(ctx context.Context, pool, authorityPool *pgxpool.Pool) (*Applicati
 	}{{"POST /books", "books.write", false}, {"GET /books/{id}", "books.read", true}} {
 		mux.HandleFunc(route.pattern, func(w http.ResponseWriter, r *http.Request) {
 			key := r.Header.Get("Idempotency-Key")
-			pipeline, _ := transport.NewPipeline(transport.PipelineOptions{Timeout: 5 * time.Second, MaxBodyBytes: 1 << 20, Manager: manager, ReadOnly: route.read, Authenticate: validator.Authenticate, ResolveTenant: resolveTenant, ResolveScope: resolveScope, Entry: func(c context.Context) error { return scopes.Authorize(c, route.permission) }, Rejected: func(c context.Context, _ error) {
+			// Default HTTP profile uses the extension ports: Bearer credential
+			// extraction plus the trusted credential authentication pipeline.
+			pipeline, _ := transport.NewPipeline(transport.PipelineOptions{Timeout: 5 * time.Second, MaxBodyBytes: 1 << 20, Manager: manager, ReadOnly: route.read, AuthenticateCredential: validator.AuthenticateCredential, Credentials: transport.BearerCredentials(), ResolveTenant: resolveTenant, ResolveScope: resolveScope, Entry: func(c context.Context) error { return scopes.Authorize(c, route.permission) }, Rejected: func(c context.Context, _ error) {
 				_ = log.Write(c, audit.Record{Action: "request.rejected", Resource: "bookstore", Result: "denied", Trace: rand.Text()})
 			}, Decode: func(raw []byte) (any, error) {
 				if route.read {

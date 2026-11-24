@@ -14,7 +14,9 @@ err = manager.Within(trustedContext, uow.Options{Mode: uow.ReadWrite},
 
 頂層需要由可信 ScopeResolver 安裝的 binding；自行填 ScopeBinding struct 不會建立權限。未指定 Mode 為 ReadOnly；TransactionAuto 在 ReadWrite 或 RLS 下使用交易；不依賴 RLS 的唯讀 Resource 可明示非交易。Required 子視圖共用根交易；子失敗／取消／不相容選項使根 rollback-only，即使外層捕捉錯誤也不會提交。唯讀子視圖拒絕寫入，callback 結束後 context 失效。
 
-支援 Required／RequiresNew、ReadCommitted／RepeatableRead／Serializable；非法選項在 Begin 前拒絕。RequiresNew 暫停父根，使用獨立資源並保留父 binding／期限。父子分別提交，不保證整條呼叫鏈原子性。SQL 已直接送入交易，尚無 change tracker；SaveChanges 呼叫可選 Flush，只 flush、不提交或排空事件。Local Event／Audit／冪等完成流程尚未接入，不能據此宣稱完整 §5 已驗收。
+Manager 表達 Required／RequiresNew 與 ReadCommitted／RepeatableRead／Serializable；各 Adapter 只接受自己能保證的隔離級別。RequiresNew 暫停父根，使用獨立資源並保留父 binding／期限。父子分別提交，不保證整條呼叫鏈原子性；連線不足或引擎寫鎖衝突可令獨立子操作失敗。SQL 已直接送入交易，尚無 change tracker；SaveChanges 呼叫可選 Flush，只 flush、不提交或排空事件。Local Event／Audit／冪等完成流程由明示組裝的 Resource 接入，核心 Manager 不自動建立這些持久化 Adapter。
+
+`DefaultOptions.DefaultIsolation` 控制未指定隔離級別的交易；零值維持既有 ReadCommitted。SQLite 組裝需明示 Serializable；也可為三種引擎統一選擇 Serializable。呼叫端明示的 Options.Isolation 優先，後端無法支援時拒絕，不靜默改成別的隔離級別。
 
 callback 返回 nil 後仍需檢查取消／rollback-only 並確認 Commit。Commit 無法判定時保守保存 Unknown，回傳 `UOW_COMMIT_UNKNOWN`，不自動重跑 callback；Rollback 不將 Unknown 改為確定失敗。`errors.As(err, &uow.Error)` 可讀取 Code／ScopeID／OperationID／Outcome，cause 可透過 errors.Is／Unwrap 判斷。
 

@@ -11,11 +11,23 @@ import m3_fixture
 ROOT=m0.ROOT
 FIELDS=('unit_tests','integration_tests','python_tests','template_tests')
 
+def database_env(env=None):
+    """Resolve both real backend DSNs; explicit values win over the host fixture."""
+    values=dict(os.environ if env is None else env)
+    postgres=(values.get('PANGOLIN_DATABASE_POSTGRES_DSN') or '').strip()
+    if not postgres:postgres=values.get('PANGOLIN_M1_APP_DSN') or 'postgres://pangolin_app:local-app-only@127.0.0.1:15542/pangolin_m0?sslmode=disable'
+    port=(values.get('PANGOLIN_M5_MYSQL_PORT') or '').strip() or '15543';int(port)
+    mysql=(values.get('PANGOLIN_DATABASE_MYSQL_DSN') or '').strip() or 'pangolin_database:local-database-only@tcp(127.0.0.1:'+port+')/pangolin_db_contracts'
+    if not postgres.strip() or not mysql.strip():raise ValueError('M5 database acceptance requires non-empty PANGOLIN_DATABASE_POSTGRES_DSN and PANGOLIN_DATABASE_MYSQL_DSN')
+    return {'PANGOLIN_DATABASE_POSTGRES_DSN':postgres,'PANGOLIN_DATABASE_MYSQL_DSN':mysql}
+
 def validate_mapping(mapping):
     expected={s['id'] for g in m0.load(ROOT/'tests/contract/subtests.json')['groups'] if g['milestone']=='M5' for s in g['subtests']}
     sets=[set(mapping[k]) for k in FIELDS]
     if mapping['milestone']!='M5' or mapping['baseline']!='v1.3' or set.union(*sets)!=expected or sum(map(len,sets))!=len(expected):raise ValueError('M5 acceptance mapping incomplete or duplicated')
     if mapping.get('pending') or any(not test for key in FIELDS for test in mapping[key].values()):raise ValueError('M5 has unimplemented acceptance')
+    field=mapping.get('regression_integration_tests',{})
+    if any(not name for name in (field.values() if isinstance(field,dict) else field)):raise ValueError('M5 regression integration mapping incomplete')
 
 def validate_report(report,commit,directory,mapping):
     m4.validate_report(report,commit,directory,m0.load(ROOT/'tests/contract/m4.json'),milestone='M5')
@@ -23,6 +35,8 @@ def validate_report(report,commit,directory,mapping):
     for field,key in [('tests','unit_tests'),('integration_tests','integration_tests')]:
         if not set(mapping[key].values())<=set(report[field]):raise ValueError('M5 case evidence missing')
     if not set(mapping.get('regression_tests',[]))<=set(report['tests']):raise ValueError('M5 JSON configuration regression missing')
+    field=mapping.get('regression_integration_tests',{})
+    if not (set(field.values()) if isinstance(field,dict) else set(field))<=set(report['integration_tests']):raise ValueError('M5 regression integration evidence missing')
     path='tests/contract/m5.json'
     if report['inputs'].get(path)!=m0.digest(ROOT/path):raise ValueError('M5 map changed')
     if not {'cli.out','templates.json'}<=report['artifacts'].keys():raise ValueError('M5 CLI/template raw evidence missing')
@@ -60,6 +74,7 @@ def main():
         if not args.commit or len(args.commit)!=40:p.error('gate requires full --commit')
         gate(args.commit,mapping);return 0
     if not args.project:p.error('verify requires --project')
+    os.environ.update(database_env())
     if args.external_broker_fixture:
         if not os.getenv('PANGOLIN_M3_BROKER_RESTART_DIR'):p.error('external fixture needs barrier directory')
         return m1.verify(args,increment=mapping)

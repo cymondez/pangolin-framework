@@ -1,4 +1,7 @@
 // Package settings resolves versioned settings through trusted scope ancestry.
+// Standard layers are explicitly ordered Default < Config < Global < Tenant <
+// Enterprise < Organization < User; Enterprise and Organization participate
+// only for their trusted scope kinds.
 package settings
 
 import (
@@ -17,8 +20,28 @@ import (
 
 var ErrInvalid = errors.New("SETTING_INVALID")
 
-// Layer is a provider address. User is always local to Ref, including tenant scope.
-// Empty Ref is reserved for application configuration at the composition boundary.
+// LayerName explicitly distinguishes the standard settings layers. The
+// resolution precedence from highest to lowest is User > Organization >
+// Enterprise > Tenant > Global > Config > Default. Enterprise and Organization
+// participate only for their trusted scope kinds, so a tenant-only composition
+// resolves exactly the five standard layers and never invents organization
+// layers.
+type LayerName string
+
+const (
+	LayerUser         LayerName = "user"
+	LayerOrganization LayerName = "organization"
+	LayerEnterprise   LayerName = "enterprise"
+	LayerTenant       LayerName = "tenant"
+	LayerGlobal       LayerName = "global"
+	LayerConfig       LayerName = "config"
+	LayerDefault      LayerName = "default"
+)
+
+// Layer is a provider address. User is always local to Ref, including tenant
+// scope. The empty Layer (zero Ref and zero User) addresses the Global layer,
+// the mutable composition-owned application-wide store; configuration is a
+// separate standard layer below Global and never stores through this address.
 type Layer struct {
 	Ref  scope.ScopeRef
 	User scope.PrincipalRef
@@ -47,6 +70,8 @@ type Cache interface {
 	Set(context.Context, cache.Resource, []byte, time.Duration) error
 	Delete(context.Context, cache.Resource) error
 }
+// Result carries the winning value and every standard candidate in precedence
+// order, highest priority first, ending with the declared default.
 type Result struct {
 	Value      json.RawMessage
 	Version    uint64
@@ -77,35 +102,93 @@ func New(provider Provider, c Cache, ancestry Ancestry, ttl time.Duration, defin
 	}
 	return s, nil
 }
-func (s *Service) layers(ctx context.Context, b scope.ScopeBinding, inherit bool) ([]Layer, error) {
-	layers := []Layer{{Ref: b.Ref, User: b.Principal}, {Ref: b.Ref}}
+func ownLayerName(kind string) LayerName {
+	switch kind {
+	case "tenant":
+		return LayerTenant
+	case "org.enterprise":
+		return LayerEnterprise
+	case "org.organization":
+		return LayerOrganization
+	default:
+		return LayerName(kind)
+	}
+}
+
+// standardOrder is the exact layer sequence for one resolution: names list
+// every standard layer, addrs lists the provider addresses that can store a
+// value. Config and Default carry no address: configuration enters through a
+// Provider (WithConfiguration) and the default lives in Definition.
+type standardOrder struct {
+	names []LayerName
+	addrs []Layer
+}
+
+func (s *Service) order(ctx context.Context, b scope.ScopeBinding, inherit bool) (standardOrder, error) {
+	o := standardOrder{
+		names: []LayerName{LayerUser, ownLayerName(b.Ref.Kind)},
+		addrs: []Layer{{Ref: b.Ref, User: b.Principal}, {Ref: b.Ref}},
+	}
 	if !inherit {
-		return layers, nil
+		o.names = append(o.names, LayerDefault)
+		return o, nil
 	}
 	switch b.Ref.Kind {
 	case "org.organization":
 		if s.ancestry == nil {
-			return nil, scope.ErrAuthorityUnavailable
+			return standardOrder{}, scope.ErrAuthorityUnavailable
 		}
 		parent, ok, err := s.ancestry.Parent(ctx, b)
 		if err != nil {
-			return nil, err
+			return standardOrder{}, err
 		}
 		if ok {
 			if scope.Validate(parent) != nil || parent.TenantID != b.Ref.TenantID || parent.Kind != "org.enterprise" {
-				return nil, scope.ErrDenied
+				return standardOrder{}, scope.ErrDenied
 			}
-			layers = append(layers, Layer{Ref: parent})
+			o.names = append(o.names, LayerEnterprise)
+			o.addrs = append(o.addrs, Layer{Ref: parent})
 		}
 	case "org.enterprise", "tenant":
 	default:
-		return nil, scope.ErrKindUnsupported
+		return standardOrder{}, scope.ErrKindUnsupported
 	}
 	if b.Ref.Kind != "tenant" {
-		layers = append(layers, Layer{Ref: scope.ScopeRef{TenantID: b.Ref.TenantID, Kind: "tenant", ID: b.Ref.TenantID}})
+		o.names = append(o.names, LayerTenant)
+		o.addrs = append(o.addrs, Layer{Ref: scope.ScopeRef{TenantID: b.Ref.TenantID, Kind: "tenant", ID: b.Ref.TenantID}})
 	}
-	return append(layers, Layer{}), nil
+	o.names = append(o.names, LayerGlobal, LayerConfig, LayerDefault)
+	o.addrs = append(o.addrs, Layer{})
+	return o, nil
 }
+
+// Layers returns the exact standard layers Resolve consults for key, ordered
+// from highest to lowest priority. Tenant-only bindings resolve the five
+// standard layers; enterprise and standalone-organization bindings resolve
+// six; organizations under an enterprise resolve seven. Definitions without
+// Inherit consult only the user and own-scope layers before Default. Config
+// yields values only when a configuration source is wired through
+// WithConfiguration.
+func (s *Service) Layers(ctx context.Context, key string) ([]LayerName, error) {
+	b, ok := scope.Current(ctx)
+	if !ok {
+		return nil, scope.ErrDenied
+	}
+	d, ok := s.definitions[key]
+	if !ok {
+		return nil, ErrInvalid
+	}
+	o, err := s.order(ctx, b, d.Inherit)
+	if err != nil {
+		return nil, err
+	}
+	return o.names, nil
+}
+
+// Resolve returns the highest-priority standard value for key, walking the
+// explicit standard layers: the owner-local user layer, the own-scope layer,
+// then for inheriting definitions the enterprise parent, tenant, Global and
+// Config, and finally the declared default.
 func (s *Service) Resolve(ctx context.Context, key string) (Result, error) {
 	b, ok := scope.Current(ctx)
 	if !ok {
@@ -115,10 +198,11 @@ func (s *Service) Resolve(ctx context.Context, key string) (Result, error) {
 	if !ok {
 		return Result{}, ErrInvalid
 	}
-	layers, err := s.layers(ctx, b, d.Inherit)
+	o, err := s.order(ctx, b, d.Inherit)
 	if err != nil {
 		return Result{}, err
 	}
+	layers := o.addrs
 	r := cache.Resource{Module: "settings", Kind: "value", ID: key, Private: true}
 	raw, hit, cacheErr := s.cache.Get(ctx, r)
 	// Provider snapshots are authoritative even if deletion/notification fails.
@@ -170,6 +254,8 @@ func (f PublisherFunc) Publish(c context.Context, v Change) error { return f(c, 
 
 // MemoryProvider is a composition-owned source. Put is an administrative Port,
 // never exposed directly to request bodies. Version increments are atomic.
+// The empty Layer stores the Global layer shared by every tenant; every other
+// address stores its exact owner.
 type MemoryProvider struct {
 	mu        sync.RWMutex
 	values    map[Layer]map[string]json.RawMessage

@@ -29,6 +29,9 @@ def main(milestone=3):
             "PANGOLIN_M3_BROKER_RESTART_DIR":"/source/artifacts/m"+str(milestone)+"-linux-broker-barrier",
             "CGO_ENABLED":"1","GOTOOLCHAIN":"local",
         }
+        if milestone>=5:
+            environment["PANGOLIN_DATABASE_POSTGRES_DSN"]=environment["PANGOLIN_M1_APP_DSN"]
+            environment["PANGOLIN_DATABASE_MYSQL_DSN"]="pangolin_database:local-database-only@tcp(mysql:3306)/pangolin_db_contracts"
         command=["docker","run","--rm","--name",project+"-linux","--cpus","2","--memory","2g","--network",network,
                  "--label","dev.pangolin.owner=pangolin-framework","--label",purpose,
                  "-v",str(m0.ROOT)+":/source","-v",str(m0.ROOT/".cache/go-mod")+":/gomod", "-v",cache+":/cache"]

@@ -1,5 +1,7 @@
 # PostgreSQL：受控 pgx Executor
 
+一般資料存取的公開 Port 見 [persistence/database](../database/README.md)。本套件保留 PostgreSQL 的 pgx／RLS Adapter 責任；MySQL 與 SQLite 各有獨立 Adapter，UOW 與業務 Repository Port 不以 PostgreSQL 命名。
+
 此套件實作 [UOW Resource](../uow/README.md)，不向 Application 暴露 Pool、Tx、Begin 或 Commit。Application 只依賴 Repository Port；Infrastructure Adapter 才能 import 本套件。實作見 [resource.go](resource.go)。
 
 `&postgres.Resource{Pool: pool}` 交給 `uow.NewManager`。Pool 由組裝端／DI Factory 擁有並最終關閉；Resource 只管理每次 Within 取得的交易。Begin 驗證可信完整 Scope binding，以明示隔離級別及 ReadOnly 或 ReadWrite 開交易，並使用 `set_config(..., true)` 安裝 transaction-local tenant 與完整 Scope owner。

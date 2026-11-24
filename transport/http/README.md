@@ -11,3 +11,13 @@
 提交後自訂 MarshalJSON 返回錯誤或 panic 都保留 committed／operationId，Outcome Unknown 優先於任何一般錯誤分類。可識別安全錯誤與支援 `HTTPStatus()/Code()` 的已分類錯誤映射為安全 Problem Details，不直接輸出 cause。
 
 資源與 CleanupTimeout／HookTimeout 由 UOW Manager 管理，本 package 不關閉 DB。驗證：`go test ./transport/http`、`go test -tags=integration ./tests/m2 ./tests/m3`。
+
+## 可擴充身分驗證
+
+PipelineOptions.AuthenticateCredential 接受完整 identity.Credential，通常接 identity.Pipeline.AuthenticateCredential；Credentials 負責 HTTP 擷取，未指定時使用 BearerCredentials。既有 Authenticate 保留 token-string Bearer 入口，兩種驗證模式必須擇一；舊模式拒絕其他 Credential.Kind。
+
+OneCredential 組合多個 extractor，每次請求最多接受一份憑證。非空但格式錯誤、重複 Authorization、重複指定 Cookie、同時提供多個來源或驗證失敗都拒絕，不猜測另一種身分。Bearer scheme 大小寫不敏感。
+
+CookieCredentials 只接受存在的命名 Session Cookie，限 GET／HEAD／OPTIONS；unsafe method 回 COOKIE_UNSAFE_METHOD。Session 模組可提供完成 CSRF 驗證的 extractor，並自行管理 Cookie 安全屬性與 Session 狀態。沒有 Cookie 的 Bearer POST 不受 Cookie extractor 影響。
+
+Challenge／Pending 分別映射 AUTHENTICATION_CHALLENGE_REQUIRED／AUTHENTICATION_PENDING，不繼續 ResolveTenant／Scope／Use Case。擴充契約與生命週期見 [Identity](../../security/identity/README.md)；完整 MFA／OIDC／Device Login 流程由各模組提供。

@@ -103,7 +103,7 @@ def check_imports(packages):
             if framework and imported.startswith(MODULE + "/examples/"):
                 raise ValueError("framework imports example: " + name + " -> " + imported)
             project_role = imported[len(MODULE):].split("/") if imported.startswith(MODULE + "/") else []
-            concrete = imported in {"database/sql", "net/http"} or bool({"infrastructure", "transport"} & set(project_role)) or imported.startswith(("github.com/jackc/", "github.com/nats-io/", MODULE + "/persistence/postgres", MODULE + "/events/nats", MODULE + "/transport/"))
+            concrete = imported in {"database/sql", "net/http"} or bool({"infrastructure", "transport"} & set(project_role)) or imported.startswith(("github.com/jackc/", "github.com/nats-io/", "github.com/go-sql-driver/", "modernc.org/sqlite", MODULE + "/persistence/postgres", MODULE + "/persistence/mysql", MODULE + "/persistence/sqlite", MODULE + "/events/nats", MODULE + "/transport/"))
             if "domain" in role and ("." in imported.split("/")[0] and imported != MODULE + "/domain" or concrete):
                 raise ValueError("forbidden Domain import: " + name + " -> " + imported)
             if "application" in role and concrete:

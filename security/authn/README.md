@@ -1,20 +1,28 @@
-# Authentication：M1 RS256 JWT 驗證
+# JWT 與服務憑證 Adapter
 
-此套件從可信 JWKS URL 驗證 JWT，成功後才在 private context key 安裝 identity。`Identity(ctx)` 供 Tenant／Scope Resolver 讀取 Principal 與 Tenant；不提供可任意安裝 Principal 的 setter。實作見 [jwt.go](jwt.go)。
+本套件提供 RS256 JWT／JWKS Validator 及既有 ServiceVerifier 的相容 Adapter。通用 Identity、Verifier、完成／Challenge／Pending 結果與私有 context 儲存歸 [security/identity](../identity/README.md)；新增 Session、API Key 或其他登入模組不必修改 JWT 程式。
+
+## JWT 組裝
 
 ```go
 validator := authn.NewValidator(issuer, audience, jwksURL,
     &http.Client{Timeout: 2*time.Second})
 authenticated, err := validator.Authenticate(ctx, bearerToken)
-// err 非 nil 即拒絕；只將 authenticated 交給後續 Resolver。
+// 只有 err == nil 才將 authenticated 交給 Tenant／Scope Resolver。
 ```
 
-M1 只接受 RS256，驗證演算法、kid、RSA 簽章、issuer、字串／陣列 audience、exp、nbf，以及非空 sub／tenant_id。RSA modulus 至少 2048 bits，公鑰 exponent 需合法。Token 上限 16 KiB，JWKS 上限 64 KiB；HTTP deadline 與 client timeout 都必須有界。
+Validator 實作 identity.Verifier，Kind 為 bearer；Verify 只回驗證結果，Authenticate／AuthenticateCredential 經共同 Pipeline 完成及安裝 identity。authn.Identity 與 authn.ErrUnauthenticated 保留相容轉接；新程式直接使用 identity 契約，不依賴 JWT Adapter 取得身分。
 
-每次驗證重新取得可信 JWKS，因此新公鑰可在輪替後使用；不可驗證、來源故障與非法 Token 一律 `ErrUnauthenticated`，不回傳 Token 或 JWKS 內容。Issuer 與 JWKS URL 必須來自可信啟動組態，不能採用請求內的 URL。M1 的 HTTP issuer 僅用於 loopback／隔離測試；正式部署應使用 HTTPS。
+JWT 驗證 RS256、kid、RSA 簽章、issuer、字串／陣列 audience、exp、nbf，以及非空 sub／tenant_id。RSA modulus 至少 2048 bits，exponent 必須合法。Token 上限 16 KiB，JWKS 上限 64 KiB。可信 issuer／JWKS URL 來自啟動組態，不能採用請求指定的位置；正式部署使用 HTTPS 與有界 HTTP client。
 
-這是 M1 身分切片：完整 OIDC discovery、快取／更新策略、多演算法、撤權與授權矩陣仍由 M3 交付。身分驗證成功不等於擁有某個資源 Scope 的權限；後續仍需 Resolver／Application 授權。
+每次驗證重新取得 JWKS；來源故障或不可驗證即拒絕。已驗證 Token 的非秘密 amr 可作 assurance metadata，不能代替應用的 step-up 政策。此 Adapter 不負責 OIDC discovery、登入 UI、協定回呼或 Session Store。
 
-驗證：`go test ./security/authn`，涵蓋真實 RSA 簽章、claim 邊界、偽造、過期、JWKS 故障與輪替。分程序真實測試 IdP 見 [M1 指南](../../docs/guides/m1-development.md)。
+## 服務身分與其他登入方式
 
-服務入口可透過 `NewServiceAuthenticator(ServiceVerifier)` 安裝私有 service identity；Verifier 必須驗證部署選定的 mTLS／OAuth credential，回傳目前 Tenant 資格再交 tenancy／Scope Provider 查驗。服務身分不是全域管理員，缺 service Kind／ID／Tenant 或驗證失敗即 UNAUTHENTICATED。
+NewServiceAuthenticator(ServiceVerifier) 保留部署選定 mTLS／OAuth 憑證的入口，經共同 Pipeline 安裝 service identity。底層回傳其他 Principal.Kind、缺 ID／Tenant 或驗證失敗均拒絕。一般使用者 Session／API Key 模組直接實作 identity.Verifier，回傳 user identity，不能借用服務限定入口。
+
+HTTP 使用共用 transport/http 的 CredentialExtractor 對接 Pipeline；預設 Bearer 仍可使用。Cookie 的安全屬性、Session 狀態及寫入時的 CSRF 防護由 Session 模組負責；見 [HTTP 模組](../../transport/http/README.md)。
+
+## 驗證與清理
+
+執行 go test ./security/authn ./security/identity。既有測試使用真實 RSA 簽章及 HTTP JWKS fixture，覆蓋偽造、過期、來源故障與輪替。登入後仍須驗證目前 Tenant／Scope／Permission。HTTP client 及外部資源由組裝端擁有；Adapter 不啟動背景程序，也不記錄 Token 或 JWKS 內容。

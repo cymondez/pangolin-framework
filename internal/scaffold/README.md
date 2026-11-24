@@ -11,3 +11,5 @@ v0.1.0 尚未發行時用 bundled runtime 的本機 replace，版本與 SHA-256 
 生成 API 將實際 Scope Registry 註冊進 Runtime DI，tenant／完整組織模組宣告 RequiredScopeKinds，封存時檢查能力。資料庫 profile marker 在 Ready 前核對；組織 DB 不能直接接到 tenant-only 生成物。生成契約另用獨立管理連線核對 book／Audit／Outbox／冪等結果數、FORCE RLS 與應用角色權限。
 
 專案名稱支援小寫字母、數字、底線及連字號（例如規範的 bookstore-org）；模組名稱使用合法 Go package 識別字。生成物驗收直接使用規範的 bookstore／bookstore-org 命令，實際建置含連字號的 module import path。
+
+兩種 Profile 的 Tenant Resolver 使用 security/identity 共同 reader，HTTP／組織控制面使用 AuthenticateCredential／CredentialExtractor Port。預設組裝選 JWT／Bearer；新增登入模組替換應用的可信 Verifier／擷取組裝，不改框架核心。Runtime bundle 同步包含中立 Identity 與各資料存取 Adapter；引擎專用完整 Profile 的支援邊界維持明示，不因 bundle 包含 Driver 就宣稱全部 SQL 已跨引擎移植。

@@ -116,3 +116,107 @@ func TestFeatureErrorsAndTypes(t *testing.T) {
 		t.Fatal("provider error")
 	}
 }
+
+type recordingSource struct {
+	values []json.RawMessage
+	seen   []scope.ScopeBinding
+	err    error
+}
+
+func (s *recordingSource) Resolve(ctx context.Context, _ string) (settings.Result, error) {
+	if b, ok := scope.Current(ctx); ok {
+		s.seen = append(s.seen, b)
+	}
+	r := settings.Result{Candidates: s.values}
+	if len(s.values) > 0 {
+		r.Value = s.values[0]
+	}
+	return r, s.err
+}
+
+// Features are constrained by Permission, never the reverse: Evaluate first
+// passes the current Permission, then evaluates availability. Feature values
+// never grant permissions and disabled features never change Permission
+// results; ordinary Permission stays independent of Feature state.
+func TestFeaturePermissionBeforeAvailability(t *testing.T) {
+	t.Run("permission-allow-feature-off", func(t *testing.T) {
+		calls, authCalls := 0, 0
+		s, _ := New(source{values: []json.RawMessage{json.RawMessage(`false`)}, calls: &calls}, authority{calls: &authCalls}, map[string]Definition{"f": {Setting: "f", Permission: "use", Kind: Boolean}})
+		v, err := s.Evaluate(bound(t), "f")
+		if err != nil || v.Boolean {
+			t.Fatal("disabled feature must not flip permission or error", v, err)
+		}
+		if authCalls != 1 || calls != 1 {
+			t.Fatal("permission first, then availability", authCalls, calls)
+		}
+	})
+	t.Run("permission-deny-feature-on", func(t *testing.T) {
+		calls, authCalls := 0, 0
+		s, _ := New(source{values: []json.RawMessage{json.RawMessage(`true`)}, calls: &calls}, authority{err: scope.ErrDenied, calls: &authCalls}, map[string]Definition{"f": {Setting: "f", Permission: "use", Kind: Boolean}})
+		if _, err := s.Evaluate(bound(t), "f"); !errors.Is(err, scope.ErrDenied) {
+			t.Fatal("feature on never grants permission", err)
+		}
+		if authCalls != 1 || calls != 0 {
+			t.Fatal("denied permission must deny without reading settings", authCalls, calls)
+		}
+	})
+	t.Run("both-allow", func(t *testing.T) {
+		s, _ := New(source{values: []json.RawMessage{json.RawMessage(`true`)}}, authority{}, map[string]Definition{"f": {Setting: "f", Permission: "use", Kind: Boolean}})
+		v, err := s.Evaluate(bound(t), "f")
+		if err != nil || !v.Boolean {
+			t.Fatal(v, err)
+		}
+	})
+	t.Run("authorization-source-failure-preserves-cause", func(t *testing.T) {
+		offline := errors.New("authority offline")
+		calls := 0
+		s, _ := New(source{values: []json.RawMessage{json.RawMessage(`true`)}, calls: &calls}, authority{err: offline}, map[string]Definition{"f": {Setting: "f", Permission: "use", Kind: Boolean}})
+		_, err := s.Evaluate(bound(t), "f")
+		if !errors.Is(err, offline) {
+			t.Fatal("authorization cause must be preserved", err)
+		}
+		if calls != 0 {
+			t.Fatal("availability must not be evaluated during an authorization outage", calls)
+		}
+	})
+	t.Run("no-binding-denies-without-evaluation", func(t *testing.T) {
+		calls, authCalls := 0, 0
+		s, _ := New(source{values: []json.RawMessage{json.RawMessage(`true`)}, calls: &calls}, authority{calls: &authCalls}, map[string]Definition{"f": {Setting: "f", Permission: "use", Kind: Boolean}})
+		if _, err := s.Evaluate(context.Background(), "f"); !errors.Is(err, scope.ErrDenied) {
+			t.Fatal(err)
+		}
+		if authCalls != 0 || calls != 0 {
+			t.Fatal("unbound context must not evaluate permission or availability", authCalls, calls)
+		}
+	})
+	t.Run("scope-kind-denied-before-settings", func(t *testing.T) {
+		calls := 0
+		s, _ := New(source{values: []json.RawMessage{json.RawMessage(`true`)}, calls: &calls}, authority{}, map[string]Definition{"f": {Setting: "f", Permission: "use", Kind: Boolean, ScopeKinds: []string{"org.organization"}}})
+		if _, err := s.Evaluate(bound(t), "f"); !errors.Is(err, scope.ErrDenied) {
+			t.Fatal(err)
+		}
+		if calls != 0 {
+			t.Fatal("out-of-range scope must not read settings", calls)
+		}
+	})
+	t.Run("settings-resolve-under-current-owner", func(t *testing.T) {
+		src := &recordingSource{values: []json.RawMessage{json.RawMessage(`true`)}}
+		s, _ := New(src, authority{}, map[string]Definition{"f": {Setting: "f", Permission: "use", Kind: Boolean}})
+		ctx := bound(t)
+		b, _ := scope.Current(ctx)
+		v, err := s.Evaluate(ctx, "f")
+		if err != nil || !v.Boolean {
+			t.Fatal(v, err)
+		}
+		if len(src.seen) != 1 || src.seen[0].Ref != b.Ref || src.seen[0].Principal != b.Principal {
+			t.Fatal("feature must resolve settings under its own binding", src.seen)
+		}
+	})
+	t.Run("quota-ceiling-still-applies-after-permission", func(t *testing.T) {
+		s, _ := New(source{values: []json.RawMessage{json.RawMessage(`100`), json.RawMessage(`25`)}}, authority{}, map[string]Definition{"f": {Setting: "f", Permission: "use", Kind: Quota, Ceiling: true}})
+		v, err := s.Evaluate(bound(t), "f")
+		if err != nil || v.Quota != 25 {
+			t.Fatal("ceiling must still intersect candidates after permission passes", v, err)
+		}
+	})
+}

@@ -50,7 +50,7 @@ type view struct {
 
 // NewManager validates mandatory limits before any operation can start.
 func NewManager(resource Resource, defaults DefaultOptions) (UnitOfWorkManager, error) {
-	if resource == nil || defaults.DefaultTimeout <= 0 || defaults.CleanupTimeout <= 0 || defaults.HookTimeout <= 0 || defaults.MaxRequiresNewDepth <= 0 {
+	if resource == nil || defaults.DefaultTimeout <= 0 || defaults.CleanupTimeout <= 0 || defaults.HookTimeout <= 0 || defaults.MaxRequiresNewDepth <= 0 || defaults.DefaultIsolation > Serializable {
 		return nil, fail(ErrOptionsInvalid, "", NotStarted, nil)
 	}
 	m := &manager{resource: resource, defaults: defaults, key: "resource:" + rand.Text(), rls: true}
@@ -208,7 +208,10 @@ func (m *manager) Within(ctx context.Context, o Options, callback func(context.C
 	}
 	isolation := o.Isolation
 	if transactional && isolation == IsolationDefault {
-		isolation = ReadCommitted
+		isolation = m.defaults.DefaultIsolation
+		if isolation == IsolationDefault {
+			isolation = ReadCommitted
+		}
 	}
 	timeout := o.Timeout
 	if timeout == 0 {

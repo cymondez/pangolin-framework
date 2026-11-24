@@ -87,4 +87,23 @@ func TestCoverageCLIRejectsIncompleteEvidence(t *testing.T) {
 	if err := checkCoverage(root, profile, io.Discard); err == nil {
 		t.Fatal("critical package failed but aggregate masked it")
 	}
+	// Each new database backend package is critical on its own raw counts even
+	// when the aggregate stays above 90%.
+	rows := []string{
+		"github.com/cymondez/pangolin-framework/kernel/check/f.go:2.1,2.26 1 1",
+		"github.com/cymondez/pangolin-framework/other/f.go:2.1,2.26 100 1",
+	}
+	for _, critical := range []string{"persistence/database", "persistence/mysql", "persistence/sqlite"} {
+		write(critical+"/f.go", "package "+filepath.Base(critical)+"\nfunc F() int { return 1 }\n")
+		rows = append(rows, "github.com/cymondez/pangolin-framework/"+critical+"/f.go:2.1,2.26 1 0")
+		write("profile.out", "mode: atomic\n"+strings.Join(rows, "\n")+"\n")
+		if err := checkCoverage(root, profile, io.Discard); err == nil {
+			t.Fatal("new critical database package failed but aggregate masked it")
+		}
+		rows[len(rows)-1] = "github.com/cymondez/pangolin-framework/" + critical + "/f.go:2.1,2.26 1 1"
+	}
+	write("profile.out", "mode: atomic\n"+strings.Join(rows, "\n")+"\n")
+	if err := checkCoverage(root, profile, io.Discard); err != nil {
+		t.Fatal(err)
+	}
 }

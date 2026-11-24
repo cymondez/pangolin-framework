@@ -41,6 +41,26 @@ def validate_python_output(text,required=()):
     if any(name not in text for name in required):raise ValueError("required Python acceptance case missing")
 
 
+def database_packages(milestone,path):
+    """Older milestone runners never require the backend suite; M5+ acceptance fails closed without it."""
+    if int(milestone[1:])<5:return []
+    if not path.is_dir():raise ValueError("M5 corrective acceptance requires the tests/database backend suite")
+    return ["./tests/database"]
+
+
+def regression_names(field):
+    return list(field.values()) if isinstance(field,dict) else list(field)
+
+
+def required_integration_tests(increments):
+    """M1 flow plus every incremental integration and corrective database case."""
+    required=[m0.MODULE+"/tests/m1:TestM1Flow"]
+    for extra in increments:
+        required.extend(extra["integration_tests"].values())
+        required.extend(regression_names(extra.get("regression_integration_tests",{})))
+    return required
+
+
 def validate_mapping(mapping):
     expected={s["id"] for g in m0.load(ROOT/"tests/contract/subtests.json")["groups"] if g["milestone"]=="M1" for s in g["subtests"]}
     go,python=mapping["go_tests"],mapping["python_tests"]
@@ -153,8 +173,8 @@ def verify(args, increment=None):
         packages=",".join(p for p in m0.command(["go","list","./..."]).splitlines() if "/internal/testkit/" not in p and "/infrastructure/internal/" not in p)
         unit=execute(["go","test","-count=1","-json","-covermode=atomic","-coverpkg="+packages,"-coverprofile="+str(output/"unit.out"),"./..."],"unit")
         report["tests"]=validate_tests(unit,[*mapping["go_tests"].values(),*(test for extra in increments for test in [*extra["unit_tests"].values(),*extra.get("regression_tests",[])])])
-        integration=execute(["go","test","-p=1","-count=1","-json","-tags=integration","-covermode=atomic","-coverpkg="+packages,"-coverprofile="+str(output/"integration.out"),"./tests/m1",*("./tests/"+extra["milestone"].lower() for extra in increments)],"integration")
-        report["integration_tests"]=validate_tests(integration,[m0.MODULE+"/tests/m1:TestM1Flow",*(test for extra in increments for test in extra["integration_tests"].values())])
+        integration=execute(["go","test","-p=1","-count=1","-json","-tags=integration","-covermode=atomic","-coverpkg="+packages,"-coverprofile="+str(output/"integration.out"),"./tests/m1",*("./tests/"+extra["milestone"].lower() for extra in increments),*database_packages(milestone,ROOT/"tests/database")],"integration")
+        report["integration_tests"]=validate_tests(integration,required_integration_tests(increments))
         report["e2e"]=m1_e2e.run(output,args.project,packages,execute)
         report["commands"].append({"name":"e2e","exit_code":0})
         profiles=[output/"unit.out",output/"integration.out",output/"e2e.out"]

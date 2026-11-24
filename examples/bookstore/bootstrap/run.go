@@ -25,7 +25,9 @@ import (
 	"github.com/cymondez/pangolin-framework/persistence/postgres"
 	"github.com/cymondez/pangolin-framework/persistence/uow"
 	"github.com/cymondez/pangolin-framework/security/authn"
+	"github.com/cymondez/pangolin-framework/security/identity"
 	"github.com/cymondez/pangolin-framework/security/scope"
+	frameworkhttp "github.com/cymondez/pangolin-framework/transport/http"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nats-io/nats.go"
 )
@@ -137,7 +139,11 @@ func Run(ctx context.Context, mode string, args []string, out io.Writer, decorat
 			if e != nil {
 				return e
 			}
-			server.Handler = &transport.Handler{Books: application.NewBooks(manager, infrastructure.Repository{}, infrastructure.Repository{}), Auth: authn.NewValidator(values["jwt.issuer"], values["jwt.audience"], values["jwt.jwks_url"], &http.Client{Timeout: 2 * time.Second}), Scopes: scope.NewTenantResolver(authn.Identity), Work: group, Ready: h.Ready}
+			// The API entry uses the extension ports: Bearer credential
+			// extraction plus the trusted credential authentication pipeline.
+			// The JWT validator remains the default working profile.
+			validator := authn.NewValidator(values["jwt.issuer"], values["jwt.audience"], values["jwt.jwks_url"], &http.Client{Timeout: 2 * time.Second})
+			server.Handler = &transport.Handler{Books: application.NewBooks(manager, infrastructure.Repository{}, infrastructure.Repository{}), CredentialAuth: validator, Credentials: frameworkhttp.BearerCredentials(), Scopes: scope.NewTenantResolver(identity.Identity), Work: group, Ready: h.Ready}
 			listener, e := net.Listen("tcp", *listen)
 			if e != nil {
 				return e

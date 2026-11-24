@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/cymondez/pangolin-framework/persistence/database"
 	"github.com/cymondez/pangolin-framework/persistence/uow"
 	"github.com/cymondez/pangolin-framework/security/scope"
 	"github.com/jackc/pgx/v5"
@@ -118,6 +119,11 @@ func (r *Resource) Begin(ctx context.Context, o uow.EffectiveOptions) (context.C
 		t.release.Do(func() { c := conn.Hijack(); _ = c.PgConn().Conn().Close() })
 		return nil, nil, err
 	}
+	// Install the driver-neutral Port view next to the guarded pgx
+	// executor. Both share the same operation, database identity and
+	// transaction; wrappers (events/postgres.Resource) delegating to this
+	// Begin expose the neutral Port automatically.
+	ctx = database.WithExecutor(ctx, &neutralBinder{key: r.DatabaseKey()})
 	return context.WithValue(ctx, executorKey{}, t), t, nil
 }
 

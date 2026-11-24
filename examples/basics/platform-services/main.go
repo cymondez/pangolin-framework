@@ -87,6 +87,9 @@ func main() {
 	channel, err := settingValues.Resolve(ctx, "Channels:0:Name")
 	must(err)
 	fmt.Println("JSON array setting:", string(channel.Value))
+	layers, err := settingValues.Layers(ctx, "theme")
+	must(err)
+	fmt.Println("Setting layers:", layers)
 
 	flags, err := features.New(settingValues, permissions, map[string]features.Definition{
 		"books.limit": {Setting: "book_limit", Permission: "books.read", Kind: features.Quota, Ceiling: true, ScopeKinds: []string{"tenant"}},

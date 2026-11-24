@@ -6,22 +6,30 @@ import (
 	"errors"
 	"io"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/cymondez/pangolin-framework/persistence/uow"
-	"github.com/cymondez/pangolin-framework/security/authn"
+	"github.com/cymondez/pangolin-framework/security/identity"
 )
 
 var ErrValidation = errors.New("VALIDATION_FAILED")
 var ErrBodyTooLarge = errors.New("REQUEST_TOO_LARGE")
 
 type PipelineOptions struct {
-	Timeout        time.Duration
-	MaxBodyBytes   int64
-	Manager        uow.UnitOfWorkManager
-	ReadOnly       bool
-	Authenticate   func(context.Context, string) (context.Context, error)
+	Timeout      time.Duration
+	MaxBodyBytes int64
+	Manager      uow.UnitOfWorkManager
+	ReadOnly     bool
+	// Authenticate verifies the extracted bearer credential value. It keeps
+	// the published Bearer-only profile; Credentials stays the default
+	// extraction and no other scheme is consulted.
+	Authenticate func(context.Context, string) (context.Context, error)
+	// AuthenticateCredential verifies the full extracted credential. When it
+	// is set, Credentials supplies pluggable request credential extraction
+	// (nil defaults to Bearer). Exactly one authenticator must be configured.
+	AuthenticateCredential func(context.Context, identity.Credential) (context.Context, error)
+	// Credentials is the request credential extractor. nil means Bearer.
+	Credentials    CredentialExtractor
 	ResolveTenant  func(context.Context, *http.Request) (context.Context, error)
 	ResolveScope   func(context.Context, *http.Request) (context.Context, error)
 	Entry          func(context.Context) error
@@ -40,7 +48,7 @@ func notifyRejected(f func(context.Context, error), ctx context.Context, err err
 }
 
 func NewPipeline(o PipelineOptions) (*Pipeline, error) {
-	if o.Timeout <= 0 || o.MaxBodyBytes <= 0 || o.Manager == nil || o.Authenticate == nil || o.ResolveTenant == nil || o.ResolveScope == nil || o.Entry == nil || o.Decode == nil || o.Work == nil {
+	if o.Timeout <= 0 || o.MaxBodyBytes <= 0 || o.Manager == nil || (o.Authenticate == nil) == (o.AuthenticateCredential == nil) || o.ResolveTenant == nil || o.ResolveScope == nil || o.Entry == nil || o.Decode == nil || o.Work == nil {
 		return nil, uow.ErrOptionsInvalid
 	}
 	return &Pipeline{o}, nil
@@ -62,18 +70,42 @@ func (p *Pipeline) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			fail(errors.New("INTERNAL"))
 		}
 	}()
-	auth := r.Header.Get("Authorization")
-	if !strings.HasPrefix(auth, "Bearer ") || strings.ContainsAny(strings.TrimPrefix(auth, "Bearer "), " \t\r\n") || len(auth) <= 7 {
-		fail(authn.ErrUnauthenticated)
+	extract := o.Credentials
+	if extract == nil {
+		extract = BearerCredentials()
+	}
+	credential, present, extractErr := extract(r)
+	if extractErr != nil {
+		fail(extractErr)
 		return
 	}
-	ctx, err := o.Authenticate(ctx, strings.TrimPrefix(auth, "Bearer "))
-	if err != nil {
-		fail(err)
+	if !present || credential.Value == "" {
+		fail(identity.ErrUnauthenticated)
 		return
+	}
+	if o.AuthenticateCredential != nil {
+		authenticated, err := o.AuthenticateCredential(ctx, credential)
+		if err != nil {
+			fail(err)
+			return
+		}
+		ctx = authenticated
+	} else {
+		// The legacy token-string entry point is Bearer-only by contract: a
+		// non-bearer credential must never be fed to it as a token value.
+		if credential.Kind != identity.BearerKind {
+			fail(identity.ErrUnauthenticated)
+			return
+		}
+		authenticated, err := o.Authenticate(ctx, credential.Value)
+		if err != nil {
+			fail(err)
+			return
+		}
+		ctx = authenticated
 	}
 	r = r.WithContext(ctx)
-	ctx, err = o.ResolveTenant(ctx, r)
+	ctx, err := o.ResolveTenant(ctx, r)
 	if err != nil {
 		fail(err)
 		return

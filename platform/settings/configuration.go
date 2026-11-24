@@ -5,12 +5,18 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"slices"
 
 	"github.com/cymondez/pangolin-framework/kernel/config"
 )
 
-// ConfigurationProvider uses ABP's exact Settings:+name lookup. Configuration
-// text becomes a JSON string unless a converter is explicitly registered.
+// ConfigurationProvider implements the standard Config layer, the lowest
+// priority above Default. It uses ABP's exact Settings:+name lookup with the
+// existing flatmap; configuration text becomes a JSON string unless a converter
+// is explicitly registered. Config is distinct from the mutable Global layer:
+// values never store through the empty-Layer Global address, and every
+// converted value is appended after the base snapshot so Global overrides
+// Config.
 type ConfigurationProvider struct {
 	base          Provider
 	configuration config.Reader
@@ -39,14 +45,9 @@ func (p *ConfigurationProvider) Read(ctx context.Context, layers []Layer, key st
 	if err != nil {
 		return Snapshot{}, err
 	}
-	application := false
-	for _, layer := range layers {
-		if layer == (Layer{}) {
-			application = true
-			break
-		}
-	}
-	if !application {
+	// The Config layer participates whenever the standard order consults the
+	// Global address; non-inheriting definitions never reach it.
+	if !slices.Contains(layers, Layer{}) {
 		return snapshot, nil
 	}
 	value, found := p.configuration.Lookup("Settings:" + key)
@@ -70,6 +71,9 @@ func (p *ConfigurationProvider) Read(ctx context.Context, layers []Layer, key st
 	snapshot.Values = append(snapshot.Values, append(json.RawMessage(nil), encoded...))
 	return snapshot, nil
 }
+// Put delegates unchanged to the base provider: the Config layer is read-only
+// configuration, so writes address the base store (the empty Layer writes
+// Global) and never store a configuration value.
 func (p *ConfigurationProvider) Put(ctx context.Context, layer Layer, key string, value json.RawMessage) (uint64, error) {
 	w, ok := p.base.(interface {
 		Put(context.Context, Layer, string, json.RawMessage) (uint64, error)

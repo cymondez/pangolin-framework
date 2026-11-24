@@ -39,8 +39,8 @@ jobs:
         env:
           PANGOLIN_SOURCE_COMMIT: ${{ github.sha }}
         run: |
-          docker compose -p pangolin-m5-ci -f deploy/compose/m1.yaml config --quiet
-          docker compose -p pangolin-m5-ci -f deploy/compose/m1.yaml up -d --build --wait --wait-timeout 60
+          docker compose -p pangolin-m5-ci -f deploy/compose/m1.yaml -f deploy/compose/m5-databases.yaml config --quiet
+          docker compose -p pangolin-m5-ci -f deploy/compose/m1.yaml -f deploy/compose/m5-databases.yaml up -d --build --wait --wait-timeout 120
       - name: Cumulative cases, real integration/E2E, coverage, race and licenses
         env:
           PANGOLIN_M5_PROJECT: pangolin-m5-ci
@@ -53,7 +53,7 @@ jobs:
         run: sh scripts/check.sh
       - name: Capture this project's logs
         if: always()
-        run: docker compose -p pangolin-m5-ci -f deploy/compose/m1.yaml logs --no-color > artifacts/compose.log
+        run: docker compose -p pangolin-m5-ci -f deploy/compose/m1.yaml -f deploy/compose/m5-databases.yaml logs --no-color > artifacts/compose.log
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
@@ -62,7 +62,7 @@ jobs:
           if-no-files-found: error
       - name: Stop only this job's disposable environment
         if: always()
-        run: docker compose -p pangolin-m5-ci -f deploy/compose/m1.yaml down --volumes --rmi local
+        run: docker compose -p pangolin-m5-ci -f deploy/compose/m1.yaml -f deploy/compose/m5-databases.yaml down --volumes --rmi local
   windows-portability:
     runs-on: windows-2025
     steps:
