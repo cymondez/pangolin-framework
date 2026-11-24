@@ -14,9 +14,9 @@ def validate_mapping(mapping):
     if mapping['milestone']!='M4' or mapping['baseline']!='v1.3' or set.union(*sets)!=expected or sum(map(len,sets))!=len(expected):raise ValueError('M4 acceptance mapping incomplete or duplicated')
     if mapping.get('pending') or any(not test for key in ('unit_tests','integration_tests','python_tests') for test in mapping[key].values()):raise ValueError('M4 still has unimplemented acceptance cases')
 
-def validate_report(report,commit,directory,mapping):
+def validate_report(report,commit,directory,mapping,milestone='M4'):
     m1.validate_report(report,commit,directory)
-    if report['milestone']!='M4' or not {'m2-regression','m3-regression','m4-regression'}<={c['name'] for c in report['commands']}:raise ValueError('M4 cumulative regression missing')
+    if report['milestone']!=milestone or not {'m2-regression','m3-regression','m4-regression'}<={c['name'] for c in report['commands']}:raise ValueError('M4 cumulative regression missing')
     for extra in (m0.load(ROOT/'tests/contract/m2.json'),m0.load(ROOT/'tests/contract/m3.json'),mapping):
         for field,key in (('tests','unit_tests'),('integration_tests','integration_tests')):
             if not set(extra[key].values())<=set(report[field]):raise ValueError('required cumulative case evidence missing')

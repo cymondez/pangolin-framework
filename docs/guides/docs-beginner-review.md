@@ -1,5 +1,19 @@
 # 官方網站的初學者走查
 
+## CLI 與設定／功能／快取增量（2026-11-24）
+
+Runtime 來源 `88f32eb6f2aa02c601dbc930f3f5a7b76911e185` 通過同版 Windows／Linux（含 race）Gate 後，才整合 Copilot CLI 使用 `litellm-zenlinkos/glm-5.3:cloud` 準備的網站與範例修改。主代理另行審查差異與驗收，沒有修改實作規範。
+
+新增生成 Bookstore 循序教學、CLI 參考、Settings／Features／Cache 指南；說明 checkout 舊範例與生成 API 的回應差異、完整組織 Profile、同版 Runtime bundle 及升級限制。各教學交代前置條件、操作目錄、完整程式、預期結果及下一步；公開導覽不加入里程碑或 Gate 文件。
+
+`python scripts/docs_examples.py --database` 在全新 consumer module 執行十份程式，包含真實 PostgreSQL 交易。新 platform-services 範例實際印出七行，驗證 Tenant cache 隔離、JSON 陣列設定、quota 上限、Permission 優先與通知失敗後版本收斂。結果保存於 `artifacts/docs/beginner-examples.json`。
+
+Windows 與 Docker Linux 的站點測試及 production build 都通過：41 頁、2127 個站內連結／錨點、一份本機搜尋索引。Windows 首次靜態輸出遇到 sandbox EPERM，以相同命令取得所需權限後通過，沒有變更 ACL。
+
+瀏覽器實際由生成 Bookstore 教學進入 Settings，確認七行預期輸出及完整程式可讀；搜尋 Channels 出現新增 JSON 設定段落與範例。收合導覽能找到「設定、功能與快取」三頁及 CLI 參考，並實際開啟 CLI 命令表。當前約 897px viewport 的標題、程式與表格顯示正常。本次沒有額外重做配色或完整裝置矩陣。
+
+既有 `pangolin-docs` 已重建且健康，持續提供 `http://localhost:18088/`。版本仍為 0.1.0 預覽；沒有建立正式版本快照或發行 tag。
+
 ## 背景工作與觀測增量（2026-11-23）
 
 Runtime 來源 `43dcd79e24f5ed74a544a760301f4fec95dc2ca2` 通過同版 Windows／Linux（含 race）驗收後，更新公開網站。新增「背景工作與維運」導覽及持久化 Jobs、完整 OpenTelemetry／Health 程式、容量／恢復指南；補上 Migration、容量錯誤、升級與功能相容性。公開導覽未加入內部里程碑或驗收連結。
@@ -72,3 +86,13 @@ Native／Docker production build 都通過 33 頁、1559 個站內連結／錨�
 瀏覽器從首頁的使用範例進入新授權指南，確認操作目錄、完整 main.go、預期輸出、教學身分的邊界與下一步。搜尋 ownerless 能找到組織治理並跳到相關章節，實際讀取 ownerless／Recover 與替換 Provider 的說明，再進入可靠配送指南確認前置條件及完整組裝檔。桌面 viewport 1280px、documentWidth 1265px，沒有頁面水平溢出；本次未重做手機與配色測試。摘要保存於 `artifacts/docs/m3-qa.json`。
 
 本次專用 PostgreSQL／NATS／IdP、network、兩個測試 volumes、Linux runner cache volume 及專用 IdP 映像已核對歸屬後清除，其他專案未受影響。既有 docs 服務已更新且健康，持續提供 `http://localhost:18088/`。
+
+## M5 分層、資料存取與登入擴充走查（2026-11-24）
+
+Runtime 修正來源 0d811a21f8b599196f0bad2dd2ee9033d1aa184b 通過同版 Windows／Linux 完整 Gate 後，更新公開手冊。新增中立資料存取、MySQL／SQLite Adapter 指南，改寫 JWT 為 Adapter 的登入教學，並同步 Settings 五至七層、Feature 受 Permission 限制、相容性與升級說明；未加入內部 Gate／spec 導覽。
+
+python scripts/docs_examples.py --database 實際執行十份獨立 consumer 範例、環境覆寫、非法組態及真實交易，全部通過。另將 Service／中立 Repository、三個引擎組裝與 Session Verifier 的六份完整 Go 程式放在獨立 consumer 編譯，與發布頁面的程式區塊逐一比對，結果見 artifacts/docs/m5-additional-snippets.json。
+
+npm test、原生 production build 與 Docker build 全部通過：44 頁、2310 個站內連結／錨點、一份本機搜尋索引、Framework 0.1.0。瀏覽走查確認「使用指南 → 資料庫選擇 → SQLite」可到達完整組裝與隔離說明，搜尋 Session 能進入可擴充登入頁並閱讀 CSRF／Challenge／Pending 邊界。未把尚未提供的完整 MFA／OIDC／Device Login 協定寫成已交付。
+
+依使用者後續偏好，剩餘 Web 驗證改用 CLI／HTTP：六條實際 URL 返回 200，並核對首頁中立文案、三引擎頁面、登入與 Settings 內容；結果見 artifacts/docs/m5-http-checks.json。網站持續由原 pangolin-docs 服務提供於 http://localhost:18088/。自有測試 containers／network／volumes／IdP 映像與 Linux cache 已按歸屬清除，清理紀錄留在 artifacts/docs/m5-cleanup-result.json，其他專案未動。

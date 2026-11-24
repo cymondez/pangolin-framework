@@ -1,0 +1,760 @@
+{
+  "milestone": "M5",
+  "status": "verified",
+  "source_commit": "0d811a21f8b599196f0bad2dd2ee9033d1aa184b",
+  "source_sha256": "78b1baaa6cf412e7727b6e3da8d95f26764a67e26cd781dfd8a67de98a74998f",
+  "baseline": "v1.3",
+  "named_subtests": 25,
+  "reports": {
+    "windows-amd64": "14aefb4476286e63f855cf5cbcb83516513f507355f27e18995e94753ab05aa1",
+    "linux-amd64": "2226a7fe8ff9440b1c291dd78468e837825c0c56fa1046f4dc335a4c23b9a954"
+  },
+  "framework_version": "0.1.0",
+  "checked_date": "2026-11-24",
+  "gate_sha256": "a3f8628e718b2d25a4ae6ff0ff0285e2dff33586b3bb11deec623b2c0a79bb8f",
+  "regression_tests": [
+    "github.com/cymondez/pangolin-framework/kernel/config:TestJSONConfiguration",
+    "github.com/cymondez/pangolin-framework/platform/settings:TestA65JSONConfiguration/json-flatmap",
+    "github.com/cymondez/pangolin-framework/platform/settings:TestA65JSONConfiguration/configuration-fallback",
+    "github.com/cymondez/pangolin-framework/platform/settings:TestA65JSONConfiguration/configuration-overrides-cache-update",
+    "github.com/cymondez/pangolin-framework/platform/settings:TestJSONConfigurationScopeInheritance",
+    "github.com/cymondez/pangolin-framework/platform/cache:TestScopedFillInvalidation",
+    "github.com/cymondez/pangolin-framework/platform/settings:TestSettingsStandardLayers",
+    "github.com/cymondez/pangolin-framework/platform/settings:TestSettingsExactLayerPrecedence",
+    "github.com/cymondez/pangolin-framework/platform/settings:TestSettingsConfigGlobalCoexistence",
+    "github.com/cymondez/pangolin-framework/platform/settings:TestConfigurationExactSettingsNamespace",
+    "github.com/cymondez/pangolin-framework/platform/settings:TestConfigurationBelowGlobal",
+    "github.com/cymondez/pangolin-framework/platform/settings:TestSettingsOwnerIsolation",
+    "github.com/cymondez/pangolin-framework/platform/settings:TestSettingsSourceFailure",
+    "github.com/cymondez/pangolin-framework/platform/features:TestFeaturePermissionBeforeAvailability",
+    "github.com/cymondez/pangolin-framework/persistence/database:TestSQLiteCommitRollbackAndOwnerScoping",
+    "github.com/cymondez/pangolin-framework/persistence/database:TestSQLiteRequiredChildViews",
+    "github.com/cymondez/pangolin-framework/persistence/database:TestSQLiteRequiresNewSemantics",
+    "github.com/cymondez/pangolin-framework/persistence/database:TestSQLiteGuardsAndCancellation",
+    "github.com/cymondez/pangolin-framework/persistence/database:TestSQLiteRowAndCursorViews",
+    "github.com/cymondez/pangolin-framework/persistence/database:TestSQLitePooledReads",
+    "github.com/cymondez/pangolin-framework/persistence/sqlite:TestForeignKeysOnEveryPooledConnection",
+    "github.com/cymondez/pangolin-framework/security/identity:TestPipelineConstruction",
+    "github.com/cymondez/pangolin-framework/security/identity:TestPipelineDispatchWithoutFallback",
+    "github.com/cymondez/pangolin-framework/security/identity:TestPipelineCredentialBounds",
+    "github.com/cymondez/pangolin-framework/security/identity:TestPipelineValidatesAuthenticatedResults",
+    "github.com/cymondez/pangolin-framework/security/identity:TestChallengeAndPendingNeverInstall",
+    "github.com/cymondez/pangolin-framework/security/identity:TestPipelineCancellation",
+    "github.com/cymondez/pangolin-framework/security/identity:TestMethodMetadataImmutability",
+    "github.com/cymondez/pangolin-framework/security/identity:TestCancellationDuringVerifierNeverInstalls",
+    "github.com/cymondez/pangolin-framework/security/identity:TestChallengeMetadataDetached",
+    "github.com/cymondez/pangolin-framework/security/identity:TestDistinctUserAndServiceIdentities",
+    "github.com/cymondez/pangolin-framework/security/authn:TestValidatorAdapterKindDispatch",
+    "github.com/cymondez/pangolin-framework/security/authn:TestServiceAdapterKindDispatch",
+    "github.com/cymondez/pangolin-framework/security/authn:TestServiceAdapterCannotMintUserPrincipal",
+    "github.com/cymondez/pangolin-framework/security/authn:TestValidatorPipelineRejectsForeignKinds",
+    "github.com/cymondez/pangolin-framework/transport/http:TestBearerCredentialExtraction",
+    "github.com/cymondez/pangolin-framework/transport/http:TestCookieCredentialExtraction",
+    "github.com/cymondez/pangolin-framework/transport/http:TestOneCredentialExtraction",
+    "github.com/cymondez/pangolin-framework/transport/http:TestPipelinePluggableSessionCredentials",
+    "github.com/cymondez/pangolin-framework/transport/http:TestPipelineAuthenticatorConfiguration",
+    "github.com/cymondez/pangolin-framework/transport/http:TestPipelineLegacyAuthenticateRejectsNonBearer",
+    "github.com/cymondez/pangolin-framework/examples/bookstore/transport/http:TestExternalUserSessionReachesBookstore",
+    "github.com/cymondez/pangolin-framework/examples/bookstore/transport/http:TestExternalSessionVerifierIsTrustedRegistration",
+    "github.com/cymondez/pangolin-framework/examples/bookstore/transport/http:TestHandlerWithoutAuthenticators",
+    "github.com/cymondez/pangolin-framework/examples/bookstore/transport/http:TestHandlerRejectsBothAuthenticators",
+    "github.com/cymondez/pangolin-framework/examples/bookstore/transport/http:TestExternalSessionCurrentAuthorityAndPolicy",
+    "github.com/cymondez/pangolin-framework/modules/organization/transport/http:TestCredentialAuthenticationForwardingContract",
+    "github.com/cymondez/pangolin-framework/modules/organization/transport/http:TestHandlerAuthenticatorSelection",
+    "github.com/cymondez/pangolin-framework/persistence/database:TestCleanupCancelsInFlightQueryAndReusesPool",
+    "github.com/cymondez/pangolin-framework/persistence/database:TestCleanupEndsStatementRegisteredWhileBusy",
+    "github.com/cymondez/pangolin-framework/persistence/database:TestSetBusyAfterCleanupIsDoomedAndSelfCloses",
+    "github.com/cymondez/pangolin-framework/persistence/database:TestCleanupWaitIsBoundedByDeadline",
+    "github.com/cymondez/pangolin-framework/persistence/database:TestPooledBusyCursorCleanupReleasesSession",
+    "github.com/cymondez/pangolin-framework/persistence/database:TestAbandonedCursorCloseAfterCleanupIsIdempotent",
+    "github.com/cymondez/pangolin-framework/persistence/database:TestCursorCloseAndErrRaceSessionCleanup",
+    "github.com/cymondez/pangolin-framework/persistence/database:TestBeginGuards"
+  ],
+  "regression_integration_tests": [
+    "github.com/cymondez/pangolin-framework/tests/database:TestDatabasePostgresCommitRollbackContract",
+    "github.com/cymondez/pangolin-framework/tests/database:TestDatabasePostgresOwnerScopedContract",
+    "github.com/cymondez/pangolin-framework/tests/database:TestDatabasePostgresGuardContract",
+    "github.com/cymondez/pangolin-framework/tests/database:TestDatabaseMySQLCommitRollbackContract",
+    "github.com/cymondez/pangolin-framework/tests/database:TestDatabaseMySQLOwnerScopedContract",
+    "github.com/cymondez/pangolin-framework/tests/database:TestDatabaseMySQLGuardContract",
+    "github.com/cymondez/pangolin-framework/tests/database:TestDatabaseCapabilityAdmissionContract"
+  ],
+  "runners": {
+    "windows-amd64": {
+      "coverage": {
+        "overall": {
+          "covered_statements": 5393,
+          "total_statements": 5789
+        },
+        "packages": {
+          "github.com/cymondez/pangolin-framework/application": {
+            "covered_statements": 23,
+            "total_statements": 24
+          },
+          "github.com/cymondez/pangolin-framework/cmd/pangolin": {
+            "covered_statements": 5,
+            "total_statements": 6
+          },
+          "github.com/cymondez/pangolin-framework/events/distributed": {
+            "covered_statements": 84,
+            "total_statements": 88
+          },
+          "github.com/cymondez/pangolin-framework/events/inbox": {
+            "covered_statements": 61,
+            "total_statements": 62
+          },
+          "github.com/cymondez/pangolin-framework/events/local": {
+            "covered_statements": 59,
+            "total_statements": 60
+          },
+          "github.com/cymondez/pangolin-framework/events/nats": {
+            "covered_statements": 42,
+            "total_statements": 44
+          },
+          "github.com/cymondez/pangolin-framework/events/outbox": {
+            "covered_statements": 79,
+            "total_statements": 81
+          },
+          "github.com/cymondez/pangolin-framework/events/postgres": {
+            "covered_statements": 228,
+            "total_statements": 248
+          },
+          "github.com/cymondez/pangolin-framework/examples/bookstore/application": {
+            "covered_statements": 19,
+            "total_statements": 25
+          },
+          "github.com/cymondez/pangolin-framework/examples/bookstore/bootstrap": {
+            "covered_statements": 126,
+            "total_statements": 146
+          },
+          "github.com/cymondez/pangolin-framework/examples/bookstore/cmd/api": {
+            "covered_statements": 3,
+            "total_statements": 5
+          },
+          "github.com/cymondez/pangolin-framework/examples/bookstore/cmd/worker": {
+            "covered_statements": 3,
+            "total_statements": 5
+          },
+          "github.com/cymondez/pangolin-framework/examples/bookstore/domain": {
+            "covered_statements": 3,
+            "total_statements": 4
+          },
+          "github.com/cymondez/pangolin-framework/examples/bookstore/infrastructure": {
+            "covered_statements": 135,
+            "total_statements": 170
+          },
+          "github.com/cymondez/pangolin-framework/examples/bookstore/transport/http": {
+            "covered_statements": 107,
+            "total_statements": 115
+          },
+          "github.com/cymondez/pangolin-framework/internal/quality": {
+            "covered_statements": 132,
+            "total_statements": 132
+          },
+          "github.com/cymondez/pangolin-framework/internal/scaffold": {
+            "covered_statements": 321,
+            "total_statements": 378
+          },
+          "github.com/cymondez/pangolin-framework/kernel/config": {
+            "covered_statements": 181,
+            "total_statements": 189
+          },
+          "github.com/cymondez/pangolin-framework/kernel/di": {
+            "covered_statements": 179,
+            "total_statements": 182
+          },
+          "github.com/cymondez/pangolin-framework/kernel/module": {
+            "covered_statements": 152,
+            "total_statements": 159
+          },
+          "github.com/cymondez/pangolin-framework/kernel/runtime": {
+            "covered_statements": 173,
+            "total_statements": 178
+          },
+          "github.com/cymondez/pangolin-framework/modules/organization": {
+            "covered_statements": 733,
+            "total_statements": 805
+          },
+          "github.com/cymondez/pangolin-framework/modules/organization/transport/http": {
+            "covered_statements": 74,
+            "total_statements": 75
+          },
+          "github.com/cymondez/pangolin-framework/observability": {
+            "covered_statements": 112,
+            "total_statements": 119
+          },
+          "github.com/cymondez/pangolin-framework/persistence/database": {
+            "covered_statements": 302,
+            "total_statements": 320
+          },
+          "github.com/cymondez/pangolin-framework/persistence/idempotency": {
+            "covered_statements": 94,
+            "total_statements": 98
+          },
+          "github.com/cymondez/pangolin-framework/persistence/migration": {
+            "covered_statements": 195,
+            "total_statements": 203
+          },
+          "github.com/cymondez/pangolin-framework/persistence/mysql": {
+            "covered_statements": 35,
+            "total_statements": 38
+          },
+          "github.com/cymondez/pangolin-framework/persistence/postgres": {
+            "covered_statements": 176,
+            "total_statements": 183
+          },
+          "github.com/cymondez/pangolin-framework/persistence/sqlite": {
+            "covered_statements": 33,
+            "total_statements": 36
+          },
+          "github.com/cymondez/pangolin-framework/persistence/uow": {
+            "covered_statements": 333,
+            "total_statements": 356
+          },
+          "github.com/cymondez/pangolin-framework/platform/audit": {
+            "covered_statements": 28,
+            "total_statements": 28
+          },
+          "github.com/cymondez/pangolin-framework/platform/cache": {
+            "covered_statements": 118,
+            "total_statements": 127
+          },
+          "github.com/cymondez/pangolin-framework/platform/features": {
+            "covered_statements": 53,
+            "total_statements": 56
+          },
+          "github.com/cymondez/pangolin-framework/platform/jobs": {
+            "covered_statements": 120,
+            "total_statements": 132
+          },
+          "github.com/cymondez/pangolin-framework/platform/jobs/postgres": {
+            "covered_statements": 104,
+            "total_statements": 115
+          },
+          "github.com/cymondez/pangolin-framework/platform/settings": {
+            "covered_statements": 145,
+            "total_statements": 152
+          },
+          "github.com/cymondez/pangolin-framework/security/authn": {
+            "covered_statements": 85,
+            "total_statements": 89
+          },
+          "github.com/cymondez/pangolin-framework/security/identity": {
+            "covered_statements": 60,
+            "total_statements": 63
+          },
+          "github.com/cymondez/pangolin-framework/security/policy": {
+            "covered_statements": 29,
+            "total_statements": 29
+          },
+          "github.com/cymondez/pangolin-framework/security/scope": {
+            "covered_statements": 136,
+            "total_statements": 145
+          },
+          "github.com/cymondez/pangolin-framework/tenancy": {
+            "covered_statements": 46,
+            "total_statements": 47
+          },
+          "github.com/cymondez/pangolin-framework/tenancy/postgres": {
+            "covered_statements": 11,
+            "total_statements": 11
+          },
+          "github.com/cymondez/pangolin-framework/tools/check": {
+            "covered_statements": 48,
+            "total_statements": 51
+          },
+          "github.com/cymondez/pangolin-framework/transport/http": {
+            "covered_statements": 208,
+            "total_statements": 210
+          }
+        }
+      },
+      "commands": [
+        {
+          "name": "inventory",
+          "exit_code": 0
+        },
+        {
+          "name": "build",
+          "exit_code": 0
+        },
+        {
+          "name": "vet",
+          "exit_code": 0
+        },
+        {
+          "name": "go-module-verify",
+          "exit_code": 0
+        },
+        {
+          "name": "m0-regression",
+          "exit_code": 0
+        },
+        {
+          "name": "m1-regression",
+          "exit_code": 0
+        },
+        {
+          "name": "m2-regression",
+          "exit_code": 0
+        },
+        {
+          "name": "m3-regression",
+          "exit_code": 0
+        },
+        {
+          "name": "m4-regression",
+          "exit_code": 0
+        },
+        {
+          "name": "m5-regression",
+          "exit_code": 0
+        },
+        {
+          "name": "unit",
+          "exit_code": 0
+        },
+        {
+          "name": "integration",
+          "exit_code": 0
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0
+        },
+        {
+          "name": "e2e",
+          "exit_code": 0
+        },
+        {
+          "name": "template-source",
+          "exit_code": 0
+        },
+        {
+          "name": "cli-build",
+          "exit_code": 0
+        },
+        {
+          "name": "templates",
+          "exit_code": 0
+        },
+        {
+          "name": "cli-coverage",
+          "exit_code": 0
+        },
+        {
+          "name": "templates-compose",
+          "exit_code": 0
+        },
+        {
+          "name": "generation-version",
+          "exit_code": 0
+        },
+        {
+          "name": "generation",
+          "exit_code": 0
+        },
+        {
+          "name": "coverage",
+          "exit_code": 0
+        },
+        {
+          "name": "coverage-html",
+          "exit_code": 0
+        }
+      ],
+      "platform": {
+        "CGO_ENABLED": "0",
+        "GOARCH": "amd64",
+        "GOOS": "windows",
+        "GOVERSION": "go1.27.4"
+      }
+    },
+    "linux-amd64": {
+      "coverage": {
+        "overall": {
+          "covered_statements": 5392,
+          "total_statements": 5789
+        },
+        "packages": {
+          "github.com/cymondez/pangolin-framework/application": {
+            "covered_statements": 23,
+            "total_statements": 24
+          },
+          "github.com/cymondez/pangolin-framework/cmd/pangolin": {
+            "covered_statements": 5,
+            "total_statements": 6
+          },
+          "github.com/cymondez/pangolin-framework/events/distributed": {
+            "covered_statements": 84,
+            "total_statements": 88
+          },
+          "github.com/cymondez/pangolin-framework/events/inbox": {
+            "covered_statements": 61,
+            "total_statements": 62
+          },
+          "github.com/cymondez/pangolin-framework/events/local": {
+            "covered_statements": 59,
+            "total_statements": 60
+          },
+          "github.com/cymondez/pangolin-framework/events/nats": {
+            "covered_statements": 42,
+            "total_statements": 44
+          },
+          "github.com/cymondez/pangolin-framework/events/outbox": {
+            "covered_statements": 79,
+            "total_statements": 81
+          },
+          "github.com/cymondez/pangolin-framework/events/postgres": {
+            "covered_statements": 228,
+            "total_statements": 248
+          },
+          "github.com/cymondez/pangolin-framework/examples/bookstore/application": {
+            "covered_statements": 19,
+            "total_statements": 25
+          },
+          "github.com/cymondez/pangolin-framework/examples/bookstore/bootstrap": {
+            "covered_statements": 125,
+            "total_statements": 146
+          },
+          "github.com/cymondez/pangolin-framework/examples/bookstore/cmd/api": {
+            "covered_statements": 3,
+            "total_statements": 5
+          },
+          "github.com/cymondez/pangolin-framework/examples/bookstore/cmd/worker": {
+            "covered_statements": 3,
+            "total_statements": 5
+          },
+          "github.com/cymondez/pangolin-framework/examples/bookstore/domain": {
+            "covered_statements": 3,
+            "total_statements": 4
+          },
+          "github.com/cymondez/pangolin-framework/examples/bookstore/infrastructure": {
+            "covered_statements": 135,
+            "total_statements": 170
+          },
+          "github.com/cymondez/pangolin-framework/examples/bookstore/transport/http": {
+            "covered_statements": 107,
+            "total_statements": 115
+          },
+          "github.com/cymondez/pangolin-framework/internal/quality": {
+            "covered_statements": 132,
+            "total_statements": 132
+          },
+          "github.com/cymondez/pangolin-framework/internal/scaffold": {
+            "covered_statements": 321,
+            "total_statements": 378
+          },
+          "github.com/cymondez/pangolin-framework/kernel/config": {
+            "covered_statements": 181,
+            "total_statements": 189
+          },
+          "github.com/cymondez/pangolin-framework/kernel/di": {
+            "covered_statements": 179,
+            "total_statements": 182
+          },
+          "github.com/cymondez/pangolin-framework/kernel/module": {
+            "covered_statements": 152,
+            "total_statements": 159
+          },
+          "github.com/cymondez/pangolin-framework/kernel/runtime": {
+            "covered_statements": 173,
+            "total_statements": 178
+          },
+          "github.com/cymondez/pangolin-framework/modules/organization": {
+            "covered_statements": 733,
+            "total_statements": 805
+          },
+          "github.com/cymondez/pangolin-framework/modules/organization/transport/http": {
+            "covered_statements": 74,
+            "total_statements": 75
+          },
+          "github.com/cymondez/pangolin-framework/observability": {
+            "covered_statements": 112,
+            "total_statements": 119
+          },
+          "github.com/cymondez/pangolin-framework/persistence/database": {
+            "covered_statements": 302,
+            "total_statements": 320
+          },
+          "github.com/cymondez/pangolin-framework/persistence/idempotency": {
+            "covered_statements": 94,
+            "total_statements": 98
+          },
+          "github.com/cymondez/pangolin-framework/persistence/migration": {
+            "covered_statements": 195,
+            "total_statements": 203
+          },
+          "github.com/cymondez/pangolin-framework/persistence/mysql": {
+            "covered_statements": 35,
+            "total_statements": 38
+          },
+          "github.com/cymondez/pangolin-framework/persistence/postgres": {
+            "covered_statements": 176,
+            "total_statements": 183
+          },
+          "github.com/cymondez/pangolin-framework/persistence/sqlite": {
+            "covered_statements": 33,
+            "total_statements": 36
+          },
+          "github.com/cymondez/pangolin-framework/persistence/uow": {
+            "covered_statements": 333,
+            "total_statements": 356
+          },
+          "github.com/cymondez/pangolin-framework/platform/audit": {
+            "covered_statements": 28,
+            "total_statements": 28
+          },
+          "github.com/cymondez/pangolin-framework/platform/cache": {
+            "covered_statements": 118,
+            "total_statements": 127
+          },
+          "github.com/cymondez/pangolin-framework/platform/features": {
+            "covered_statements": 53,
+            "total_statements": 56
+          },
+          "github.com/cymondez/pangolin-framework/platform/jobs": {
+            "covered_statements": 120,
+            "total_statements": 132
+          },
+          "github.com/cymondez/pangolin-framework/platform/jobs/postgres": {
+            "covered_statements": 104,
+            "total_statements": 115
+          },
+          "github.com/cymondez/pangolin-framework/platform/settings": {
+            "covered_statements": 145,
+            "total_statements": 152
+          },
+          "github.com/cymondez/pangolin-framework/security/authn": {
+            "covered_statements": 85,
+            "total_statements": 89
+          },
+          "github.com/cymondez/pangolin-framework/security/identity": {
+            "covered_statements": 60,
+            "total_statements": 63
+          },
+          "github.com/cymondez/pangolin-framework/security/policy": {
+            "covered_statements": 29,
+            "total_statements": 29
+          },
+          "github.com/cymondez/pangolin-framework/security/scope": {
+            "covered_statements": 136,
+            "total_statements": 145
+          },
+          "github.com/cymondez/pangolin-framework/tenancy": {
+            "covered_statements": 46,
+            "total_statements": 47
+          },
+          "github.com/cymondez/pangolin-framework/tenancy/postgres": {
+            "covered_statements": 11,
+            "total_statements": 11
+          },
+          "github.com/cymondez/pangolin-framework/tools/check": {
+            "covered_statements": 48,
+            "total_statements": 51
+          },
+          "github.com/cymondez/pangolin-framework/transport/http": {
+            "covered_statements": 208,
+            "total_statements": 210
+          }
+        }
+      },
+      "commands": [
+        {
+          "name": "inventory",
+          "exit_code": 0
+        },
+        {
+          "name": "build",
+          "exit_code": 0
+        },
+        {
+          "name": "vet",
+          "exit_code": 0
+        },
+        {
+          "name": "go-module-verify",
+          "exit_code": 0
+        },
+        {
+          "name": "m0-regression",
+          "exit_code": 0
+        },
+        {
+          "name": "m1-regression",
+          "exit_code": 0
+        },
+        {
+          "name": "m2-regression",
+          "exit_code": 0
+        },
+        {
+          "name": "m3-regression",
+          "exit_code": 0
+        },
+        {
+          "name": "m4-regression",
+          "exit_code": 0
+        },
+        {
+          "name": "m5-regression",
+          "exit_code": 0
+        },
+        {
+          "name": "unit",
+          "exit_code": 0
+        },
+        {
+          "name": "integration",
+          "exit_code": 0
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0
+        },
+        {
+          "name": "e2e",
+          "exit_code": 0
+        },
+        {
+          "name": "template-source",
+          "exit_code": 0
+        },
+        {
+          "name": "cli-build",
+          "exit_code": 0
+        },
+        {
+          "name": "templates",
+          "exit_code": 0
+        },
+        {
+          "name": "cli-coverage",
+          "exit_code": 0
+        },
+        {
+          "name": "race",
+          "exit_code": 0
+        },
+        {
+          "name": "generation-version",
+          "exit_code": 0
+        },
+        {
+          "name": "generation",
+          "exit_code": 0
+        },
+        {
+          "name": "coverage",
+          "exit_code": 0
+        },
+        {
+          "name": "coverage-html",
+          "exit_code": 0
+        }
+      ],
+      "platform": {
+        "CGO_ENABLED": "1",
+        "GOARCH": "amd64",
+        "GOOS": "linux",
+        "GOVERSION": "go1.27.4"
+      }
+    }
+  }
+}

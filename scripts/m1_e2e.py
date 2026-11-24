@@ -22,8 +22,8 @@ def http(url, token=None, body=None, headers=None):
 
 
 def run(output, project, packages, execute):
-    if not re.fullmatch(r"pangolin-m[1234][-a-z0-9]*", project):
-        raise ValueError("E2E requires an explicit isolated pangolin-m1/m2/m3/m4 namespace")
+    if not re.fullmatch(r"pangolin-m[12345][-a-z0-9]*", project):
+        raise ValueError("E2E requires an explicit isolated pangolin-m1/m2/m3/m4/m5 namespace")
     suffix = ".exe" if os.name == "nt" else ""
     query=output/("m1-query"+suffix)
     execute(["go","build","-o",str(query),"./examples/bookstore/internal/testkit/cmd/m1-query"])

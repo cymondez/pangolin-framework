@@ -1,6 +1,8 @@
 # Organization HTTP Adapter
 
-`NewHandler(Options)` 將公開 `contracts.Management` 與 `JoinAsOwner`／`Recover` Port 接到控制面 HTTP 路由。只有啟用 Organization Profile 才註冊本 Handler。呼叫端明示注入 JWT 驗證、Tenant／Scope Resolver、入口授權、UOW Manager、timeout、body 上限及獨立安全日誌。
+`NewHandler(Options)` 將公開 `contracts.Management` 與 `JoinAsOwner`／`Recover` Port 接到控制面 HTTP 路由。只有啟用 Organization Profile 才註冊本 Handler。呼叫端明示注入身分驗證、Tenant／Scope Resolver、入口授權、UOW Manager、timeout、body 上限及獨立安全日誌。
+
+Options.AuthenticateCredential 接共同 identity.Pipeline，Credentials 接 transport/http 的 CredentialExtractor，直接轉交共用 HTTP Pipeline。既有 Authenticate 保留 Bearer 相容入口；兩種驗證模式必須擇一，缺少或同時設定會拒絕組裝。自訂使用者 Session／API Key 不需修改組織模組；Cookie unsafe method 的預設拒絕及 CSRF 接線與共用 HTTP 契約一致。
 
 入口順序為驗證身分、解析 Tenant／Scope、入口 action 授權、限制並解碼 DTO、短 UOW、Management 自身授權，最後在根交易提交後輸出 JSON。Tenant 來自可信 binding；target Kind／ID 來自路由，DTO 不接受 owner 或 Tenant 欄位。寫入要求 `Idempotency-Key`；更新要求 `expected_version`。未知欄位與缺少必要資料回 400，body 超限回 413，未知資源回 404，版本／最後 owner／非空資源衝突回 409。Commit Unknown 保留 503 與 Unknown outcome。
 

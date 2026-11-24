@@ -49,6 +49,7 @@ def main():
         'event-envelope': 'event-1 / bookstore.book_created / schema 1\n{"id":"book-1","title":"Go in Action"}',
         'observability': 'Trace correlated: true\n/livez: 204\n/readyz: 204\nJSON log recorded: true',
         'authorization': 'read allowed\nwrite denied\nfeature enabled: write denied',
+        'platform-services': 'Tenant cache isolated: true\nTenant setting: "blue"\nJSON array setting: "mail"\nSetting layers: [user tenant global config default]\nEffective quota: 10\nFeature cannot grant permission: true\nStored update despite notification failure: true\nVersion converged: true',
     }
     for sample, expected in samples.items():
         shutil.copyfile(ROOT / f'examples/basics/{sample}/main.go', project / 'main.go')
@@ -62,7 +63,7 @@ def main():
     # Compile the complete, app-owned repository/service examples printed in the manual.
     books = project / 'books'
     books.mkdir()
-    for document, target in [('data/unit-of-work.md', 'service.go'), ('data/postgresql.md', 'repository.go')]:
+    for document, target in [('data/unit-of-work.md', 'service.go'), ('data/database.md', 'repository.go')]:
         source = (ROOT / 'docs/site/content' / document).read_text(encoding='utf-8')
         code = re.search(r'```go\n(.*?)```', source, re.S).group(1)
         (books / target).write_text(code, encoding='utf-8')

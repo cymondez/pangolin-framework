@@ -6,7 +6,7 @@ import CodeBlock from '@theme/CodeBlock';
 
 const topics = [
   {label: '組裝應用', title: '依賴與生命週期，由你明確定義。', text: '透過 Module、DI 與 Runtime，讓每個資源的建立、使用與清理都有擁有者。', path: 'fundamentals/modules', icon: '◈'},
-  {label: '維護邊界', title: '在同一個工作單元內完成業務。', text: 'Required 交易、可信 Tenant Scope 與 PostgreSQL RLS，從入口一路約束到資料存取。', path: 'data/unit-of-work', icon: '▣'},
+  {label: '維護邊界', title: '在同一個工作單元內完成業務。', text: 'Required 交易、可信 Tenant Scope 與中立資料存取，從入口一路維護資料邊界。', path: 'data/unit-of-work', icon: '▣'},
   {label: '傳遞變更', title: '事件先保存，再跨程序配送。', text: '沿著 Bookstore 的 Outbox、JetStream 與 Inbox，理解重送與處理去重的責任。', path: 'events/integration-events', icon: '⇌'},
 ];
 

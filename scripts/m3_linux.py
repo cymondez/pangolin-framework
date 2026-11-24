@@ -11,7 +11,7 @@ import m3_fixture
 def main(milestone=3):
     p=argparse.ArgumentParser(description=__doc__);p.add_argument("--project",required=True);args=p.parse_args()
     project=args.project
-    if milestone not in (3,4) or not re.fullmatch(r"pangolin-m"+str(milestone)+r"-[a-z0-9-]+",project):p.error("dedicated milestone project required")
+    if milestone not in (3,4,5) or not re.fullmatch(r"pangolin-m"+str(milestone)+r"-[a-z0-9-]+",project):p.error("dedicated milestone project required")
     image=m0.load(m0.ROOT/"deploy/toolchain.json")["go_image"]
     network=project+"_default";cache=project+"-linux-cache"
     # Named cache belongs to this test project and is removed by its cleanup.
@@ -29,6 +29,9 @@ def main(milestone=3):
             "PANGOLIN_M3_BROKER_RESTART_DIR":"/source/artifacts/m"+str(milestone)+"-linux-broker-barrier",
             "CGO_ENABLED":"1","GOTOOLCHAIN":"local",
         }
+        if milestone>=5:
+            environment["PANGOLIN_DATABASE_POSTGRES_DSN"]=environment["PANGOLIN_M1_APP_DSN"]
+            environment["PANGOLIN_DATABASE_MYSQL_DSN"]="pangolin_database:local-database-only@tcp(mysql:3306)/pangolin_db_contracts"
         command=["docker","run","--rm","--name",project+"-linux","--cpus","2","--memory","2g","--network",network,
                  "--label","dev.pangolin.owner=pangolin-framework","--label",purpose,
                  "-v",str(m0.ROOT)+":/source","-v",str(m0.ROOT/".cache/go-mod")+":/gomod", "-v",cache+":/cache"]

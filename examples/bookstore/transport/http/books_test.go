@@ -110,6 +110,8 @@ func TestCommitBeforeSuccessAndRejections(t *testing.T) {
 		{"ready", "GET", "/readyz", "", 204, nil},
 		{"missing-auth", "POST", "/books", `{"title":"book"}`, 401, map[string]string{"Authorization": ""}},
 		{"invalid-auth", "POST", "/books", `{"title":"book"}`, 401, map[string]string{"Authorization": "Bearer invalid"}},
+		{"non-bearer-scheme", "POST", "/books", `{"title":"book"}`, 401, map[string]string{"Authorization": "Basic dXNlcg=="}},
+		{"unknown-token-scheme", "GET", "/books/book", "", 401, map[string]string{"Authorization": "Token abc"}},
 		{"tenant-forgery", "POST", "/books", `{"title":"book"}`, 403, map[string]string{"X-Tenant-ID": "tenant-b"}},
 		{"org-hint", "POST", "/books", `{"title":"book"}`, 400, map[string]string{"X-Scope-Kind": "org.organization"}},
 		{"bad-scope-id", "POST", "/books", `{"title":"book"}`, 403, map[string]string{"X-Scope-ID": "tenant-b"}},
@@ -197,3 +199,15 @@ func (w *writeBarrier) WriteHeader(int) {
 	}
 }
 func (w *writeBarrier) Write(p []byte) (int, error) { w.WriteHeader(200); return len(p), nil }
+
+func TestLegacyAuthRejectsDuplicateAuthorization(t *testing.T) {
+	h, _, books := fixture(t)
+	r := httptest.NewRequest("POST", "/books", strings.NewReader(`{"title":"book"}`))
+	r.Header.Add("Authorization", "Bearer one")
+	r.Header.Add("Authorization", "Bearer two")
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, r)
+	if w.Code != 401 || books.calls != 0 {
+		t.Fatal(w.Code, books.calls)
+	}
+}

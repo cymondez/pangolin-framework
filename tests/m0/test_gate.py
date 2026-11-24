@@ -22,7 +22,7 @@ class BaselineChecks(unittest.TestCase):
 
     def test_product_version_rejects_milestone_and_module_drift(self):
         self.assertEqual(product_version.check(ROOT), "0.1.0")
-        paths = ("VERSION", "examples/bookstore/bootstrap/run.go", "tests/fixtures/modules.json", "docs/site/package.json", "docs/site/package-lock.json")
+        paths = ("VERSION", "examples/bookstore/bootstrap/run.go", "tests/fixtures/modules.json", "docs/site/package.json", "docs/site/package-lock.json", "internal/scaffold/cli.go")
         (ROOT / ".cache").mkdir(exist_ok=True)
         with tempfile.TemporaryDirectory(dir=ROOT / ".cache") as directory:
             root = Path(directory)
@@ -76,8 +76,8 @@ class BaselineChecks(unittest.TestCase):
 
     def test_architecture_protects_domain_application_and_core(self):
         module = m0.MODULE
-        m0.check_imports([{"ImportPath":module+"/kernel/module", "Imports":[module+"/kernel/di"]}, {"ImportPath":module+"/examples/bookstore/application", "Imports":[module+"/persistence/uow"]}])
-        for path, imported in [("examples/bookstore/domain","net/http"),("examples/bookstore/domain","github.com/jackc/pgx/v5"),("examples/bookstore/application",module+"/persistence/postgres"),("kernel/di",module+"/modules/organization/contracts")]:
+        m0.check_imports([{"ImportPath":module+"/kernel/module", "Imports":[module+"/kernel/di"]}, {"ImportPath":module+"/examples/bookstore/application", "Imports":[module+"/persistence/uow", module+"/persistence/database"]}])
+        for path, imported in [("examples/bookstore/domain","net/http"),("examples/bookstore/domain","github.com/jackc/pgx/v5"),("examples/bookstore/application",module+"/persistence/postgres"),("examples/bookstore/application",module+"/persistence/mysql"),("examples/bookstore/application",module+"/persistence/sqlite"),("examples/bookstore/application","github.com/go-sql-driver/mysql"),("examples/bookstore/application","modernc.org/sqlite"),("kernel/di",module+"/modules/organization/contracts")]:
             with self.subTest(path=path, imported=imported):
                 with self.assertRaises(ValueError):
                     m0.check_imports([{"ImportPath":module+"/"+path,"Imports":[imported]}])

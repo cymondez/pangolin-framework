@@ -40,7 +40,7 @@ func (s *Service) Create(ctx context.Context, title string) error {
 }
 ```
 
-在[PostgreSQL](postgresql.md)組裝 Manager／Repository，並將[驗證過的租戶 context](../security/multi-tenancy.md)傳給 Create。Bookstore 的 Books.Create 使用相同方式，把書籍與待送事件包進同一筆交易。
+在[中立資料存取](database.md)組裝 Manager／Repository，並將[驗證過的租戶 context](../security/multi-tenancy.md)傳給 Create。Bookstore 的 Books.Create 使用相同方式，把書籍與待送事件包進同一筆交易。
 
 ## 每次操作要怎麼選？
 
@@ -69,7 +69,7 @@ func (s *Service) Create(ctx context.Context, title string) error {
 
 Manager 的 DefaultTimeout、CleanupTimeout、HookTimeout 與 MaxRequiresNewDepth 必須是正值。連線池取得、Begin、SQL、提交前階段與 Commit 都受有效 deadline 限制。RequiresNew 等待第二條連線或父鎖時也會逾時，不會改用父交易。
 
-非交易唯讀只適用於不依賴 transaction-local RLS 的 Resource。這個 PostgreSQL Adapter 一律要求交易；非交易寫入、Savepoint、Suppress 與跨 DB 原子提交不提供。
+非交易唯讀只適用於不依賴 transaction-local RLS 的 Resource。使用 transaction-local RLS 的 Adapter 一律要求交易；非交易寫入、Savepoint、Suppress 與跨 DB 原子提交不提供。
 
 ## SaveChanges 與完成通知
 

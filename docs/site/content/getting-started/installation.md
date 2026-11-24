@@ -54,3 +54,7 @@ go mod edit -replace=github.com/cymondez/pangolin-framework=../pangolin-framewor
 保持終端機位於 `hello-pangolin`，前往[第一個應用](quickstart.mdx)。
 
 若你只想先執行現成範例，也可以從套件 checkout 的 `examples/basics` 執行 `go run ./hello`；[範例索引](../samples/index.md)列出每個範例的用途。
+
+## 4. 或用 CLI 生成完整專案
+
+不想手動組裝時，可從 Framework checkout 建置 `pangolin` CLI，一次生成有登入、資料庫與租戶隔離的獨立 Bookstore 專案；見[用 CLI 建立自己的 Bookstore](../tutorials/generated-bookstore.md)。命令、選項與生成專案的環境變數見 [pangolin CLI](../reference/cli.md)。

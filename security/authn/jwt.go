@@ -1,4 +1,7 @@
-// Package authn verifies the M1 RS256 identity slice against a trusted JWKS URL.
+// jwt.go holds the concrete RS256 JWT adapter: it verifies the M1 identity
+// slice against a trusted JWKS URL. Parsing details stay here; the
+// protocol-independent contract and trusted installation live in
+// security/identity.
 package authn
 
 import (
@@ -8,48 +11,41 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"io"
 	"math/big"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/cymondez/pangolin-framework/security/identity"
 	"github.com/cymondez/pangolin-framework/security/scope"
 )
-
-var ErrUnauthenticated = errors.New("UNAUTHENTICATED")
-
-type identity struct {
-	principal scope.PrincipalRef
-	tenant    string
-}
-type identityKey struct{}
-
-// Identity reads only verified identity installed by Validator.Authenticate.
-func Identity(ctx context.Context) (scope.PrincipalRef, string, bool) {
-	if ctx == nil {
-		return scope.PrincipalRef{}, "", false
-	}
-	v, ok := ctx.Value(identityKey{}).(identity)
-	return v.principal, v.tenant, ok
-}
 
 type Validator struct {
 	issuer, audience, jwks string
 	client                 *http.Client
+	pipeline               *identity.Pipeline
 }
 
 func NewValidator(issuer, audience, jwks string, client *http.Client) *Validator {
-	return &Validator{strings.TrimRight(issuer, "/"), audience, jwks, client}
+	v := &Validator{issuer: strings.TrimRight(issuer, "/"), audience: audience, jwks: jwks, client: client}
+	v.pipeline, _ = identity.NewPipeline(v)
+	return v
 }
-func (v *Validator) Authenticate(ctx context.Context, token string) (context.Context, error) {
-	if ctx == nil || len(token) > 16384 || v.client == nil || v.issuer == "" || v.audience == "" {
-		return nil, ErrUnauthenticated
+
+// Kind implements identity.Verifier: bearer credentials route here.
+func (v *Validator) Kind() string { return identity.BearerKind }
+
+// Verify validates one RS256 bearer JWT and returns its result. It never
+// installs identity; the trusted identity pipeline does that.
+func (v *Validator) Verify(ctx context.Context, credential identity.Credential) (identity.Result, error) {
+	if ctx == nil || v == nil || credential.Kind != identity.BearerKind || len(credential.Value) > identity.MaxCredentialBytes || v.client == nil || v.issuer == "" || v.audience == "" {
+		return identity.Result{}, identity.ErrUnauthenticated
 	}
+	token := credential.Value
 	parts := strings.Split(token, ".")
 	if len(parts) != 3 {
-		return nil, ErrUnauthenticated
+		return identity.Result{}, identity.ErrUnauthenticated
 	}
 	decode := func(s string, out any) error {
 		raw, e := base64.RawURLEncoding.DecodeString(s)
@@ -60,7 +56,7 @@ func (v *Validator) Authenticate(ctx context.Context, token string) (context.Con
 	}
 	var header struct{ Alg, Kid string }
 	if decode(parts[0], &header) != nil || header.Alg != "RS256" || header.Kid == "" {
-		return nil, ErrUnauthenticated
+		return identity.Result{}, identity.ErrUnauthenticated
 	}
 	var claims struct {
 		Issuer    string          `json:"iss"`
@@ -69,46 +65,47 @@ func (v *Validator) Authenticate(ctx context.Context, token string) (context.Con
 		Tenant    string          `json:"tenant_id"`
 		Expiry    int64           `json:"exp"`
 		NotBefore int64           `json:"nbf"`
+		AMR       json.RawMessage `json:"amr"`
 	}
 	if decode(parts[1], &claims) != nil || claims.Issuer != v.issuer || claims.Subject == "" || claims.Tenant == "" || claims.Expiry <= time.Now().Unix() || claims.NotBefore > time.Now().Unix() {
-		return nil, ErrUnauthenticated
+		return identity.Result{}, identity.ErrUnauthenticated
 	}
 	var audiences []string
 	var single string
 	if json.Unmarshal(claims.Audience, &single) == nil {
 		audiences = []string{single}
 	} else if json.Unmarshal(claims.Audience, &audiences) != nil {
-		return nil, ErrUnauthenticated
+		return identity.Result{}, identity.ErrUnauthenticated
 	}
 	accepted := false
 	for _, a := range audiences {
 		accepted = accepted || a == v.audience
 	}
 	if !accepted {
-		return nil, ErrUnauthenticated
+		return identity.Result{}, identity.ErrUnauthenticated
 	}
 	request, e := http.NewRequestWithContext(ctx, http.MethodGet, v.jwks, nil)
 	if e != nil {
-		return nil, ErrUnauthenticated
+		return identity.Result{}, identity.ErrUnauthenticated
 	}
 	response, e := v.client.Do(request)
 	if e != nil {
-		return nil, ErrUnauthenticated
+		return identity.Result{}, identity.ErrUnauthenticated
 	}
 	defer response.Body.Close()
 	if response.StatusCode != http.StatusOK {
-		return nil, ErrUnauthenticated
+		return identity.Result{}, identity.ErrUnauthenticated
 	}
 	var keys struct {
 		Keys []struct{ Kty, Alg, Use, Kid, N, E string }
 	}
 	raw, e := io.ReadAll(io.LimitReader(response.Body, 65537))
 	if e != nil || len(raw) > 65536 || json.Unmarshal(raw, &keys) != nil {
-		return nil, ErrUnauthenticated
+		return identity.Result{}, identity.ErrUnauthenticated
 	}
 	signature, e := base64.RawURLEncoding.DecodeString(parts[2])
 	if e != nil {
-		return nil, ErrUnauthenticated
+		return identity.Result{}, identity.ErrUnauthenticated
 	}
 	digest := sha256.Sum256([]byte(parts[0] + "." + parts[1]))
 	for _, key := range keys.Keys {
@@ -126,8 +123,37 @@ func (v *Validator) Authenticate(ctx context.Context, token string) (context.Con
 			continue
 		}
 		if rsa.VerifyPKCS1v15(&rsa.PublicKey{N: modulus, E: int(exponent)}, crypto.SHA256, digest[:], signature) == nil {
-			return context.WithValue(ctx, identityKey{}, identity{scope.PrincipalRef{ID: claims.Subject, Kind: "user"}, claims.Tenant}), nil
+			// The amr claim, when present as a string array, is preserved as
+			// immutable, non-secret assurance metadata for future policies.
+			assurances := []string(nil)
+			if len(claims.AMR) > 0 {
+				var reported []string
+				if json.Unmarshal(claims.AMR, &reported) == nil {
+					assurances = reported
+				}
+			}
+			return identity.Result{
+				Status:     identity.StatusAuthenticated,
+				Principal:  scope.PrincipalRef{ID: claims.Subject, Kind: identity.PrincipalUser},
+				Tenant:     claims.Tenant,
+				Method:     identity.MethodJWT,
+				Assurances: assurances,
+			}, nil
 		}
 	}
-	return nil, ErrUnauthenticated
+	return identity.Result{}, identity.ErrUnauthenticated
+}
+
+// Authenticate keeps the published Bearer token entry point. The trusted
+// identity pipeline validates the result and installs identity.
+func (v *Validator) Authenticate(ctx context.Context, token string) (context.Context, error) {
+	return v.AuthenticateCredential(ctx, identity.Credential{Kind: identity.BearerKind, Value: token})
+}
+
+// AuthenticateCredential verifies one extracted credential.
+func (v *Validator) AuthenticateCredential(ctx context.Context, credential identity.Credential) (context.Context, error) {
+	if v == nil || v.pipeline == nil {
+		return nil, identity.ErrUnauthenticated
+	}
+	return v.pipeline.AuthenticateCredential(ctx, credential)
 }

@@ -13,3 +13,7 @@ Handler 的 WorkGroup 記錄活躍操作；Quiesce 後拒絕新工作。HTTP ser
 驗證：`go test ./examples/bookstore/transport/http`，涵蓋拒絕順序、body、錯誤遮罩與成功回應 barrier；真實 Commit 前不回 2xx、簽章／租戶拒絕及停機用 [M1 E2E](../../../../docs/guides/m1-development.md)。Bookstore 本身不提供串流路由；共用 [短串流操作](../../../../transport/http/README.md) 在 M2 提供。
 
 M2 起不支援的 Scope Kind 回 400／SCOPE_KIND_UNSUPPORTED；已存在 UOW 的請求被拒絕，避免 Required 子範圍提前送出成功。UOW 錯誤共用框架 Problem Details 映射，Unknown 附 operationId／outcome，保持 503 且不無條件重試。
+
+登入方式可透過 CredentialAuth 注入共同 identity.Pipeline，Credentials 使用共用 CredentialExtractor；預設組裝仍選 JWT／Bearer。原 Auth 保留相容入口，兩種模式同時設定會拒絕。身分儲存由 security/identity 擁有；自訂使用者 Session／API Key Verifier 不需修改 JWT 或本 Handler。Cookie 的 unsafe method 預設拒絕，需 Session 模組明示 CSRF 接線。
+
+外部 Session Adapter 回歸見 session_auth_test.go，涵蓋目前 Tenant Authority、Scope Registry、實際 policy.Require、明確 deny／撤權／權威故障，以及 Challenge／Pending／多憑證拒絕。預設薄片與完整治理應用的組裝邊界仍以各自 Profile 為準，身份安裝成功不等於獲得資源權限。

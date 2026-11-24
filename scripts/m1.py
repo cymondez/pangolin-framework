@@ -41,6 +41,26 @@ def validate_python_output(text,required=()):
     if any(name not in text for name in required):raise ValueError("required Python acceptance case missing")
 
 
+def database_packages(milestone,path):
+    """Older milestone runners never require the backend suite; M5+ acceptance fails closed without it."""
+    if int(milestone[1:])<5:return []
+    if not path.is_dir():raise ValueError("M5 corrective acceptance requires the tests/database backend suite")
+    return ["./tests/database"]
+
+
+def regression_names(field):
+    return list(field.values()) if isinstance(field,dict) else list(field)
+
+
+def required_integration_tests(increments):
+    """M1 flow plus every incremental integration and corrective database case."""
+    required=[m0.MODULE+"/tests/m1:TestM1Flow"]
+    for extra in increments:
+        required.extend(extra["integration_tests"].values())
+        required.extend(regression_names(extra.get("regression_integration_tests",{})))
+    return required
+
+
 def validate_mapping(mapping):
     expected={s["id"] for g in m0.load(ROOT/"tests/contract/subtests.json")["groups"] if g["milestone"]=="M1" for s in g["subtests"]}
     go,python=mapping["go_tests"],mapping["python_tests"]
@@ -117,7 +137,7 @@ def verify(args, increment=None):
     # Dirty development runs are inspectable but cannot become Verified evidence.
     output=ROOT/"artifacts"/(milestone.lower()+"-development-"+source[:12]+"/"+label if dirty else commit+"/"+milestone.lower()+"/"+label)
     output.mkdir(parents=True,exist_ok=True)
-    if milestone=="M4":os.environ["PANGOLIN_M4_METRICS_DIR"]=str(output)
+    if int(milestone[1:])>=4:os.environ["PANGOLIN_M4_METRICS_DIR"]=str(output)
     report={"milestone":milestone,"commit":commit,"source_sha256":source,"working_tree_dirty":dirty,"baseline":"v1.3","platform":platform,"seed":20261121,"project":args.project,"status":"failed","commands":[]}
     mapping=m0.load(ROOT/"tests/contract/m1.json");validate_mapping(mapping)
     check_module_docs(mapping)
@@ -132,7 +152,7 @@ def verify(args, increment=None):
         log.write_text(result.stdout+result.stderr,encoding="utf-8")
         report["commands"].append({"name":name,"argv":argv,"exit_code":result.returncode,"log":log.name,"sha256":m0.digest(log),"seconds":round(time.monotonic()-started,3)})
         if result.returncode: raise ValueError("gate failed: "+name+"; see "+str(log))
-        if name in {"m0-regression","m1-regression","m2-regression","m3-regression","m4-regression"}:
+        if name in {"m0-regression","m1-regression","m2-regression","m3-regression","m4-regression","m5-regression"}:
             required=mapping["python_tests"].values() if name=="m1-regression" else next((x["python_tests"].values() for x in increments if name==x["milestone"].lower()+"-regression"),())
             validate_python_output(result.stdout+result.stderr,required)
         print("PASS",name,flush=True)
@@ -152,11 +172,26 @@ def verify(args, increment=None):
             execute([sys.executable,"-m","unittest","discover","-v","-s","tests/"+name,"-p","test_*.py"],name+"-regression")
         packages=",".join(p for p in m0.command(["go","list","./..."]).splitlines() if "/internal/testkit/" not in p and "/infrastructure/internal/" not in p)
         unit=execute(["go","test","-count=1","-json","-covermode=atomic","-coverpkg="+packages,"-coverprofile="+str(output/"unit.out"),"./..."],"unit")
-        report["tests"]=validate_tests(unit,[*mapping["go_tests"].values(),*(test for extra in increments for test in extra["unit_tests"].values())])
-        integration=execute(["go","test","-p=1","-count=1","-json","-tags=integration","-covermode=atomic","-coverpkg="+packages,"-coverprofile="+str(output/"integration.out"),"./tests/m1",*("./tests/"+extra["milestone"].lower() for extra in increments)],"integration")
-        report["integration_tests"]=validate_tests(integration,[m0.MODULE+"/tests/m1:TestM1Flow",*(test for extra in increments for test in extra["integration_tests"].values())])
+        report["tests"]=validate_tests(unit,[*mapping["go_tests"].values(),*(test for extra in increments for test in [*extra["unit_tests"].values(),*extra.get("regression_tests",[])])])
+        integration=execute(["go","test","-p=1","-count=1","-json","-tags=integration","-covermode=atomic","-coverpkg="+packages,"-coverprofile="+str(output/"integration.out"),"./tests/m1",*("./tests/"+extra["milestone"].lower() for extra in increments),*database_packages(milestone,ROOT/"tests/database")],"integration")
+        report["integration_tests"]=validate_tests(integration,required_integration_tests(increments))
         report["e2e"]=m1_e2e.run(output,args.project,packages,execute)
         report["commands"].append({"name":"e2e","exit_code":0})
+        profiles=[output/"unit.out",output/"integration.out",output/"e2e.out"]
+        if milestone=="M5":
+            execute([sys.executable,"scripts/template_bundle.py","--check"],"template-source")
+            cli=output/("pangolin.exe" if os.name=="nt" else "pangolin")
+            execute(["go","build","-cover","-covermode=atomic","-coverpkg="+packages,"-o",str(cli),"./cmd/pangolin"],"cli-build")
+            covered=output/"cli-cov";covered.mkdir(exist_ok=True)
+            previous=os.environ.get("GOCOVERDIR");os.environ["GOCOVERDIR"]=str(covered)
+            try:execute([sys.executable,"scripts/m5_templates.py","--output",str(output),"--cli",str(cli)],"templates")
+            finally:
+                if previous is None:os.environ.pop("GOCOVERDIR",None)
+                else:os.environ["GOCOVERDIR"]=previous
+            execute(["go","tool","covdata","textfmt","-i="+str(covered),"-o="+str(output/"cli.out")],"cli-coverage")
+            profiles.append(output/"cli.out")
+            if os.name=="nt" or os.getenv("PANGOLIN_M5_COMPOSE")=="1":
+                execute([sys.executable,"scripts/m5_compose.py","--output",str(output),"--project",args.project],"templates-compose")
         if args.race:
             race=execute(["go","test","-p=1","-count=1","-json","-race","-tags=integration","./..."],"race");validate_tests(race)
         sqlc=os.getenv("PANGOLIN_SQLC",str(ROOT/".cache/bin"/("sqlc.exe" if os.name=="nt" else "sqlc")))
@@ -164,7 +199,7 @@ def verify(args, increment=None):
         generated=list((ROOT/"examples/bookstore/infrastructure/internal").glob("*/*.go"));before={str(p.relative_to(ROOT)):m0.digest(p) for p in generated}
         execute([sqlc,"generate"],"generation")
         if before!={str(p.relative_to(ROOT)):m0.digest(p) for p in generated}:raise ValueError("sqlc generated source drift")
-        merge_profiles([output/"unit.out",output/"integration.out",output/"e2e.out"],output/"merged.out")
+        merge_profiles(profiles,output/"merged.out")
         counts=execute(["go","run","./tools/check","-coverage",str(output/"merged.out")],"coverage")
         (output/"coverage.json").write_text(json.dumps(json.loads(counts.splitlines()[0]),indent=2)+"\n",encoding="utf-8")
         execute(["go","tool","cover","-html="+str(output/"merged.out"),"-o="+str(output/"coverage.html")],"coverage-html")

@@ -15,6 +15,8 @@ Secrets 只從環境注入，不提供 DSN flag。`-listen` 預設 `127.0.0.1:18
 
 DB／Broker 都是 DI Singleton，Cleanup 是唯一關閉 owner。API Start 只檢查 Book schema，設定有界 HTTP timeout；HTTP Participant 先停止 admission，再 Shutdown／Drain。Worker Participant 先停止下一次認領，等待已接入工作，期限到才取消；最後反序 Stop 並由 Container 關閉依賴。
 
+API 的預設 JWT Validator 經 CredentialAuth／BearerCredentials Port 接入，Scope Resolver 讀 security/identity 的共同身分。選擇其他登入方式時替換應用組裝中的 Verifier／CredentialExtractor，無需修改框架的身分儲存或 JWT Adapter。此範例仍為 tenant-only 薄片；完整當前資格與組織控制面由生成 Profile 明示組裝。
+
 Worker 依序 Dispatch、接收並持久化後 ACK、Project；每次操作有 deadline，接收等待為短輪詢。故障回傳錯誤並退出，持久化狀態供重啟復原。`decorate` 只供 testkit 注入 Broker ACK 後 crash；正式兩個 main 都傳 nil。
 
 啟動環境、schema／topology fixture 與驗證步驟見 [M1 指南](../../../docs/guides/m1-development.md)。驗證：`go test ./examples/bookstore/bootstrap` 加真實分程序 E2E；無設定、非法參數或相依不可用時不報 Ready。

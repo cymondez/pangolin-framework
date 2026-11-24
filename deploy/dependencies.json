@@ -1,5 +1,5 @@
 {
-  "reviewed_at": "2026-11-23",
+  "reviewed_at": "2026-11-24",
   "modules": [
     {
       "module": "filippo.io/edwards25519",
@@ -258,12 +258,28 @@
       "license": "BSD-3-Clause"
     },
     {
+      "module": "github.com/google/pprof",
+      "version": "v0.0.0-20261016150608-1facf8f91b50",
+      "sum": "h1:PlNWJRxu5APSV0pWqfIsZ0qt9OOGHSWfZQ4zvx+WgWs=",
+      "license_file": "LICENSE",
+      "license_sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "license": "Apache-2.0"
+    },
+    {
       "module": "github.com/google/uuid",
       "version": "v1.6.0",
       "sum": "h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=",
       "license_file": "LICENSE",
       "license_sha256": "0a8d61ed3cbfd5312326e8126c31ce9c627a283adc99131b56896d29ada04b2d",
       "license": "BSD-3-Clause"
+    },
+    {
+      "module": "github.com/hashicorp/golang-lru/v2",
+      "version": "v2.0.7",
+      "sum": "h1:a+bsQ5rvGLjzHuww6tVxozPZFVghXaHOwFs4luLUK2k=",
+      "license_file": "LICENSE",
+      "license_sha256": "6c7088eb877b5d7e6e0e9d27e822ea25fcda2e83f9eba59bb5f1418a656796e0",
+      "license": "MPL-2.0"
     },
     {
       "module": "github.com/jackc/pgpassfile",
@@ -842,6 +858,54 @@
       "license": "BSD-3-Clause"
     },
     {
+      "module": "modernc.org/cc/v4",
+      "version": "v4.30.6-0.20261101114202-1b9d1a076f6b",
+      "sum": "h1:WE5SLOURcNd8s6uPR/n4WV4weQxxYKi5OpEZkfNVvdE=",
+      "license_file": "LICENSE",
+      "license_sha256": "1c77905db36f407e0fdb513f97f1f2a3f2282049ca273637841face982d5d003",
+      "license": "BSD-3-Clause"
+    },
+    {
+      "module": "modernc.org/ccgo/v4",
+      "version": "v4.38.1",
+      "sum": "h1:wdxJVBuFT8JufZnnQyS6Bbz3NOWhViD0xJOGR96Bpd4=",
+      "license_file": "LICENSE",
+      "license_sha256": "343748b20da2ceb739c1ab7b85fe16f6fe4b67fad88fea40c5835a08383d8ffe",
+      "license": "BSD-3-Clause"
+    },
+    {
+      "module": "modernc.org/fileutil",
+      "version": "v1.4.0",
+      "sum": "h1:j6ZzNTftVS054gi281TyLjHPp6CPHr2KCxEXjEbD6SM=",
+      "license_file": "LICENSE",
+      "license_sha256": "7dc07397727fc500d5ce768d724e4d555eee8fb7687f421fd40d72249868b0ca",
+      "license": "BSD-3-Clause"
+    },
+    {
+      "module": "modernc.org/gc/v2",
+      "version": "v2.6.5",
+      "sum": "h1:nyqdV8q46KvTpZlsw66kWqwXRHdjIlJOhG6kxiV/9xI=",
+      "license_file": "LICENSE",
+      "license_sha256": "4719790df5e9d33b1cef3a67df8264fb1e3e7f54f3ca900c562e84a951de62d9",
+      "license": "BSD-3-Clause"
+    },
+    {
+      "module": "modernc.org/gc/v3",
+      "version": "v3.2.0",
+      "sum": "h1:/Y3LGDMQaoYf55PebP1qsZ5FDGgAZyG1RYKEHeQzh1o=",
+      "license_file": "LICENSE",
+      "license_sha256": "4719790df5e9d33b1cef3a67df8264fb1e3e7f54f3ca900c562e84a951de62d9",
+      "license": "BSD-3-Clause"
+    },
+    {
+      "module": "modernc.org/goabi0",
+      "version": "v0.2.0",
+      "sum": "h1:HvEowk7LxcPd0eq6mVOAEMai46V+i7Jrj13t4AzuNks=",
+      "license_file": "LICENSE",
+      "license_sha256": "6d33428c98f9d7113dfc86e17fca00f81aeaac33e02f79c8a5afafb0a5fd33c6",
+      "license": "BSD-3-Clause"
+    },
+    {
       "module": "modernc.org/libc",
       "version": "v1.80.2",
       "sum": "h1:3+a4fJZvvzg920ZC0mOepnKPGn7cqCaVeDxm/UnrM1A=",
@@ -866,11 +930,43 @@
       "license": "BSD-3-Clause"
     },
     {
+      "module": "modernc.org/opt",
+      "version": "v0.2.0",
+      "sum": "h1:tGyef5ApycA7FSEOMraay9SaTk5zmbx7Tu+cJs4QKZg=",
+      "license_file": "LICENSE",
+      "license_sha256": "7a0dd90f1d1c8fa80d03c1806bdd8e4dca7285fae9b4a34f2c4a8a2552fdd77c",
+      "license": "BSD-3-Clause"
+    },
+    {
+      "module": "modernc.org/sortutil",
+      "version": "v1.2.1",
+      "sum": "h1:+xyoGf15mM3NMlPDnFqrteY07klSFxLElE2PVuWIJ7w=",
+      "license_file": "LICENSE",
+      "license_sha256": "7bc9df688c16dd8e64463ec0ad66728730a0e1a70a1dbda3dcbcd8a9b45bfaab",
+      "license": "BSD-3-Clause"
+    },
+    {
       "module": "modernc.org/sqlite",
       "version": "v1.62.0",
       "sum": "h1:gMaCjSM1qpl+iOjiWhR1LYP3zqrYDI+5GYLGt6veP2g=",
       "license_file": "LICENSE",
       "license_sha256": "c6fe05491a60ae13bcd223088d2705e36dede24e5587226231d2459ada5c4822",
+      "license": "BSD-3-Clause"
+    },
+    {
+      "module": "modernc.org/strutil",
+      "version": "v1.2.1",
+      "sum": "h1:UneZBkQA+DX2Rp35KcM69cSsNES9ly8mQWD71HKlOA0=",
+      "license_file": "LICENSE",
+      "license_sha256": "0f594b710bedb0335b15155204150cb1aac98e76144b52b852b43ce6a65eaaad",
+      "license": "BSD-3-Clause"
+    },
+    {
+      "module": "modernc.org/token",
+      "version": "v1.1.0",
+      "sum": "h1:Xl7Ap9dKaEs5kLoOQeQmPWevfnk/DM5qcLcYlA8ys6Y=",
+      "license_file": "LICENSE",
+      "license_sha256": "2d36597f7117c38b006835ae7f537487207d8ec407aa9d9980794b2030cbc067",
       "license": "BSD-3-Clause"
     }
   ]

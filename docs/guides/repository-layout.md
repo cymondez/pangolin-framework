@@ -56,3 +56,7 @@ M2 共用呼叫政策位於 application，共用 HTTP／串流邊界位於 trans
 M3 新增 tenancy 與 PostgreSQL 資格投影、security/policy、platform/audit、完整 events/{local,outbox,inbox,postgres}、persistence/{migration,idempotency}，組織治理與 HTTP 保持單一 modules/organization 擁有者。各 package README 與 [M3 指南](m3-development.md) 說明組裝及驗收；Docusaurus 使用導覽於 Runtime Gate 通過後更新。
 
 M4 的背景工作契約與 Worker 在 platform/jobs，PostgreSQL queue Adapter／migration 在 platform/jobs/postgres；observability 提供明確注入的 OpenTelemetry／JSON logs／Health。跨套件驗收在 tests/m4，重用組織治理 fixture 的持久化 Job 替換回歸保留於 tests/m3/persistent_jobs_test.go。完整入口見 [M4 指南](m4-development.md)。
+
+M5 的 Cache／Settings／Features 在 platform 下；CLI main 在 cmd/pangolin、非公開命令與 embed 模板在 internal/scaffold。純文字 assets 由 scripts/template_bundle.py 固定同版 Runtime，禁止 framework import examples。跨套件 CLI 驗收在 tests/m5；完整組織 Authority／平台回歸重用 tests/m3/platform_test.go。tests/contract/m5.json 索引正式情境與模組 README。
+
+後續資料存取修正以 persistence/database 定義中立 Resource／Executor／Dialect；各引擎 Adapter 在 persistence/{postgres,mysql,sqlite}，跨引擎契約在 tests/database。業務 Application 使用自己的 Repository Port，Repository 使用中立 Executor；連線池與 Driver 型別只在組裝／Adapter。引擎專用 schema／migration 仍由實際擁有者維護，不因新增中立 Port 就宣稱全數跨引擎可用。

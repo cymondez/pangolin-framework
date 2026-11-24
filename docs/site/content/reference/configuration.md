@@ -32,6 +32,8 @@ JWT audience 為 `pangolin-bookstore`。請將密碼與 Token 放在可信環境
 
 你的應用不必使用 Bookstore 的環境變數名稱。使用 [Configuration](../fundamentals/configuration.mdx)將你選擇的名稱映射成 Source.Values，並提供必要欄位與格式驗證。
 
+由 CLI 生成的專案有自己的環境變數組合與 Compose ports（例如 `PANGOLIN_MIGRATION_DSN`、`PANGOLIN_API_PORT`），見 [pangolin CLI](cli.md)與[生成教學](../tutorials/generated-bookstore.md)；本頁設定只屬於套件內的 Bookstore 範例。
+
 ## Jobs 與觀測
 
 Jobs 的 Lease／執行／清理期限可先用 30s／20s／5s，並行 4、認領上限 32、重試 8 次、退避 250ms–30s、jitter 0.2、容量 100000、retention 720h。這些是明示起始設定，仍需依自己的負載與保留窗口量測。完整欄位與組裝見[背景工作](../platform/jobs.md)。

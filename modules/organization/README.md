@@ -22,6 +22,8 @@ Management 支援建立 Enterprise／standalone 或附屬 Organization、分頁 
 
 ## 授權、交易與失敗
 
+`Store.Parent(ctx, binding)` 實作 Settings 的中立 ancestry Port，重新查驗目前權威後回傳 Org 的現行 Enterprise（或 standalone）。不讀 DTO／JWT 的舊 parent，不授予 Enterprise 內容權限。無可信 binding、撤權或來源故障時拒絕。
+
 預設 Authority 以單一 SQL visibility snapshot 讀取本地 `pangolin_security.tenant_memberships`、scope state、有效 owner、membership／service grant、目前父層及 deny。Tenant／Enterprise restriction 只收緊下層權限。角色不擴散到同 Tenant 其他 Org；Enterprise metadata 目錄不代表業務資料聯集。Service 必須有明示 scope grant。
 
 Resolver／新根 UOW admission 向權威重新解析，JWT 的組織聲明與 TTL 快取不作授權來源。已 admission 的短 UOW 使用包含 Tenant／parent revision 的不可變簽署快照；RequiresNew 保留父 binding／期限。權威故障回 `SCOPE_AUTHORITY_UNAVAILABLE`，不使用舊 allow 或降級成 Tenant。簽署快照只用於當前受控 context，不是可由 DTO 安裝的 bearer token，也不供跨程序保存。Permission Adapter 應依此 immutable Snapshot 決策。

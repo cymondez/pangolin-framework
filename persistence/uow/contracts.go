@@ -45,11 +45,18 @@ type Options struct {
 	Isolation   Isolation
 	Timeout     time.Duration
 }
+
+// DefaultOptions configures a Manager's limits and transaction policy.
 type DefaultOptions struct {
 	DefaultTimeout      time.Duration
 	CleanupTimeout      time.Duration
 	HookTimeout         time.Duration
 	MaxRequiresNewDepth int
+	// DefaultIsolation is the isolation level applied when a transactional
+	// operation requests none explicitly. It must be a level the backend
+	// can enforce; a value the backend rejects fails Begin instead of being
+	// silently downgraded. Zero keeps the historical ReadCommitted default.
+	DefaultIsolation Isolation
 }
 type EffectiveOptions struct {
 	Mode              AccessMode

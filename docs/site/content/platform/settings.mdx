@@ -1,0 +1,74 @@
+---
+title: 分層設定與 Features
+description: 執行完整範例，學習 Tenant 設定覆寫、產品配額與失效通知後的版本核對。
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import source from '../_snippets/platform-services.go';
+
+啟動設定決定程序如何運作；這裡的 Settings 則解析使用者偏好與產品設定。Features 在已有權限的前提下，決定功能是否可用、可用多少。
+
+## 先執行完整範例
+
+完成[安裝](../getting-started/installation.md)後，從 Framework checkout 的 **examples/basics** 執行：
+
+```bash
+go run ./platform-services
+```
+
+不需要 Docker 或資料庫。預期看到：
+
+```text
+Tenant cache isolated: true
+Tenant setting: "blue"
+JSON array setting: "mail"
+Setting layers: [user tenant global config default]
+Effective quota: 10
+Feature cannot grant permission: true
+Stored update despite notification failure: true
+Version converged: true
+```
+
+也可以在自己的 consumer Go 專案建立 main.go，貼上完整程式，執行 go mod tidy、go run .：
+
+<CodeBlock language="go" title="main.go">{source}</CodeBlock>
+
+這是 console 教學，因此明示建立 demo 身分與 Permission。HTTP／Job／Consumer 使用各自的可信入口，先驗證身分、Tenant 與 Scope；不從 request body 建立授權。
+
+## 設定按什麼順序解析？
+
+基本五層由低至高為 Default、Config、Global、Tenant、User。Config 是 Configuration Reader 的設定值；Global 是可更新的全域儲存值，兩者獨立。Enterprise／Organization 可選，完整鏈最多七層。範例的 Setting layers 顯示由高至低的標準解析順序；沒有值的來源會繼續 fallback。
+
+| 目前 Scope | 由高至低的優先序 |
+|---|---|
+| Tenant | User-in-Tenant → Tenant → Global → Config → Default |
+| Organization | User-in-Scope → Organization → 目前 Enterprise（若有）→ Tenant → Global → Config → Default |
+| Enterprise | User-in-Scope → Enterprise → Tenant → Global → Config → Default |
+
+Definition.Inherit 需明示為 true 才讀取上層。未宣告繼承的 key 只使用目前 User／Scope 與 Default。使用者在 Org A 的設定不套用到 Org B；standalone Org 沒有 Enterprise 層。
+
+Settings 只依賴中立 Ancestry Port。組織應用可把已組裝的 organization.Store 注入 settings.New 的 ancestry 參數；Store.Parent 取得當前可信父層。已 admission 的短 UOW 保持原快照，其他讀取重新查驗目前權威。Tenant-only 不需要組織模組，傳 nil 即可。
+
+Definition.Validate 可以驗證自己的值型別。未知 key、非法值、無可信 Scope 或權威來源故障會回錯誤。Resolve 回傳 Value、Version 與按優先序排列的 Candidates。
+
+## 更新與通知失敗
+
+MemoryProvider.Put 是組裝使用的管理 Port，接收的是你已驗證的 Layer。HTTP 應用不要把任意 Layer DTO 直接交給它。Service.Update 先檢查 settings.write，且只修改目前精確 Scope。
+
+更新先保存來源值與新版本，再通知快取。通知／刪除失敗時可能仍已保存成功；Update 會回傳非零版本及錯誤，呼叫端應查驗目前結果。範例最後兩行就示範這個情況。
+
+Resolve 即使命中 Scoped Cache，仍核對原子來源 snapshot 的版本與解析層級。來源不可用時不服務未核對的舊值。TTL 與版本策略共同限制失效延遲，不能把 cache delete 當成資料庫 Commit 的一部分。
+
+MemoryProvider 的資料只存在目前程序；跨程序持久化需另實作 Provider。Provider.Read 必須讓候選值與版本來自同一 snapshot，所有有效更新都改變版本。
+
+## 下一步
+
+閱讀 [Features 與配額](features.md)了解 Boolean／Quota／Enum 與父層限制，再用 [Scoped Cache](cache.md)處理其他資料的 TTL、載入合併與失效事件。
+
+## JSON 設定的 key
+
+JSON 由 Configuration 層解析。例如 `{"Settings":{"Channels":[{"Name":"mail"}]}}` 產生 `Settings:Channels:0:Name`，Setting 名稱為 `Channels:0:Name`。索引從 0 起算，10、11 與巢狀陣列同樣使用冒號 segment；數字 property 也是一般名稱。
+
+Settings 只查 `Settings:` 加完整名稱，不會在儲存時拆 key。`Abp.Mailing.Smtp.Host` 的點號是 literal；它與巢狀物件產生的 `Abp:Mailing:Smtp:Host` 不同。JSON Configuration 比對 key 不區分大小寫，重複 scalar／攤平衝突拒絕。
+
+依 .NET 10：null 與空物件沒有字串值，空陣列為空字串；bool 為 True／False，number 保留文字。Configuration Provider 預設回 JSON string，值看似 JSON 也不猜型別。typed Feature 必須明示 converter。原有 JSON 管理 API 的值型別仍由應用明示。

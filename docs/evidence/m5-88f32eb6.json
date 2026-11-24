@@ -1,0 +1,959 @@
+{
+  "milestone": "M5",
+  "status": "verified",
+  "source_commit": "88f32eb6f2aa02c601dbc930f3f5a7b76911e185",
+  "source_sha256": "f7503c80c8afcc4201aacf40d027d90daa08021c686b7c5e2c19acf7ef64c420",
+  "baseline": "v1.3",
+  "named_subtests": 25,
+  "reports": {
+    "windows-amd64": "955b8510eec87246e81f99f8c30f9308e38f3263130bc0ac04420fc8101c1847",
+    "linux-amd64": "4ed98512d713f0e6e48ed35b62cb83c142f631c8bda3c09e43ecfa1ffe0ee55f"
+  },
+  "framework_version": "0.1.0",
+  "checked_date": "2026-11-24",
+  "gate_sha256": "2efb51d034c611407c352459fce170882ecd62ca4c0884964449923d67a242c9",
+  "regression_tests": [
+    "github.com/cymondez/pangolin-framework/kernel/config:TestJSONConfiguration",
+    "github.com/cymondez/pangolin-framework/platform/settings:TestA65JSONConfiguration/json-flatmap",
+    "github.com/cymondez/pangolin-framework/platform/settings:TestA65JSONConfiguration/configuration-fallback",
+    "github.com/cymondez/pangolin-framework/platform/settings:TestA65JSONConfiguration/configuration-overrides-cache-update",
+    "github.com/cymondez/pangolin-framework/platform/settings:TestJSONConfigurationScopeInheritance",
+    "github.com/cymondez/pangolin-framework/platform/cache:TestScopedFillInvalidation"
+  ],
+  "runners": {
+    "windows-amd64": {
+      "coverage": {
+        "overall": {
+          "covered_statements": 4798,
+          "total_statements": 5165
+        },
+        "packages": {
+          "github.com/cymondez/pangolin-framework/application": {
+            "covered_statements": 23,
+            "total_statements": 24
+          },
+          "github.com/cymondez/pangolin-framework/cmd/pangolin": {
+            "covered_statements": 5,
+            "total_statements": 6
+          },
+          "github.com/cymondez/pangolin-framework/events/distributed": {
+            "covered_statements": 84,
+            "total_statements": 88
+          },
+          "github.com/cymondez/pangolin-framework/events/inbox": {
+            "covered_statements": 61,
+            "total_statements": 62
+          },
+          "github.com/cymondez/pangolin-framework/events/local": {
+            "covered_statements": 59,
+            "total_statements": 60
+          },
+          "github.com/cymondez/pangolin-framework/events/nats": {
+            "covered_statements": 42,
+            "total_statements": 44
+          },
+          "github.com/cymondez/pangolin-framework/events/outbox": {
+            "covered_statements": 79,
+            "total_statements": 81
+          },
+          "github.com/cymondez/pangolin-framework/events/postgres": {
+            "covered_statements": 228,
+            "total_statements": 248
+          },
+          "github.com/cymondez/pangolin-framework/examples/bookstore/application": {
+            "covered_statements": 19,
+            "total_statements": 25
+          },
+          "github.com/cymondez/pangolin-framework/examples/bookstore/bootstrap": {
+            "covered_statements": 125,
+            "total_statements": 145
+          },
+          "github.com/cymondez/pangolin-framework/examples/bookstore/cmd/api": {
+            "covered_statements": 3,
+            "total_statements": 5
+          },
+          "github.com/cymondez/pangolin-framework/examples/bookstore/cmd/worker": {
+            "covered_statements": 3,
+            "total_statements": 5
+          },
+          "github.com/cymondez/pangolin-framework/examples/bookstore/domain": {
+            "covered_statements": 3,
+            "total_statements": 4
+          },
+          "github.com/cymondez/pangolin-framework/examples/bookstore/infrastructure": {
+            "covered_statements": 135,
+            "total_statements": 170
+          },
+          "github.com/cymondez/pangolin-framework/examples/bookstore/transport/http": {
+            "covered_statements": 73,
+            "total_statements": 79
+          },
+          "github.com/cymondez/pangolin-framework/internal/quality": {
+            "covered_statements": 132,
+            "total_statements": 132
+          },
+          "github.com/cymondez/pangolin-framework/internal/scaffold": {
+            "covered_statements": 321,
+            "total_statements": 378
+          },
+          "github.com/cymondez/pangolin-framework/kernel/config": {
+            "covered_statements": 181,
+            "total_statements": 189
+          },
+          "github.com/cymondez/pangolin-framework/kernel/di": {
+            "covered_statements": 179,
+            "total_statements": 182
+          },
+          "github.com/cymondez/pangolin-framework/kernel/module": {
+            "covered_statements": 152,
+            "total_statements": 159
+          },
+          "github.com/cymondez/pangolin-framework/kernel/runtime": {
+            "covered_statements": 173,
+            "total_statements": 178
+          },
+          "github.com/cymondez/pangolin-framework/modules/organization": {
+            "covered_statements": 733,
+            "total_statements": 805
+          },
+          "github.com/cymondez/pangolin-framework/modules/organization/transport/http": {
+            "covered_statements": 74,
+            "total_statements": 75
+          },
+          "github.com/cymondez/pangolin-framework/observability": {
+            "covered_statements": 112,
+            "total_statements": 119
+          },
+          "github.com/cymondez/pangolin-framework/persistence/idempotency": {
+            "covered_statements": 94,
+            "total_statements": 98
+          },
+          "github.com/cymondez/pangolin-framework/persistence/migration": {
+            "covered_statements": 195,
+            "total_statements": 203
+          },
+          "github.com/cymondez/pangolin-framework/persistence/postgres": {
+            "covered_statements": 142,
+            "total_statements": 150
+          },
+          "github.com/cymondez/pangolin-framework/persistence/uow": {
+            "covered_statements": 330,
+            "total_statements": 354
+          },
+          "github.com/cymondez/pangolin-framework/platform/audit": {
+            "covered_statements": 28,
+            "total_statements": 28
+          },
+          "github.com/cymondez/pangolin-framework/platform/cache": {
+            "covered_statements": 118,
+            "total_statements": 127
+          },
+          "github.com/cymondez/pangolin-framework/platform/features": {
+            "covered_statements": 53,
+            "total_statements": 56
+          },
+          "github.com/cymondez/pangolin-framework/platform/jobs": {
+            "covered_statements": 120,
+            "total_statements": 132
+          },
+          "github.com/cymondez/pangolin-framework/platform/jobs/postgres": {
+            "covered_statements": 104,
+            "total_statements": 115
+          },
+          "github.com/cymondez/pangolin-framework/platform/settings": {
+            "covered_statements": 127,
+            "total_statements": 136
+          },
+          "github.com/cymondez/pangolin-framework/security/authn": {
+            "covered_statements": 71,
+            "total_statements": 72
+          },
+          "github.com/cymondez/pangolin-framework/security/policy": {
+            "covered_statements": 29,
+            "total_statements": 29
+          },
+          "github.com/cymondez/pangolin-framework/security/scope": {
+            "covered_statements": 136,
+            "total_statements": 145
+          },
+          "github.com/cymondez/pangolin-framework/tenancy": {
+            "covered_statements": 46,
+            "total_statements": 47
+          },
+          "github.com/cymondez/pangolin-framework/tenancy/postgres": {
+            "covered_statements": 11,
+            "total_statements": 11
+          },
+          "github.com/cymondez/pangolin-framework/tools/check": {
+            "covered_statements": 48,
+            "total_statements": 51
+          },
+          "github.com/cymondez/pangolin-framework/transport/http": {
+            "covered_statements": 147,
+            "total_statements": 148
+          }
+        }
+      },
+      "platform": {
+        "CGO_ENABLED": "0",
+        "GOARCH": "amd64",
+        "GOOS": "windows",
+        "GOVERSION": "go1.27.4"
+      },
+      "commands": [
+        {
+          "name": "inventory",
+          "exit_code": 0,
+          "sha256": "f675ef38dbd25260378c4dd8cd04db0fcab9e6f2db3158f4a420320ccbb6a42b",
+          "seconds": 7.32
+        },
+        {
+          "name": "build",
+          "exit_code": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 1.183
+        },
+        {
+          "name": "vet",
+          "exit_code": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 0.514
+        },
+        {
+          "name": "go-module-verify",
+          "exit_code": 0,
+          "sha256": "acdb6a6a98dc2c297af31bb3538319778be8c8ef263cd0a8c9799de9c4998533",
+          "seconds": 1.394
+        },
+        {
+          "name": "m0-regression",
+          "exit_code": 0,
+          "sha256": "a6494347728b7bae00ca3290263b3c510a867b5f6994ad658e7d5e72e09ebe59",
+          "seconds": 0.261
+        },
+        {
+          "name": "m1-regression",
+          "exit_code": 0,
+          "sha256": "118949525c3b5ef90830717d1ecfc1b0fc29670bc3e803ee61148b74b0a8246e",
+          "seconds": 0.835
+        },
+        {
+          "name": "m2-regression",
+          "exit_code": 0,
+          "sha256": "3539a2ca64a858823fac480c8aa1abcdccab8314868a4bc2872d5c6edee764f7",
+          "seconds": 1.429
+        },
+        {
+          "name": "m3-regression",
+          "exit_code": 0,
+          "sha256": "025eba3c3ce37ca4967f4367cceef0027e579c1e3c4040d9bd92cc2e44dcf7fa",
+          "seconds": 0.167
+        },
+        {
+          "name": "m4-regression",
+          "exit_code": 0,
+          "sha256": "46e35f53aa040142729463d0014eeb0b87a3917d8ff9797700d51554d6d4abba",
+          "seconds": 0.143
+        },
+        {
+          "name": "m5-regression",
+          "exit_code": 0,
+          "sha256": "aa8f197fb9112adb5266cfdaa4612c9820c54f13eb7a2dbc2ed252a9894a5cd1",
+          "seconds": 0.165
+        },
+        {
+          "name": "unit",
+          "exit_code": 0,
+          "sha256": "a00b26399617a0137d88240047ce37ee987a6cf1adddff0250c7fdb99ed7e341",
+          "seconds": 6.881
+        },
+        {
+          "name": "integration",
+          "exit_code": 0,
+          "sha256": "5f2a065ee35001242daec43b587e3e1b643b6ef95721a7c245c5826fcc67a349",
+          "seconds": 114.218
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 1.107
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "sha256": "5ca1424fe6747392127463998deb9181156bdc3d4b0e31615307045ab270bd54",
+          "seconds": 0.135
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "sha256": "3de2773e87fd3f7aae43d3b822713fce00b0a1e9c39bc1a9f7ed618c65e2725b",
+          "seconds": 1.598
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "sha256": "623064db2a9398ab0c116e8ca0b6e848d88301bef9cd3485a48da000f8eb51df",
+          "seconds": 1.554
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 1.298
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+          "seconds": 0.029
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04",
+          "seconds": 0.042
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "sha256": "572e627e8b160176e6a3f0b0ef56e7383399c8fbfcc36a367c85014d2a260eb3",
+          "seconds": 0.054
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+          "seconds": 0.049
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+          "seconds": 0.032
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "sha256": "13bf7b3039c63bf5a50491fa3cfd8eb4e699d1ba1436315aef9cbe5711530354",
+          "seconds": 0.028
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04",
+          "seconds": 0.031
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "sha256": "cccf5e75aeb6e00acf767f59eacb07b5b4cad50020524e6aab2909648859b2a1",
+          "seconds": 0.034
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "sha256": "f1b2f662800122bed0ff255693df89c4487fbdcf453d3524a42d4ec20c3d9c04",
+          "seconds": 0.029
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 0.183
+        },
+        {
+          "name": "e2e",
+          "exit_code": 0
+        },
+        {
+          "name": "template-source",
+          "exit_code": 0,
+          "sha256": "596bf465db040e758038744ffceb7e6344dc05b8a4e1d6521af7f48924ed068d",
+          "seconds": 0.098
+        },
+        {
+          "name": "cli-build",
+          "exit_code": 0,
+          "sha256": "7fe449cd19537158eea1c76b5709980e15cb1cb712c043e5c84d6192ccef3b72",
+          "seconds": 0.979
+        },
+        {
+          "name": "templates",
+          "exit_code": 0,
+          "sha256": "aa3960ff1fce375ffcbc28793d019718d7567bcdcaddb899ef75950102199d4c",
+          "seconds": 10.369
+        },
+        {
+          "name": "cli-coverage",
+          "exit_code": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 0.199
+        },
+        {
+          "name": "templates-compose",
+          "exit_code": 0,
+          "sha256": "f03f0d4d44a2b88164a11d09f36c074ebf1b0f17b55941d41f8e5cd491a273c9",
+          "seconds": 36.006
+        },
+        {
+          "name": "generation-version",
+          "exit_code": 0,
+          "sha256": "198f0461c04e81193e7f7d68a80153237419cfa6d76f466acfdcf0df842f1fcb",
+          "seconds": 0.059
+        },
+        {
+          "name": "generation",
+          "exit_code": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 0.981
+        },
+        {
+          "name": "coverage",
+          "exit_code": 0,
+          "sha256": "5e7ddb772c2ca03e2fd97a2a8c2dfa474d0b00e621ab78aca072c2af6b231b4c",
+          "seconds": 1.391
+        },
+        {
+          "name": "coverage-html",
+          "exit_code": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 0.683
+        }
+      ],
+      "templates": [
+        {
+          "profile": "tenant-only",
+          "checks": [
+            "write-tenant-a",
+            "replay-tenant-a",
+            "read-tenant-a",
+            "write-tenant-b",
+            "replay-tenant-b",
+            "read-tenant-b",
+            "key-conflict",
+            "owner-dto-rejected",
+            "semantic-validation",
+            "tenant-hint-denied",
+            "unsupported-org"
+          ],
+          "runtime_files": 94,
+          "custom_migration_applied": true,
+          "build_test_start": true,
+          "reconciliation": {
+            "counts": {
+              "bookstore.books": 3,
+              "pangolin_audit.records": 2,
+              "pangolin_events.outbox": 2,
+              "pangolin_idempotency.results": 2
+            },
+            "force_rls": true,
+            "non_privileged_app": true,
+            "organization_schema": false
+          }
+        },
+        {
+          "profile": "organization-enabled",
+          "checks": [
+            "write-tenant-a",
+            "replay-tenant-a",
+            "read-tenant-a",
+            "write-tenant-b",
+            "replay-tenant-b",
+            "read-tenant-b",
+            "key-conflict",
+            "owner-dto-rejected",
+            "semantic-validation",
+            "tenant-hint-denied",
+            "org-write-2",
+            "org-read-2",
+            "org-write-3",
+            "org-read-3",
+            "complete-control-plane",
+            "create-enterprise",
+            "create-organization",
+            "parent-is-not-union",
+            "missing-selector",
+            "profile-downgrade-blocked"
+          ],
+          "runtime_files": 107,
+          "custom_migration_applied": true,
+          "build_test_start": true,
+          "reconciliation": {
+            "counts": {
+              "bookstore.books": 5,
+              "pangolin_audit.records": 6,
+              "pangolin_events.outbox": 6,
+              "pangolin_idempotency.results": 6
+            },
+            "force_rls": true,
+            "non_privileged_app": true,
+            "organization_schema": true
+          }
+        }
+      ]
+    },
+    "linux-amd64": {
+      "coverage": {
+        "overall": {
+          "covered_statements": 4797,
+          "total_statements": 5165
+        },
+        "packages": {
+          "github.com/cymondez/pangolin-framework/application": {
+            "covered_statements": 23,
+            "total_statements": 24
+          },
+          "github.com/cymondez/pangolin-framework/cmd/pangolin": {
+            "covered_statements": 5,
+            "total_statements": 6
+          },
+          "github.com/cymondez/pangolin-framework/events/distributed": {
+            "covered_statements": 84,
+            "total_statements": 88
+          },
+          "github.com/cymondez/pangolin-framework/events/inbox": {
+            "covered_statements": 61,
+            "total_statements": 62
+          },
+          "github.com/cymondez/pangolin-framework/events/local": {
+            "covered_statements": 59,
+            "total_statements": 60
+          },
+          "github.com/cymondez/pangolin-framework/events/nats": {
+            "covered_statements": 42,
+            "total_statements": 44
+          },
+          "github.com/cymondez/pangolin-framework/events/outbox": {
+            "covered_statements": 79,
+            "total_statements": 81
+          },
+          "github.com/cymondez/pangolin-framework/events/postgres": {
+            "covered_statements": 228,
+            "total_statements": 248
+          },
+          "github.com/cymondez/pangolin-framework/examples/bookstore/application": {
+            "covered_statements": 19,
+            "total_statements": 25
+          },
+          "github.com/cymondez/pangolin-framework/examples/bookstore/bootstrap": {
+            "covered_statements": 124,
+            "total_statements": 145
+          },
+          "github.com/cymondez/pangolin-framework/examples/bookstore/cmd/api": {
+            "covered_statements": 3,
+            "total_statements": 5
+          },
+          "github.com/cymondez/pangolin-framework/examples/bookstore/cmd/worker": {
+            "covered_statements": 3,
+            "total_statements": 5
+          },
+          "github.com/cymondez/pangolin-framework/examples/bookstore/domain": {
+            "covered_statements": 3,
+            "total_statements": 4
+          },
+          "github.com/cymondez/pangolin-framework/examples/bookstore/infrastructure": {
+            "covered_statements": 135,
+            "total_statements": 170
+          },
+          "github.com/cymondez/pangolin-framework/examples/bookstore/transport/http": {
+            "covered_statements": 73,
+            "total_statements": 79
+          },
+          "github.com/cymondez/pangolin-framework/internal/quality": {
+            "covered_statements": 132,
+            "total_statements": 132
+          },
+          "github.com/cymondez/pangolin-framework/internal/scaffold": {
+            "covered_statements": 321,
+            "total_statements": 378
+          },
+          "github.com/cymondez/pangolin-framework/kernel/config": {
+            "covered_statements": 181,
+            "total_statements": 189
+          },
+          "github.com/cymondez/pangolin-framework/kernel/di": {
+            "covered_statements": 179,
+            "total_statements": 182
+          },
+          "github.com/cymondez/pangolin-framework/kernel/module": {
+            "covered_statements": 152,
+            "total_statements": 159
+          },
+          "github.com/cymondez/pangolin-framework/kernel/runtime": {
+            "covered_statements": 173,
+            "total_statements": 178
+          },
+          "github.com/cymondez/pangolin-framework/modules/organization": {
+            "covered_statements": 733,
+            "total_statements": 805
+          },
+          "github.com/cymondez/pangolin-framework/modules/organization/transport/http": {
+            "covered_statements": 74,
+            "total_statements": 75
+          },
+          "github.com/cymondez/pangolin-framework/observability": {
+            "covered_statements": 112,
+            "total_statements": 119
+          },
+          "github.com/cymondez/pangolin-framework/persistence/idempotency": {
+            "covered_statements": 94,
+            "total_statements": 98
+          },
+          "github.com/cymondez/pangolin-framework/persistence/migration": {
+            "covered_statements": 195,
+            "total_statements": 203
+          },
+          "github.com/cymondez/pangolin-framework/persistence/postgres": {
+            "covered_statements": 142,
+            "total_statements": 150
+          },
+          "github.com/cymondez/pangolin-framework/persistence/uow": {
+            "covered_statements": 330,
+            "total_statements": 354
+          },
+          "github.com/cymondez/pangolin-framework/platform/audit": {
+            "covered_statements": 28,
+            "total_statements": 28
+          },
+          "github.com/cymondez/pangolin-framework/platform/cache": {
+            "covered_statements": 118,
+            "total_statements": 127
+          },
+          "github.com/cymondez/pangolin-framework/platform/features": {
+            "covered_statements": 53,
+            "total_statements": 56
+          },
+          "github.com/cymondez/pangolin-framework/platform/jobs": {
+            "covered_statements": 120,
+            "total_statements": 132
+          },
+          "github.com/cymondez/pangolin-framework/platform/jobs/postgres": {
+            "covered_statements": 104,
+            "total_statements": 115
+          },
+          "github.com/cymondez/pangolin-framework/platform/settings": {
+            "covered_statements": 127,
+            "total_statements": 136
+          },
+          "github.com/cymondez/pangolin-framework/security/authn": {
+            "covered_statements": 71,
+            "total_statements": 72
+          },
+          "github.com/cymondez/pangolin-framework/security/policy": {
+            "covered_statements": 29,
+            "total_statements": 29
+          },
+          "github.com/cymondez/pangolin-framework/security/scope": {
+            "covered_statements": 136,
+            "total_statements": 145
+          },
+          "github.com/cymondez/pangolin-framework/tenancy": {
+            "covered_statements": 46,
+            "total_statements": 47
+          },
+          "github.com/cymondez/pangolin-framework/tenancy/postgres": {
+            "covered_statements": 11,
+            "total_statements": 11
+          },
+          "github.com/cymondez/pangolin-framework/tools/check": {
+            "covered_statements": 48,
+            "total_statements": 51
+          },
+          "github.com/cymondez/pangolin-framework/transport/http": {
+            "covered_statements": 147,
+            "total_statements": 148
+          }
+        }
+      },
+      "platform": {
+        "CGO_ENABLED": "1",
+        "GOARCH": "amd64",
+        "GOOS": "linux",
+        "GOVERSION": "go1.27.4"
+      },
+      "commands": [
+        {
+          "name": "inventory",
+          "exit_code": 0,
+          "sha256": "860ec98b9bc55c51d70b5a2e90827a372c3cdd7b12dc4d1fc41f6665339bbb90",
+          "seconds": 41.489
+        },
+        {
+          "name": "build",
+          "exit_code": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 4.539
+        },
+        {
+          "name": "vet",
+          "exit_code": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 4.897
+        },
+        {
+          "name": "go-module-verify",
+          "exit_code": 0,
+          "sha256": "b4537ed75f533f993f371954de47e42a793b8e5b0587577de7e27fb3e50696bd",
+          "seconds": 107.793
+        },
+        {
+          "name": "m0-regression",
+          "exit_code": 0,
+          "sha256": "14d43e4b64f2aa77409f5e458e8f80d8ef8cb6432021ba459e6b90dd1e50adbe",
+          "seconds": 0.127
+        },
+        {
+          "name": "m1-regression",
+          "exit_code": 0,
+          "sha256": "d5b73b322d6b3fb3bba9e23f3ee14a9487d474bd3fd22aa7860cc0052a0bd792",
+          "seconds": 3.387
+        },
+        {
+          "name": "m2-regression",
+          "exit_code": 0,
+          "sha256": "b7e1ef0d5d8c8b834dc90c954ee71d90edf61caa5e0f928501c13685d8b421e6",
+          "seconds": 4.487
+        },
+        {
+          "name": "m3-regression",
+          "exit_code": 0,
+          "sha256": "b09aad3dd9a4ed3d36db37b9b97cf60c558b0e7372aac1f0a9efb1ae6bb26f2f",
+          "seconds": 0.06
+        },
+        {
+          "name": "m4-regression",
+          "exit_code": 0,
+          "sha256": "5bd973dfa66d6217e3a133978e3dfd6b5864f21adea191d0c236620a90bb7711",
+          "seconds": 0.057
+        },
+        {
+          "name": "m5-regression",
+          "exit_code": 0,
+          "sha256": "d916bbdb0e24542f82dc6e12e3070fc6c99f1eef94d5a1aba36cfc481d39ef4f",
+          "seconds": 0.066
+        },
+        {
+          "name": "unit",
+          "exit_code": 0,
+          "sha256": "e14eff2262d0aaab58bcfcdd49c0331fd91d6d5c8d862eb2a6f9344a632039ec",
+          "seconds": 20.52
+        },
+        {
+          "name": "integration",
+          "exit_code": 0,
+          "sha256": "f855ddc3701e9e7c31327b4ee0732df11852d305e24565d672321aedbf040332",
+          "seconds": 90.38
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 1.288
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "sha256": "c86a72ac8bd9ac6bd8f65ce1706af6e778f01f57b4f5c63beb18c90295053783",
+          "seconds": 0.086
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "sha256": "6b0e73a8f5f7d9487863744e1a7ed44c890ac088bf3e3166daade59a5dc13937",
+          "seconds": 2.688
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "sha256": "7066171d428f05d3571e131d1a43fc74cbaff217a9d62ed43631d27d6df59923",
+          "seconds": 2.544
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 2.183
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+          "seconds": 0.084
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "seconds": 0.079
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "sha256": "81c6a2fdaba7c40cdc3a899e0449e2c4b8fe0abe3477eb01252ca1f0d3de6680",
+          "seconds": 0.073
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "sha256": "9a271f2a916b0b6ee6cecb2426f0b3206ef074578be55d9bc94f6f3fe3ab86aa",
+          "seconds": 0.074
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "seconds": 0.068
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "sha256": "6a6584fbfdca0ed9406be94ad8c86cca9bbf8a7a44fe9db9f89f11e4773cbf79",
+          "seconds": 0.087
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "sha256": "4355a46b19d348dc2f57c046f8ef63d4538ebb936000f3c9ee954a27460dd865",
+          "seconds": 0.078
+        },
+        {
+          "name": "e2e-step",
+          "exit_code": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 0.716
+        },
+        {
+          "name": "e2e",
+          "exit_code": 0
+        },
+        {
+          "name": "template-source",
+          "exit_code": 0,
+          "sha256": "af1f3535c9d007e4591bf180bc945dea13a5c748668f59521714b9035902cfd5",
+          "seconds": 0.036
+        },
+        {
+          "name": "cli-build",
+          "exit_code": 0,
+          "sha256": "63248e6a37a0dfa5f676a10e909b548ef3615f998dc33fccbe58a0c61ae65ba6",
+          "seconds": 1.644
+        },
+        {
+          "name": "templates",
+          "exit_code": 0,
+          "sha256": "08f1de28c3f44558b93fb45f42d3c3f84416d483db0a0a6861b69e0ad9f4cc6a",
+          "seconds": 55.967
+        },
+        {
+          "name": "cli-coverage",
+          "exit_code": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 0.358
+        },
+        {
+          "name": "race",
+          "exit_code": 0,
+          "sha256": "ffb1a5fbe554062191da3ff856e0645fe731546f26be10ba77a69c042146f472",
+          "seconds": 213.471
+        },
+        {
+          "name": "generation-version",
+          "exit_code": 0,
+          "sha256": "7a54f3f1dad67104e41c3998c35716a83134876096c530cf7b6edec81d4b42a7",
+          "seconds": 0.018
+        },
+        {
+          "name": "generation",
+          "exit_code": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 0.025
+        },
+        {
+          "name": "coverage",
+          "exit_code": 0,
+          "sha256": "9a03596ec7b4f0d54bbc52b704e054fbe3f0d315cf5cef5872d0469083ac2f4f",
+          "seconds": 2.576
+        },
+        {
+          "name": "coverage-html",
+          "exit_code": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 3.108
+        }
+      ],
+      "templates": [
+        {
+          "profile": "tenant-only",
+          "checks": [
+            "write-tenant-a",
+            "replay-tenant-a",
+            "read-tenant-a",
+            "write-tenant-b",
+            "replay-tenant-b",
+            "read-tenant-b",
+            "key-conflict",
+            "owner-dto-rejected",
+            "semantic-validation",
+            "tenant-hint-denied",
+            "unsupported-org"
+          ],
+          "runtime_files": 94,
+          "custom_migration_applied": true,
+          "build_test_start": true,
+          "reconciliation": {
+            "counts": {
+              "bookstore.books": 3,
+              "pangolin_audit.records": 2,
+              "pangolin_events.outbox": 2,
+              "pangolin_idempotency.results": 2
+            },
+            "force_rls": true,
+            "non_privileged_app": true,
+            "organization_schema": false
+          }
+        },
+        {
+          "profile": "organization-enabled",
+          "checks": [
+            "write-tenant-a",
+            "replay-tenant-a",
+            "read-tenant-a",
+            "write-tenant-b",
+            "replay-tenant-b",
+            "read-tenant-b",
+            "key-conflict",
+            "owner-dto-rejected",
+            "semantic-validation",
+            "tenant-hint-denied",
+            "org-write-2",
+            "org-read-2",
+            "org-write-3",
+            "org-read-3",
+            "complete-control-plane",
+            "create-enterprise",
+            "create-organization",
+            "parent-is-not-union",
+            "missing-selector",
+            "profile-downgrade-blocked"
+          ],
+          "runtime_files": 107,
+          "custom_migration_applied": true,
+          "build_test_start": true,
+          "reconciliation": {
+            "counts": {
+              "bookstore.books": 5,
+              "pangolin_audit.records": 6,
+              "pangolin_events.outbox": 6,
+              "pangolin_idempotency.results": 6
+            },
+            "force_rls": true,
+            "non_privileged_app": true,
+            "organization_schema": true
+          }
+        }
+      ]
+    }
+  }
+}

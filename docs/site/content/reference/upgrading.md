@@ -40,8 +40,26 @@ Runtime Options 新增 StartupChecks，請將 positional literal 改成具名欄
 
 未知 Scope Kind 在預設 Bookstore 由舊的 403 改為 400／SCOPE_KIND_UNSUPPORTED。組織範例改用獨立 ScopeAware Repository，不能直接沿用 TenantOnly 資料表。
 
+## 更新 CLI 生成的專案
+
+`pangolin new` 生成的專案內附固定版本的 `framework/` 與 `runtime-manifest.json`，以本機 module replacement 固定 Runtime。更新時整套替換 bundled Runtime 與 checksum manifest，或從相同版本的 Framework checkout 重新生成；不要只抽換其中一部分檔案，也不要混用不同來源的 Runtime。
+
+替換後在生成專案執行 `go test ./...` 與 `pangolin doctor` 確認 checksum 與環境；Runtime 帶來新 migration 時，先執行 `go run ./cmd/migrate` 部署，再啟動 API。
+
+### 組織 Profile 的切換限制
+
+`tenant-only` 與 `organization` 是不同的依賴圖與 schema，不能只改 pangolin.json 切換。既有專案啟用組織能力需[前向遷移與移除檢查](../data/migrations.md)；已含組織資料的資料庫也不能直接接到 tenant-only 專案，生成 API 會核對資料庫 Profile，不合時拒絕 Ready。
+
 ## 加入背景工作與觀測
 
 升級預覽來源後，部署 Jobs migration 與事件 CapacityMigrations，再更新 schema 相容版本範圍。事件 store 改用 NewBoundedStore 並設定容量；舊 NewStore 保留既有組裝相容性。完整[接線與上限](../platform/jobs.md)需要目前服務 grant 和 Handler 冪等。
 
 Envelope 新增可省略 traceparent，舊格式仍可讀取，已發布 payload schema 不重寫。人工 replay 保留實際持久化的原始 Envelope，不重新生成 owner、事件 ID 或 traceparent。OpenTelemetry 採明確注入，應用負責 SDK 有界 Shutdown。
+
+## 中立資料存取與登入擴充
+
+一般 Repository 改用 persistence/database 的 Resource／Executor／Dialect；連線與 Driver 只留在組裝／Adapter。SQLite 的 Manager 明示 DefaultIsolation=Serializable，零值仍保留既有 ReadCommitted；缺少必要能力時用 database.Admit 拒絕組裝。既有引擎專用 SQL／migration 不會自動移植，見[資料庫選擇](../data/database.md)。
+
+Settings 的空 Layer 位址保留為 Global；Config 是 WithConfiguration 提供的獨立唯讀來源。名稱及既有值不搬移，完整來源順序見[分層設定](../platform/settings.mdx)。Feature 先檢查 Permission，普通 Permission 不反向依賴 Feature。
+
+原 authn.Identity／Validator／ServiceAuthenticator 保留相容轉接；新登入模組使用 security/identity 的 Verifier／Pipeline。HTTP 改用 AuthenticateCredential／Credentials，舊 Authenticate 或 Bookstore Auth 則保留 Bearer 入口，兩種模式擇一。Challenge／Pending 不安裝身分；Cookie 寫入需由 Session 模組提供 CSRF 接線，見[登入指南](../security/authentication.md)。

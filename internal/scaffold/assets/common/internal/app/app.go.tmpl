@@ -1,0 +1,276 @@
+package app
+
+import (
+	"bytes"
+	"context"
+	"crypto/rand"
+	"encoding/json"
+	"errors"
+	"net"
+	"net/http"
+	"os"
+	"time"
+
+	"github.com/cymondez/pangolin-framework/events/distributed"
+	"github.com/cymondez/pangolin-framework/events/outbox"
+	eventpg "github.com/cymondez/pangolin-framework/events/postgres"
+	"github.com/cymondez/pangolin-framework/kernel/config"
+	"github.com/cymondez/pangolin-framework/kernel/di"
+	"github.com/cymondez/pangolin-framework/kernel/module"
+	"github.com/cymondez/pangolin-framework/kernel/runtime"
+	"github.com/cymondez/pangolin-framework/persistence/idempotency"
+	"github.com/cymondez/pangolin-framework/persistence/migration"
+	"github.com/cymondez/pangolin-framework/persistence/postgres"
+	"github.com/cymondez/pangolin-framework/persistence/uow"
+	"github.com/cymondez/pangolin-framework/platform/audit"
+	"github.com/cymondez/pangolin-framework/security/authn"
+	"github.com/cymondez/pangolin-framework/security/identity"
+	"github.com/cymondez/pangolin-framework/security/scope"
+	"github.com/cymondez/pangolin-framework/tenancy"
+	tenantpg "github.com/cymondez/pangolin-framework/tenancy/postgres"
+	transport "github.com/cymondez/pangolin-framework/transport/http"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"{{MODULE}}/internal/application"
+	"{{MODULE}}/internal/domain"
+	"{{MODULE}}/internal/infrastructure"
+	"{{MODULE}}/modules"
+)
+
+func permission(_ context.Context, b scope.ScopeBinding, action string) error {
+	if b.Principal.ID != "alice" {
+		return scope.ErrDenied
+	}
+	switch action {
+	case "books.read", "books.write", "tenant.enterprise.create", "tenant.organization.create", "organization.create", "organization.directory", "tenant.scope.recover":
+		return nil
+	}
+	return scope.ErrDenied
+}
+
+type participant struct {
+	server *http.Server
+	work   *runtime.WorkGroup
+}
+
+func (p participant) Quiesce(ctx context.Context) error {
+	p.server.SetKeepAlivesEnabled(false)
+	return p.work.Quiesce(ctx)
+}
+func (p participant) Drain(ctx context.Context) error {
+	return errors.Join(p.server.Shutdown(ctx), p.work.Drain(ctx))
+}
+func (p participant) Cancel() { p.work.Cancel() }
+
+// Handler composes trusted JWT/Tenant/Scope, permission, strict DTO, UOW, required
+// audit and durable Outbox. Pools remain owned by the caller.
+type Application struct {
+	http.Handler
+	scopes *scope.Registry
+}
+type requestError struct {
+	cause  error
+	status int
+	code   string
+}
+
+func (e requestError) Error() string   { return e.code }
+func (e requestError) Unwrap() error   { return e.cause }
+func (e requestError) HTTPStatus() int { return e.status }
+func (e requestError) Code() string    { return e.code }
+
+func Handler(ctx context.Context, pool, authorityPool *pgxpool.Pool) (*Application, error) {
+	db, err := openSQL(os.Getenv("PANGOLIN_DSN"))
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+	version, err := expectedVersion()
+	if err != nil {
+		return nil, err
+	}
+	runner, err := migration.NewPostgres(db, migration.Filesystem("."), version, version)
+	if err != nil {
+		return nil, err
+	}
+	if err = runner.CheckCompatibility(ctx); err != nil {
+		return nil, err
+	}
+	var installedProfile string
+	if err = db.QueryRowContext(ctx, "SELECT name FROM bookstore.profile").Scan(&installedProfile); err != nil {
+		return nil, errors.Join(scope.ErrMigrationRequired, err)
+	}
+	if installedProfile != profileName {
+		return nil, scope.ErrMigrationRequired
+	}
+	authority := tenantpg.Authority{Pool: authorityPool}
+	tenants, err := tenancy.NewResolver(identity.Identity, authority)
+	if err != nil {
+		return nil, err
+	}
+	validator := authn.NewValidator(os.Getenv("PANGOLIN_ISSUER"), "pangolin-bookstore", os.Getenv("PANGOLIN_JWKS_URL"), &http.Client{Timeout: 2 * time.Second})
+	eventStore, err := eventpg.NewBoundedStore(authorityPool, outbox.Policy{Lease: 30 * time.Second, SendTimeout: 5 * time.Second, RetryInitial: 250 * time.Millisecond, RetryMax: 30 * time.Second, MaxAttempts: 8}, eventpg.Capacity{Outbox: 100000, Inbox: 100000})
+	if err != nil {
+		return nil, err
+	}
+	schemas := append([]distributed.Schema{{Type: "bookstore.book.created", Version: 1, Required: []string{"id", "title"}}}, profileSchemas()...)
+	serializer, err := distributed.NewRegistry(schemas...)
+	if err != nil {
+		return nil, err
+	}
+	publisher, err := outbox.NewPublisher(serializer, eventStore)
+	if err != nil {
+		return nil, err
+	}
+	manager, err := uow.NewManager(&eventpg.Resource{Base: &postgres.Resource{Pool: pool}, Publisher: publisher}, uow.DefaultOptions{DefaultTimeout: 5 * time.Second, CleanupTimeout: 2 * time.Second, HookTimeout: time.Second, MaxRequiresNewDepth: 4})
+	if err != nil {
+		return nil, err
+	}
+	effects := infrastructure.Effects{Publisher: publisher, Manager: manager}
+	var scopes *scope.Registry
+	copyBytes := func(b []byte) ([]byte, error) { return append([]byte(nil), b...), nil }
+	idem, err := idempotency.New(idempotency.Config{MaxKeyBytes: 128, MaxBodyBytes: 1 << 20, RetryWindow: 24 * time.Hour, Retention: 168 * time.Hour, Protect: copyBytes, Unprotect: copyBytes}, func(c context.Context, a string) error { return scopes.Authorize(c, a) })
+	if err != nil {
+		return nil, err
+	}
+	scopes, optional, err := profile(ctx, manager, authorityPool, authority, idem, effects, tenants, validator)
+	if err != nil {
+		return nil, err
+	}
+	books := application.Books{Repository: infrastructure.Repository{}, Authorizer: scopes, Idempotency: idem, Effects: effects}
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /livez", func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(204) })
+	mux.HandleFunc("GET /readyz", func(w http.ResponseWriter, r *http.Request) {
+		c, cancel := context.WithTimeout(r.Context(), time.Second)
+		defer cancel()
+		if pool.Ping(c) != nil || authorityPool.Ping(c) != nil {
+			w.WriteHeader(503)
+			return
+		}
+		w.WriteHeader(204)
+	})
+	resolveTenant := func(c context.Context, r *http.Request) (context.Context, error) {
+		return tenants.Resolve(c, "", r.Header.Get("X-Tenant-ID"))
+	}
+	resolveScope := func(c context.Context, r *http.Request) (context.Context, error) {
+		_, tenant, _ := tenancy.Identity(c)
+		kind, id := r.Header.Get("X-Scope-Kind"), r.Header.Get("X-Scope-ID")
+		if kind == "" && id == "" {
+			kind, id = "tenant", tenant
+		}
+		if kind == "" || id == "" {
+			return nil, scope.ErrRequired
+		}
+		return scopes.Bind(c, scope.ScopeRef{TenantID: tenant, Kind: kind, ID: id})
+	}
+	log, _ := audit.NewSecurityLog(os.Stderr, tenancy.Identity)
+	for _, route := range []struct {
+		pattern, permission string
+		read                bool
+	}{{"POST /books", "books.write", false}, {"GET /books/{id}", "books.read", true}} {
+		mux.HandleFunc(route.pattern, func(w http.ResponseWriter, r *http.Request) {
+			key := r.Header.Get("Idempotency-Key")
+			// Default HTTP profile uses the extension ports: Bearer credential
+			// extraction plus the trusted credential authentication pipeline.
+			pipeline, _ := transport.NewPipeline(transport.PipelineOptions{Timeout: 5 * time.Second, MaxBodyBytes: 1 << 20, Manager: manager, ReadOnly: route.read, AuthenticateCredential: validator.AuthenticateCredential, Credentials: transport.BearerCredentials(), ResolveTenant: resolveTenant, ResolveScope: resolveScope, Entry: func(c context.Context) error { return scopes.Authorize(c, route.permission) }, Rejected: func(c context.Context, _ error) {
+				_ = log.Write(c, audit.Record{Action: "request.rejected", Resource: "bookstore", Result: "denied", Trace: rand.Text()})
+			}, Decode: func(raw []byte) (any, error) {
+				if route.read {
+					if len(raw) != 0 {
+						return nil, requestError{scope.ErrInvalid, 400, "MALFORMED_REQUEST"}
+					}
+					return nil, nil
+				}
+				var b domain.Book
+				d := json.NewDecoder(bytes.NewReader(raw))
+				d.DisallowUnknownFields()
+				if err := d.Decode(&b); err != nil {
+					return nil, requestError{err, 400, "MALFORMED_REQUEST"}
+				}
+				if !json.Valid(raw) || key == "" {
+					return nil, requestError{scope.ErrInvalid, 400, "MALFORMED_REQUEST"}
+				}
+				if err := b.Validate(); err != nil {
+					return nil, requestError{err, 422, "VALIDATION_FAILED"}
+				}
+				return b, nil
+			}, Work: func(c context.Context, dto any) (any, error) {
+				if route.read {
+					return books.Get(c, r.PathValue("id"))
+				}
+				return books.Create(c, dto.(domain.Book), key)
+			}})
+			pipeline.ServeHTTP(w, r)
+		})
+	}
+	if optional != nil {
+		mux.Handle("/", optional)
+	}
+	return &Application{Handler: mux, scopes: scopes}, nil
+}
+func Run(ctx context.Context) error {
+	pool, err := pgxpool.New(ctx, os.Getenv("PANGOLIN_DSN"))
+	if err != nil {
+		return errors.New("invalid application database")
+	}
+	defer pool.Close()
+	authority, err := pgxpool.New(ctx, os.Getenv("PANGOLIN_AUTHORITY_DSN"))
+	if err != nil {
+		return errors.New("invalid authority database")
+	}
+	defer authority.Close()
+	handler, err := Handler(ctx, pool, authority)
+	if err != nil {
+		return err
+	}
+	listen := os.Getenv("PANGOLIN_LISTEN")
+	if listen == "" {
+		listen = "127.0.0.1:18081"
+	}
+	server := &http.Server{Addr: listen, ReadHeaderTimeout: 3 * time.Second, ReadTimeout: 6 * time.Second, WriteTimeout: 6 * time.Second, IdleTimeout: 30 * time.Second}
+	work := runtime.NewWorkGroup()
+	defaults := []config.Source{{Name: "defaults", Values: map[string]string{"uow.default_timeout": "5s", "uow.cleanup_timeout": "2s", "uow.hook_timeout": "1s", "uow.max_requires_new_depth": "4"}}}
+	host, err := runtime.New(runtime.Options{DrainTimeout: 15 * time.Second, CleanupTimeout: 5 * time.Second}, defaults, participant{server, work})
+	if err != nil {
+		return err
+	}
+	registered := modules.All()
+	for i := range registered {
+		switch registered[i].Name {
+		case "authorization":
+			registered[i].RequiredScopeKinds = []string{"tenant"}
+			registered[i].Configure = func(b module.Builder) error {
+				return b.Provide(di.Provider{Key: scope.RegistryKey, Lifetime: di.Singleton, Factory: func(context.Context, di.Resolver) (any, di.Cleanup, error) { return handler.scopes, nil, nil }})
+			}
+		case "organization":
+			registered[i].RequiredScopeKinds = []string{"org.enterprise", "org.organization"}
+		}
+	}
+	if err = host.Start(ctx, registered); err != nil {
+		return err
+	}
+	defer host.Stop(context.Background())
+	server.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		c, done, err := work.Enter(r.Context())
+		if err != nil {
+			transport.WriteError(w, r, err)
+			return
+		}
+		defer done()
+		handler.ServeHTTP(w, r.WithContext(c))
+	})
+	listener, err := net.Listen("tcp", listen)
+	if err != nil {
+		return err
+	}
+	done := make(chan error, 1)
+	go func() { done <- server.Serve(listener) }()
+	select {
+	case <-ctx.Done():
+		return host.Stop(context.Background())
+	case err = <-done:
+		if errors.Is(err, http.ErrServerClosed) {
+			return nil
+		}
+		return err
+	}
+}
