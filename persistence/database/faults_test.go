@@ -273,15 +273,13 @@ func TestBeginGuards(t *testing.T) {
 	if _, _, err := r.Begin(ctx, uow.EffectiveOptions{Transactional: true, DatabaseKey: "other"}); !errors.Is(err, uow.ErrResourceMismatch) {
 		t.Fatalf("wrong key accepted: %v", err)
 	}
-	// Invalid scope reference.
-	invalid, berr := scope.NewTenantResolver(func(context.Context) (scope.PrincipalRef, string, bool) {
+	// Invalid scope reference: the trusted resolver rejects the mismatched
+	// tenant ID, so no binding can ever be fabricated for Begin.
+	_, berr := scope.NewTenantResolver(func(context.Context) (scope.PrincipalRef, string, bool) {
 		return scope.PrincipalRef{ID: "x", Kind: "user"}, "tenant-a", true
 	}).Bind(context.Background(), scope.ScopeRef{TenantID: "tenant-a", Kind: "tenant", ID: "different"})
-	if berr != nil {
-		t.Skip("tenant resolver rejected the invalid ref already")
-	}
-	if _, _, err := r.Begin(invalid, uow.EffectiveOptions{Transactional: true, DatabaseKey: r.DatabaseKey()}); err == nil {
-		t.Fatal("invalid scope accepted")
+	if berr == nil {
+		t.Fatal("invalid scope reference accepted by resolver")
 	}
 	// Rejected isolation fails before any connection is taken.
 	strict, serr := NewSQLResource(r.Pool(), SQLConfig{

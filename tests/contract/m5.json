@@ -156,7 +156,8 @@
     "github.com/cymondez/pangolin-framework/persistence/database:TestCleanupWaitIsBoundedByDeadline",
     "github.com/cymondez/pangolin-framework/persistence/database:TestPooledBusyCursorCleanupReleasesSession",
     "github.com/cymondez/pangolin-framework/persistence/database:TestAbandonedCursorCloseAfterCleanupIsIdempotent",
-    "github.com/cymondez/pangolin-framework/persistence/database:TestCursorCloseAndErrRaceSessionCleanup"
+    "github.com/cymondez/pangolin-framework/persistence/database:TestCursorCloseAndErrRaceSessionCleanup",
+    "github.com/cymondez/pangolin-framework/persistence/database:TestBeginGuards"
   ],
   "regression_integration_tests": [
     "github.com/cymondez/pangolin-framework/tests/database:TestDatabasePostgresCommitRollbackContract",
