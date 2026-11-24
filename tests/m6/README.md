@@ -11,7 +11,7 @@ python -m unittest discover -v -s tests/m6 -p test_*.py
 go test -tags=integration ./tests/m6   # 需要 PANGOLIN_M1_* fixture DSN（drills 測試）
 ```
 
-Go 演練測試使用與舊里程碑相同的 `PANGOLIN_M1_ADMIN_DSN`／`APP_DSN`／`WORKER_DSN`／`NATS_URL`／`ISSUER`，並以 `PANGOLIN_M6_EVIDENCE_DIR` 輸出機器可讀證據供 `scripts/m6_drills.py` 驗證；每個演練自建且自清專屬資料庫，不觸碰共享 fixture 資料。
+Go 演練測試使用與舊里程碑相同的 `PANGOLIN_M1_ADMIN_DSN`／`APP_DSN`／`WORKER_DSN`／`NATS_URL`／`ISSUER`，並以 `PANGOLIN_M6_EVIDENCE_DIR` 輸出機器可讀證據供 `scripts/m6_drills.py` 驗證；每個演練自建且自清專屬資料庫，不觸碰共享 fixture 資料。`PANGOLIN_M1_ISSUER` 是 API 驗證 JWT `iss` claim 的 issuer 值；測試 runner 呼叫 fixture IdP 取得 token 則使用 `PANGOLIN_M1_TOKEN_URL`。兩者可使用不同網路位址，例如 Linux runner 以 `http://test-idp:8080/token` 呼叫 IdP，同時保留 token 中與 API 設定相符的 issuer claim。未設定 `PANGOLIN_M1_TOKEN_URL` 時，演練回退使用 `<ISSUER>/token`。
 
 ## 覆蓋的拒絕語意
 

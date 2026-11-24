@@ -45,3 +45,10 @@ Final interface recheck: drill report platform object vs string; --allow-dirty s
 - Profile index generation/revalidation is connected to the release gate. Counts/percentiles must match complete raw samples; nonfinite/impossible data and source/artifact path escapes are rejected. CLI inventory now points at the actual M6 gate rather than claiming every runtime case is still pending.
 - Module/tool/script/test READMEs, development guide, release notes and runbooks are maintained. Recovery measurement explicitly describes the quiescent seeded dataset and does not promise production RPO. Docusaurus remains untouched pending formal acceptance.
 - Next: freeze/commit this source, start fresh owned M6 services, collect native Windows and pinned Linux/full-race cumulative evidence, validate the same-source gate, then update public documentation.
+
+## Follow-up review and platform correction
+
+- Source `35386a2` passed the complete native Windows gate and independent report/index validation (5393/5789 statements). Its Linux run was stopped after Luna identified the rebuild drill using the JWT issuer as the token HTTP endpoint inside the runner.
+- The fixture now honors the existing `PANGOLIN_M1_TOKEN_URL` for token transport and retains the issuer claim for API validation, with HTTP regression tests for endpoint separation/fallback and an updated test README. This correction requires a new source commit and both platforms to run again; no evidence from `35386a2` is relabeled as the corrected source.
+- During focused validation the four owned fixture services were found stopped (Exited 255); they were inventoried and restarted. This environment interruption is distinct from executable acceptance and is not reported as a pass.
+- Website draft remains ignored and unapplied until the final same-source gate. Its restore flow derives a unique target database URI from one management endpoint to avoid mismatched restore connections.

@@ -12,6 +12,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -23,6 +24,73 @@ import (
 	"github.com/jackc/pgx/v5"
 	natsgo "github.com/nats-io/nats.go"
 )
+
+const fixtureTokenURLEnv = "PANGOLIN_M1_TOKEN_URL"
+
+type fixtureTokenCall struct {
+	method string
+	path   string
+	body   string
+}
+
+func TestM6FixtureTokenUsesSeparateTokenURL(t *testing.T) {
+	issuerHits := make(chan struct{}, 1)
+	issuerServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		select {
+		case issuerHits <- struct{}{}:
+		default:
+		}
+		http.NotFound(w, r)
+	}))
+	defer issuerServer.Close()
+
+	tokenCalls := make(chan fixtureTokenCall, 1)
+	tokenServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			t.Errorf("read token request: %v", err)
+		}
+		tokenCalls <- fixtureTokenCall{method: r.Method, path: r.URL.Path, body: string(body)}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = io.WriteString(w, `{"access_token":"fixture-token"}`)
+	}))
+	defer tokenServer.Close()
+
+	t.Setenv(fixtureTokenURLEnv, tokenServer.URL+"/token")
+	status, raw, _ := fixtureTokenRequest(t, issuerServer.URL)
+	if status != http.StatusOK || string(raw) != `{"access_token":"fixture-token"}` {
+		t.Fatalf("separate fixture token endpoint response = %d %s", status, raw)
+	}
+	call := <-tokenCalls
+	if call.method != http.MethodPost || call.path != "/token" || call.body != `{"subject":"alice","tenant_id":"tenant-a"}` {
+		t.Fatalf("fixture token request = %s %s %s", call.method, call.path, call.body)
+	}
+	select {
+	case <-issuerHits:
+		t.Fatal("JWT issuer URL was used as the fixture token endpoint")
+	default:
+	}
+}
+
+func TestM6FixtureTokenFallsBackToIssuerTokenPath(t *testing.T) {
+	tokenCalls := make(chan fixtureTokenCall, 1)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		tokenCalls <- fixtureTokenCall{method: r.Method, path: r.URL.Path}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = io.WriteString(w, `{"access_token":"fallback-token"}`)
+	}))
+	defer server.Close()
+	t.Setenv(fixtureTokenURLEnv, "")
+
+	status, raw, _ := fixtureTokenRequest(t, server.URL)
+	if status != http.StatusOK || string(raw) != `{"access_token":"fallback-token"}` {
+		t.Fatalf("fallback fixture token response = %d %s", status, raw)
+	}
+	call := <-tokenCalls
+	if call.method != http.MethodPost || call.path != "/token" {
+		t.Fatalf("fallback fixture token request = %s %s", call.method, call.path)
+	}
+}
 
 // TestM6CleanRebuild deploys a unique fresh database with the real framework
 // migration set, builds the real example Bookstore API/Worker binaries from
@@ -76,7 +144,7 @@ func TestM6CleanRebuild(t *testing.T) {
 	until(t, 10*time.Second, func() bool { return httpStatus(t, "GET", apiURL+"/readyz", nil, nil) == http.StatusNoContent })
 	readyzMS := time.Since(readyzStarted).Milliseconds()
 
-	tokenStatus, raw, _ := request(t, "POST", issuer+"/token", []byte(`{"subject":"alice","tenant_id":"tenant-a"}`), nil)
+	tokenStatus, raw, _ := fixtureTokenRequest(t, issuer)
 	if tokenStatus != http.StatusOK {
 		t.Fatalf("fixture IdP token failed: %d %s", tokenStatus, raw)
 	}
@@ -332,6 +400,15 @@ func request(t *testing.T, method, target string, body []byte, headers map[strin
 	must(t, err)
 	must(t, response.Body.Close())
 	return response.StatusCode, raw, time.Since(started)
+}
+
+func fixtureTokenRequest(t *testing.T, issuer string) (int, []byte, time.Duration) {
+	t.Helper()
+	tokenURL := os.Getenv(fixtureTokenURLEnv)
+	if tokenURL == "" {
+		tokenURL = issuer + "/token"
+	}
+	return request(t, http.MethodPost, tokenURL, []byte(`{"subject":"alice","tenant_id":"tenant-a"}`), nil)
 }
 
 func httpStatus(t *testing.T, method, target string, body []byte, headers map[string]string) int {
