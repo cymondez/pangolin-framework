@@ -54,6 +54,8 @@ func Deploy(ctx context.Context, db *sql.DB, source fs.FS,
 
 ## 從 TenantOnly 升級
 
+升級含資料的應用前，先依[備份、還原與升級檢查](../platform/backup-restore.md)建立備份，並在新的隔離資料庫實際還原、核對 owner／RLS 與待處理工作，再安排停寫與遷移。
+
 先停止接入、停止認領並 Drain，備份及對帳。業務表明示回填 `(TenantID, tenant, TenantID)`，增加完整 owner 唯一鍵／複合外鍵，參照中立 resource_scopes；同一交易移除舊 permissive policies 再安裝精確 owner RLS，避免 policies 被 OR 放寬。
 
 Bookstore 提供可選 `infrastructure.ScopeUpgrade` 的部署檔，會把 books 改為 scope_books，配合現有 ScopedRepository。舊 tenant-only API 相容性檢查會拒絕這份 schema；它不會自動變成 Organization API。請先確認要使用的 Repository 與新程序，再執行升級。

@@ -127,7 +127,7 @@ def gate(commit):
     (root/"gate.json").write_text(json.dumps(result,indent=2)+"\n");print(json.dumps(result,indent=2))
 
 
-def verify(args, increment=None):
+def verify(args, increment=None, extra_steps=None):
     milestone=increment["milestone"] if increment else "M1"
     increments=([m0.load(ROOT/("tests/contract/m"+str(n)+".json")) for n in range(2,int(milestone[1:]))]+[increment]) if increment else []
     commit=m0.revision();source=source_hash();dirty=not m0.clean()
@@ -152,7 +152,7 @@ def verify(args, increment=None):
         log.write_text(result.stdout+result.stderr,encoding="utf-8")
         report["commands"].append({"name":name,"argv":argv,"exit_code":result.returncode,"log":log.name,"sha256":m0.digest(log),"seconds":round(time.monotonic()-started,3)})
         if result.returncode: raise ValueError("gate failed: "+name+"; see "+str(log))
-        if name in {"m0-regression","m1-regression","m2-regression","m3-regression","m4-regression","m5-regression"}:
+        if name in {"m0-regression","m1-regression","m2-regression","m3-regression","m4-regression","m5-regression","m6-regression"}:
             required=mapping["python_tests"].values() if name=="m1-regression" else next((x["python_tests"].values() for x in increments if name==x["milestone"].lower()+"-regression"),())
             validate_python_output(result.stdout+result.stderr,required)
         print("PASS",name,flush=True)
@@ -178,7 +178,7 @@ def verify(args, increment=None):
         report["e2e"]=m1_e2e.run(output,args.project,packages,execute)
         report["commands"].append({"name":"e2e","exit_code":0})
         profiles=[output/"unit.out",output/"integration.out",output/"e2e.out"]
-        if milestone=="M5":
+        if milestone in ("M5","M6"):
             execute([sys.executable,"scripts/template_bundle.py","--check"],"template-source")
             cli=output/("pangolin.exe" if os.name=="nt" else "pangolin")
             execute(["go","build","-cover","-covermode=atomic","-coverpkg="+packages,"-o",str(cli),"./cmd/pangolin"],"cli-build")
@@ -204,6 +204,9 @@ def verify(args, increment=None):
         (output/"coverage.json").write_text(json.dumps(json.loads(counts.splitlines()[0]),indent=2)+"\n",encoding="utf-8")
         execute(["go","tool","cover","-html="+str(output/"merged.out"),"-o="+str(output/"coverage.html")],"coverage-html")
         validate_commands(report["commands"],args.race)
+        # M6 injects its release acceptance (manifest, drills, bound evidence)
+        # after the cumulative coverage gate; nothing older calls this hook.
+        if extra_steps: extra_steps(report,output,execute)
         if source_hash()!=source or m0.revision()!=commit:raise ValueError("source changed during verification")
         report["status"]="passed"
         report["gate"]="development-only" if dirty or platform["GOOS"]=="linux" and not args.race else "evidence-ready"

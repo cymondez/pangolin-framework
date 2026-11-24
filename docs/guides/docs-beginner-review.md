@@ -1,5 +1,17 @@
 # 官方網站的初學者走查
 
+## 備份、還原與升級增量（2026-11-24）
+
+Runtime 來源 `1d7ef1cf0dfdb7ee7b0211d04ad3380329883cb1` 通過同版 Windows／Linux 全量發布 Gate（Linux 含完整 integration race）後，才整合網站修改。新增「備份、還原與升級檢查」，並由維運、資料遷移、版本升級及側欄導向新指南；公開導覽維持使用者操作內容。
+
+主代理實際執行正式指南的前三段 PowerShell 命令，使用 PostgreSQL 18.7 的 pg_dump、pg_restore、createdb，從隔離種子資料建立 custom archive、TOC 與 SHA-256，再於同一管理端點建立 GUID 命名的空資料庫並還原。獨立連線核對 17 張表的列數、row JSON checksum、table owner、RLS flags 及 policy 集合均相符；app 角色讀到自身 tenant 的 25 筆資料，跨 tenant／organization 均為零筆。自建的兩個資料庫與容器暫存 archive 已移除。結果與逐命令紀錄保留於 `artifacts/docs/m6-backup-184444e432ad458c84523b87e26d67ed/`。停寫種子資料的成功演練不構成生產 RPO／RTO 承諾。
+
+`python scripts/docs_examples.py --database` 以全新 consumer module 執行十份完整程式，含真實 PostgreSQL 交易、設定覆寫、非法設定及手冊 Go 片段，全部通過；結果見 `artifacts/docs/beginner-examples.json`。Windows 的 `npm.cmd test` 及 production build 通過，Docker Linux 重建亦通過靜態檢查：45 頁、2375 個站內連結／錨點與一份本機搜尋索引。Windows 首次 build 遇 sandbox EPERM，以取得所需權限的同一命令重跑通過。
+
+瀏覽器實際從首頁進入安裝頁，在收合導覽的「背景工作與維運」找到新指南。確認前置條件、備份程式、還原命令與下一步可讀；長程式僅在程式區塊內水平捲動，897px viewport 的整頁 scrollWidth 與 clientWidth 相同。搜尋「備份」以新指南為第一個結果，點擊後正確導向指南。未另做完整裝置矩陣或變更配色。
+
+既有 `pangolin-docs` 已更新且健康，持續提供 `http://localhost:18088/`。M6 專用測試容器、network、volumes 及無使用的專用 runner image 已清除，驗收 logs 保留於 `artifacts/`；清理紀錄見 `artifacts/m6-cleanup.json`。版本仍為 0.1.0 預覽，未建立正式版本快照或發行 tag。
+
 ## CLI 與設定／功能／快取增量（2026-11-24）
 
 Runtime 來源 `88f32eb6f2aa02c601dbc930f3f5a7b76911e185` 通過同版 Windows／Linux（含 race）Gate 後，才整合 Copilot CLI 使用 `litellm-zenlinkos/glm-5.3:cloud` 準備的網站與範例修改。主代理另行審查差異與驗收，沒有修改實作規範。

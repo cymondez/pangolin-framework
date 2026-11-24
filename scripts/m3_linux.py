@@ -2,6 +2,7 @@
 import argparse
 import json
 import os
+from pathlib import Path
 import re
 import subprocess
 import m0
@@ -11,12 +12,29 @@ import m3_fixture
 def main(milestone=3):
     p=argparse.ArgumentParser(description=__doc__);p.add_argument("--project",required=True);args=p.parse_args()
     project=args.project
-    if milestone not in (3,4,5) or not re.fullmatch(r"pangolin-m"+str(milestone)+r"-[a-z0-9-]+",project):p.error("dedicated milestone project required")
+    if milestone not in (3,4,5,6) or not re.fullmatch(r"pangolin-m"+str(milestone)+r"-[a-z0-9-]+",project):p.error("dedicated milestone project required")
     image=m0.load(m0.ROOT/"deploy/toolchain.json")["go_image"]
+    runner_id=None
+    if milestone==6:
+        # Both inputs are immutable image digests. Native PostgreSQL clients
+        # allow the complete integration/race suites to perform real restores
+        # without granting the runner a Docker socket or adopting host results.
+        image=project+"-runner"
+        subprocess.run(["docker","build","-f",str(m0.ROOT/"deploy/docker/Dockerfile.m6-runner"),
+                        "--label","dev.pangolin.source-commit="+m0.revision(),"-t",image,str(m0.ROOT)],check=True)
+        runner_id=subprocess.check_output(["docker","image","inspect",image,"--format","{{.Id}}"],text=True).strip()
     network=project+"_default";cache=project+"-linux-cache"
     # Named cache belongs to this test project and is removed by its cleanup.
     purpose="dev.pangolin.purpose=m"+str(milestone)+"-test-runner"
     subprocess.run(["docker","volume","create","--label","dev.pangolin.owner=pangolin-framework","--label",purpose,cache],check=True)
+    # The fixed OCI runner has no Docker socket, so M6 drills must have run on
+    # this host against the same source bytes; only provenance is checked in.
+    host_drills=os.getenv("PANGOLIN_M6_DRILLS_DIR")
+    if milestone==6 and host_drills:
+        drills=Path(host_drills).resolve()
+        if not drills.is_relative_to(m0.ROOT) or not (drills/"release-drills.json").is_file():
+            p.error("host M6 drills require a release-drills.json inside this repository tree")
+        host_drills="/source/"+drills.relative_to(m0.ROOT).as_posix()
     with m3_fixture.broker_restart(project,m0.ROOT/"artifacts"/("m"+str(milestone)+"-linux-broker-barrier"),milestone=milestone):
         environment={
             "PANGOLIN_EXPECTED_SOURCE":m1.source_hash(),"PANGOLIN_M3_PROJECT":project,
@@ -29,6 +47,10 @@ def main(milestone=3):
             "PANGOLIN_M3_BROKER_RESTART_DIR":"/source/artifacts/m"+str(milestone)+"-linux-broker-barrier",
             "CGO_ENABLED":"1","GOTOOLCHAIN":"local",
         }
+        if milestone==6:
+            environment["PANGOLIN_M6_RUNNER_IMAGE_ID"]=runner_id
+            environment["PANGOLIN_M6_RUNNER_IMAGE"]=image
+            if host_drills:environment["PANGOLIN_M6_DRILLS_DIR"]=host_drills
         if milestone>=5:
             environment["PANGOLIN_DATABASE_POSTGRES_DSN"]=environment["PANGOLIN_M1_APP_DSN"]
             environment["PANGOLIN_DATABASE_MYSQL_DSN"]="pangolin_database:local-database-only@tcp(mysql:3306)/pangolin_db_contracts"

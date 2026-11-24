@@ -1,0 +1,10 @@
+# Keep the supported Go toolchain and use the exact PostgreSQL fixture clients.
+# No package manager, floating downloads, or Docker socket is needed in the runner.
+FROM postgres:18.7-bookworm@sha256:194e55feb2597b1465dbee81cc9fd8d204566cd2eb42c8d22fd6c931a38781b1 AS postgres_tools
+FROM golang:1.27.4-bookworm@sha256:4fa7c968ba93f1635670522dbb01a2c78150443e1385746924566079f36570ea
+LABEL dev.pangolin.owner="pangolin-framework" dev.pangolin.purpose="m6-test-runner"
+COPY --from=postgres_tools /usr/lib/postgresql/18/bin/pg_dump /usr/local/bin/pg_dump
+COPY --from=postgres_tools /usr/lib/postgresql/18/bin/pg_restore /usr/local/bin/pg_restore
+COPY --from=postgres_tools /usr/lib/postgresql/18/bin/psql /usr/local/bin/psql
+COPY --from=postgres_tools /usr/lib/x86_64-linux-gnu/libpq.so.5.* /usr/local/lib/
+RUN ldconfig && pg_dump --version && pg_restore --version && psql --version

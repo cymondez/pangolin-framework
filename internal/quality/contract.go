@@ -83,7 +83,7 @@ func ValidateContract(spec, plan []byte, manifest Manifest, release bool) error 
 		}
 	}
 	if release {
-		return fmt.Errorf("release blocked: all 95 runtime case groups await executable tests and same-commit evidence")
+		return fmt.Errorf("release blocked: a static inventory has no runtime evidence; use scripts/m6.py gate --commit <SHA>")
 	}
 	return nil
 }

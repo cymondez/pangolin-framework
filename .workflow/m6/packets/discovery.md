@@ -1,0 +1,3 @@
+# Packet: bounded M6 discovery (Flash)
+
+Use only selected Zenlinkos Flash model, no delegation. Read-only except `.workflow/m6/results/discovery.md`. Do not edit code, run services, commit or change models. Read AGENTS.md, spec release requirements/13/14/15 and milestone WP18/section 8, current gate scripts, current profile manifests and CI. Inspect whether all 421 subtest IDs map uniquely to M1-M6 and how to make A70/A72/A95 genuine negative tests. Identify exact release artifacts, gaps and cheapest reusable test entry points; inspect available local cached tool binaries useful for gates. Report concise actionable findings with paths/lines. No web research unless needed, never echo credentials or provider config.
