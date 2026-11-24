@@ -14,7 +14,7 @@ lang: zh-TW
 
 本文件依[實作規範書 v1.3](panGOlin-framework_實作規範書.md)安排全框架 v0.1.0 的交付，包含可選的 Enterprise／Organization 單一模組。需求正式句、介面、產品行為、版本範圍、A01–A95 及品質門檻只由實作規範定義；本文件不重新定義它們。
 
-**2026-11-23：M0 已 Verified（來源 commit `a0b1ad099fdf7bd28240514a24c34590220019a1`）；M1 已 Verified（來源 `9eb10df6cd848b87fda964f0b6b61d60dc12b0a6`），M2 已 Verified（來源 `23651f654389af99d8c427b11909c07bc70f58cc`）；M3 已 Verified（來源 `7f17ecc76a84e65ec4d64fb39b0900fb6bb50ba7`）；M4 已 Verified（來源 `43dcd79e24f5ed74a544a760301f4fec95dc2ca2`，見 [M4 驗收紀錄](../docs/evidence/M4.md)）；M5 已 Verified（來源 `88f32eb6f2aa02c601dbc930f3f5a7b76911e185`，見 [M5 驗收紀錄](../docs/evidence/M5.md)）；M6 的其餘需求保持 Planned。** 已建立的底座及未完成條件見 §2.1。文件、CI 配置或品質工具測試不等於 M0 通過，也不等於 Runtime 已驗收或全框架達成 90% coverage。只有指定 commit 的 Exit 證據完整且 Gate 通過才能改為 Verified。
+**2026-11-23：M0 已 Verified（來源 commit `a0b1ad099fdf7bd28240514a24c34590220019a1`）；M1 已 Verified（來源 `9eb10df6cd848b87fda964f0b6b61d60dc12b0a6`），M2 已 Verified（來源 `23651f654389af99d8c427b11909c07bc70f58cc`）；M3 已 Verified（來源 `7f17ecc76a84e65ec4d64fb39b0900fb6bb50ba7`）；M4 已 Verified（來源 `43dcd79e24f5ed74a544a760301f4fec95dc2ca2`，見 [M4 驗收紀錄](../docs/evidence/M4.md)）；M5 已 Verified（後續修正來源 `0d811a21f8b599196f0bad2dd2ee9033d1aa184b`，見 [M5 修正驗收](../docs/evidence/M5-corrections.md)）；M6 的其餘需求保持 Planned。** 已建立的底座及未完成條件見 §2.1。文件、CI 配置或品質工具測試不等於 M0 通過，也不等於 Runtime 已驗收或全框架達成 90% coverage。只有指定 commit 的 Exit 證據完整且 Gate 通過才能改為 Verified。
 
 ## 1. 範圍、估算與角色
 
@@ -219,7 +219,7 @@ flowchart LR
 
 ### M5 — 平台服務與開發者體驗
 
-**狀態：** Verified；來源 `88f32eb6f2aa02c601dbc930f3f5a7b76911e185`，25 個正式情境與同版 Windows／Linux（含 race）Gate 已通過，見 [驗收紀錄](../docs/evidence/M5.md)。
+**狀態：** Verified；後續修正來源 `0d811a21f8b599196f0bad2dd2ee9033d1aa184b`，原 25 個正式情境、56 項必要單元回歸與 7 項 Backend 整合映射及同版 Windows／Linux（含完整 race）累積 Gate 通過，見 [修正驗收](../docs/evidence/M5-corrections.md)。原始交付 88f32eb6 的[驗收紀錄](../docs/evidence/M5.md)保留。
 
 **原節奏：** W19–W22；**責任：** Go C 主責，Go A／B 補平台整合，QA 驗證生成物。  
 **Delivers：** `PLAT-001`、`CLI-001`、`SCP-008`、`ORG-013`。

@@ -55,3 +55,11 @@ Runtime Options 新增 StartupChecks，請將 positional literal 改成具名欄
 升級預覽來源後，部署 Jobs migration 與事件 CapacityMigrations，再更新 schema 相容版本範圍。事件 store 改用 NewBoundedStore 並設定容量；舊 NewStore 保留既有組裝相容性。完整[接線與上限](../platform/jobs.md)需要目前服務 grant 和 Handler 冪等。
 
 Envelope 新增可省略 traceparent，舊格式仍可讀取，已發布 payload schema 不重寫。人工 replay 保留實際持久化的原始 Envelope，不重新生成 owner、事件 ID 或 traceparent。OpenTelemetry 採明確注入，應用負責 SDK 有界 Shutdown。
+
+## 中立資料存取與登入擴充
+
+一般 Repository 改用 persistence/database 的 Resource／Executor／Dialect；連線與 Driver 只留在組裝／Adapter。SQLite 的 Manager 明示 DefaultIsolation=Serializable，零值仍保留既有 ReadCommitted；缺少必要能力時用 database.Admit 拒絕組裝。既有引擎專用 SQL／migration 不會自動移植，見[資料庫選擇](../data/database.md)。
+
+Settings 的空 Layer 位址保留為 Global；Config 是 WithConfiguration 提供的獨立唯讀來源。名稱及既有值不搬移，完整來源順序見[分層設定](../platform/settings.mdx)。Feature 先檢查 Permission，普通 Permission 不反向依賴 Feature。
+
+原 authn.Identity／Validator／ServiceAuthenticator 保留相容轉接；新登入模組使用 security/identity 的 Verifier／Pipeline。HTTP 改用 AuthenticateCredential／Credentials，舊 Authenticate 或 Bookstore Auth 則保留 Bearer 入口，兩種模式擇一。Challenge／Pending 不安裝身分；Cookie 寫入需由 Session 模組提供 CSRF 接線，見[登入指南](../security/authentication.md)。

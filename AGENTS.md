@@ -6,11 +6,11 @@ panGOlin-framework 是 Go 模組化應用框架，先以模組化單體交付，
 
 ## 目前狀態與文件權威
 
-**核對日期：2026-11-23。** M0 已 Verified，來源 commit `a0b1ad099fdf7bd28240514a24c34590220019a1`，見 [M0 驗收紀錄](docs/evidence/M0.md)。M1 已 Verified，來源 `9eb10df6cd848b87fda964f0b6b61d60dc12b0a6`，見 [M1 驗收紀錄](docs/evidence/M1.md)：交付 Kernel／DI／Config／Drain 與 tenant-only Bookstore Required 交易、JWT／RLS／分程序事件薄片，Windows／Linux（含 race）同版 Gate 通過，20 份模組 README 已補齊。M2 已於來源 `23651f654389af99d8c427b11909c07bc70f58cc` 通過 UOW／Persistence／中立 Scope 核心驗收，見 [M2 驗收紀錄](docs/evidence/M2.md)。M3 已於來源 `7f17ecc76a84e65ec4d64fb39b0900fb6bb50ba7` 通過完整安全／組織治理／可靠事件／遷移及冪等的同版 Windows／Linux（含 race）驗收，見 [M3 驗收紀錄](docs/evidence/M3.md)。M4 已於來源 `43dcd79e24f5ed74a544a760301f4fec95dc2ca2` 通過 Jobs／容量背壓／觀測與活躍停機的同版 Windows／Linux（含 race）Gate，見 [M4 驗收紀錄](docs/evidence/M4.md)；分支 `codex/m4-platform-services`，重現入口見 [M4 開發指南](docs/guides/m4-development.md)。M5 已於來源 `88f32eb6f2aa02c601dbc930f3f5a7b76911e185` 通過 Cache／Settings／Features、CLI 與兩種生成 Profile 的同版 Windows／Linux（含 race）Gate，見 [M5 驗收紀錄](docs/evidence/M5.md)；M6 全量發布驗收仍待交付。文件基線 v1.3、產品目標 v0.1.0；狀態由里程碑規劃書維護，重現方式見 [M1 開發指南](docs/guides/m1-development.md)。
+**核對日期：2026-11-24。** M0 已 Verified，來源 commit `a0b1ad099fdf7bd28240514a24c34590220019a1`，見 [M0 驗收紀錄](docs/evidence/M0.md)。M1 已 Verified，來源 `9eb10df6cd848b87fda964f0b6b61d60dc12b0a6`，見 [M1 驗收紀錄](docs/evidence/M1.md)：交付 Kernel／DI／Config／Drain 與 tenant-only Bookstore Required 交易、JWT／RLS／分程序事件薄片，Windows／Linux（含 race）同版 Gate 通過，20 份模組 README 已補齊。M2 已於來源 `23651f654389af99d8c427b11909c07bc70f58cc` 通過 UOW／Persistence／中立 Scope 核心驗收，見 [M2 驗收紀錄](docs/evidence/M2.md)。M3 已於來源 `7f17ecc76a84e65ec4d64fb39b0900fb6bb50ba7` 通過完整安全／組織治理／可靠事件／遷移及冪等的同版 Windows／Linux（含 race）驗收，見 [M3 驗收紀錄](docs/evidence/M3.md)。M4 已於來源 `43dcd79e24f5ed74a544a760301f4fec95dc2ca2` 通過 Jobs／容量背壓／觀測與活躍停機的同版 Windows／Linux（含 race）Gate，見 [M4 驗收紀錄](docs/evidence/M4.md)；分支 `codex/m4-platform-services`，重現入口見 [M4 開發指南](docs/guides/m4-development.md)。M5 已於來源 `88f32eb6f2aa02c601dbc930f3f5a7b76911e185` 通過 Cache／Settings／Features、CLI 與兩種生成 Profile 的同版 Windows／Linux（含 race）Gate，見 [M5 驗收紀錄](docs/evidence/M5.md)；M6 全量發布驗收仍待交付。文件基線 v1.3、產品目標 v0.1.0；狀態由里程碑規劃書維護，重現方式見 [M1 開發指南](docs/guides/m1-development.md)。
 
 本檔下文的 package、介面與執行流程都是既定設計的導覽，不表示對應目錄或功能已存在。實作開始後應同步更新這段狀態；不能由文件完成推論 Runtime 可執行或品質門檻已通過。
 
-2026-11-24 後續修正在 `codex/m5-settings-multidatabase` 進行：Settings 明確五至七層、Feature 受 Permission 限制、中立資料存取及可擴充 Authentication。既有 M5 證據僅綁定原始來源，不能作為本次修正的驗收證據。修正以實際程式、package README 與同版 Gate 為準，進行中不標 Verified。
+2026-11-24 後續修正已於來源 `0d811a21f8b599196f0bad2dd2ee9033d1aa184b` 通過同版 Windows／Linux（含完整 race）M5 累積 Gate：Settings 五至七層、Feature 受 Permission 限制、中立 PostgreSQL／MySQL／SQLite 資料存取與可擴充 Authentication。分支 `codex/m5-settings-multidatabase`；56 項必要單元回歸、7 項 Backend 整合映射及原 25 個正式情境均通過，見 [修正驗收](docs/evidence/M5-corrections.md)。原始 88f32eb6 證據保持歷史來源；完整登入協定與其餘引擎專用平台 Adapter 不由此推論已交付。
 
 M1 後續目錄整理已在來源 `b3bf59c03f4b66ff7389d44d8434356258a85d9a` 通過同版 Windows／Linux（含 race）回歸：共用框架 import 保留，Bookstore 專用入口／HTTP／fixture 已集中；現行位置見 [目錄指南](docs/guides/repository-layout.md)，證據見 [回歸紀錄](docs/evidence/source-layout.md)。
 
@@ -152,7 +152,7 @@ M2 已於來源 `23651f654389af99d8c427b11909c07bc70f58cc` 通過同版 Windows�
 | Logs／Metrics／Tracing／Health | `observability` | §9.6；敏感內容遮罩，不以無界租戶／組織 labels 建 Metrics |
 | CLI、兩種 Profile 範本與 Bookstore | `cmd/pangolin`（M5 已交付）、`examples/bookstore/cmd/{api,worker}`、`examples/bookstore` | §10、§12、§13.4 |
 
-v0.1.0 的正式範圍只由[實作規範 §15](design/panGOlin-framework_實作規範書.md#s-15)決定。Organization 對應用可選，但仍是框架發行包交付項。Redis、Blob Storage、進階 Cron、新的 DB／Broker／Transport Adapter 列在 v0.2+，沒有本次時程承諾。
+v0.1.0 的正式範圍只由[實作規範 §15](design/panGOlin-framework_實作規範書.md#s-15)決定。Organization 對應用可選，但仍是框架發行包交付項。中立資料存取已補上 MySQL／SQLite；Redis、Blob Storage、進階 Cron 及其餘新的 DB／Broker／Transport Adapter 列在 v0.2+，沒有本次時程承諾。
 
 ## 常見開發工作
 

@@ -16,6 +16,8 @@ panGOlin 是用來開發 **Go 應用程式**的框架。你可以用它組織功
 | 替換服務實作，讓業務程式容易測試 | 依賴注入（DI） | [注入你的服務](fundamentals/dependency-injection.mdx) |
 | 在本機與部署環境使用不同設定 | Configuration | [讀取應用設定](fundamentals/configuration.mdx) |
 | 一次完成多個資料寫入，失敗時一起回滾 | 工作單元（UOW） | [使用交易](data/unit-of-work.md) |
+| 在 PostgreSQL、MySQL 或 SQLite 使用相同資料操作介面 | 中立資料存取與 Adapter | [資料庫選擇](data/database.md) |
+| 替換登入方式並保留共同授權流程 | Identity／Verifier／HTTP 憑證 | [登入與身分驗證](security/authentication.md) |
 | 讓不同客戶只能存取自己的資料 | 身分驗證、Tenant Scope 與 RLS | [多租戶應用](security/multi-tenancy.md) |
 | 把資料變更交給背景程序處理 | Integration Event、Outbox／Inbox | [使用事件](events/integration-events.mdx) |
 | 依使用者、租戶或組織分層管理偏好與配額 | Settings 與 Features | [分層設定與 Features](platform/settings.mdx) |

@@ -1,41 +1,81 @@
 ---
-title: 驗證登入身份
-description: 使用可信 issuer 與 JWKS 驗證 Bearer Token，再交給應用處理。
+title: 可擴充登入與身分驗證
+description: 用共同 Identity 契約接上 JWT、Session 或自訂登入模組，再驗證 Tenant、Scope 與 Permission。
 ---
 
-當你的 API 需要知道「誰正在呼叫」，可以使用 `security/authn` 驗證 JWT（JSON Web Token，攜帶可驗證登入資訊的 Token）。JWKS 是登入服務提供的公開驗證金鑰集合。先在 [Bookstore](../tutorials/bookstore.md)取得可用 Token，再閱讀這一頁。
+登入模組驗證憑證，security/identity 的 Pipeline 統一安裝可信身分，HTTP 入口再解析當前 Tenant／Scope 並檢查 Permission。JWT 是一個 Adapter；Session、API Key 或未來 MFA、OIDC、Device Login 模組都使用相同擴充 Port，不需修改核心。
 
-## 你需要準備的資料
+## 選擇驗證方式
 
-| 值 | 從哪裡取得 |
-|---|---|
-| issuer | 你的登入服務所宣告的可信發行者 |
-| audience | 發給目前應用的 Token 受眾 |
-| JWKS URL | 登入服務公開 RSA 驗證金鑰的位置 |
-| bearerToken | 本次 HTTP 請求的 Authorization Token |
+| 部分 | 模組負責 | 共用契約 |
+|---|---|---|
+| HTTP 憑證 | 從 Header、Cookie 或其他明示來源擷取 | transport/http.CredentialExtractor |
+| 驗證流程 | 查驗簽章、Session 狀態或登入流程 | identity.Verifier |
+| 完成／待完成 | 回傳 Principal、Tenant hint、方式或 Challenge | identity.Result |
+| 可信 context | 檢查結果、取消與 private key 安裝 | identity.Pipeline |
+| 存取資格 | 查目前 Tenant、Scope、Permission | Tenant／Scope Resolver 與政策 |
 
-在 Bookstore，audience 是 `pangolin-bookstore`，本機 issuer 是 `http://127.0.0.1:18180`，JWKS 位於該 origin 的 `/jwks.json`。正式登入服務應使用 HTTPS。
+請求 body 的使用者 ID、Tenant 或 Scope 都不是授權來源。組裝端只註冊可信 Verifier，不能將 Principal DTO 當成已驗證身分。
 
-## 在 HTTP 入口驗證
+## 接上自己的 Session 模組
+
+以下完整檔案可放在應用的 authentication/session.go。SessionStore 由你的登入模組實作，需查驗 Session 的有效期限、撤銷狀態與目前使用者；此頁不以記憶體 Token 表充當正式 Session Store。
 
 ```go
-validator := authn.NewValidator(issuer, audience, jwksURL,
-    &http.Client{Timeout: 2 * time.Second})
-authenticated, err := validator.Authenticate(request.Context(), bearerToken)
-if err != nil {
-    // 回應 401，結束這次請求。
-    return
+package authentication
+
+import (
+    "context"
+    "github.com/cymondez/pangolin-framework/security/identity"
+    "github.com/cymondez/pangolin-framework/security/scope"
+    transport "github.com/cymondez/pangolin-framework/transport/http"
+)
+
+type SessionStore interface {
+    Resolve(context.Context, string) (scope.PrincipalRef, string, error)
+}
+
+type Sessions struct { Store SessionStore }
+
+func (Sessions) Kind() string { return identity.SessionKind }
+
+func (s Sessions) Verify(ctx context.Context, credential identity.Credential) (identity.Result, error) {
+    if s.Store == nil || credential.Kind != identity.SessionKind {
+        return identity.Result{}, identity.ErrUnauthenticated
+    }
+    principal, tenant, err := s.Store.Resolve(ctx, credential.Value)
+    if err != nil { return identity.Result{}, err }
+    if principal.Kind != identity.PrincipalUser {
+        return identity.Result{}, identity.ErrUnauthenticated
+    }
+    return identity.Result{
+        Status: identity.StatusAuthenticated, Principal: principal,
+        Tenant: tenant, Method: "session",
+    }, nil
+}
+
+func NewSessionAuthentication(store SessionStore) (*identity.Pipeline, transport.CredentialExtractor, error) {
+    if store == nil { return nil, nil, identity.ErrUnauthenticated }
+    pipeline, err := identity.NewPipeline(Sessions{Store: store})
+    if err != nil { return nil, nil, err }
+    return pipeline, transport.CookieCredentials("pangolin_session"), nil
 }
 ```
 
-此為 HTTP handler 內的呼叫片段，使用 `security/authn`、`net/http` 與 `time`。issuer／audience／JWKS URL 由你的可信啟動設定傳入，不從請求指定的位置下載金鑰。
+在你的 HTTP 組裝端，將 pipeline.AuthenticateCredential 傳入 PipelineOptions.AuthenticateCredential，將 extractor 傳入 Credentials；其餘 Manager、ResolveTenant、ResolveScope、Entry 與 Work 依原本的 UOW／政策設定。Bookstore Handler 對應欄位為 CredentialAuth 與 Credentials。舊 Authenticate／Auth 保留 Bearer 相容入口，兩種模式擇一設定。
 
-成功後，將 authenticated context 交給後續處理；不要繼續使用驗證前的 request context。`authn.Identity(authenticated)` 可以讀出 principal 與 Tenant。
+CookieCredentials 只接受 GET／HEAD／OPTIONS，存在 Cookie 的其他方法回 COOKIE_UNSAFE_METHOD。需要 Cookie 寫入時，由 Session 模組提供完成 CSRF 查驗的 extractor，並自行設定 HttpOnly、Secure、SameSite、到期與撤銷策略；不能把方法檢查直接移除就當作安全接線。
 
-## 驗證成功後
+## 同時提供 JWT 與其他憑證
 
-接著[建立 Tenant Scope](multi-tenancy.md)，再呼叫資料操作。登入成功表示身份可信，不代表能存取任意租戶或資源。
+RS256 Adapter 仍以 authn.NewValidator(issuer, audience, jwksURL, client) 建立。它實作 identity.Verifier，可與 Session Verifier 一起交給 NewPipeline；HTTP 使用 OneCredential(BearerCredentials(), CookieCredentials(...))。同一請求同時提供多份憑證會拒絕，格式錯誤或驗證失敗也不改用另一種身分。
 
-服務入口可透過 `authn.NewServiceAuthenticator(verifier)` 注入部署選定的服務憑證驗證器，取得獨立 service Principal；不能把使用者 ID 改名成服務身分。Event／Job 每次以目前 grant 重建 context，見[可靠配送](../events/reliable-delivery.md)。
+issuer、audience 與 JWKS URL 來自可信啟動組態，不從請求指定位置下載金鑰；正式部署用 HTTPS 與有界 HTTP client。JWT 會檢查 RSA 簽章、issuer、audience、有效期限、sub 與 tenant_id；見 [Bookstore](../tutorials/bookstore.md)的本機 Token 操作。
 
-目前支援 RS256／JWKS，檢查簽章、issuer、audience、有效期限、sub 與 tenant_id。過期、來源無法取得或非法 Token 都拒絕；不要把 Token 放進記錄或錯誤回應。
+## MFA、OIDC 與 Device Login
+
+協定模組自行擁有登入／redirect／polling endpoint、驗證狀態、一次性 Token 與重播防護。需要後續驗證回 StatusChallenge，等待核准回 StatusPending；共同 Pipeline 分別回 ChallengeError／PendingError，均不安裝可授權身分。整個協定完成後才回 StatusAuthenticated。這些擴充契約已提供，完整協定模組仍需另行實作。
+
+驗證成功後讀取 identity.Identity(authenticated)，登入方式與 assurance 可由 identity.Method 取得；context 不儲存原始憑證。失敗或取消即結束請求，不沿用驗證前的 context。
+
+下一步[建立當前 Tenant 資格](multi-tenancy.md)，再解析 Scope 與 Permission。登入成功不代表能存取任何租戶或資源；服務入口也維持獨立 service Principal，不能以使用者身分替代。

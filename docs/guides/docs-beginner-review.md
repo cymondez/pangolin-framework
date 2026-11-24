@@ -86,3 +86,13 @@ Native／Docker production build 都通過 33 頁、1559 個站內連結／錨�
 瀏覽器從首頁的使用範例進入新授權指南，確認操作目錄、完整 main.go、預期輸出、教學身分的邊界與下一步。搜尋 ownerless 能找到組織治理並跳到相關章節，實際讀取 ownerless／Recover 與替換 Provider 的說明，再進入可靠配送指南確認前置條件及完整組裝檔。桌面 viewport 1280px、documentWidth 1265px，沒有頁面水平溢出；本次未重做手機與配色測試。摘要保存於 `artifacts/docs/m3-qa.json`。
 
 本次專用 PostgreSQL／NATS／IdP、network、兩個測試 volumes、Linux runner cache volume 及專用 IdP 映像已核對歸屬後清除，其他專案未受影響。既有 docs 服務已更新且健康，持續提供 `http://localhost:18088/`。
+
+## M5 分層、資料存取與登入擴充走查（2026-11-24）
+
+Runtime 修正來源 0d811a21f8b599196f0bad2dd2ee9033d1aa184b 通過同版 Windows／Linux 完整 Gate 後，更新公開手冊。新增中立資料存取、MySQL／SQLite Adapter 指南，改寫 JWT 為 Adapter 的登入教學，並同步 Settings 五至七層、Feature 受 Permission 限制、相容性與升級說明；未加入內部 Gate／spec 導覽。
+
+python scripts/docs_examples.py --database 實際執行十份獨立 consumer 範例、環境覆寫、非法組態及真實交易，全部通過。另將 Service／中立 Repository、三個引擎組裝與 Session Verifier 的六份完整 Go 程式放在獨立 consumer 編譯，與發布頁面的程式區塊逐一比對，結果見 artifacts/docs/m5-additional-snippets.json。
+
+npm test、原生 production build 與 Docker build 全部通過：44 頁、2310 個站內連結／錨點、一份本機搜尋索引、Framework 0.1.0。瀏覽走查確認「使用指南 → 資料庫選擇 → SQLite」可到達完整組裝與隔離說明，搜尋 Session 能進入可擴充登入頁並閱讀 CSRF／Challenge／Pending 邊界。未把尚未提供的完整 MFA／OIDC／Device Login 協定寫成已交付。
+
+依使用者後續偏好，剩餘 Web 驗證改用 CLI／HTTP：六條實際 URL 返回 200，並核對首頁中立文案、三引擎頁面、登入與 Settings 內容；結果見 artifacts/docs/m5-http-checks.json。網站持續由原 pangolin-docs 服務提供於 http://localhost:18088/。自有測試 containers／network／volumes／IdP 映像與 Linux cache 已按歸屬清除，清理紀錄留在 artifacts/docs/m5-cleanup-result.json，其他專案未動。

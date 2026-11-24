@@ -5,6 +5,8 @@ description: 在 Permission 允許後，判斷產品功能、配額與 Enum 等�
 
 先執行[分層設定完整範例](settings.mdx)。使用者設定 book_limit=50，但 Tenant 上限為 10，因此有效配額仍為 10；editing 即使是 true，使用者缺少 books.write 仍會被拒絕。
 
+Permission 拒絕或授權來源故障時，Evaluate 不讀取 Settings。Feature 的值不反向改寫普通 Permission 判定；功能關閉不會把已有 Permission 改成拒絕，但該功能仍不可使用。
+
 ## 定義功能
 
 features.New 接受 Settings Resolver、Authorizer 與功能定義。每個 Definition 明示 Setting、Permission、Kind，可另設 ScopeKinds 限制允許的資源範圍。ScopeKinds 為空時接受任何已授權的 Scope Kind；設定範圍與繼承則由 Settings Definition 決定。

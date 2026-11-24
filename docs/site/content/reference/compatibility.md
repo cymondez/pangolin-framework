@@ -11,9 +11,9 @@ description: 選擇適合目前預覽版的功能，了解現有 API 支援與�
 | 依賴注入 | Singleton／Transient／Operation、明確替換 | Singleton 不能捕獲操作範圍服務 |
 | 啟動設定 | 預設、檔案、環境、CLI 來源合併 | 來源讀取由你的應用提供 |
 | 工作單元 | Required／RequiresNew、三種隔離級別、唯讀／讀寫、deadline 與完成通知 | 不提供非交易寫入、Savepoint、跨 DB 原子性 |
-| PostgreSQL | pgx Pool、受控 Exec／QueryRow／Query、完整 Scope RLS | Rows 必須關閉；沒有 Batch 入口 |
+| 資料存取 | 中立 Resource／Executor／Dialect，PostgreSQL、MySQL、SQLite Adapter | Application／Repository 不依賴 Driver 型別；能力差異在組裝時檢查 |
 | Application／HTTP | 明示 Command／Query、提交後回應、每次串流短操作 | 先建立可信身分與 Scope；HTTP Command 不加入外層 UOW |
-| 登入驗證 | RS256 JWT／JWKS | 自行設定可信 issuer／JWKS；不提供完整登入 UI |
+| 登入驗證 | 協定中立 Identity／Verifier／Pipeline、可擴充憑證擷取、RS256 JWT／JWKS Adapter | MFA／OIDC／Device Login 的完整流程由各自模組提供；Cookie 寫入需 CSRF 防護 |
 | 多租戶與授權 | 當前 Tenant 資格、admission、Permission／Resource Policy、完整 Scope RLS | 權威故障拒絕；新根重新驗證；不接受 DTO 自行授權 |
 | 組織治理 | 可選 PostgreSQL Authority、Management／HTTP、ownerless 復原與 Provider 匯入對帳 | 明示注入 Permission／Effects／inventory，父層無內容聯集 |
 | 稽核與冪等 | 同交易必要 Audit／成功結果、獨立安全記錄、同鍵重播及 Unknown 對帳 | 結果保護與保留期限由部署明示設定 |
@@ -22,11 +22,11 @@ description: 選擇適合目前預覽版的功能，了解現有 API 支援與�
 | 背景工作 | 持久化單次／延後工作、版本 Registry、租約、取消、有界重試、Audit 重送 | 至少一次執行；Handler 需冪等，複雜 Cron 未提供 |
 | 觀測與維運 | 明確注入 OpenTelemetry、JSON logs、Health、全域容量及積壓告警 | 應用明示 exporter／sampling／retention，Metrics 不放 owner labels |
 | CLI | `new` 生成 tenant-only／organization 兩種 Profile、`module add`、`migrate`、`doctor`、`generate openapi` | 預覽版從 Framework checkout 建置；生成專案以本機 replace 固定 Runtime |
-| 分層設定與 Features | 使用者／租戶／組織層級覆寫、JSON 陣列 key、Boolean／Quota／Enum、Ceiling 上限、Permission 優先 | 持久化 Provider 與值驗證由應用組裝；Memory Provider 只存在目前程序 |
+| 分層設定與 Features | Default／Config／Global／Tenant／可選組織／User 分層覆寫、JSON 陣列 key、Boolean／Quota／Enum、Ceiling 上限、Permission 優先 | 持久化 Provider 與值驗證由應用組裝；Memory Provider 只存在目前程序 |
 | Scoped Cache | Memory Adapter：完整 Tenant／Scope key、TTL、載入合併、失效通知 | Redis 等跨程序 Adapter 尚未提供；刪除失敗不代表業務回滾 |
 
 CLI 生成的 Bookstore 與套件內的範例 API 是不同專案：生成的建立與讀取都回 HTTP 200，欄位為 `id`／`title`；[套件內範例](bookstore-api.md)建立回 201 且回應另含 `version` 欄位。選用前見[生成教學](../tutorials/generated-bookstore.md)與 [CLI 參考](cli.md)。
 
-其他 DB／Broker Adapter 與 Redis Cache Adapter 目前尚未提供。可以依[安裝頁](../getting-started/installation.md)手動建立 Go 專案，或用 [pangolin CLI](cli.md)生成完整專案；正式 tag 發布前，兩種方式都以本機來源固定 0.1.0 預覽套件。
+資料存取支援 PostgreSQL、MySQL、SQLite；三者共用 UOW Port，但引擎 RLS、唯讀交易與隔離級別不同，見[資料庫選擇](../data/database.md)。既有完整 Bookstore、治理、Audit、事件、Jobs 與 migration 的持久化 Adapter 仍有引擎專用 SQL，不能僅更換 DSN。其他 Broker 與 Redis Cache Adapter 尚未提供。可以依[安裝頁](../getting-started/installation.md)手動建立 Go 專案，或用 [pangolin CLI](cli.md)生成完整專案；正式 tag 發布前，兩種方式都以本機來源固定 0.1.0 預覽套件。
 
-Go 使用 1.27.4；真實資料範例使用 PostgreSQL 18.7 與 NATS 2.15.3。初次學習核心功能時不需要安裝這兩個服務。
+Go 使用 1.27.4；完整 Bookstore 範例使用 PostgreSQL 18.7 與 NATS 2.15.3，中立資料存取另以 MySQL 8.4 與內嵌 SQLite 驗證。初學核心功能不需外部服務，SQLite 也不需獨立資料庫程序。

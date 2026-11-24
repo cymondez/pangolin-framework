@@ -63,7 +63,7 @@ def main():
     # Compile the complete, app-owned repository/service examples printed in the manual.
     books = project / 'books'
     books.mkdir()
-    for document, target in [('data/unit-of-work.md', 'service.go'), ('data/postgresql.md', 'repository.go')]:
+    for document, target in [('data/unit-of-work.md', 'service.go'), ('data/database.md', 'repository.go')]:
         source = (ROOT / 'docs/site/content' / document).read_text(encoding='utf-8')
         code = re.search(r'```go\n(.*?)```', source, re.S).group(1)
         (books / target).write_text(code, encoding='utf-8')

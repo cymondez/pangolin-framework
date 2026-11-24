@@ -1,8 +1,8 @@
 # M5 開發與驗收
 
-M5 原始交付於來源 `88f32eb6f2aa02c601dbc930f3f5a7b76911e185` 通過雙平台 Gate，見 [驗收紀錄](../evidence/M5.md)。後續 Settings 標準分層、中立資料存取及可擴充 Authentication 修正在 `codex/m5-settings-multidatabase` 開發中；原始證據不代表修正已驗收。以下為目前驗收入口。
+M5 原始交付於來源 `88f32eb6f2aa02c601dbc930f3f5a7b76911e185` 通過雙平台 Gate，見 [驗收紀錄](../evidence/M5.md)。後續 Settings 標準分層、中立資料存取及可擴充 Authentication 已於來源 `0d811a21f8b599196f0bad2dd2ee9033d1aa184b` 通過同版 Gate，見 [修正驗收](../evidence/M5-corrections.md)。以下為目前驗收入口。
 
-開發分支 `codex/m5-cli-platform-services`，Framework 版本固定 0.1.0。正式責任 PLAT-001／CLI-001／SCP-008／ORG-013；25 個具名情境見 tests/contract/m5.json。工作樹測試不代替同 commit 的雙平台 Gate。
+開發分支 `codex/m5-settings-multidatabase`，Framework 版本固定 0.1.0。正式責任 PLAT-001／CLI-001／SCP-008／ORG-013；25 個具名情境見 tests/contract/m5.json。工作樹測試不代替同 commit 的雙平台 Gate。
 
 先依 [M3 指南](m3-development.md) 盤點 Docker／ports／volumes，使用 `pangolin-m5-dev` 專用環境。Go 1.27.4、PostgreSQL 18.7、NATS 2.15.3、Goose 3.30.0、sqlc 1.31.1 沿用既有固定版本；連線變數沿用 PANGOLIN_M1_*，不可操作其他專案或使用者的 docs 服務。
 

@@ -22,6 +22,7 @@ go run ./platform-services
 Tenant cache isolated: true
 Tenant setting: "blue"
 JSON array setting: "mail"
+Setting layers: [user tenant global config default]
 Effective quota: 10
 Feature cannot grant permission: true
 Stored update despite notification failure: true
@@ -36,11 +37,13 @@ Version converged: true
 
 ## 設定按什麼順序解析？
 
+基本五層由低至高為 Default、Config、Global、Tenant、User。Config 是 Configuration Reader 的設定值；Global 是可更新的全域儲存值，兩者獨立。Enterprise／Organization 可選，完整鏈最多七層。範例的 Setting layers 顯示由高至低的標準解析順序；沒有值的來源會繼續 fallback。
+
 | 目前 Scope | 由高至低的優先序 |
 |---|---|
-| Tenant | User-in-Tenant → Tenant → Application → Default |
-| Organization | User-in-Scope → Organization → 目前 Enterprise（若有）→ Tenant → Application → Default |
-| Enterprise | User-in-Scope → Enterprise → Tenant → Application → Default |
+| Tenant | User-in-Tenant → Tenant → Global → Config → Default |
+| Organization | User-in-Scope → Organization → 目前 Enterprise（若有）→ Tenant → Global → Config → Default |
+| Enterprise | User-in-Scope → Enterprise → Tenant → Global → Config → Default |
 
 Definition.Inherit 需明示為 true 才讀取上層。未宣告繼承的 key 只使用目前 User／Scope 與 Default。使用者在 Org A 的設定不套用到 Org B；standalone Org 沒有 Enterprise 層。
 

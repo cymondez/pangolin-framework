@@ -26,4 +26,4 @@ SQL Placeholder 及識別字 quoting 使用 Adapter 的 Dialect；不把 Postgre
 
 資源不符、無 UOW、唯讀寫入、重疊 SQL 與已結束 context 遵守 uow 契約。錯誤保留 cause；無法確認的 Commit 不可聲稱已回滾。只有 Manager 完成交易，Pool 的最終關閉由建立它的組裝端負責。
 
-修正驗收正在進行，不能以可編譯取代交付證據。SQLite 使用真實 Driver；PostgreSQL／MySQL 必須以實際服務執行跨引擎契約。執行方式及最終驗收來源會在同版 Gate 通過後補齊。
+SQLite 使用真實 Driver，PostgreSQL／MySQL 使用實際服務；三引擎與完整累積 Gate 已於來源 0d811a21f8b599196f0bad2dd2ee9033d1aa184b 通過，見 [驗收證據](../../docs/evidence/M5-corrections.md)與 [M5 重現指南](../../docs/guides/m5-development.md)。

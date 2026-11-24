@@ -16,4 +16,4 @@ SQL 使用 `?` Placeholder。不能直接執行 PostgreSQL 的 set_config、RLS 
 
 保留 Driver cause 與 UOW Outcome；未確認的 Commit 回報 Unknown，不由此 Adapter 重試 Use Case。建立連線池的組裝端在 Drain／UOW 清理結束後關閉 Pool，只有一個關閉責任者。
 
-修正驗收中。單元測試不得代替真實 MySQL 的交易、owner 隔離與獨立連線對帳；正式執行方式及來源證據待同版 Gate 通過後補齊。
+真實 MySQL 的交易、owner 隔離與獨立連線對帳已通過；單元測試不代替此證據。來源及完整重現見 [修正驗收](../../docs/evidence/M5-corrections.md)與 [M5 指南](../../docs/guides/m5-development.md)。

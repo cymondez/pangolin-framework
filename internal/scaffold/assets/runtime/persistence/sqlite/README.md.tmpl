@@ -18,4 +18,4 @@ RequiresNew 使用獨立連線，不是 Savepoint。先完成的子交易不隨�
 
 Pool 必須容納使用情境需要的獨立連線；記憶體資料庫還需維持其生命週期。組裝端在操作 Drain 後關閉 Pool。Row／Rows 必須完成 Scan／Close 並檢查延遲錯誤。
 
-修正驗收中。SQLite 以真實 Driver 覆蓋提交／回滾、Required／RequiresNew、owner、取消與 cursor 清理；最終執行入口及證據待同版 Gate 通過後補齊。
+SQLite 以真實 Driver 驗證提交／回滾、Required／RequiresNew、owner、每連線外鍵、取消與 cursor 清理，並通過完整 Linux race。來源及重現見 [修正驗收](../../docs/evidence/M5-corrections.md)與 [M5 指南](../../docs/guides/m5-development.md)。
