@@ -57,7 +57,11 @@ func (t transaction) BeforeCommit(c context.Context) error { return t.queue.Flus
 func (transaction) Commit(context.Context) error           { return nil }
 func (transaction) Rollback(context.Context) error         { return nil }
 func manager(t *testing.T, r resource) uow.UnitOfWorkManager {
-	m, e := uow.NewManager(r, uow.DefaultOptions{DefaultTimeout: time.Second, CleanupTimeout: time.Second, HookTimeout: time.Second, MaxRequiresNewDepth: 2})
+	// The unit fixture is pure memory, but the engineering gate runs it inside
+	// a heavily instrumented parallel test batch; the bounded budget stays
+	// generous enough that CI scheduling cannot turn an in-memory transaction
+	// into a deadline rollback.
+	m, e := uow.NewManager(r, uow.DefaultOptions{DefaultTimeout: 5 * time.Second, CleanupTimeout: 5 * time.Second, HookTimeout: 5 * time.Second, MaxRequiresNewDepth: 2})
 	if e != nil {
 		t.Fatal(e)
 	}
