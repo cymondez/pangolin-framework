@@ -1,8 +1,8 @@
 # M7 SignalR Realtime — 最終報告
 
 **Scenario:** panGOlin 可選 SignalR 即時通訊模組（RT-001–RT-009／A96–A104）之實作、整合測試與驗收證據整併
-**Outcome:** ✅ 工作包範圍完成（M7 正式發布 Gate 未執行，見「尚未通過的正式發布 Gate」）；**2026-11-26 審計結論：模組在 develop `326c881` 已實際驗證可用，M7 完整驗收（原始 coverage 計數、全庫累積 Gate、九項 pending 情境）未完成，不標 Verified**
-**Branch:** `codex/signalr-realtime`（HEAD `c868bfd`，全部變更為工作樹未提交狀態——**此分支／未提交快照屬歷史來源**；實作其後以 `f7f370e` 併入 develop，現行審計來源為 `326c881`）
+**Outcome:** ✅ **2026-11-26 正式 M7 並行發布 Gate 已 Verified**（develop 來源 commit `42c2622c270d1389b9d4775abb1d584cdf75a9ad`，同版 Windows／pinned Linux 含完整 `-race`；見第六節與 [M7 驗收紀錄](../../docs/evidence/M7.md)）。**先前審計結論（歷史紀錄）：模組在 develop `326c881` 已實際驗證可用，M7 完整驗收當時未完成、不標 Verified**
+**Branch:** `codex/signalr-realtime`（HEAD `c868bfd`，全部變更為工作樹未提交狀態——**此分支／未提交快照屬歷史來源**；實作其後以 `f7f370e` 併入 develop，現行審計來源為 `326c881`，正式驗收來源為 `42c2622c`）
 
 > **2026-11-26 補正**：本報告撰寫時的來源邊界如上（worktree 未提交）。該實作後以 `f7f370e` 提交並併入 develop（HEAD `326c881`）。2026-11-26 於 develop `326c881` 重新執聚焦審計：build／vet／契約盤點／兩種 CLI 生成 Profile 回歸／官方 client 整合 3/3／pinned Linux race（4 套件）／聚焦 coverage 百分比（env-gated）92.7/93.2/93.6/92.5 全數通過；**未保存原始 statement count profile，原始計數與全倉庫 release coverage 未收集**；詳見 [SignalR 現況報告](../../docs/evidence/SignalR-status.md)。下文歷史敘述保留撰寫時點的來源，不回溯改寫。
 ---
@@ -103,3 +103,16 @@ go test -cover -count=1 ./modules/realtime/... ./events/nats/...
 - pending 理由更正（`tests/contract/m7.json`）：A102/broker-redelivery（未 ACK 對同一節點 consumer 依 AckWait 重送、不越過有界去重——非另一 process）、A99/disabled-scope（連線中 active scope 的權威端狀態停用，需 live provider revision／state 證據）與 A104/legacy-off 的現況已依現有證據改寫；九項情境本身仍保持 pending，未虛構映射。
 - 生成專案邊界：`--realtime` 範本 API 啟動 per-node receiver，但不運作 Outbox worker；端到端推送需部署提供以 `jetstream.Route` 注入的 worker。
 - 完整現況、可照做命令與剩餘缺口見 [docs/evidence/SignalR-status.md](../../docs/evidence/SignalR-status.md)。
+
+---
+
+## 六、2026-11-26 正式 M7 Gate（Verified）
+
+同版 Windows／pinned Linux（含完整 `-race`）累積 M0–M6＋M7 gate 在 develop 來源 commit `42c2622c270d1389b9d4775abb1d584cdf75a9ad`（source bytes `2b35259eec8ab02fc3f3bec44e0e8eee121a64cd603700dc8b79ede993bdb85e`）通過，`scripts/m7.py gate` 寫入 `artifacts/42c2622c270d1389b9d4775abb1d584cdf75a9ad/m7/gate.json`；連續兩輪 gate 重跑證明每個 artifact／雜湊／mtime 逐位元不變（唯讀驗證），並獨立重算所有 report-bound artifact 與命令 log hash，零不符。
+
+- 每平台 51 條命令；M0 盤點（104 群組／593 具名子情境）、m0–m7 Python 回歸、unit＋real-service integration（無 skip）、M1 E2E、M5 模組／CLI coverage、官方 `@microsoft/signalr` 10.0.0 三 Profile E2E（兩獨立儀器化節點）、18 套件 client license 鎖、sqlc v1.31.1、五項發布 drills（Windows inline、Linux host-run 同源採用）。
+- 原始 atomic 聯集 coverage：Windows 7962/8635（92.21%）、Linux 7965/8635（92.24%）；全部 28 個 critical package ≥90%（最低 90.26%；`events/nats` 76/80、`modules/realtime` 281/302、`jetstream` 57/59、`signalr` 282/298）。
+- §13.6 索引：593×3＝1779 列（required 1698、N/A 81），`tests/contract/m7.json` `pending: []`（61 個 M7 具名子情境全部映射、closure M1..M7＝147/134/185/28/25/13/61）。
+- 第五節所列九項 pending 至此全數解除（各列綁定原始 artifact sha256）；「M7 正式發布 Gate 未執行」等缺口不再存在。
+- 已知限制（誠實記錄，詳見 [M7 驗收紀錄](../../docs/evidence/M7.md)）：drills 一次執行於 Windows 由 Linux 採用；race log 無個案明細（套件級 race＋0 skip 為記錄證據）；demo key 僅 loopback；同日較早的 `1d7a8ce7…` gate 因 `validate_report` 驗證期間重寫證據（主機換行恆真比較）宣告為歷史紀錄、不構成 Verified，修正後於 `42c2622c` 重驗通過。
+- VERSION 維持 `0.1.0`，realtime 子系統目標 v0.2，**非 tag release**；沒有 push／tag／部署行為。第五節審計數字（聚焦百分比、env-gated skip 未盤點等）屬 `326c881` 歷史來源，正式結論以本節與 [M7 驗收紀錄](../../docs/evidence/M7.md) 為準。

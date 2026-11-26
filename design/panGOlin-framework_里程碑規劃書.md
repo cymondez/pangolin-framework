@@ -462,7 +462,7 @@ Core／Scope Port 先固定再分工；治理資料與業務資料的交界由 A
 
 ## 9. M7 可選即時通訊
 
-**狀態** In progress（2026-11-26：A96–A104 實作已併入 develop `326c881`，聚焦單元／整合／pinned Linux race／env-gated 聚焦 coverage 通過；正式 Gate 未執行，不標 Verified。聚焦證據與剩餘缺口見 [SignalR 現況報告](../docs/evidence/SignalR-status.md)。）Root 與 D1–D5 接合基線是 `c868bfd8da2ef1c4855a2e7cfa326b1fcf51f7a1`。正式 Gate 綁定 M7 實作來源。時程待工作包估算。
+**狀態** Verified（2026-11-26：同版 Windows／pinned Linux（含 `-race`、Linux host-run 五項 drills、官方 client 三 Profile、真實 PostgreSQL／NATS／IdP）累積 M0–M6 + M7 gate 於 develop 來源 commit `42c2622c270d1389b9d4775abb1d584cdf75a9ad`（source bytes `2b35259eec8ab02fc3f3bec44e0e8eee121a64cd603700dc8b79ede993bdb85e`）通過並寫入 `artifacts/42c2622c270d1389b9d4775abb1d584cdf75a9ad/m7/gate.json`；連續兩輪 `scripts/m7.py gate` 重跑證明每個 artifact／雜湊／mtime 逐位元不變、`gate.json` 內容一致。原始 coverage Windows 7962/8635（92.21%）、Linux 7965/8635（92.24%），全部 critical ≥90%（含 `modules/realtime/...`、`events/nats`）；593 具名子情境 × 3 Profile 索引 1779 列（required 1698、N/A 81）全數綁定原始 artifact；`tests/contract/m7.json` `pending: []`。詳細限制見 [M7 驗收紀錄](../docs/evidence/M7.md)。同日較早於來源 `1d7a8ce75c9142eee4a31952bf7160568949f198` 的首次 gate 宣告保留為歷史紀錄、**不構成 Verified**：其 `validate_report` 缺陷在驗證期間以主機預設換行重寫 release 證據造成恆真比較，已於 `42c2622c` 來源修正為純推導＋唯讀驗證後重驗。實作併入基線為 `326c881`（Root／D1–D5 接合基線 `c868bfd8da2ef1c4855a2e7cfa326b1fcf51f7a1`）。VERSION 維持 0.1.0；realtime 子系統目標 v0.2，**不構成 tag release**。）
 
 | 工作包 | 責任 | 交付物 | 案例 |
 |---|---|---|---|
@@ -472,15 +472,15 @@ Core／Scope Port 先固定再分工；治理資料與業務資料的交界由 A
 
 | 唯一交付節點 | 需求 | 正式驗收 | 狀態 |
 |---|---|---|---|
-| M7 | RT-001 | A96 | Planned |
-| M7 | RT-002 | A97 | Planned |
-| M7 | RT-003 | A98 | Planned |
-| M7 | RT-004 | A99 | Planned |
-| M7 | RT-005 | A100 | Planned |
-| M7 | RT-006 | A101 | Planned |
-| M7 | RT-007 | A102 | Planned |
-| M7 | RT-008 | A103 | Planned |
-| M7 | RT-009 | A104 | Planned |
+| M7 | RT-001 | A96 | Verified（來源 42c2622c；見 M7 驗收紀錄） |
+| M7 | RT-002 | A97 | Verified（來源 42c2622c；見 M7 驗收紀錄） |
+| M7 | RT-003 | A98 | Verified（來源 42c2622c；見 M7 驗收紀錄） |
+| M7 | RT-004 | A99 | Verified（來源 42c2622c；見 M7 驗收紀錄） |
+| M7 | RT-005 | A100 | Verified（來源 42c2622c；見 M7 驗收紀錄） |
+| M7 | RT-006 | A101 | Verified（來源 42c2622c；見 M7 驗收紀錄） |
+| M7 | RT-007 | A102 | Verified（來源 42c2622c；見 M7 驗收紀錄） |
+| M7 | RT-008 | A103 | Verified（來源 42c2622c；見 M7 驗收紀錄） |
+| M7 | RT-009 | A104 | Verified（來源 42c2622c；見 M7 驗收紀錄） |
 
 **Exit** [M7 符合性矩陣](panGOlin-framework_實作規範書.md#s-13-realtime) 全部適用情境通過，三組 Profile 與同來源報告齊備。報告保存工具與依賴版本、授權檢查、完整命令、原始 coverage 計數及實跑結果。
 

@@ -1,8 +1,8 @@
 # SignalR 即時通訊現況報告（2026-11-26）
 
-日期：2026-11-26。來源 commit `326c8811c728aab8f8434a48cc58fc6b6d9a673b`（develop，`f7f370e` 的 merge；`codex/signalr-realtime` 之 worktree 版本已併入 develop）。Go `1.27.4` windows/amd64。本檔記錄該來源實際驗證結果與可用邊界；M7 正式發布 Gate 未通過，狀態不是 Verified，見結尾「未完成驗收」。
+Date：2026-11-26。審計來源 commit `326c8811c728aab8f8434a48cc58fc6b6d9a673b`（develop，`f7f370e` 的 merge；`codex/signalr-realtime` 之 worktree 版本已併入 develop）。Go `1.27.4` windows/amd64。本檔記錄 SignalR 即時通訊的實際驗證範圍與可用邊界。**2026-11-26 正式 M7 發布 Gate 已在同版 Windows／pinned Linux（含完整 race）通過並標 Verified**，來源 commit `42c2622c270d1389b9d4775abb1d584cdf75a9ad`；正式證據見 [M7 驗收紀錄](M7.md)，重現入口見 [M7 開發指南](../guides/m7-development.md)。本文的聚焦審計數字屬 `326c881` 歷史來源，正式結論以 M7 驗收紀錄為準。
 
-**目前結論**：模組本身（Hub、SignalR Adapter、JetStream receiver、官方 client 整合）在此來源已實際驗證可用；M7 完整驗收（原始 coverage 計數、全庫累積 Gate、九項 pending 情境）未完成，不得視為 Verified。
+**目前結論**：模組本身（Hub、SignalR Adapter、JetStream receiver、官方 client 整合）已通過 develop `42c2622c` 的完整 M0–M6＋M7 同版 Windows／Linux（含 race）累積 Gate；104 項需求（RT-001–RT-009）／593 個具名情境／三組 Profile 映射完成（`tests/contract/m7.json` `pending: []`），原始 coverage 全部 critical ≥90%。使用邊界見下文與 M7 驗收紀錄。
 
 ## 實際可用範圍
 
@@ -59,10 +59,11 @@ go run ./examples/realtime --provision
 - 官方 client 依 `examples/realtime/client/package.json` 固定 `@microsoft/signalr` `10.0.0`（lock 安裝 `--ignore-scripts`）。
 - 日誌保存於 `artifacts/signalr-audit-20261126/logs/`（build、vet、coverage 兩種情境、provision、整合、race、compose up）及 `race-compose.yaml`。`artifacts/…` 目錄為 gitignore 範圍，僅作本機證據。
 
-## 未完成驗收（剩餘缺口）
+## 2026-11-26 正式 Gate 驗收更新（`42c2622c`）
 
-- **M7 正式發布 Gate 未執行**：未跑 `scripts/check.ps1`／`check.sh` 同版累積發布流；原始 statement count profile 未保存，全倉庫 race 與 §13.3 分平台 coverage 聯集未收集。
-- 未盤點聚焦測試在 race／coverage 執行中的 skip 明細（env-gated 案例在缺服務時 skip）；「無 skip」未經證實，不作宣稱。
-- `tests/contract/m7.json` 9 項 pending 均仍未滿足；**三項 pending 理由已依現有證據更正**：A102/broker-redelivery（真實 JetStream 去重與 poison Term 已驗證；未 ACK 依 AckWait 的同節點重送尚未驗證）、A99/disabled-scope（連線中 active scope 在權威端停用的即時撤權語意未驗證）與 A104/legacy-off（no-realtime 生成變體已驗證，僅缺舊入口啟動對照整合）。其餘項目理由不變。
-- A104/legacy-off（原因見上）；A104/cumulative-gates 屬發布階段；A103/redaction 依 observability 共用遮罩待 Gate 審查；A100/commit-unknown、A101/unknown-reconcile、A102/node-restart／no-client-ack 需真實 DB／Broker 故障注入或節點生命週期操作，本輪未提供。
-- 未更新任何 M0–M6 Verified 狀態；本檔與里程碑規劃書 §9 的 In progress 標記僅描述此來源的聚焦證據。
+上文的聚焦審計（`326c881`）保留為實作期歷史證據；當日後續發生：
+
+- **正式 M7 Gate 執行並 Verified**：同版 Windows／pinned Linux（含完整 race）累積 M0–M6＋M7 gate 於來源 commit `42c2622c270d1389b9d4775abb1d584cdf75a9ad`（source bytes `2b35259eec8ab02fc3f3bec44e0e8eee121a64cd603700dc8b79ede993bdb85e`）通過，原始 coverage Windows 7962/8635、Linux 7965/8635，全部 critical ≥90%（`events/nats` 76/80、`modules/realtime` 281/302、`jetstream` 57/59、`signalr` 282/298）；51 條命令／平台、官方 client 三 Profile、五項 drills、client license 鎖與 §13.6 索引（593×3＝1779 列，required 1698、N/A 81）全部通過，連續兩輪 gate 重跑逐位元重現。
+- **九項 pending 全數解除**：`tests/contract/m7.json` 完成全部 61 個 M7 具名子情境映射（`pending: []`），A99/disabled-scope、A100/commit-unknown、A101/unknown-reconcile、A102/broker-redelivery／node-restart／no-client-ack、A103/redaction、A104/legacy-off／cumulative-gates 各自綁定執行證據（見 `profile-evidence-m7.json` 每列的原始 artifact sha256）；先前聚焦審計的「未驗證」描述至此已被正式映射取代。
+- **已知的 gate 級限制**（詳見 [M7 驗收紀錄](M7.md)）：五項 drills 一次執行於 Windows 由 Linux 採用；race log 無個案明細（工具鏈輸出限制，套件級 race＋0 skip 為記錄證據）；demo key 僅 loopback；同日較早的 `1d7a8ce7…` gate 因驗證期間重寫證據的 `validate_report` 缺陷宣告為歷史紀錄、不構成 Verified，已在 `42c2622c` 來源以純推導＋唯讀驗證修正。
+- 本檔聚焦審計的其餘邊界仍適用：`--realtime` 生成專案的 API 不運作 Outbox worker（部署需自行以 `outbox.NewWorker`＋`jetstream.Route` 接上 dispatch）；race／證據數字以 `42c2622c` 的 M7 驗收紀錄為準。

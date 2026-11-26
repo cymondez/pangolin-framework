@@ -1,10 +1,15 @@
 # M7 development guide: full same-source realtime acceptance
 
-Status: **In progress** (formal gate not yet run). This guide defines how the
+Status: **Verified** (2026-11-26, source commit
+`42c2622c270d1389b9d4775abb1d584cdf75a9ad`; gate record
+`artifacts/42c2622c270d1389b9d4775abb1d584cdf75a9ad/m7/gate.json`, evidence in
+[M7 驗收紀錄](../evidence/M7.md)). This guide defines how the
 M7 realtime acceptance is executed, what the runner enforces, and which
 interfaces the Go/JS test slice must satisfy. The formal milestone status is
 maintained by the milestone plan (§9); only a passing same-commit two-platform
-gate (M7 `gate.json` in `artifacts/<commit>/m7/`) may claim Verified.
+gate (M7 `gate.json` in `artifacts/<commit>/m7/`) may claim Verified. Repro-
+ducing the runtime gate requires checking out the source commit above; the
+documentation commit that carries this page is not the runtime-tested commit.
 
 ## 1. Architecture
 
@@ -65,6 +70,17 @@ raw files (log and artifact sha256 are recomputed from disk), and the
 finished report is strictly re-derived and compared byte-for-byte during
 `validate_report` — the final artifacts map is cross-checked against each
 bound log/artifact hash there.
+
+Emission and validation are strictly separated: `build_release_m7` is a pure
+derivation (never writes); `write_release_evidence` is the single emitter,
+writing `release-m7.json` and the per-profile index with canonical LF bytes
+exactly once in the verify hook. Gate-time validation runs the read-only
+`m7.validate_stored_release_m7`, which loads the existing stored bytes only,
+re-derives the evidence from the raw artifacts and fails closed on any
+stored-JSON mismatch or recorded-hash drift — validation and `gate` never
+rewrite, re-emit or retouch evidence (the historical rewrite inside
+`validate_report` that once produced a cross-platform newline tautology is
+recorded in the evidence doc and fixed by this separation).
 
 ## 2. Contract inventory (additive, frozen)
 
