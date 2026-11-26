@@ -49,7 +49,7 @@ go run ./examples/realtime --provision
 注意：
 
 - 上述 coverage 是 `go test -cover` 的**四捨五入百分比**，屬聚焦套件組合（`modules/realtime/...`＋`events/nats/...`）；本次**未保存原始 statement count profile**，原始計數不適用於本輪，全倉庫 release coverage 與 §13.3 分平台聯集門檻皆未收集。歷史報告（如 P3）若宣稱「原始計數」，屬其自身來源的舊量測，不代表本輪。
-- race 結果為**套件層級 PASS**：log 無案例明細，且真實服務案例（publish／live）在 race 容器內仍依環境變數啟用、可能 skip；**本輪未盤點 skip 數，不宣稱 race 中零 skip 或每個 live 情境都完成**。真實服務情境的完成證據以整合測試與非 race coverage 執行為準。
+- race 結果為**套件層級 PASS**：本輪聚焦審計的 race log 僅記錄套件結果、無個案明細（屬該歷史執行自身的輸出形式），且真實服務案例（publish／live）在 race 容器內仍依環境變數啟用、可能 skip；**本輪未盤點 skip 數，不宣稱 race 中零 skip 或每個 live 情境都完成**。真實服務情境的完成證據以整合測試與非 race coverage 執行為準。正式 Gate 的 race 證據不同：`42c2622c` 的 raw Go JSONL `41-race.log` 完整列舉 1391 個具名測試全數 PASS、無具名 fail／skip（見 [M7 驗收紀錄](M7.md)）。
 - 整合測試 3/3 是每組 Profile 內的完整情境序列；兩個 server process 由測試以 `--stop-on-stdin-eof` 自管生命週期，race 執行不含整合情境。
 
 ## 服務與環境
@@ -65,5 +65,5 @@ go run ./examples/realtime --provision
 
 - **正式 M7 Gate 執行並 Verified**：同版 Windows／pinned Linux（含完整 race）累積 M0–M6＋M7 gate 於來源 commit `42c2622c270d1389b9d4775abb1d584cdf75a9ad`（source bytes `2b35259eec8ab02fc3f3bec44e0e8eee121a64cd603700dc8b79ede993bdb85e`）通過，原始 coverage Windows 7962/8635、Linux 7965/8635，全部 critical ≥90%（`events/nats` 76/80、`modules/realtime` 281/302、`jetstream` 57/59、`signalr` 282/298）；51 條命令／平台、官方 client 三 Profile、五項 drills、client license 鎖與 §13.6 索引（593×3＝1779 列，required 1698、N/A 81）全部通過，連續兩輪 gate 重跑逐位元重現。
 - **九項 pending 全數解除**：`tests/contract/m7.json` 完成全部 61 個 M7 具名子情境映射（`pending: []`），A99/disabled-scope、A100/commit-unknown、A101/unknown-reconcile、A102/broker-redelivery／node-restart／no-client-ack、A103/redaction、A104/legacy-off／cumulative-gates 各自綁定執行證據（見 `profile-evidence-m7.json` 每列的原始 artifact sha256）；先前聚焦審計的「未驗證」描述至此已被正式映射取代。
-- **已知的 gate 級限制**（詳見 [M7 驗收紀錄](M7.md)）：五項 drills 一次執行於 Windows 由 Linux 採用；race log 無個案明細（工具鏈輸出限制，套件級 race＋0 skip 為記錄證據）；demo key 僅 loopback；同日較早的 `1d7a8ce7…` gate 因驗證期間重寫證據的 `validate_report` 缺陷宣告為歷史紀錄、不構成 Verified，已在 `42c2622c` 來源以純推導＋唯讀驗證修正。
+- **已知的 gate 級限制**（詳見 [M7 驗收紀錄](M7.md)）：五項 drills 一次執行於 Windows 由 Linux 採用；race 證據含完整個案明細——raw Go JSONL `41-race.log` 列舉 1391 個具名測試全數 PASS、無具名 fail／skip（無測試名的 package 列為 package 級 start/done 記錄，非被 skip 的驗收個案）；demo key 僅 loopback；同日較早的 `1d7a8ce7…` gate 因驗證期間重寫證據的 `validate_report` 缺陷宣告為歷史紀錄、不構成 Verified，已在 `42c2622c` 來源以純推導＋唯讀驗證修正。
 - 本檔聚焦審計的其餘邊界仍適用：`--realtime` 生成專案的 API 不運作 Outbox worker（部署需自行以 `outbox.NewWorker`＋`jetstream.Route` 接上 dispatch）；race／證據數字以 `42c2622c` 的 M7 驗收紀錄為準。

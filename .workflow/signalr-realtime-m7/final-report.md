@@ -70,7 +70,7 @@ go test -cover -count=1 ./modules/realtime/... ./events/nats/...
 
 ## 三、未支援／未執行的項目
 
-### 9 項 pending 情境（m7.json 已註冊並附理由，未虛構映射；2026-11-26 起三項理由已依證據更正，情境本身仍 pending）
+### 歷史紀錄（已由第六節驗收取代）：9 項 pending 情境（m7.json 已註冊並附理由，未虛構映射；2026-11-26 起三項理由已依證據更正，情境在彼時仍 pending）
 
 - A99/disabled-scope：需連線中 active scope 的權威端狀態停用（live provider revision／state 拒絕後續訂閱／配送）
 - A100/commit-unknown、A101/unknown-reconcile：需真實 DB／Broker 故障注入與提交結果不確定狀態模擬，超出單元與既有 client 整合能力
@@ -86,7 +86,7 @@ go test -cover -count=1 ./modules/realtime/... ./events/nats/...
 
 ---
 
-## 四、尚未通過的正式發布 Gate
+## 四、歷史紀錄（已由第六節驗收取代）：尚未通過的正式發布 Gate
 
 - **M7 正式發布 Gate 未執行**：未跑完整累積發布流（`scripts/check.ps1`／`check.sh` 同版 Windows／Linux 全量 Gate），本輪僅完成 M7 範圍的單元＋整合＋race／vet／coverage 與契約註冊
 - **Linux 全量 race 與 §13.3 分平台 coverage 未收集**：僅對 `modules/realtime/...`、`events/nats/...` 做 pinned Linux race；全庫 race 對帳與分平台 coverage 聯集未收集
@@ -99,8 +99,8 @@ go test -cover -count=1 ./modules/realtime/... ./events/nats/...
 
 - `go build ./...`、`go vet`（realtime／nats／scaffold）、`go run ./tools/check`（95 requirements 盤點）、`go test ./internal/scaffold/...`（含無 `--realtime` 舊 Profile 與 `--realtime` 新 Profile 生成回歸）全部通過。
 - 初跑 coverage 曾見 `TestRealtimePublishStagesOutboxEvent` `UOW_ROLLED_BACK`：全空 PG 未跑 `--provision` 所致（examples/realtime `--provision` 建立後通過），非 production 缺陷；整合測試初跑 3/3 fail 亦因未設 `PANGOLIN_REALTIME_ADMIN_DSN`（spawn 的 provision 直接退出），補設後 3/3 pass。兩者皆為前置條件，已寫入 [evidence](../../docs/evidence/SignalR-status.md) 與範例 README。
-- coverage 語意更正：上文「P3 聚焦量測」的套件百分比在 2026-11-26 審計重現為四捨五入數字（env-gated 聚焦套件組合），本次未保存原始 statement count profile，原始計數不適用於本輪；純單元（無真實服務）下 jetstream 23.7%／events/nats 66.2%，引用覆蓋不得與真實服務前置條件切割；且此聚焦組合不等於全倉庫 release coverage（§13.3 聯集未收集）。race 結果為套件層級 PASS，log 無案例明細且 env-gated 案例可能 skip；skip 明細未盤點，不宣稱零 skip。
-- pending 理由更正（`tests/contract/m7.json`）：A102/broker-redelivery（未 ACK 對同一節點 consumer 依 AckWait 重送、不越過有界去重——非另一 process）、A99/disabled-scope（連線中 active scope 的權威端狀態停用，需 live provider revision／state 證據）與 A104/legacy-off 的現況已依現有證據改寫；九項情境本身仍保持 pending，未虛構映射。
+- coverage 語意更正：上文「P3 聚焦量測」的套件百分比在 2026-11-26 審計重現為四捨五入數字（env-gated 聚焦套件組合），本次未保存原始 statement count profile，原始計數不適用於本輪；純單元（無真實服務）下 jetstream 23.7%／events/nats 66.2%，引用覆蓋不得與真實服務前置條件切割；且此聚焦組合不等於全倉庫 release coverage（§13.3 聯集未收集）。race 結果為套件層級 PASS（該歷史審計執行自身的 log 未輸出個案明細），env-gated 案例可能 skip；skip 明細未盤點，不宣稱零 skip（正式 Gate 的 race 證據不同，詳見第六節與 [M7 驗收紀錄](../../docs/evidence/M7.md)：raw Go JSONL `41-race.log` 列舉 1391 個具名測試全數 PASS、無具名 fail／skip）。
+- pending 理由更正（`tests/contract/m7.json`）：A102/broker-redelivery（未 ACK 對同一節點 consumer 依 AckWait 重送、不越過有界去重——非另一 process）、A99/disabled-scope（連線中 active scope 的權威端狀態停用，需 live provider revision／state 證據）與 A104/legacy-off 的現況已依現有證據改寫；九項情境在彼時仍保持 pending、未虛構映射（後已由第六節驗收全數解除）。
 - 生成專案邊界：`--realtime` 範本 API 啟動 per-node receiver，但不運作 Outbox worker；端到端推送需部署提供以 `jetstream.Route` 注入的 worker。
 - 完整現況、可照做命令與剩餘缺口見 [docs/evidence/SignalR-status.md](../../docs/evidence/SignalR-status.md)。
 
@@ -108,11 +108,11 @@ go test -cover -count=1 ./modules/realtime/... ./events/nats/...
 
 ## 六、2026-11-26 正式 M7 Gate（Verified）
 
-同版 Windows／pinned Linux（含完整 `-race`）累積 M0–M6＋M7 gate 在 develop 來源 commit `42c2622c270d1389b9d4775abb1d584cdf75a9ad`（source bytes `2b35259eec8ab02fc3f3bec44e0e8eee121a64cd603700dc8b79ede993bdb85e`）通過，`scripts/m7.py gate` 寫入 `artifacts/42c2622c270d1389b9d4775abb1d584cdf75a9ad/m7/gate.json`；連續兩輪 gate 重跑證明每個 artifact／雜湊／mtime 逐位元不變（唯讀驗證），並獨立重算所有 report-bound artifact 與命令 log hash，零不符。
+同版 Windows／pinned Linux（含完整 `-race`）累積 M0–M6＋M7 gate 在 develop 來源 commit `42c2622c270d1389b9d4775abb1d584cdf75a9ad`（source bytes `2b35259eec8ab02fc3f3bec44e0e8eee121a64cd603700dc8b79ede993bdb85e`）通過，`scripts/m7.py gate` 寫入 `artifacts/42c2622c270d1389b9d4775abb1d584cdf75a9ad/m7/gate.json`；連續兩輪 gate 重跑證明 raw artifact 的位元組／雜湊／mtime 逐位元不變（唯讀驗證），並獨立重算所有 report-bound artifact 與命令 log hash，零不符；`gate.json` 本身每次 gate 都會重寫（輸出 mtime 隨之變動）但內容逐位元一致、內容雜湊穩定，raw 證據不受影響。
 
 - 每平台 51 條命令；M0 盤點（104 群組／593 具名子情境）、m0–m7 Python 回歸、unit＋real-service integration（無 skip）、M1 E2E、M5 模組／CLI coverage、官方 `@microsoft/signalr` 10.0.0 三 Profile E2E（兩獨立儀器化節點）、18 套件 client license 鎖、sqlc v1.31.1、五項發布 drills（Windows inline、Linux host-run 同源採用）。
 - 原始 atomic 聯集 coverage：Windows 7962/8635（92.21%）、Linux 7965/8635（92.24%）；全部 28 個 critical package ≥90%（最低 90.26%；`events/nats` 76/80、`modules/realtime` 281/302、`jetstream` 57/59、`signalr` 282/298）。
 - §13.6 索引：593×3＝1779 列（required 1698、N/A 81），`tests/contract/m7.json` `pending: []`（61 個 M7 具名子情境全部映射、closure M1..M7＝147/134/185/28/25/13/61）。
 - 第五節所列九項 pending 至此全數解除（各列綁定原始 artifact sha256）；「M7 正式發布 Gate 未執行」等缺口不再存在。
-- 已知限制（誠實記錄，詳見 [M7 驗收紀錄](../../docs/evidence/M7.md)）：drills 一次執行於 Windows 由 Linux 採用；race log 無個案明細（套件級 race＋0 skip 為記錄證據）；demo key 僅 loopback；同日較早的 `1d7a8ce7…` gate 因 `validate_report` 驗證期間重寫證據（主機換行恆真比較）宣告為歷史紀錄、不構成 Verified，修正後於 `42c2622c` 重驗通過。
+- 已知限制（誠實記錄，詳見 [M7 驗收紀錄](../../docs/evidence/M7.md)）：drills 一次執行於 Windows 由 Linux 採用；race 證據含完整個案明細——raw Go JSONL `41-race.log` 列舉 1391 個具名測試全數 PASS、無具名 fail／skip（無測試名的 package 列為 package 級 start/done 記錄，非被 skip 的驗收個案）；demo key 僅 loopback；同日較早的 `1d7a8ce7…` gate 因 `validate_report` 驗證期間重寫證據（主機換行恆真比較）宣告為歷史紀錄、不構成 Verified，修正後於 `42c2622c` 重驗通過。
 - VERSION 維持 `0.1.0`，realtime 子系統目標 v0.2，**非 tag release**；沒有 push／tag／部署行為。第五節審計數字（聚焦百分比、env-gated skip 未盤點等）屬 `326c881` 歷史來源，正式結論以本節與 [M7 驗收紀錄](../../docs/evidence/M7.md) 為準。
