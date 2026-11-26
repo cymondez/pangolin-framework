@@ -187,7 +187,7 @@ def realtime_coverage_steps(report, output, execute, packages):
     parsed = m7_index.parse_official_log(stream)
     raw = {"kind": "official-client-harness", "status": "passed", "command": "realtime-e2e",
            "tests": parsed["tests"], "skipped": 0, "failed": 0, "profiles": parsed["profiles"]}
-    (output / m7_index.RELEASE_E2E_FILE).write_text(json.dumps(raw, indent=2) + "\n", encoding="utf-8")
+    (output / m7_index.RELEASE_E2E_FILE).write_bytes((json.dumps(raw, indent=2) + "\n").encode("utf-8"))
     if not list(covered.glob("covmeta.*")) or not list(covered.glob("covcounters.*")):
         raise ValueError("official-client harness produced no coverage instrumentation")
     execute(["go", "tool", "covdata", "textfmt", "-i=" + str(covered), "-o=" + str(output / "e2e-realtime.out")], "realtime-coverage")
@@ -258,7 +258,7 @@ def validate_client_dependencies(output, root=ROOT):
 
 
 def build_release_m7(report, output, root=ROOT):
-    """Collect and write release-m7.json: the additive M7 release evidence."""
+    """Derive the M7 release evidence purely from raw artifacts (no writes)."""
     root, output = Path(root), Path(output)
     summary = validate_m7_manifest(m0.load(root / MANIFEST_REL), root)
     groups = m0.load(root / "tests/contract/subtests.json")["groups"]
@@ -322,8 +322,34 @@ def build_release_m7(report, output, root=ROOT):
     }
     if runner:
         evidence["runner_image"] = dict(runner)
-    (output / m7_index.RELEASE_EVIDENCE_FILE).write_text(json.dumps(evidence, indent=2) + "\n", encoding="utf-8")
     return evidence
+
+
+def write_release_evidence(evidence, output):
+    """Emit the release evidence with canonical LF JSON bytes exactly once."""
+    path = Path(output) / m7_index.RELEASE_EVIDENCE_FILE
+    payload = json.dumps(evidence, indent=2, sort_keys=True) + "\n"
+    if path.is_file() and path.read_bytes() != payload.encode("utf-8"):
+        raise ValueError("release evidence already exists with different content: " + m7_index.RELEASE_EVIDENCE_FILE)
+    path.write_bytes(payload.encode("utf-8"))
+    return path
+
+
+def validate_stored_release_m7(report, directory, root=ROOT):
+    """Reproduce the stored release evidence read-only from the raw artifacts.
+
+    Loads the existing release-m7.json bytes, re-derives the evidence purely
+    from the raw artifacts and fails closed unless the stored JSON content and
+    the recorded artifact digest both match; gate-time validation never
+    writes, rewrites or re-emits the stored evidence.
+    """
+    path = Path(directory) / m7_index.RELEASE_EVIDENCE_FILE
+    stored = json.loads(path.read_text(encoding="utf-8-sig"))
+    if stored != build_release_m7(report, directory, root=root):
+        raise ValueError("M7 release evidence cannot be reproduced from the raw artifacts")
+    if report["artifacts"].get(m7_index.RELEASE_EVIDENCE_FILE) != m0.digest(path):
+        raise ValueError("M7 release evidence bytes no longer match the recorded artifact hash")
+    return stored
 
 
 def release_steps(report, output, execute):
@@ -338,6 +364,10 @@ def release_steps(report, output, execute):
                                "id": os.environ["PANGOLIN_M7_RUNNER_IMAGE_ID"],
                                "dockerfile_sha256": m0.digest(ROOT / DOCKERFILE_REL)}
     evidence = build_release_m7(report, output)
+    # Release evidence is written exactly once, in the verify hook with
+    # canonical LF bytes; validation reads the stored artifact and rejects
+    # any mismatch against this pure derivation — gate runs never rewrite it.
+    write_release_evidence(evidence, output)
     # The cumulative runner finalizes report status/artifacts after this hook;
     # like the M6 index, the M7 index is written from the passing projection
     # and strictly re-derived from the finished report during gate validation.
@@ -416,9 +446,7 @@ def validate_report(report, commit, directory):
         if name not in artifacts:
             raise ValueError("M7 raw release evidence missing: " + name)
     validate_client_dependencies(directory)
-    e7 = build_release_m7(report, directory)
-    if m0.load(directory / m7_index.RELEASE_EVIDENCE_FILE) != e7:
-        raise ValueError("M7 release evidence cannot be reproduced from the raw artifacts")
+    e7 = validate_stored_release_m7(report, directory)
     if m0.load(directory / m7_index.EVIDENCE_FILE) != m7_index.build_index(report, directory):
         raise ValueError("M7 per-profile evidence index cannot be reproduced from the raw artifacts")
     if not set(map7["unit_tests"].values()) <= set(report["tests"]):
@@ -483,7 +511,7 @@ def gate(commit, mapping):
               "profile_evidence": {label: m0.digest(root / label / m7_index.EVIDENCE_FILE) for label in reports},
               "release_m7": {label: m0.digest(root / label / m7_index.RELEASE_EVIDENCE_FILE) for label in reports},
               "release_manifest": {label: m0.digest(root / label / "release-manifest.json") for label in reports}}
-    (root / "gate.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+    (root / "gate.json").write_bytes((json.dumps(result, indent=2) + "\n").encode("utf-8"))
     print(json.dumps(result, indent=2))
     return result
 

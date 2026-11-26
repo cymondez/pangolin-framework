@@ -352,7 +352,12 @@ def _classify(field, identity):
 
 
 def write_index(report, directory, root=ROOT):
+    """Emit the per-profile evidence index with canonical LF bytes exactly once."""
     index = build_index(report, directory, root)
-    Path(directory).mkdir(parents=True, exist_ok=True)
-    (Path(directory) / EVIDENCE_FILE).write_text(json.dumps(index, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    path = Path(directory) / EVIDENCE_FILE
+    payload = json.dumps(index, indent=2, sort_keys=True) + "\n"
+    if path.is_file() and path.read_bytes() != payload.encode("utf-8"):
+        raise ValueError("per-profile evidence index already exists with different content: " + EVIDENCE_FILE)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(payload.encode("utf-8"))
     return index

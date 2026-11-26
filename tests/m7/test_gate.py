@@ -786,5 +786,196 @@ class RealtimePreparedGateTestCase(unittest.TestCase):
             m7.compare_release_declarations(windows, declared)
 
 
+class ReleaseEvidenceImmutabilityTestCase(unittest.TestCase):
+    """The stored release evidence must be validated strictly read-only.
+
+    The evidence artifact is emitted once by the verify hook with canonical
+    LF bytes; gate-time validation re-derives the evidence purely from the
+    raw artifacts and compares the stored content plus the recorded artifact
+    digest, never writing, rewriting or re-emitting the stored file. The
+    historical bug rewrote release-m7.json inside validation with platform
+    newlines, silently breaking its recorded artifact hash across platforms.
+    """
+
+    maxDiff = None
+
+    # Milestones without python mappings still need a real, non-empty
+    # unittest run: one genuine filler case satisfies the validator.
+    _FILLER_CASE = "test_gate.FixtureSuite.test_noop ... ok\n"
+
+    def _snapshot(self, directory):
+        return {str(path.relative_to(directory)): (path.read_bytes(), path.stat().st_mtime_ns)
+                for path in sorted(Path(directory).rglob("*")) if path.is_file()}
+
+    def _fixture(self, directory):
+        """A minimal cumulative report directory bound to the committed contract.
+
+        Every raw artifact the pure derivation reads is generated from the
+        real acceptance contract (mappings, release manifest, drills, the
+        installed client tree), so the store-then-validate round trip below
+        exercises exactly the derivation the live gate performs."""
+        mapping = m0.load(ROOT / "tests/contract/m7.json")
+        regression_integration = mapping.get("regression_integration_tests") or {}
+        regression_integration = set(regression_integration.values()) if isinstance(regression_integration, dict) else set(regression_integration)
+        report = {
+            "commit": COMMIT, "source_sha256": SOURCE, "baseline": "v1.3", "status": "passed",
+            "working_tree_dirty": False, "gate": "evidence-ready", "requested_race": False,
+            "platform": {"GOOS": "windows", "GOARCH": "amd64"},
+            "tests": sorted(set(mapping["unit_tests"].values())),
+            "integration_tests": sorted(set(mapping["integration_tests"].values()) | regression_integration),
+            "prepare": {"realtime": {"database": "m5_template_m7rt_" + "1a2b3c4d5e6f",
+                                     "database_tool": "realtime-db.exe", "binary": "realtime-demo.exe",
+                                     "provisioned": True, "race": False, "coverage_dir": "realtime-cov",
+                                     "covered_child_binary": True}},
+            "release_drills": {"host_run": False, "project": "pangolin-m7-fixture"},
+            "commands": [], "artifacts": {}}
+        for number in range(0, 8):
+            name = f"m{number}-regression"
+            required = () if number in (0, 7) else sorted(set(
+                m0.load(ROOT / f"tests/contract/m{number}.json").get("python_tests", {}).values()))
+            body = "".join(identity + " ... ok\n" for identity in required) + \
+                (self._FILLER_CASE if not required else "") + \
+                f"Ran {max(len(required), 1)} tests in 0.001s\n\nOK\n"
+            log = directory / f"{number:02d}-{name}.log"
+            log.write_bytes(body.encode("utf-8"))
+            report["commands"].append({"name": name, "exit_code": 0, "log": log.name,
+                                       "sha256": m0.digest(log)})
+        critical = sorted(set(m0.load(ROOT / "deploy/release/m7.json")["critical_packages"]))
+        packages = {MODULE + "/" + prefix: {"total_statements": 100, "covered_statements": 95} for prefix in critical}
+        (directory / "coverage.json").write_bytes(json.dumps(
+            {"overall": {"total_statements": 1000, "covered_statements": 950}, "packages": packages},
+            indent=2, sort_keys=True).encode("utf-8") + b"\n")
+        (directory / "templates.json").write_bytes(json.dumps(
+            {"status": "passed", "profiles": [{"profile": name} for name in m7_index.OFFICIAL_PROFILES]}).encode("utf-8") + b"\n")
+        (directory / m7_index.RELEASE_E2E_FILE).write_bytes(json.dumps(
+            {"kind": "official-client-harness", "status": "passed", "command": "realtime-e2e",
+             "tests": 3, "skipped": 0, "failed": 0, "profiles": sorted(m7_index.OFFICIAL_PROFILES)}).encode("utf-8") + b"\n")
+        import m7_client_dependencies
+        inventory = m7_client_dependencies.inventory()
+        (directory / "client-dependencies.json").write_bytes(
+            (json.dumps(inventory, indent=2, sort_keys=True) + "\n").encode("utf-8"))
+        report["artifacts"]["client-dependencies.json"] = m0.digest(directory / "client-dependencies.json")
+        drills = directory / "release-drills"
+        drills.mkdir()
+        samples = [150 + rank for rank in range(50)]
+        checks = {
+            "clean-rebuild": {"clean_source": True, "clean_database": True, "clean_build": True, "tests_passed": True},
+            "forward-upgrade": {"seeded_tenant_rows": 3, "owner_preserved": True, "force_rls": True,
+                                "permissive_policy_left": False},
+            "backup-restore": {"restore_verified": True, "row_counts_match": True,
+                               "checksums_match": True, "independent_connection": True},
+            "load-baseline": {"hardware": "fixture cpu", "go_version": "pinned toolchain",
+                              "database": "pinned postgres", "broker": "pinned nats",
+                              "methodology": "fixture harness", "pool_size": 2, "load_count": len(samples),
+                              "concurrency": 4, "p95_ms": sorted(samples)[(len(samples) * 95) // 100],
+                              "p99_ms": sorted(samples)[(len(samples) * 99) // 100], "samples": samples},
+            "security-review": {"categories": list(release_manifest.THREAT_CATEGORIES), "unresolved_high_risk": 0,
+                                "controls": [{"category": category, "attack_surface": "fixture surface",
+                                              "abuse_path": "fixture abuse path", "control": "fixture control",
+                                              "test": "fixture test", "residual_risk": "fixture residual"}
+                                             for category in release_manifest.THREAT_CATEGORIES]}}
+        entries = {}
+        for name in release_manifest.DRILLS:
+            log = name.replace("-", "_") + ".log"
+            (drills / log).write_bytes(f"{name}: fixture drill commands executed\n".encode("utf-8"))
+            entries[name] = {"status": "passed",
+                             "commands": [{"argv": ["fixture", "--drill", name], "exit_code": 0,
+                                           "log": log, "sha256": m0.digest(drills / log)}],
+                             "checks": checks[name]}
+        artifact = drills / "drill-summary.json"
+        artifact.write_bytes(b"fixture drill artifact\n")
+        (drills / "release-drills.json").write_bytes(json.dumps(
+            {"status": "passed", "baseline": "v1.3", "product_version": "0.1.0",
+             "commit": COMMIT, "source_sha256": SOURCE, "working_tree_dirty": False,
+             "evidence_class": "evidence-ready", "platform": {"GOOS": "windows", "GOARCH": "amd64"},
+             "project": "pangolin-m7-fixture", "drills": entries,
+             "artifacts": {"drill-summary.json": m0.digest(artifact)}}).encode("utf-8") + b"\n")
+        evidence = m7.build_release_m7(report, directory)
+        path = m7.write_release_evidence(evidence, directory)
+        report["artifacts"][m7_index.RELEASE_EVIDENCE_FILE] = m0.digest(path)
+        return report, evidence, path
+
+    def test_write_is_canonical_lf_and_only_once(self):
+        with TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            evidence = {"b": 2, "a": "x"}
+            path = m7.write_release_evidence(evidence, directory)
+            raw = path.read_bytes()
+            self.assertEqual(raw, (json.dumps(evidence, indent=2, sort_keys=True) + "\n").encode("utf-8"))
+            self.assertNotIn(b"\r\n", raw)
+            with self.assertRaises(ValueError):
+                m7.write_release_evidence({"a": "tampered"}, directory)
+            self.assertEqual(raw, path.read_bytes())
+
+    def test_stored_lf_artifact_validates_without_writes(self):
+        with TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            report, evidence, path = self._fixture(directory)
+            before = self._snapshot(directory)
+            self.assertEqual(m7.validate_stored_release_m7(report, directory), evidence)
+            self.assertEqual(before, self._snapshot(directory),
+                             "validation rewrote or retouched the stored evidence bytes/mtimes")
+
+    def test_stored_crlf_artifact_validates_without_modification(self):
+        with TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            report, evidence, path = self._fixture(directory)
+            # A historical CRLF artifact (legacy platform-newline emission) is
+            # accepted read-only: content equality is JSON equality while the
+            # recorded artifact digest keeps the exact stored bytes.
+            crlf = (json.dumps(evidence, indent=2, sort_keys=True) + "\n").encode("utf-8").replace(b"\n", b"\r\n")
+            path.write_bytes(crlf)
+            report["artifacts"][m7_index.RELEASE_EVIDENCE_FILE] = m0.digest(path)
+            before = self._snapshot(directory)
+            self.assertEqual(m7.validate_stored_release_m7(report, directory), evidence)
+            self.assertEqual(before, self._snapshot(directory),
+                             "validation retouched the historical CRLF evidence bytes/mtimes")
+
+    def test_stored_content_tamper_is_rejected_without_rewrite(self):
+        with TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            report, evidence, path = self._fixture(directory)
+            stored = json.loads(path.read_text(encoding="utf-8-sig"))
+            stored["realtime_official_client"]["tests"] += 1
+            path.write_bytes((json.dumps(stored, indent=2, sort_keys=True) + "\n").encode("utf-8"))
+            before = self._snapshot(directory)
+            with self.assertRaises(ValueError):
+                m7.validate_stored_release_m7(report, directory)
+            self.assertEqual(before, self._snapshot(directory),
+                             "rejected validation rewrote the stored evidence bytes/mtimes")
+
+    def test_recorded_hash_drift_is_rejected_without_rewrite(self):
+        with TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            report, evidence, path = self._fixture(directory)
+            report["artifacts"][m7_index.RELEASE_EVIDENCE_FILE] = "0" * 64
+            before = self._snapshot(directory)
+            with self.assertRaises(ValueError):
+                m7.validate_stored_release_m7(report, directory)
+            self.assertEqual(before, self._snapshot(directory),
+                             "rejected validation rewrote the stored evidence bytes/mtimes")
+
+    def test_missing_stored_artifact_fails_without_emitting(self):
+        with TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            report, evidence, path = self._fixture(directory)
+            path.unlink()
+            before = self._snapshot(directory)
+            with self.assertRaises(OSError):
+                m7.validate_stored_release_m7(report, directory)
+            self.assertFalse(path.exists())
+            self.assertEqual(before, self._snapshot(directory),
+                             "failed validation re-emitted the missing evidence artifact")
+
+    def test_pure_builder_writes_nothing(self):
+        with TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            report, evidence, path = self._fixture(directory)
+            before = self._snapshot(directory)
+            self.assertEqual(m7.build_release_m7(report, directory), evidence)
+            self.assertEqual(before, self._snapshot(directory),
+                             "the pure derivation wrote to the report directory")
+
+
 if __name__ == "__main__":
     unittest.main()
