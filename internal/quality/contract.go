@@ -23,9 +23,11 @@ type Manifest struct {
 }
 
 var (
-	requirementRE = regexp.MustCompile(`(?m)^- ([A-Z]+-[0-9]{3}) —`)
-	caseRE        = regexp.MustCompile(`(?m)^\| (A[0-9]{2}) \| ([A-Z]+-[0-9]{3}) \|`)
-	deliveryRE    = regexp.MustCompile(`(?m)^\| (M[0-6]) \| ([A-Z]+-[0-9]{3}) \| (A[0-9]{2})；`)
+	requirementRE      = regexp.MustCompile(`(?m)^- ([A-Z]+-[0-9]{3}) —`)
+	caseRE             = regexp.MustCompile(`(?m)^\| (A[0-9]{2}) \| ([A-Z]+-[0-9]{3}) \|`)
+	deliveryRE         = regexp.MustCompile(`(?m)^\| (M[0-6]) \| ([A-Z]+-[0-9]{3}) \| (A[0-9]{2})；`)
+	realtimeCaseRE     = regexp.MustCompile(`(?m)^\| (RT-[0-9]{3}) \| (A[0-9]{2,3}) \|`)
+	realtimeDeliveryRE = regexp.MustCompile(`(?m)^\| M7 \| (RT-[0-9]{3}) \| (A[0-9]{2,3}) \|`)
 )
 
 // ValidateContract verifies the three independently maintained requirement maps.
@@ -35,8 +37,16 @@ func ValidateContract(spec, plan []byte, manifest Manifest, release bool) error 
 		return fmt.Errorf("unsupported contract baseline %q", manifest.Baseline)
 	}
 	requirements := make(map[string]bool)
+	realtime := make(map[string]bool)
 	for _, match := range requirementRE.FindAllSubmatch(spec, -1) {
 		id := string(match[1])
+		if strings.HasPrefix(id, "RT-") {
+			if realtime[id] {
+				return fmt.Errorf("duplicate requirement %s", id)
+			}
+			realtime[id] = true
+			continue
+		}
 		if requirements[id] {
 			return fmt.Errorf("duplicate requirement %s", id)
 		}
@@ -44,6 +54,9 @@ func ValidateContract(spec, plan []byte, manifest Manifest, release bool) error 
 	}
 	if len(requirements) != 95 {
 		return fmt.Errorf("expected 95 requirements, got %d", len(requirements))
+	}
+	if err := validateRealtimeMapping(spec, plan, realtime); err != nil {
+		return err
 	}
 	cases := make(map[string]string)
 	mapped := make(map[string]bool)
@@ -84,6 +97,31 @@ func ValidateContract(spec, plan []byte, manifest Manifest, release bool) error 
 	}
 	if release {
 		return fmt.Errorf("release blocked: a static inventory has no runtime evidence; use scripts/m6.py gate --commit <SHA>")
+	}
+	return nil
+}
+
+func validateRealtimeMapping(spec, plan []byte, requirements map[string]bool) error {
+	cases := realtimeCaseRE.FindAllSubmatch(spec, -1)
+	deliveries := realtimeDeliveryRE.FindAllSubmatch(plan, -1)
+	if len(requirements) == 0 && len(cases) == 0 && len(deliveries) == 0 && !strings.Contains(string(spec), `id="s-17"`) {
+		return nil
+	}
+	const count = 9
+	if len(requirements) != count || len(cases) != count || len(deliveries) != count {
+		return fmt.Errorf("M7 requires %d requirements, cases and deliveries", count)
+	}
+	for _, group := range [][][][]byte{cases, deliveries} {
+		mapping := make(map[string]string, count)
+		for _, match := range group {
+			mapping[string(match[1])] = string(match[2])
+		}
+		for n := 1; n <= count; n++ {
+			req, id := fmt.Sprintf("RT-%03d", n), fmt.Sprintf("A%d", n+95)
+			if !requirements[req] || mapping[req] != id {
+				return fmt.Errorf("M7 mapping drift at %s/%s", req, id)
+			}
+		}
 	}
 	return nil
 }

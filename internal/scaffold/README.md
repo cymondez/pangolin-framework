@@ -1,5 +1,7 @@
 # pangolin CLI implementation
 
+`new --realtime` 可將 SignalR 加入任一 Profile。啟用時生成 `REALTIME.md` 及 Root 模組裝配，`module add --depends realtime` 對應可注入 `realtime.Publisher` 的直接相依。
+
 CLI.Run 接受明確工作目錄、context 與輸出 writer，失敗回非零。new、module add、migrate create/status、doctor、generate openapi 均提供 help。名稱限小寫 Go package 形式；new 在同目錄 staging 後發布，已存在目的地拒絕。重複 module／migration 拒絕；OpenAPI 同內容重入成功，使用者修改的檔案保留。
 
 2026-11-25 起「Root 裝配與建構子 DI」增補改變兩個生成面：`module add` 產出 Root 模式 module.go（`ModuleMetadata`／`DependsOn() []module.Ref`／`RootBuilder` hooks），並登記進 `modules/registry.go` 產出的 `UserRoot` Type 聚合（菱形去重）；`foundation` 套件的 `foundation.Module` 平台模組擁有全部 DB／Broker／事件資源與公開框架契約，`foundation.Profile` 模組只在同一契約擁有者下替換 Profile 實作，`internal/app` 根模組僅保留 HTTP／drain 組裝與 deployment 相容檢查（invalid graph 不取用任何資源，cleanup 由 Container 單一擁有）。`module add --depends persistence/authorization`（或 `organization`）翻譯為 `module.Of[foundation.Module]()` Type 邊並在 generated module 中示範 typed constructor injection（`uow.UnitOfWorkManager`、`foundation.Scopes`、`foundation.Publisher`、`foundation.Idempotency`）；`bookstore` 是生成網域示例名稱，拒絕作為 user module 依賴；pangolin.json 的 framework 名稱保留給 migration 排序。

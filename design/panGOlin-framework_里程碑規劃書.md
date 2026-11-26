@@ -12,7 +12,7 @@ lang: zh-TW
 
 ## 0. 計畫權威與目前狀態
 
-本文件依[實作規範書 v1.3](panGOlin-framework_實作規範書.md)安排全框架 v0.1.0 的交付，包含可選的 Enterprise／Organization 單一模組。需求正式句、介面、產品行為、版本範圍、A01–A95 及品質門檻只由實作規範定義；本文件不重新定義它們。
+本文件依[實作規範書 v1.3](panGOlin-framework_實作規範書.md)安排 v0.1.0 交付與 §9 的 M7 增量。需求正式句、介面、產品行為、版本範圍、驗收案例及品質門檻由實作規範定義。
 
 **2026-11-24：M0 已 Verified（來源 commit `a0b1ad099fdf7bd28240514a24c34590220019a1`）；M1 已 Verified（來源 `9eb10df6cd848b87fda964f0b6b61d60dc12b0a6`），M2 已 Verified（來源 `23651f654389af99d8c427b11909c07bc70f58cc`）；M3 已 Verified（來源 `7f17ecc76a84e65ec4d64fb39b0900fb6bb50ba7`）；M4 已 Verified（來源 `43dcd79e24f5ed74a544a760301f4fec95dc2ca2`，見 [M4 驗收紀錄](../docs/evidence/M4.md)）；M5 已 Verified（後續修正來源 `0d811a21f8b599196f0bad2dd2ee9033d1aa184b`，見 [M5 修正驗收](../docs/evidence/M5-corrections.md)）；M6 已 Verified（來源 `1d7ef1cf0dfdb7ee7b0211d04ad3380329883cb1`，見 [M6 驗收紀錄](../docs/evidence/M6.md)）。** 已建立的底座及未完成條件見 §2.1。文件、CI 配置或品質工具測試不等於 M0 通過，也不等於 Runtime 已驗收或全框架達成 90% coverage。只有指定 commit 的 Exit 證據完整且 Gate 通過才能改為 Verified。
 
@@ -21,6 +21,8 @@ lang: zh-TW
 ### 1.1 發布集合與延期項目
 
 v0.1.0 交付集合為實作規範 §5.7 與 §16 的全部 95 項需求；唯一逐項清單在本文件 §5。產品範圍以[實作規範 §15](panGOlin-framework_實作規範書.md#s-15)為準。v0.2+ 的 Redis、Blob、進階 Cron 及新增 Adapter 未分配本版工作量，也沒有虛構的已交付 ID；若納入，先修改規範、案例與估算。
+
+M7 為 [v0.2.0 目標增量](panGOlin-framework_實作規範書.md#s-15)。即時通訊依 [實作規範 §17](panGOlin-framework_實作規範書.md#s-17) 驗收，交付集合見 §9。原 M0–M6 對應 v0.1.0 的 95 項需求與同來源證據。
 
 Organization 模組對採用框架的專案可選，對 v0.1.0 框架發行包仍是交付項。純 Tenant、組織啟用與替換契約三種組裝依[實作規範 §13.4](panGOlin-framework_實作規範書.md#s-13.4)驗證。
 
@@ -457,3 +459,29 @@ Core／Scope Port 先固定再分工；治理資料與業務資料的交界由 A
 | 發布 manifest | 規範基線、commit、CLI／Runtime／Template 版本、變更／遷移說明 | 技術負責人 |
 
 95 項需求映射、適用案例與證據包一致才完成計畫。此文件不表示已執行實作、外部發布或部署。
+
+## 9. M7 可選即時通訊
+
+**狀態** Planned。Root 與 D1–D5 接合基線是 `c868bfd8da2ef1c4855a2e7cfa326b1fcf51f7a1`。正式 Gate 綁定 M7 實作來源。時程待工作包估算。
+
+| 工作包 | 責任 | 交付物 | 案例 |
+|---|---|---|---|
+| WP19 SignalR 與授權 | 技術負責人、Go C、QA | 可選核心、SignalR Adapter、訂閱與撤權 | A96–A99 |
+| WP20 可靠配送與 lifecycle | Go A、Go B、SRE、QA | 短操作、Outbox、JetStream fan-out、容量與停機 | A100–A103 |
+| WP21 Root、CLI 與符合性 | Go C、QA、技術負責人 | Root／DI、範本、server／client 範例、操作指南、證據 | A104 與累積 Gate |
+
+| 唯一交付節點 | 需求 | 正式驗收 | 狀態 |
+|---|---|---|---|
+| M7 | RT-001 | A96 | Planned |
+| M7 | RT-002 | A97 | Planned |
+| M7 | RT-003 | A98 | Planned |
+| M7 | RT-004 | A99 | Planned |
+| M7 | RT-005 | A100 | Planned |
+| M7 | RT-006 | A101 | Planned |
+| M7 | RT-007 | A102 | Planned |
+| M7 | RT-008 | A103 | Planned |
+| M7 | RT-009 | A104 | Planned |
+
+**Exit** [M7 符合性矩陣](panGOlin-framework_實作規範書.md#s-13-realtime) 全部適用情境通過，三組 Profile 與同來源報告齊備。報告保存工具與依賴版本、授權檢查、完整命令、原始 coverage 計數及實跑結果。
+
+**Gate** Windows／Linux 同來源的累積 Gate 通過，含 Linux race 與 D1–D5、Root／DI、兩種 CLI 生成 Profile 的適用回歸。依 §8 保存發布及復原證據後才更新狀態。

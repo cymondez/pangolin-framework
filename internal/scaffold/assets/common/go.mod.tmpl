@@ -5,6 +5,7 @@ go 1.27.0
 toolchain go1.27.4
 
 require (
+	github.com/coder/websocket v1.8.15
 	github.com/go-sql-driver/mysql v1.10.1
 	github.com/jackc/pgx/v5 v5.12.0
 	github.com/nats-io/nats.go v1.47.0

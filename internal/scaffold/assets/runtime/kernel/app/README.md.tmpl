@@ -16,5 +16,6 @@ err := app.Run(ctx, &myapp.Root{},
 - `Sources` 的每一個 caller "defaults" source 同層覆蓋內建 defaults（後者在前者之下）。值一律複製，不改寫呼叫端 map；非法值在 `config` 驗證失敗，任何 hook 都不執行。file／environment／cli 層保持既有更高優先序。
 - Runtime 的 drain／cleanup 預算目前是固定常數（10s／5s），不透過組態覆蓋；這不是組態契約，需要調整時以明示 Runtime 選項擴充，不會以組態值暗示可設定。
 - `Stop` 預算 25s；ctx 已取消後仍以 `WithoutCancel` 執行收尾。
+- `Roots` 可提供需配置的相依模組實例。Root loader 仍會檢查完整 Type 相依圖。
 
 生命週期、失敗與證據責任同 [runtime](../runtime/README.md)：任何啟動錯誤不報 Ready、反序 Stop、Container 單一擁有關閉責任。驗證：`go test ./kernel/app`。

@@ -62,6 +62,7 @@ func (e requestError) Code() string    { return e.code }
 // which the aggregate already pulls in — touches HTTP and drain wiring, so
 // business packages never import the app root.
 type rootApplication struct {
+	realtime realtimeState
 	bridge   *drainParticipant
 	serveErr chan error
 	listen   string
@@ -75,7 +76,7 @@ func (ra *rootApplication) ModuleMetadata() module.Metadata {
 // first, the profile contribution second, then the typed user module
 // aggregate. The loader plans shared dependency Types exactly once.
 func (ra *rootApplication) DependsOn() []module.Ref {
-	return []module.Ref{module.Of[foundation.Module](), module.Of[foundation.Profile](), module.Of[modules.UserRoot]()}
+	return append([]module.Ref{module.Of[foundation.Module](), module.Of[foundation.Profile](), module.Of[modules.UserRoot]()}, ra.realtime.refs()...)
 }
 
 func (ra *rootApplication) Configure(b module.RootBuilder) error {
@@ -116,6 +117,7 @@ type drainParticipant struct {
 	work   *runtime.WorkGroup
 	mu     sync.Mutex
 	server *http.Server
+	extra  runtime.Participant
 }
 
 func (p *drainParticipant) attach(server *http.Server) {
@@ -131,20 +133,33 @@ func (p *drainParticipant) Quiesce(ctx context.Context) error {
 	if server != nil {
 		server.SetKeepAlivesEnabled(false)
 	}
-	return p.work.Quiesce(ctx)
+	err := p.work.Quiesce(ctx)
+	if p.extra != nil {
+		err = errors.Join(err, p.extra.Quiesce(ctx))
+	}
+	return err
 }
 func (p *drainParticipant) Drain(ctx context.Context) error {
 	p.mu.Lock()
 	server := p.server
 	p.mu.Unlock()
+	var err error
+	if p.extra != nil {
+		err = p.extra.Drain(ctx)
+	}
 	if server != nil {
 		if err := server.Shutdown(ctx); err != nil {
 			return errors.Join(err, p.work.Drain(ctx))
 		}
 	}
-	return p.work.Drain(ctx)
+	return errors.Join(err, p.work.Drain(ctx))
 }
-func (p *drainParticipant) Cancel() { p.work.Cancel() }
+func (p *drainParticipant) Cancel() {
+	p.work.Cancel()
+	if p.extra != nil {
+		p.extra.Cancel()
+	}
+}
 
 func (ra *rootApplication) Start(ctx context.Context, rt module.Runtime) error {
 	// The deployment compatibility check resolves every platform service
@@ -208,6 +223,9 @@ func (ra *rootApplication) Start(ctx context.Context, rt module.Runtime) error {
 	tenants := resolved.tenants
 	validator := resolved.validator
 	mux := http.NewServeMux()
+	if err := ra.realtime.mount(ctx, rt, mux, ra.bridge); err != nil {
+		return err
+	}
 	mux.HandleFunc("GET /livez", func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(204) })
 	mux.HandleFunc("GET /readyz", func(w http.ResponseWriter, r *http.Request) {
 		c, cancel := context.WithTimeout(r.Context(), time.Second)
@@ -388,7 +406,7 @@ func Run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	if err = runtime.StartRoot(ctx, host, root); err != nil {
+	if err = runtime.StartRoot(ctx, host, append([]any{root}, root.realtime.roots()...)...); err != nil {
 		return err
 	}
 	defer host.Stop(context.Background())

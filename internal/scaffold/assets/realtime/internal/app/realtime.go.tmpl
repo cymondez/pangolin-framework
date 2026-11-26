@@ -1,0 +1,180 @@
+package app
+
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"io"
+	"net/http"
+	"net/url"
+	"os"
+	"strings"
+	"time"
+
+	"github.com/cymondez/pangolin-framework/events/nats"
+	"github.com/cymondez/pangolin-framework/events/outbox"
+	"github.com/cymondez/pangolin-framework/kernel/module"
+	"github.com/cymondez/pangolin-framework/modules/realtime"
+	"github.com/cymondez/pangolin-framework/modules/realtime/jetstream"
+	"github.com/cymondez/pangolin-framework/modules/realtime/signalr"
+	"github.com/cymondez/pangolin-framework/security/authn"
+	"github.com/cymondez/pangolin-framework/security/identity"
+	"github.com/cymondez/pangolin-framework/security/scope"
+	"github.com/cymondez/pangolin-framework/tenancy"
+	"{{MODULE}}/foundation"
+)
+
+type realtimeState struct {
+	receiver *jetstream.Receiver
+	endpoint *signalr.Endpoint
+}
+
+func (*realtimeState) refs() []module.Ref { return []module.Ref{module.Of[realtime.Module]()} }
+
+func (state *realtimeState) roots() []any {
+	return []any{&realtime.Module{
+		Constructor:  newRealtimeHub,
+		Dependencies: []module.Ref{module.Of[foundation.Module]()},
+		StartIngress: state.start,
+	}}
+}
+
+func newRealtimeHub(validator *authn.Validator, tenants *tenancy.Resolver, scopes *scope.Registry, out *outbox.Publisher) (*realtime.Hub, error) {
+	auth, err := newRealtimeIdentity(validator)
+	if err != nil {
+		return nil, err
+	}
+	read := realtime.Access{Permission: "books.read"}
+	return realtime.New(realtime.Options{
+		Producer: "bookstore-realtime", Connect: read, MaxConnections: 128, MaxSubscriptions: 16,
+		QueueSize: 32, MaxPayload: 8 << 10, MaxOperations: 32, OperationTimeout: 5 * time.Second,
+		Channels: []realtime.Channel{{
+			Name: "books", Target: "BookNotification", Kinds: foundation.ScopeKinds(),
+			Subscribe: read, Receive: read, Publish: realtime.Access{Permission: "books.write"},
+		}},
+		Methods: []realtime.Method{{
+			Name: "CurrentScope", Access: read,
+			Invoke: func(ctx context.Context, args []json.RawMessage) (any, error) {
+				if len(args) != 0 {
+					return nil, realtime.ErrInvalid
+				}
+				binding, ok := scope.Current(ctx)
+				if !ok {
+					return nil, scope.ErrDenied
+				}
+				return binding.Ref, nil
+			},
+		}},
+	}, auth, tenants, scopes, out)
+}
+
+func (state *realtimeState) start(ctx context.Context, hub *realtime.Hub) (func(context.Context) error, error) {
+	brokerURL, stream, subject := os.Getenv("PANGOLIN_REALTIME_NATS_URL"), os.Getenv("PANGOLIN_REALTIME_STREAM"), os.Getenv("PANGOLIN_REALTIME_SUBJECT")
+	if brokerURL == "" || stream == "" || subject == "" {
+		return nil, errors.New("set PANGOLIN_REALTIME_NATS_URL, PANGOLIN_REALTIME_STREAM and PANGOLIN_REALTIME_SUBJECT")
+	}
+	broker, err := nats.ConnectLive(brokerURL, stream, subject)
+	if err != nil {
+		return nil, errors.New("realtime NATS connection failed")
+	}
+	state.receiver, err = jetstream.Start(ctx, broker, hub, 4096)
+	if err != nil {
+		broker.Close()
+		return nil, err
+	}
+	return func(cleanup context.Context) error {
+		defer broker.Close()
+		return state.receiver.Close(cleanup)
+	}, nil
+}
+
+func (state *realtimeState) mount(ctx context.Context, rt module.Runtime, mux *http.ServeMux, bridge *drainParticipant) error {
+	service, err := rt.Services().Resolve(ctx, module.Contract[realtime.Gateway]())
+	if err != nil {
+		return err
+	}
+	var origins []string
+	if configured := os.Getenv("PANGOLIN_REALTIME_ORIGINS"); configured != "" {
+		origins = strings.Split(configured, ",")
+	}
+	state.endpoint, err = signalr.New(service.(realtime.Gateway), signalr.Options{
+		Path: "/hub", Origins: origins, NegotiationLimit: 128, HandshakeConcurrency: 16,
+		NegotiationTTL: 15 * time.Second, HandshakeTimeout: 5 * time.Second,
+		ReadTimeout: 30 * time.Second, WriteTimeout: 3 * time.Second, KeepAlive: 10 * time.Second, MaxMessage: 64 << 10,
+	})
+	if err != nil {
+		return err
+	}
+	mux.Handle("/hub", state.endpoint)
+	mux.Handle("/hub/negotiate", state.endpoint)
+	bridge.extra = state
+	return nil
+}
+
+func (state *realtimeState) Quiesce(ctx context.Context) error {
+	return errors.Join(state.endpoint.Quiesce(ctx), state.receiver.Quiesce(ctx))
+}
+
+func (state *realtimeState) Drain(ctx context.Context) error {
+	return errors.Join(state.endpoint.Drain(ctx), state.receiver.Drain(ctx))
+}
+
+func (state *realtimeState) Cancel() {
+	state.endpoint.Cancel()
+	state.receiver.Cancel()
+}
+
+type realtimeIdentity struct {
+	validator                  *authn.Validator
+	client                     *http.Client
+	endpoint, clientID, secret string
+}
+
+func newRealtimeIdentity(validator *authn.Validator) (*realtimeIdentity, error) {
+	endpoint, err := url.Parse(os.Getenv("PANGOLIN_REALTIME_INTROSPECTION_URL"))
+	clientID, secret := os.Getenv("PANGOLIN_REALTIME_INTROSPECTION_ID"), os.Getenv("PANGOLIN_REALTIME_INTROSPECTION_SECRET")
+	if err != nil || endpoint.Scheme != "https" || endpoint.Hostname() == "" ||
+		endpoint.User != nil || endpoint.Fragment != "" || clientID == "" || secret == "" {
+		return nil, errors.New("realtime requires a configured HTTPS token introspection endpoint and client credentials")
+	}
+	return &realtimeIdentity{validator: validator, endpoint: endpoint.String(), clientID: clientID, secret: secret,
+		client: &http.Client{Timeout: 2 * time.Second, CheckRedirect: func(*http.Request, []*http.Request) error {
+			return http.ErrUseLastResponse
+		}},
+	}, nil
+}
+
+func (a *realtimeIdentity) AuthenticateCredential(ctx context.Context, credential identity.Credential) (context.Context, error) {
+	bound, err := a.validator.AuthenticateCredential(ctx, credential)
+	if err != nil {
+		return nil, err
+	}
+	body := url.Values{"token": {credential.Value}, "token_type_hint": {"access_token"}}
+	request, err := http.NewRequestWithContext(ctx, http.MethodPost, a.endpoint, strings.NewReader(body.Encode()))
+	if err != nil {
+		return nil, scope.ErrAuthorityUnavailable
+	}
+	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	request.Header.Set("Accept", "application/json")
+	request.SetBasicAuth(url.QueryEscape(a.clientID), url.QueryEscape(a.secret))
+	response, err := a.client.Do(request)
+	if err != nil {
+		return nil, errors.Join(scope.ErrAuthorityUnavailable, err)
+	}
+	defer response.Body.Close()
+	if response.StatusCode != http.StatusOK {
+		return nil, scope.ErrAuthorityUnavailable
+	}
+	const limit = 16 << 10
+	raw, err := io.ReadAll(io.LimitReader(response.Body, limit+1))
+	var status struct {
+		Active *bool `json:"active"`
+	}
+	if err != nil || len(raw) > limit || json.Unmarshal(raw, &status) != nil || status.Active == nil {
+		return nil, scope.ErrAuthorityUnavailable
+	}
+	if !*status.Active {
+		return nil, identity.ErrUnauthenticated
+	}
+	return bound, ctx.Err()
+}

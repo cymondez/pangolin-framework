@@ -6,7 +6,7 @@ module.exports = {manual: [
   {type: 'category', label: '基礎功能', items: ['fundamentals/modules', 'fundamentals/dependency-injection', 'fundamentals/configuration', 'fundamentals/application-startup']},
   {type: 'category', label: '資料存取', items: ['data/unit-of-work', 'data/database', 'data/postgresql', 'data/mysql', 'data/sqlite', 'data/idempotency', 'data/migrations']},
   {type: 'category', label: '身分與多租戶', items: ['security/authentication', 'security/multi-tenancy', 'security/authorization', 'security/resource-scopes', 'security/organizations', 'security/http-and-audit']},
-  {type: 'category', label: '事件', items: ['events/integration-events', 'events/reliable-delivery']},
+  {type: 'category', label: '事件', items: ['events/integration-events', 'events/reliable-delivery', 'platform/realtime']},
   {type: 'category', label: '設定、功能與快取', items: ['platform/settings', 'platform/features', 'platform/cache']},
   {type: 'category', label: '背景工作與維運', items: ['platform/jobs', 'platform/observability', 'platform/operations', 'platform/backup-restore']},
   'concepts/architecture',

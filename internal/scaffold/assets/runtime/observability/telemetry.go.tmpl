@@ -62,7 +62,12 @@ func WithMessage(ctx context.Context, kind, id string) context.Context {
 func Record(ctx context.Context, operation string) {
 	defer func() { _ = recover() }()
 	t, _ := ctx.Value(contextKey{}).(*Telemetry)
-	if t != nil && operation == "inbox_duplicate" {
+	if t == nil {
+		return
+	}
+	switch operation {
+	case "inbox_duplicate", "realtime_staged", "realtime_broker_accepted", "realtime_node_processed",
+		"realtime_queue_full", "realtime_socket_written":
 		t.count.Add(ctx, 1, metric.WithAttributes(attribute.String("operation", operation)))
 	}
 }

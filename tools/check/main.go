@@ -76,7 +76,7 @@ func checkCoverage(root, profile string, out io.Writer) error {
 	const module = "github.com/cymondez/pangolin-framework/"
 	for pkg, counts := range coverage.Packages {
 		path := strings.TrimPrefix(pkg, module)
-		for _, key := range []string{"kernel", "persistence/uow", "persistence/postgres", "persistence/database", "persistence/mysql", "persistence/sqlite", "security", "tenancy", "events", "platform/audit", "modules/organization"} {
+		for _, key := range []string{"kernel", "persistence/uow", "persistence/postgres", "persistence/database", "persistence/mysql", "persistence/sqlite", "security", "tenancy", "events", "platform/audit", "modules/organization", "modules/realtime"} {
 			if (path == key || strings.HasPrefix(path, key+"/")) && !counts.Pass() {
 				return fmt.Errorf("critical package %s is below 90%%", pkg)
 			}

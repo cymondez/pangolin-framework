@@ -34,12 +34,19 @@ var builtinDefaults = map[string]string{
 }
 
 type runOptions struct {
+	roots         []any
 	sources       []config.Source
 	startupChecks []func(context.Context, module.Runtime) error
 	participants  []runtime.Participant
 }
 
 type RunOption func(*runOptions)
+
+// Roots supplies configured module instances for dependencies in the Root
+// graph. The loader still validates all declared Type edges.
+func Roots(instances ...any) RunOption {
+	return func(o *runOptions) { o.roots = append(o.roots, instances...) }
+}
 
 // Sources adds configuration sources. Every caller "defaults" source is
 // merged over the built-in defaults inside the same layer (later sources win,
@@ -105,7 +112,7 @@ func Run(ctx context.Context, root any, opts ...RunOption) error {
 	if err != nil {
 		return err
 	}
-	if err = runtime.StartRoot(ctx, host, root); err != nil {
+	if err = runtime.StartRoot(ctx, host, append([]any{root}, o.roots...)...); err != nil {
 		return err
 	}
 	<-ctx.Done()

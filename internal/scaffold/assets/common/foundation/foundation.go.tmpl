@@ -27,8 +27,8 @@ import (
 	"github.com/cymondez/pangolin-framework/security/scope"
 	"github.com/cymondez/pangolin-framework/tenancy"
 	tenantpg "github.com/cymondez/pangolin-framework/tenancy/postgres"
-	"{{MODULE}}/internal/infrastructure"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"{{MODULE}}/internal/infrastructure"
 )
 
 // Module acquires every platform resource. Its Type is the single direct
@@ -225,7 +225,7 @@ func newEventPublisher(db AuthorityDB) (*outbox.Publisher, error) {
 	if err != nil {
 		return nil, err
 	}
-	serializer, err := distributed.NewRegistry(profileSchemas()...)
+	serializer, err := distributed.NewRegistry(append(profileSchemas(), optionalEventSchemas()...)...)
 	if err != nil {
 		return nil, err
 	}

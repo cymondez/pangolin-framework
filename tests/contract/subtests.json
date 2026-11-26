@@ -4960,6 +4960,602 @@
           "evidence": "artifacts/{commit}/{profile}/A95/tenant-only-build-independent/"
         }
       ]
+    },
+    {
+      "id": "A96",
+      "requirement": "RT-001",
+      "milestone": "M7",
+      "status": "planned",
+      "setup": "SignalR 即時通訊符合性情境（單元、官方 client 整合、真實服務）",
+      "stimulus": "official-negotiate, token-binding, concurrent-consume, unsupported-version, unsupported-transport, origin-rejected",
+      "expected": "官方 client 經協商建立 WebSocket；錯誤身分、逾期、重用及未授權 Origin 均拒絕",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A96/concurrent-consume",
+          "stimulus_variant": "concurrent-consume",
+          "assertion_ref": "A96.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A96/concurrent-consume/",
+          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA96RT001/concurrent-consume"
+        },
+        {
+          "id": "A96/official-negotiate",
+          "stimulus_variant": "official-negotiate",
+          "assertion_ref": "A96.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A96/official-negotiate/",
+          "test": "github.com/cymondez/pangolin-framework/modules/realtime/signalr:TestA96RT001/official-negotiate"
+        },
+        {
+          "id": "A96/origin-rejected",
+          "stimulus_variant": "origin-rejected",
+          "assertion_ref": "A96.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A96/origin-rejected/",
+          "test": "github.com/cymondez/pangolin-framework/modules/realtime/signalr:TestA96RT001/origin-rejected"
+        },
+        {
+          "id": "A96/token-binding",
+          "stimulus_variant": "token-binding",
+          "assertion_ref": "A96.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A96/token-binding/",
+          "test": "github.com/cymondez/pangolin-framework/modules/realtime/signalr:TestA96RT001/token-binding"
+        },
+        {
+          "id": "A96/unsupported-transport",
+          "stimulus_variant": "unsupported-transport",
+          "assertion_ref": "A96.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A96/unsupported-transport/",
+          "test": "github.com/cymondez/pangolin-framework/modules/realtime/signalr:TestA96RT001/unsupported-transport"
+        },
+        {
+          "id": "A96/unsupported-version",
+          "stimulus_variant": "unsupported-version",
+          "assertion_ref": "A96.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A96/unsupported-version/",
+          "test": "github.com/cymondez/pangolin-framework/modules/realtime/signalr:TestA96RT001/unsupported-version"
+        }
+      ]
+    },
+    {
+      "id": "A97",
+      "requirement": "RT-002",
+      "milestone": "M7",
+      "status": "planned",
+      "setup": "SignalR 即時通訊符合性情境（單元、官方 client 整合、真實服務）",
+      "stimulus": "official-invoke, official-error, official-push, heartbeat, invalid-method, invalid-frame, oversize, cancel, reconnect",
+      "expected": "官方 client 取得 Completion 並接收推播；畸形訊息、不支援的 Hub 能力均拒絕",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A97/heartbeat",
+          "stimulus_variant": "heartbeat",
+          "assertion_ref": "A97.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A97/heartbeat/",
+          "template": "examples/realtime/client/integration.test.mjs (official client, two live nodes, three profiles)"
+        },
+        {
+          "id": "A97/official-error",
+          "stimulus_variant": "official-error",
+          "assertion_ref": "A97.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A97/official-error/",
+          "template": "examples/realtime/client/integration.test.mjs (official client, two live nodes, three profiles)"
+        },
+        {
+          "id": "A97/official-invoke",
+          "stimulus_variant": "official-invoke",
+          "assertion_ref": "A97.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A97/official-invoke/",
+          "template": "examples/realtime/client/integration.test.mjs (official client, two live nodes, three profiles)"
+        },
+        {
+          "id": "A97/official-push",
+          "stimulus_variant": "official-push",
+          "assertion_ref": "A97.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A97/official-push/",
+          "template": "examples/realtime/client/integration.test.mjs (official client, two live nodes, three profiles)"
+        },
+        {
+          "id": "A97/reconnect",
+          "stimulus_variant": "reconnect",
+          "assertion_ref": "A97.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A97/reconnect/",
+          "template": "examples/realtime/client/integration.test.mjs (official client, two live nodes, three profiles)"
+        },
+        {
+          "id": "A97/cancel",
+          "stimulus_variant": "cancel",
+          "assertion_ref": "A97.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A97/cancel/",
+          "test": "github.com/cymondez/pangolin-framework/modules/realtime/signalr:TestA97RT002/cancel"
+        },
+        {
+          "id": "A97/invalid-frame",
+          "stimulus_variant": "invalid-frame",
+          "assertion_ref": "A97.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A97/invalid-frame/",
+          "test": "github.com/cymondez/pangolin-framework/modules/realtime/signalr:TestA97RT002/invalid-frame"
+        },
+        {
+          "id": "A97/invalid-method",
+          "stimulus_variant": "invalid-method",
+          "assertion_ref": "A97.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A97/invalid-method/",
+          "test": "github.com/cymondez/pangolin-framework/modules/realtime/signalr:TestA97RT002/invalid-method"
+        },
+        {
+          "id": "A97/oversize",
+          "stimulus_variant": "oversize",
+          "assertion_ref": "A97.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A97/oversize/",
+          "test": "github.com/cymondez/pangolin-framework/modules/realtime/signalr:TestA97RT002/oversize"
+        }
+      ]
+    },
+    {
+      "id": "A98",
+      "requirement": "RT-003",
+      "milestone": "M7",
+      "status": "planned",
+      "setup": "SignalR 即時通訊符合性情境（單元、官方 client 整合、真實服務）",
+      "stimulus": "tenant-collision, scope-collision, enterprise-child-negative, multi-membership, user-devices, unsubscribe, forged-owner, cross-tenant-host-negative",
+      "expected": "重複 ID 不混用；多裝置與各 Scope 只收到各自授權的訊息",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A98/enterprise-child-negative",
+          "stimulus_variant": "enterprise-child-negative",
+          "assertion_ref": "A98.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A98/enterprise-child-negative/",
+          "template": "examples/realtime/client/integration.test.mjs (official client, two live nodes, three profiles)"
+        },
+        {
+          "id": "A98/multi-membership",
+          "stimulus_variant": "multi-membership",
+          "assertion_ref": "A98.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A98/multi-membership/",
+          "template": "examples/realtime/client/integration.test.mjs (official client, two live nodes, three profiles)"
+        },
+        {
+          "id": "A98/cross-tenant-host-negative",
+          "stimulus_variant": "cross-tenant-host-negative",
+          "assertion_ref": "A98.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A98/cross-tenant-host-negative/",
+          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA98RT003/cross-tenant-host-negative"
+        },
+        {
+          "id": "A98/forged-owner",
+          "stimulus_variant": "forged-owner",
+          "assertion_ref": "A98.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A98/forged-owner/",
+          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA98RT003/forged-owner"
+        },
+        {
+          "id": "A98/scope-collision",
+          "stimulus_variant": "scope-collision",
+          "assertion_ref": "A98.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A98/scope-collision/",
+          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA98RT003/scope-collision"
+        },
+        {
+          "id": "A98/tenant-collision",
+          "stimulus_variant": "tenant-collision",
+          "assertion_ref": "A98.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A98/tenant-collision/",
+          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA98RT003/tenant-collision"
+        },
+        {
+          "id": "A98/unsubscribe",
+          "stimulus_variant": "unsubscribe",
+          "assertion_ref": "A98.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A98/unsubscribe/",
+          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA98RT003/unsubscribe"
+        },
+        {
+          "id": "A98/user-devices",
+          "stimulus_variant": "user-devices",
+          "assertion_ref": "A98.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A98/user-devices/",
+          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA98RT003/user-devices"
+        }
+      ]
+    },
+    {
+      "id": "A99",
+      "requirement": "RT-004",
+      "milestone": "M7",
+      "status": "planned",
+      "setup": "SignalR 即時通訊符合性情境（單元、官方 client 整合、真實服務）",
+      "stimulus": "invalid-credential, membership-revocation, permission-deny, disabled-account, disabled-scope, authority-down, before-write, reconnect-denied",
+      "expected": "用 barrier 在排入佇列後和最終授權前撤權，接收端無該訊息；重連不能恢復失效訂閱",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A99/reconnect-denied",
+          "stimulus_variant": "reconnect-denied",
+          "assertion_ref": "A99.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A99/reconnect-denied/",
+          "template": "examples/realtime/client/integration.test.mjs (official client, two live nodes, three profiles)"
+        },
+        {
+          "id": "A99/authority-down",
+          "stimulus_variant": "authority-down",
+          "assertion_ref": "A99.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A99/authority-down/",
+          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA99RT004/authority-down"
+        },
+        {
+          "id": "A99/before-write",
+          "stimulus_variant": "before-write",
+          "assertion_ref": "A99.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A99/before-write/",
+          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA99RT004/before-write"
+        },
+        {
+          "id": "A99/disabled-account",
+          "stimulus_variant": "disabled-account",
+          "assertion_ref": "A99.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A99/disabled-account/",
+          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA99RT004/disabled-account"
+        },
+        {
+          "id": "A99/invalid-credential",
+          "stimulus_variant": "invalid-credential",
+          "assertion_ref": "A99.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A99/invalid-credential/",
+          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA99RT004/invalid-credential"
+        },
+        {
+          "id": "A99/membership-revocation",
+          "stimulus_variant": "membership-revocation",
+          "assertion_ref": "A99.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A99/membership-revocation/",
+          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA99RT004/membership-revocation"
+        },
+        {
+          "id": "A99/permission-deny",
+          "stimulus_variant": "permission-deny",
+          "assertion_ref": "A99.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A99/permission-deny/",
+          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA99RT004/permission-deny"
+        },
+        {
+          "id": "A99/disabled-scope",
+          "stimulus_variant": "disabled-scope",
+          "assertion_ref": "A99.expected",
+          "status": "pending",
+          "evidence": "artifacts/{commit}/{profile}/A99/disabled-scope/",
+          "reason": "需要在 session 存續期間由 scope registry 移除 kind 的真實撤權語意（ErrKindUnsupported 路徑）；單元無法在 Hub 建構後卸除 provider，屬 M7 正式 Gate 的整合撤權範圍。"
+        }
+      ]
+    },
+    {
+      "id": "A100",
+      "requirement": "RT-005",
+      "milestone": "M7",
+      "status": "planned",
+      "setup": "SignalR 即時通訊符合性情境（單元、官方 client 整合、真實服務）",
+      "stimulus": "exact-method-owner, no-long-uow, operation-scope-close, no-commit-no-success, commit-unknown",
+      "expected": "每個操作獨立釋放 Scope 與 UOW；提交錯誤保留原結果",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A100/no-commit-no-success",
+          "stimulus_variant": "no-commit-no-success",
+          "assertion_ref": "A100.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A100/no-commit-no-success/",
+          "template": "examples/realtime/client/integration.test.mjs (official client, two live nodes, three profiles)"
+        },
+        {
+          "id": "A100/exact-method-owner",
+          "stimulus_variant": "exact-method-owner",
+          "assertion_ref": "A100.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A100/exact-method-owner/",
+          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA100RT005/exact-method-owner"
+        },
+        {
+          "id": "A100/no-long-uow",
+          "stimulus_variant": "no-long-uow",
+          "assertion_ref": "A100.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A100/no-long-uow/",
+          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA100RT005/no-long-uow"
+        },
+        {
+          "id": "A100/operation-scope-close",
+          "stimulus_variant": "operation-scope-close",
+          "assertion_ref": "A100.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A100/operation-scope-close/",
+          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA100RT005/operation-scope-close"
+        },
+        {
+          "id": "A100/commit-unknown",
+          "stimulus_variant": "commit-unknown",
+          "assertion_ref": "A100.expected",
+          "status": "pending",
+          "evidence": "artifacts/{commit}/{profile}/A100/commit-unknown/",
+          "reason": "UOC-UNKNOWN 需要真實交易提交結果不可判讀的 PG 故障注入；單元測試的 fake UOW 不能作為提交語意的完成證據，映射到整合故障注入後補登。"
+        }
+      ]
+    },
+    {
+      "id": "A101",
+      "requirement": "RT-006",
+      "milestone": "M7",
+      "status": "planned",
+      "setup": "SignalR 即時通訊符合性情境（單元、官方 client 整合、真實服務）",
+      "stimulus": "outbox-committed, outbox-rollback, unknown-reconcile, stable-envelope, wrong-producer, wrong-owner",
+      "expected": "獨立 DB 連線對帳；業務與 Outbox 同進退，來源或 owner 驗證失敗不得配送",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A101/outbox-committed",
+          "stimulus_variant": "outbox-committed",
+          "assertion_ref": "A101.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A101/outbox-committed/",
+          "template": "examples/realtime/client/integration.test.mjs (official client, two live nodes, three profiles)"
+        },
+        {
+          "id": "A101/outbox-rollback",
+          "stimulus_variant": "outbox-rollback",
+          "assertion_ref": "A101.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A101/outbox-rollback/",
+          "template": "examples/realtime/client/integration.test.mjs (official client, two live nodes, three profiles)"
+        },
+        {
+          "id": "A101/stable-envelope",
+          "stimulus_variant": "stable-envelope",
+          "assertion_ref": "A101.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A101/stable-envelope/",
+          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA101RT006/stable-envelope"
+        },
+        {
+          "id": "A101/wrong-owner",
+          "stimulus_variant": "wrong-owner",
+          "assertion_ref": "A101.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A101/wrong-owner/",
+          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA101RT006/wrong-owner"
+        },
+        {
+          "id": "A101/wrong-producer",
+          "stimulus_variant": "wrong-producer",
+          "assertion_ref": "A101.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A101/wrong-producer/",
+          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA101RT006/wrong-producer"
+        },
+        {
+          "id": "A101/unknown-reconcile",
+          "stimulus_variant": "unknown-reconcile",
+          "assertion_ref": "A101.expected",
+          "status": "pending",
+          "evidence": "artifacts/{commit}/{profile}/A101/unknown-reconcile/",
+          "reason": "依賴 A100/commit-unknown 的 UOW_COMMIT_UNKNOWN 對帳流程，需真實 PG 與獨立連線對帳；無單元可用且 integration.test.mjs 未涵蓋。"
+        }
+      ]
+    },
+    {
+      "id": "A102",
+      "requirement": "RT-007",
+      "milestone": "M7",
+      "status": "planned",
+      "setup": "SignalR 即時通訊符合性情境（單元、官方 client 整合、真實服務）",
+      "stimulus": "two-live-processes, wrong-scope-negative, broker-redelivery, node-restart, no-client-ack",
+      "expected": "兩個獨立 server process 的官方 clients 均收到對應訊息，控制組無訊息；重送保留 ID",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A102/two-live-processes",
+          "stimulus_variant": "two-live-processes",
+          "assertion_ref": "A102.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A102/two-live-processes/",
+          "template": "examples/realtime/client/integration.test.mjs (official client, two live nodes, three profiles)"
+        },
+        {
+          "id": "A102/wrong-scope-negative",
+          "stimulus_variant": "wrong-scope-negative",
+          "assertion_ref": "A102.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A102/wrong-scope-negative/",
+          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA102RT007/wrong-scope-negative"
+        },
+        {
+          "id": "A102/broker-redelivery",
+          "stimulus_variant": "broker-redelivery",
+          "assertion_ref": "A102.expected",
+          "status": "pending",
+          "evidence": "artifacts/{commit}/{profile}/A102/broker-redelivery/",
+          "reason": "JetStream 去重與重送語意（jetstream.Receiver）需要真實 NATS 消費者；Mock 不作為 Broker 語意證據（§13）。"
+        },
+        {
+          "id": "A102/node-restart",
+          "stimulus_variant": "node-restart",
+          "assertion_ref": "A102.expected",
+          "status": "pending",
+          "evidence": "artifacts/{commit}/{profile}/A102/node-restart/",
+          "reason": "節點重啟後續訂閱恢復需要兩個 server process 的 docker 生命週期操作；整合環境尚未提供 restart 流程腳本。"
+        },
+        {
+          "id": "A102/no-client-ack",
+          "stimulus_variant": "no-client-ack",
+          "assertion_ref": "A102.expected",
+          "status": "pending",
+          "evidence": "artifacts/{commit}/{profile}/A102/no-client-ack/",
+          "reason": "無法消費的 client 不應重複入隊：需真實 Broker ack/retry 與 socket 寫入失敗注入；單元無法重建 Broker 重送語意。"
+        }
+      ]
+    },
+    {
+      "id": "A103",
+      "requirement": "RT-008",
+      "milestone": "M7",
+      "status": "planned",
+      "setup": "SignalR 即時通訊符合性情境（單元、官方 client 整合、真實服務）",
+      "stimulus": "admission-capacity, slow-client, queue-full, write-timeout, active-drain, close-once, redaction",
+      "expected": "阻塞一條連線時其他連線仍有進度；Drain 有界，資源僅釋放一次，觀測資料合乎遮罩",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A103/active-drain",
+          "stimulus_variant": "active-drain",
+          "assertion_ref": "A103.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A103/active-drain/",
+          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA103RT008/active-drain"
+        },
+        {
+          "id": "A103/admission-capacity",
+          "stimulus_variant": "admission-capacity",
+          "assertion_ref": "A103.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A103/admission-capacity/",
+          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA103RT008/admission-capacity"
+        },
+        {
+          "id": "A103/close-once",
+          "stimulus_variant": "close-once",
+          "assertion_ref": "A103.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A103/close-once/",
+          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA103RT008/close-once"
+        },
+        {
+          "id": "A103/queue-full",
+          "stimulus_variant": "queue-full",
+          "assertion_ref": "A103.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A103/queue-full/",
+          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA103RT008/queue-full"
+        },
+        {
+          "id": "A103/slow-client",
+          "stimulus_variant": "slow-client",
+          "assertion_ref": "A103.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A103/slow-client/",
+          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA103RT008/slow-client"
+        },
+        {
+          "id": "A103/write-timeout",
+          "stimulus_variant": "write-timeout",
+          "assertion_ref": "A103.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A103/write-timeout/",
+          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA103RT008/write-timeout"
+        },
+        {
+          "id": "A103/redaction",
+          "stimulus_variant": "redaction",
+          "assertion_ref": "A103.expected",
+          "status": "pending",
+          "evidence": "artifacts/{commit}/{profile}/A103/redaction/",
+          "reason": "遮罩責任在 observability 共用機制（M4 已驗收）；realtime 指標鍵不含租戶/組織 label 與 payload 值，正式 Gate 由 observability 套件既有案例與 §9.6 審查確認。"
+        }
+      ]
+    },
+    {
+      "id": "A104",
+      "requirement": "RT-009",
+      "milestone": "M7",
+      "status": "planned",
+      "setup": "SignalR 即時通訊符合性情境（單元、官方 client 整合、真實服務）",
+      "stimulus": "root-constructor, tenant-only-graph, organization-enabled, replacement-contract, generated-profiles, legacy-off, cumulative-gates",
+      "expected": "根模組與生成 Profile 可啟動，替換 Provider 保持公開契約，停用時舊入口仍可用",
+      "fixture": "tests/fixtures/manifest.json",
+      "subtests": [
+        {
+          "id": "A104/generated-profiles",
+          "stimulus_variant": "generated-profiles",
+          "assertion_ref": "A104.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A104/generated-profiles/",
+          "template": "examples/realtime/client/integration.test.mjs (official client, two live nodes, three profiles)"
+        },
+        {
+          "id": "A104/organization-enabled",
+          "stimulus_variant": "organization-enabled",
+          "assertion_ref": "A104.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A104/organization-enabled/",
+          "template": "examples/realtime/client/integration.test.mjs (official client, two live nodes, three profiles)"
+        },
+        {
+          "id": "A104/replacement-contract",
+          "stimulus_variant": "replacement-contract",
+          "assertion_ref": "A104.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A104/replacement-contract/",
+          "template": "examples/realtime/client/integration.test.mjs (official client, two live nodes, three profiles)"
+        },
+        {
+          "id": "A104/root-constructor",
+          "stimulus_variant": "root-constructor",
+          "assertion_ref": "A104.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A104/root-constructor/",
+          "template": "examples/realtime/client/integration.test.mjs (official client, two live nodes, three profiles)"
+        },
+        {
+          "id": "A104/tenant-only-graph",
+          "stimulus_variant": "tenant-only-graph",
+          "assertion_ref": "A104.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A104/tenant-only-graph/",
+          "template": "examples/realtime/client/integration.test.mjs (official client, two live nodes, three profiles)"
+        },
+        {
+          "id": "A104/legacy-off",
+          "stimulus_variant": "legacy-off",
+          "assertion_ref": "A104.expected",
+          "status": "pending",
+          "evidence": "artifacts/{commit}/{profile}/A104/legacy-off/",
+          "reason": "「停用 realtime 後舊入口仍可用」需要 Root 停用組裝對照環境（有/無 realtime Module 的兩份 Profile），目前 generate 的 Profile 未含無 realtime 變體；M7 正式 Gate 以 Root DI 回歸補齊。"
+        },
+        {
+          "id": "A104/cumulative-gates",
+          "stimulus_variant": "cumulative-gates",
+          "assertion_ref": "A104.expected",
+          "status": "pending",
+          "evidence": "artifacts/{commit}/{profile}/A104/cumulative-gates/",
+          "reason": "累積 Gate（M1–M6 回歸、coverage、race、靜態分析）屬發布驗收執行，不在本包範圍。"
+        }
+      ]
     }
   ]
 }
