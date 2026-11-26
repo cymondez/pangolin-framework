@@ -112,6 +112,15 @@ def prepare_realtime(report, output, execute, packages):
     covered.mkdir(exist_ok=True)
     platform = report["platform"]
     race = bool(report.get("requested_race")) and platform["GOOS"] == "linux"
+    node = shutil.which("node")
+    npm = shutil.which("npm.cmd" if os.name == "nt" else "npm")
+    if not node or not npm:
+        raise ValueError("official-client harness requires Node.js and npm on the runner")
+    execute(["node", "--version"], "node-version")
+    execute([npm, "--version"], "npm-version")
+    # The reviewed dependency tree is installed before the regression suites:
+    # the m7 acceptance regressions exercise the installed client inventory.
+    execute([npm, "--prefix", "examples/realtime/client", "ci", "--ignore-scripts"], "realtime-client-deps")
     db_tool = output / ("realtime-db.exe" if os.name == "nt" else "realtime-db")
     execute(["go", "build", "-o", str(db_tool), "./internal/testkit/cmd/template-db"], "realtime-dbtool")
     # The template-db fixture tool owns database creation inside the isolated
@@ -170,11 +179,8 @@ def realtime_coverage_steps(report, output, execute, packages):
     if not binary.is_file():
         raise ValueError("prepared realtime binary is missing: " + str(binary))
     covered = output / prepared["coverage_dir"]
-    execute(["node", "--version"], "node-version")
-    execute([npm, "--version"], "npm-version")
-    execute([npm, "--prefix", "examples/realtime/client", "ci", "--ignore-scripts"], "realtime-client-deps")
-    # The npm tree the harness will load is re-derived against the reviewed
-    # dependency/license manifest and persisted as raw gate evidence.
+    # The reviewed dependency/license inventory is re-derived from the npm tree
+    # installed during preparation, right before the harness consumes it.
     execute([sys.executable, "scripts/m7_client_dependencies.py", "--check",
              "--output", str(output / "client-dependencies.json")], "realtime-client-licenses")
     stream = execute([npm, "--prefix", "examples/realtime/client", "test", "--", "--test-reporter=tap"], "realtime-e2e")

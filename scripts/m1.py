@@ -169,15 +169,15 @@ def verify(args, increment=None, extra_steps=None, coverage_steps=None, prepare=
         execute(["go","mod","verify"],"go-module-verify")
         execute([sys.executable,"-m","unittest","discover","-v","-s","tests/m0","-p","test_*.py"],"m0-regression")
         execute([sys.executable,"-m","unittest","discover","-v","-s","tests/m1","-p","test_*.py"],"m1-regression")
+        # Later milestones prepare same-source runtime fixtures (covered child
+        # binaries, installed client tree, environment) before every regression
+        # suite that can depend on them; the run records what was done.
+        packages=",".join(p for p in m0.command(["go","list",*go_dirs]).splitlines() if "/internal/testkit/" not in p and "/infrastructure/internal/" not in p)
+        if prepare:
+            report["prepare"]=prepare(report,output,execute,packages) or report.get("prepare")
         for extra in increments:
             name=extra["milestone"].lower()
             execute([sys.executable,"-m","unittest","discover","-v","-s","tests/"+name,"-p","test_*.py"],name+"-regression")
-        packages=",".join(p for p in m0.command(["go","list",*go_dirs]).splitlines() if "/internal/testkit/" not in p and "/infrastructure/internal/" not in p)
-        # Later milestones prepare same-source runtime fixtures (covered child
-        # binaries, environment) before the unit suite so no acceptance test
-        # ever skips for a missing environment; the run records what was done.
-        if prepare:
-            report["prepare"]=prepare(report,output,execute,packages) or report.get("prepare")
         unit=execute(["go","test","-count=1","-json","-covermode=atomic","-coverpkg="+packages,"-coverprofile="+str(output/"unit.out"),*go_dirs],"unit")
         report["tests"]=validate_tests(unit,[*mapping["go_tests"].values(),*(test for extra in increments for test in [*extra["unit_tests"].values(),*extra.get("regression_tests",[])])])
         integration=execute(["go","test","-p=1","-count=1","-json","-tags=integration","-covermode=atomic","-coverpkg="+packages,"-coverprofile="+str(output/"integration.out"),"./tests/m1",*("./tests/"+extra["milestone"].lower() for extra in increments),*database_packages(milestone,ROOT/"tests/database")],"integration")
