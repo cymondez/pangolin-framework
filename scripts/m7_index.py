@@ -158,6 +158,7 @@ def _gates_proof(report, directory, artifacts):
         raise ValueError("the cumulative-gate proof is missing the recorded E2E process evidence")
     artifact_names = ("coverage.json", "merged.out", "go-list.json", "exclusions.json", "dependencies.json",
                       "templates.json", "client-dependencies.json")
+    bound = {}
     for name in artifact_names:
         digest = artifacts.get(name)
         if not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest):
@@ -168,6 +169,11 @@ def _gates_proof(report, directory, artifacts):
             if not path.is_file():
                 raise ValueError("the cumulative-gate proof is missing a bound artifact: " + name)
             digest = m0.digest(path)
+        else:
+            disk = directory / name
+            if not disk.is_file() or m0.digest(disk) != digest:
+                raise ValueError("the cumulative-gate proof is missing a bound artifact: " + name)
+        bound[name] = digest
     coverage = m0.load(directory / "coverage.json")
     overall = coverage.get("overall") or {}
     total, covered = int(overall.get("total_statements", 0)), int(overall.get("covered_statements", 0))
@@ -179,7 +185,7 @@ def _gates_proof(report, directory, artifacts):
     return {"kind": "cumulative-gates", "commit": commit, "source_sha256": source,
             "commands": sorted(required), "linux_race": linux,
             "coverage": {"total_statements": total, "covered_statements": covered},
-            "artifacts": {name: artifacts[name] for name in artifact_names}}
+            "artifacts": bound}
 
 
 def _realtime_proof(report, directory, artifacts):

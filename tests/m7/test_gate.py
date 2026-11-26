@@ -524,6 +524,15 @@ class GateChecksProofTestCase(unittest.TestCase):
 
     maxDiff = None
 
+    raw_artifacts = {
+        "merged.out": "mode: atomic\n",
+        "go-list.json": "{}\n",
+        "exclusions.json": "{}\n",
+        "dependencies.json": "{}\n",
+        "templates.json": json.dumps({"status": "passed", "profiles": []}) + "\n",
+        "client-dependencies.json": json.dumps({"packages": {}}) + "\n",
+    }
+
     def _report(self, directory, **overrides):
         logs = {"02-integration.log": [{"Action": "run", "Package": "p"},
                                        {"Action": "pass", "Package": "p", "Test": "T"}],
@@ -552,11 +561,10 @@ class GateChecksProofTestCase(unittest.TestCase):
                  "realtime-client-licenses", "realtime-e2e",
                  "realtime-coverage", "realtime-db-drop", "release-drills", "templates-compose"]
             ] + [{"name": "e2e-step", "exit_code": 0} for _ in range(4)],
-            "artifacts": {
-                "coverage.json": "c" * 64, "merged.out": "d" * 64, "go-list.json": "e" * 64,
-                "exclusions.json": "f" * 64, "dependencies.json": "0" * 64, "templates.json": "1" * 64,
-                "client-dependencies.json": "2" * 64},
+            "artifacts": {},
         }
+        for name, body in self.raw_artifacts.items():
+            (directory / name).write_text(body, encoding="utf-8")
         for command in report["commands"]:
             log = {"integration": "02-integration.log", "coverage": "07-coverage.log",
                    "race": "08-race.log", "release-manifest": "21-release-manifest.log"}.get(command["name"])
@@ -566,6 +574,14 @@ class GateChecksProofTestCase(unittest.TestCase):
         (directory / "coverage.json").write_text(json.dumps(
             {"overall": {"total_statements": 1000, "covered_statements": 950},
              "packages": {}}), encoding="utf-8")
+        report["artifacts"] = {
+            "coverage.json": m0.digest(directory / "coverage.json"),
+            "merged.out": m0.digest(directory / "merged.out"),
+            "go-list.json": m0.digest(directory / "go-list.json"),
+            "exclusions.json": m0.digest(directory / "exclusions.json"),
+            "dependencies.json": m0.digest(directory / "dependencies.json"),
+            "templates.json": m0.digest(directory / "templates.json"),
+            "client-dependencies.json": m0.digest(directory / "client-dependencies.json")}
         return report
 
     def test_complete_windows_proof_passes_without_circular_hash(self):
@@ -615,9 +631,12 @@ class GateChecksProofTestCase(unittest.TestCase):
                     json.dumps({"overall": {"total_statements": 1000, "covered_statements": 950}, "packages": {}}),
                     encoding="utf-8")
             untouched = self._report(directory)
-            report["artifacts"]["coverage.json"] = "zz"
+            # A finalized bound digest that contradicts the raw artifact is
+            # rejected outright (the hook path records from disk instead).
+            tampered_map = self._report(directory)
+            tampered_map["artifacts"]["coverage.json"] = "f" * 64
             with self.assertRaises(ValueError):
-                m7_index._gates_proof(report, directory, report["artifacts"])
+                m7_index._gates_proof(tampered_map, directory, tampered_map["artifacts"])
             tampered = self._report(directory)
             (directory / "coverage.json").write_text(
                 json.dumps({"overall": {"total_statements": 1000, "covered_statements": 1001}, "packages": {}}),
