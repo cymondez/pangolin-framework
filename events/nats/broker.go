@@ -17,10 +17,19 @@ type Broker struct {
 }
 
 func Connect(url, stream, subject string) (*Broker, error) {
+	return connect(url, stream, subject, nats.NoReconnect())
+}
+
+// ConnectLive allows bounded reconnects for a live fan-out deployment.
+func ConnectLive(url, stream, subject string) (*Broker, error) {
+	return connect(url, stream, subject, nats.MaxReconnects(10), nats.ReconnectWait(time.Second))
+}
+
+func connect(url, stream, subject string, options ...nats.Option) (*Broker, error) {
 	if stream == "" || subject == "" {
 		return nil, fmt.Errorf("NATS stream and subject required")
 	}
-	connection, e := nats.Connect(url, nats.Timeout(3*time.Second), nats.NoReconnect())
+	connection, e := nats.Connect(url, append(options, nats.Timeout(3*time.Second))...)
 	if e != nil {
 		return nil, e
 	}

@@ -1,0 +1,25 @@
+{
+  "slug": "signalr-realtime-m7",
+  "created": "2026-11-26",
+  "goal": "M7 SignalR realtime module with verified integration evidence",
+  "branch": "codex/signalr-realtime",
+  "packets": [
+    {"id": "P1", "title": "盤點與整合測試", "status": "completed", "owner": "main"},
+    {"id": "P2", "title": "M7 契約情境註冊", "status": "completed", "owner": "glmworker"},
+    {"id": "P3", "title": "race/vet/coverage", "status": "completed", "owner": "glmworker"},
+    {"id": "P4", "title": "累積回歸與報告", "status": "completed", "owner": "glmworker"}
+  ],
+  "verification": [
+    {"check": "go build ./...", "status": "pass"},
+    {"check": "go test ./... (production 套件全綠；唯一失敗 artifacts/design-review-2026-11-24 歷史重現 6 項，branch 基線既有，非 M7 引入)", "status": "pass"},
+    {"check": "go test ./modules/realtime/... ./events/nats/... ./internal/scaffold/...", "status": "pass"},
+    {"check": "official client integration test (docker postgres 26000 + nats 26001, 兩節點, tenant-only/organization-enabled/replacement-contract)", "status": "pass 3/3"},
+    {"check": "go test -race ./modules/realtime/... ./events/nats/... (pinned golang:1.27.4-bookworm Linux; Windows host 無 gcc 不執行)", "status": "pass"},
+    {"check": "go vet ./modules/realtime/... ./events/nats/...", "status": "pass"},
+    {"check": "coverage (go test -cover 原始計數): realtime 92.7%/signalr 93.6%/jetstream 93.2%/events/nats 92.5%，均達 §13 90% 門檻", "status": "pass"},
+    {"check": "contract registration: tests/contract/m7.json (35 unit + 17 template 映射, 9 pending 附理由) + subtests.json A96-A104 共 61 情境（diff 純新增）；internal/quality/contract.go 校驗 RT-001..009 ↔ A96-A104", "status": "pass"},
+    {"check": "M7 正式發布 Gate / Linux 全量 race / §13.3 分平台 coverage", "status": "not run — 未收集，未更新任何既有 Verified"}
+  ],
+  "approvals": [],
+  "notes": "歷史重現失敗：artifacts/design-review-2026-11-24 6 項（TestLocalSwallowedNestedBusyCompletesRoot、TestLocalPropagatedNestedBusyFailsRoot、TestDIResolveHoldsContainerMutexAcrossFactory、TestDIOpenScopeWaitsForGlobalMutexHeldByFactory、TestDICloseHoldsContainerMutexAcrossCleanup、TestJWTRequestsJWKSForEveryValidShapeBeforeSignatureRejection）為 branch 基線 c868bfd 合併後既有狀態，kernel/di、persistence/uow、security/authn 本工作樹未變，非 M7 引入，需另行確認。環境殘留：pangolin-signalr-1a215bc-* 容器（port 25342/24222）為先前 session 存留未動；compose project pangolin-realtime-example（PG 26000/NATS 26001）保留運行由主代理統一處置；NATS 伺服器餘先前 session 的 RT_* 串流。M7 Gate、Linux 全量 race、§13.3 分平台 coverage 未收集；未更新任何既有 Verified。完整報告見 final-report.md。"
+}

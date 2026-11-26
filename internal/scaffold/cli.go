@@ -39,10 +39,11 @@ func (e commandError) Unwrap() error { return e.cause }
 var assets embed.FS
 
 type Project struct {
-	Name    string              `json:"name"`
-	Version string              `json:"version"`
-	Profile string              `json:"profile"`
-	Modules map[string][]string `json:"modules"`
+	Name     string              `json:"name"`
+	Version  string              `json:"version"`
+	Profile  string              `json:"profile"`
+	Realtime bool                `json:"realtime,omitempty"`
+	Modules  map[string][]string `json:"modules"`
 }
 type CLI struct {
 	Dir      string
@@ -85,7 +86,7 @@ func (c CLI) run(ctx context.Context, args []string) error {
 		return err
 	}
 	if len(args) == 0 || args[0] == "--help" || args[0] == "help" {
-		fmt.Fprintln(c.Out, "pangolin 0.1.0\nnew NAME --template modular-monolith [--with organization]\nmodule add NAME [--depends persistence,authorization]\nmigrate create NAME --module MODULE\nmigrate status\ndoctor\ngenerate openapi\nEach command accepts --help.")
+		fmt.Fprintln(c.Out, "pangolin 0.1.0\nnew NAME --template modular-monolith [--with organization] [--realtime]\nmodule add NAME [--depends persistence,authorization]\nmigrate create NAME --module MODULE\nmigrate status\ndoctor\ngenerate openapi\nEach command accepts --help.")
 		return nil
 	}
 	if args[0] == "--version" && len(args) == 1 {
@@ -224,14 +225,16 @@ func (c CLI) newProject(args []string) error {
 	name, rest, err := splitProjectName(args)
 	if err != nil {
 		if errors.Is(err, flag.ErrHelp) {
-			fmt.Fprintln(c.Out, "new NAME --template modular-monolith [--with organization]")
+			fmt.Fprintln(c.Out, "new NAME --template modular-monolith [--with organization] [--realtime]")
 		}
 		return err
 	}
 	var template, with string
+	var realtime bool
 	f, err := c.flags("new", rest, func(f *flag.FlagSet) {
 		f.StringVar(&template, "template", "modular-monolith", "project template")
 		f.StringVar(&with, "with", "", "optional organization module")
+		f.BoolVar(&realtime, "realtime", false, "include the optional SignalR endpoint")
 	})
 	if err != nil {
 		return err
@@ -252,6 +255,10 @@ func (c CLI) newProject(args []string) error {
 	if with == "organization" {
 		profile = "organization-enabled"
 	}
+	realtimeGroup := "no-realtime"
+	if realtime {
+		realtimeGroup = "realtime"
+	}
 	err = fs.WalkDir(assets, "assets", func(path string, d fs.DirEntry, walkErr error) error {
 		if walkErr != nil {
 			return walkErr
@@ -268,11 +275,14 @@ func (c CLI) newProject(args []string) error {
 			return nil
 		}
 		group, destination := parts[0], strings.TrimSuffix(parts[1], ".tmpl")
-		if group != "common" && group != "runtime" && group != profile {
+		if group != "common" && group != "runtime" && group != profile && group != realtimeGroup {
 			return nil
 		}
 		if group == "runtime" {
 			if with == "" && strings.HasPrefix(destination, "modules/organization/") {
+				return nil
+			}
+			if !realtime && strings.HasPrefix(destination, "modules/realtime/") {
 				return nil
 			}
 			destination = "framework/" + destination
@@ -313,9 +323,12 @@ func (c CLI) newProject(args []string) error {
 	if err = writeFile(filepath.Join(stage, "runtime-manifest.json"), jsonBytes(manifest)); err != nil {
 		return err
 	}
-	p := Project{Name: name, Version: Version, Profile: profile, Modules: map[string][]string{"persistence": {}, "authorization": {}, "bookstore": {"persistence", "authorization"}}}
+	p := Project{Name: name, Version: Version, Profile: profile, Realtime: realtime, Modules: map[string][]string{"persistence": {}, "authorization": {}, "bookstore": {"persistence", "authorization"}}}
 	if with != "" {
 		p.Modules["organization"] = []string{"persistence", "authorization"}
+	}
+	if realtime {
+		p.Modules["realtime"] = []string{"authorization"}
 	}
 	if err = writeFile(filepath.Join(stage, "pangolin.json"), jsonBytes(p)); err != nil {
 		return err
@@ -343,7 +356,7 @@ func registryBytes(p Project) ([]byte, error) {
 	sort.Strings(names)
 	var imports, refs strings.Builder
 	for _, name := range names {
-		if name == "persistence" || name == "authorization" || name == "bookstore" || name == "organization" {
+		if name == "persistence" || name == "authorization" || name == "bookstore" || name == "organization" || (name == "realtime" && p.Realtime) {
 			continue
 		}
 		fmt.Fprintf(&imports, "m_%s %q\n", name, "example.com/"+p.Name+"/modules/"+name)
@@ -426,6 +439,11 @@ func (c CLI) addModule(args []string) error {
 	var refs strings.Builder
 	framework := false
 	for _, d := range dependencies {
+		if d == "realtime" && p.Realtime {
+			importList = append(importList, `"github.com/cymondez/pangolin-framework/modules/realtime"`)
+			refs.WriteString("module.Of[realtime.Module](),")
+			continue
+		}
 		switch d {
 		case "persistence", "authorization", "organization":
 			// Framework capability names translate into the foundation Type

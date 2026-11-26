@@ -1,0 +1,104 @@
+{
+  "milestone": "M7",
+  "baseline": "v1.3",
+  "unit_tests": {
+    "A96/official-negotiate": "github.com/cymondez/pangolin-framework/modules/realtime/signalr:TestA96RT001/official-negotiate",
+    "A96/token-binding": "github.com/cymondez/pangolin-framework/modules/realtime/signalr:TestA96RT001/token-binding",
+    "A96/concurrent-consume": "github.com/cymondez/pangolin-framework/modules/realtime:TestA96RT001/concurrent-consume",
+    "A96/unsupported-version": "github.com/cymondez/pangolin-framework/modules/realtime/signalr:TestA96RT001/unsupported-version",
+    "A96/unsupported-transport": "github.com/cymondez/pangolin-framework/modules/realtime/signalr:TestA96RT001/unsupported-transport",
+    "A96/origin-rejected": "github.com/cymondez/pangolin-framework/modules/realtime/signalr:TestA96RT001/origin-rejected",
+    "A97/invalid-method": "github.com/cymondez/pangolin-framework/modules/realtime/signalr:TestA97RT002/invalid-method",
+    "A97/invalid-frame": "github.com/cymondez/pangolin-framework/modules/realtime/signalr:TestA97RT002/invalid-frame",
+    "A97/oversize": "github.com/cymondez/pangolin-framework/modules/realtime/signalr:TestA97RT002/oversize",
+    "A97/cancel": "github.com/cymondez/pangolin-framework/modules/realtime/signalr:TestA97RT002/cancel",
+    "A98/tenant-collision": "github.com/cymondez/pangolin-framework/modules/realtime:TestA98RT003/tenant-collision",
+    "A98/scope-collision": "github.com/cymondez/pangolin-framework/modules/realtime:TestA98RT003/scope-collision",
+    "A98/user-devices": "github.com/cymondez/pangolin-framework/modules/realtime:TestA98RT003/user-devices",
+    "A98/unsubscribe": "github.com/cymondez/pangolin-framework/modules/realtime:TestA98RT003/unsubscribe",
+    "A98/forged-owner": "github.com/cymondez/pangolin-framework/modules/realtime:TestA98RT003/forged-owner",
+    "A98/cross-tenant-host-negative": "github.com/cymondez/pangolin-framework/modules/realtime:TestA98RT003/cross-tenant-host-negative",
+    "A99/invalid-credential": "github.com/cymondez/pangolin-framework/modules/realtime:TestA99RT004/invalid-credential",
+    "A99/membership-revocation": "github.com/cymondez/pangolin-framework/modules/realtime:TestA99RT004/membership-revocation",
+    "A99/permission-deny": "github.com/cymondez/pangolin-framework/modules/realtime:TestA99RT004/permission-deny",
+    "A99/disabled-account": "github.com/cymondez/pangolin-framework/modules/realtime:TestA99RT004/disabled-account",
+    "A99/authority-down": "github.com/cymondez/pangolin-framework/modules/realtime:TestA99RT004/authority-down",
+    "A99/before-write": "github.com/cymondez/pangolin-framework/modules/realtime:TestA99RT004/before-write",
+    "A100/exact-method-owner": "github.com/cymondez/pangolin-framework/modules/realtime:TestA100RT005/exact-method-owner",
+    "A100/no-long-uow": "github.com/cymondez/pangolin-framework/modules/realtime:TestA100RT005/no-long-uow",
+    "A100/operation-scope-close": "github.com/cymondez/pangolin-framework/modules/realtime:TestA100RT005/operation-scope-close",
+    "A101/stable-envelope": "github.com/cymondez/pangolin-framework/modules/realtime:TestA101RT006/stable-envelope",
+    "A101/wrong-producer": "github.com/cymondez/pangolin-framework/modules/realtime:TestA101RT006/wrong-producer",
+    "A101/wrong-owner": "github.com/cymondez/pangolin-framework/modules/realtime:TestA101RT006/wrong-owner",
+    "A102/wrong-scope-negative": "github.com/cymondez/pangolin-framework/modules/realtime:TestA102RT007/wrong-scope-negative",
+    "A103/admission-capacity": "github.com/cymondez/pangolin-framework/modules/realtime:TestA103RT008/admission-capacity",
+    "A103/slow-client": "github.com/cymondez/pangolin-framework/modules/realtime:TestA103RT008/slow-client",
+    "A103/queue-full": "github.com/cymondez/pangolin-framework/modules/realtime:TestA103RT008/queue-full",
+    "A103/write-timeout": "github.com/cymondez/pangolin-framework/modules/realtime:TestA103RT008/write-timeout",
+    "A103/active-drain": "github.com/cymondez/pangolin-framework/modules/realtime:TestA103RT008/active-drain",
+    "A103/close-once": "github.com/cymondez/pangolin-framework/modules/realtime:TestA103RT008/close-once"
+  },
+  "integration_tests": {},
+  "python_tests": {},
+  "regression_tests": [],
+  "regression_integration_tests": [],
+  "template_tests": {
+    "A97/official-invoke": "examples-realtime-official-client",
+    "A97/official-error": "examples-realtime-official-client",
+    "A97/official-push": "examples-realtime-official-client",
+    "A97/heartbeat": "examples-realtime-official-client",
+    "A97/reconnect": "examples-realtime-official-client",
+    "A98/enterprise-child-negative": "examples-realtime-official-client",
+    "A98/multi-membership": "examples-realtime-official-client",
+    "A99/reconnect-denied": "examples-realtime-official-client",
+    "A100/no-commit-no-success": "examples-realtime-official-client",
+    "A101/outbox-committed": "examples-realtime-official-client",
+    "A101/outbox-rollback": "examples-realtime-official-client",
+    "A102/two-live-processes": "examples-realtime-official-client",
+    "A104/root-constructor": "examples-realtime-official-client",
+    "A104/tenant-only-graph": "examples-realtime-official-client",
+    "A104/organization-enabled": "examples-realtime-official-client",
+    "A104/replacement-contract": "examples-realtime-official-client",
+    "A104/generated-profiles": "examples-realtime-official-client"
+  },
+  "pending": [
+    {
+      "id": "A99/disabled-scope",
+      "reason": "需要在 session 存續期間由 scope registry 移除 kind 的真實撤權語意（ErrKindUnsupported 路徑）；單元無法在 Hub 建構後卸除 provider，屬 M7 正式 Gate 的整合撤權範圍。"
+    },
+    {
+      "id": "A100/commit-unknown",
+      "reason": "UOC-UNKNOWN 需要真實交易提交結果不可判讀的 PG 故障注入；單元測試的 fake UOW 不能作為提交語意的完成證據，映射到整合故障注入後補登。"
+    },
+    {
+      "id": "A101/unknown-reconcile",
+      "reason": "依賴 A100/commit-unknown 的 UOW_COMMIT_UNKNOWN 對帳流程，需真實 PG 與獨立連線對帳；無單元可用且 integration.test.mjs 未涵蓋。"
+    },
+    {
+      "id": "A102/broker-redelivery",
+      "reason": "JetStream 去重與重送語意（jetstream.Receiver）需要真實 NATS 消費者；Mock 不作為 Broker 語意證據（§13）。"
+    },
+    {
+      "id": "A102/node-restart",
+      "reason": "節點重啟後續訂閱恢復需要兩個 server process 的 docker 生命週期操作；整合環境尚未提供 restart 流程腳本。"
+    },
+    {
+      "id": "A102/no-client-ack",
+      "reason": "無法消費的 client 不應重複入隊：需真實 Broker ack/retry 與 socket 寫入失敗注入；單元無法重建 Broker 重送語意。"
+    },
+    {
+      "id": "A103/redaction",
+      "reason": "遮罩責任在 observability 共用機制（M4 已驗收）；realtime 指標鍵不含租戶/組織 label 與 payload 值，正式 Gate 由 observability 套件既有案例與 §9.6 審查確認。"
+    },
+    {
+      "id": "A104/legacy-off",
+      "reason": "「停用 realtime 後舊入口仍可用」需要 Root 停用組裝對照環境（有/無 realtime Module 的兩份 Profile），目前 generate 的 Profile 未含無 realtime 變體；M7 正式 Gate 以 Root DI 回歸補齊。"
+    },
+    {
+      "id": "A104/cumulative-gates",
+      "reason": "累積 Gate（M1–M6 回歸、coverage、race、靜態分析）屬發布驗收執行，不在本包範圍。"
+    }
+  ],
+  "thin_slices": [],
+  "module_docs": []
+}

@@ -38,9 +38,9 @@ lang: zh-TW
 
 | 文件／區塊 | 唯一責任 | 使用方式 |
 |---|---|---|
-| 本文件 §5.7、§16 | 95 項穩定需求的唯一正式定義 | 同一 ID 不在其他文件重新定義 |
+| 本文件 §5.7、§16、§17 | v0.1.0 的 95 項穩定需求及 M7 新增需求的唯一正式定義 | 同一 ID 不在其他文件重新定義 |
 | 本文件 §1–§12、§14–§15 | 需求引用的介面、參數、失敗、資料與相容性細則 | 被需求引用者構成該需求的完整契約 |
-| 本文件 §13 | A01–A95、測法、證據與品質門檻 | 證明契約，不以測試新增或放寬產品保證 |
+| 本文件 §13 | A01–A104、測法、證據與品質門檻 | 證明契約，不以測試新增或放寬產品保證 |
 | [里程碑規劃書](panGOlin-framework_里程碑規劃書.md) | 交付順序、責任、Tasks／Exit／Gate、唯一交付映射 | 只引用需求與案例 ID，不重述規範句 |
 | [架構總覽](panGOlin-framework_完整架構與實作規劃書.md) | 設計目的、關係圖、取捨及導覽 | 說明性內容，不構成第二份規格 |
 
@@ -1524,6 +1524,26 @@ A01–A16 保留原 ID，其中 A05 限定「確定回滾」；結果未知另�
 | A94 | ORG-013 | 乾淨目錄與兩種 profile | 生成並建置／測試／啟動兩種 Bookstore | 預設純 Tenant 可運行；啟用時完整模組／migration／契約套件存在；不生成半套 Enterprise／Org |
 | A95 | ORG-014 | 兩 profile 與替換 fixture 的 pipeline | 讓組織授權測試或其 coverage 失敗，另測純 Tenant build | 任一適用案例失敗／skip 或關鍵 package 不足 90% 即阻擋發布；純 Tenant 不依賴 optional 模組 |
 
+<a id="s-13-realtime"></a>
+
+### M7 即時通訊符合性矩陣
+
+| 需求 | 案例 | 具名情境 | 可觀測結果 |
+|---|---|---|---|
+| RT-001 | A96 | official-negotiate, token-binding, concurrent-consume, unsupported-version, unsupported-transport, origin-rejected | 官方 client 經協商建立 WebSocket；錯誤身分、逾期、重用及未授權 Origin 均拒絕 |
+| RT-002 | A97 | official-invoke, official-error, official-push, heartbeat, invalid-method, invalid-frame, oversize, cancel, reconnect | 官方 client 取得 Completion 並接收推播；畸形訊息、不支援的 Hub 能力均拒絕 |
+| RT-003 | A98 | tenant-collision, scope-collision, enterprise-child-negative, multi-membership, user-devices, unsubscribe, forged-owner, cross-tenant-host-negative | 重複 ID 不混用；多裝置與各 Scope 只收到各自授權的訊息 |
+| RT-004 | A99 | invalid-credential, membership-revocation, permission-deny, disabled-account, disabled-scope, authority-down, before-write, reconnect-denied | 用 barrier 在排入佇列後和最終授權前撤權，接收端無該訊息；重連不能恢復失效訂閱 |
+| RT-005 | A100 | exact-method-owner, no-long-uow, operation-scope-close, no-commit-no-success, commit-unknown | 每個操作獨立釋放 Scope 與 UOW；提交錯誤保留原結果 |
+| RT-006 | A101 | outbox-committed, outbox-rollback, unknown-reconcile, stable-envelope, wrong-producer, wrong-owner | 獨立 DB 連線對帳；業務與 Outbox 同進退，來源或 owner 驗證失敗不得配送 |
+| RT-007 | A102 | two-live-processes, wrong-scope-negative, broker-redelivery, node-restart, no-client-ack | 兩個獨立 server process 的官方 clients 均收到對應訊息，控制組無訊息；重送保留 ID |
+| RT-008 | A103 | admission-capacity, slow-client, queue-full, write-timeout, active-drain, close-once, redaction | 阻塞一條連線時其他連線仍有進度；Drain 有界，資源僅釋放一次，觀測資料合乎遮罩 |
+| RT-009 | A104 | root-constructor, tenant-only-graph, organization-enabled, replacement-contract, generated-profiles, legacy-off, cumulative-gates | 根模組與生成 Profile 可啟動，替換 Provider 保持公開契約，停用時舊入口仍可用 |
+
+一般協定、交易、容量與 lifecycle 情境適用三組 Profile。企業、組織及跨組織會員情境適用 organization-enabled 與 replacement contract。tenant-only 必須驗證缺 Kind 拒絕及依賴圖，企業／組織資料路徑須附 N/A 理由。
+
+協定正向案例使用鎖定版本的官方 `@microsoft/signalr` 在獨立程序測試。低階 fixture 可補充官方 client 不會生成的負向輸入。DB 與 Broker 語意採固定版本真實服務。依 §13.3 收集 Windows 及 Linux 分程序 coverage、原始 statement 計數、Linux race、靜態分析、授權與依賴檢查。即時通訊核心、SignalR Adapter 與 Broker Adapter 的每個手寫 Go production package 均納入關鍵 package 門檻。M7 累積 Gate 包含既有適用案例、D1–D5 與 Root／DI 回歸。任一適用案例失敗或 skip 均阻擋 Gate。歷史 M0–M6 發布驗收仍對應其既有 ID 與證據來源。
+
 <a id="s-13.3"></a>
 
 ### 13.3 90% 品質門檻與量測方法
@@ -1614,7 +1634,8 @@ Commit Unknown 時從新連線依同 key 查詢：查到已提交終態可返回
 | 版本 | 範圍 |
 |---|---|
 | **v0.1.0** | Kernel／DI／Config；完整 §5 UOW（含 RequiresNew）；PostgreSQL＋pgx/sqlc＋單一 Migration Tool；HTTP／Bookstore；OIDC/JWT／Permission／Tenant／中立 Scope／RLS／Audit；可選單一 organization 模組（Enterprise／Organization／Membership／治理及預設 Adapter）；Local Event／Outbox／Inbox／一個可靠 Broker Adapter；單次／重試 Jobs；Memory Cache／Settings／Features 基線；Logs／Metrics／Tracing；§12.1 全部 CLI 命令、兩種 Profile Template、OpenAPI、Quickstart；框架發布包的全部適用規範需求及 90% gates |
-| **v0.2+，無本次時程承諾** | Redis Adapter、Blob Storage（Local／S3）、進階 Cron、新的 DB／Broker／Transport Adapter、更多平台與 CLI 擴充；不是將 v0.1.0 未完成項目自動順延 |
+| **v0.2.0 目標增量** | [§17](#s-17) 可選 SignalR 即時通訊、官方 JavaScript client 互通、多節點可靠事件配送與 Profile 生成。由 M7 交付及驗收 |
+| **v0.2+，無本次時程承諾** | Redis Adapter、Blob Storage（Local／S3）、進階 Cron、其他 DB／Broker／Transport Adapter、更多平台與 CLI 擴充；不是將 v0.1.0 未完成項目自動順延 |
 | **v1.0** | 公開核心 API、遷移、長期相容性與安全支援政策完成穩定性審查 |
 
 v0.1.0 可調整尚未穩定的 API，但每次變更附 Release Notes／Migration Plan；已發布 Event Schema 不可無通知破壞。Runtime／Module 使用 SemVer，CLI Template 綁定對應 Runtime；Release Notes 列新增、變更、移除、Breaking Changes、最低 Go／PostgreSQL 版本、風險與升級步驟。
@@ -1750,6 +1771,60 @@ v0.1.0 可調整尚未穩定的 API，但每次變更附 Release Notes／Migrati
 - ORG-013 — CLI 服務 MUST 提供 §12.1 的 tenant-only 與 organization-enabled 組裝範本，並讓啟用選項同時安裝 Enterprise／Organization 單一模組。
 
 - ORG-014 — CI 服務 MUST 執行 §13.4 的兩種 Profile 及替換契約矩陣，並對 Organization 模組與 Scope 核心的每個 production package 套用 90% 門檻。
+
+<a id="s-17"></a>
+
+## 17. 可選 SignalR 即時通訊
+
+本章是 §15 所列 M7 增量的產品契約。即時通訊使用 §7 定義的完整 `ScopeRef`。頻道是應用明確註冊並配置發布及接收政策的訊息目的地。節點是持有自己連線集合的 server process。所有長連線、負載與重試限制由部署配置，以明示且經啟動驗證的有限值表示。
+
+### 17.1 協商與 Hub 協定
+
+- RT-001 — SignalR Adapter MUST 以 ASP.NET Core Transport Protocol 協商 v1 提供 WebSocket Text，且在升級前重新驗證連線身分與協商權杖。
+- RT-002 — SignalR Adapter MUST 以 SignalR Hub Protocol JSON v1 提供 Hub 握手、明確註冊的 RPC、Completion、server push、心跳與斷線處理。
+
+`POST <hub>/negotiate?negotiateVersion=1` 成功時回傳公開 `connectionId`、不同的不可預測 `connectionToken`、`negotiateVersion: 1` 與唯一的 `WebSockets/Text`。升級使用 `GET <hub>?id=<connectionToken>`。權杖只能使用一次，有有限存續期，僅可在協商節點由同一已驗證 Principal／Tenant 原子消耗。部署需讓協商和升級落到同一節點。HTTP 方法或版本不支援時明確拒絕，並對未知、逾期、重用或身分不符的協商權杖使用同一拒絕回應。
+
+瀏覽器同源連線需通過 Origin 檢查，跨來源由部署顯式列出允許 Origin，協商與升級一致套用。瀏覽器 `access_token` 僅可作為 TLS WebSocket 升級的替代憑證來源，與同時出現的其他憑證來源衝突時拒絕。本機開發 fixture 可用 loopback 明文。部署的反向代理與 HTTP 入口不得把連線權杖或憑證查詢參數寫入 access log。
+
+握手、訊息及回覆遵守 JSON record separator（0x1E）與封包邊界。握手檢查 protocol 與 version，失敗送握手錯誤後關閉。支援 client Invocation、帶 invocation ID 的結果或錯誤 Completion、server 單向 Invocation、Ping 與 Close。取消正在執行且匹配 ID 的操作，連線中止或操作逾時時取消相應 context。未知方法與驗證錯誤用安全的錯誤分類回覆；畸形、過大或不支援的協定輸入不得進入 handler。重新連線需要新資格、新協商及新訂閱。首版能力不含 v0、跳過協商、重導、SSE、Long Polling、Binary、MessagePack、streaming Invocation、stateful reconnect、離線收件匣、持久 client replay 或 client ACK。
+
+### 17.2 精確配送與授權生效點
+
+- RT-003 — 即時通訊模組 MUST 只依受信任且精確匹配的 Tenant、Scope、頻道與目標 Principal 路由訊息。
+- RT-004 — 即時通訊模組 MUST 在連線、重新連線、訂閱、方法及最終 delivery admission 向目前權威重新判斷資格，授權來源不可用時拒絕。
+
+一條連線的 Principal／Tenant 自協商至終止保持固定。傳入的 Tenant、Scope 與頻道僅是候選值。訂閱鍵包含完整 ScopeRef 與已註冊頻道，使用者配送另含 Principal kind／ID；不同 Scope 的訂閱分別授權。同一使用者可由多個連線各自建立訂閱。Tenant、Enterprise、Organization 不互相繼承內容權限。Tenant 廣播只能選擇已授權且由 tenant scope 擁有的內容。多 Scope 配送逐一明示及驗證。一般 Publish Port 拒絕跨 Tenant；Host 例外須另經 §7 的明確受稽核路徑。
+
+發送權限、訂閱權限及接收權限各自檢查，依頻道及操作使用 §7.10 的 Permission 與適用 Resource Policy。公開 API 自行構造 ScopeRef 或群組名稱不得轉化為授權。重新建立受控 binding 不得重用歷史 allow。檢查包含憑證有效性與撤銷來源、帳號／租戶資格及 Scope 目前 revision 和狀態。部署必須提供可判斷憑證已撤銷的權威來源。僅通過 JWT 簽章、效期或本機快取檢查不足以認定目前未撤銷。斷線清除全部訂閱。身分或 Tenant 確認失效時關閉連線，確認訂閱資格失效時移除該訂閱。已認證使用者可移除自己連線的訂閱。權威暫時故障時拒絕當次操作。
+
+推播在排隊後、實際寫入連線之前重新授權，排隊本身不構成 admission。縱使較早排隊成功，最終 admission 仍須排除已退出或已撤權的訂閱。已 admission 的單次操作或寫入在其期限內可完成，已進入傳輸緩衝或已抵達的訊息無法撤回。
+
+### 17.3 短操作與 Outbox
+
+- RT-005 — Hub handler MUST 在有界 operation context 內依 §3.2 與 §5 呼叫公開 Application 或 Query Port。
+- RT-006 — 需要交易一致性的發布 MUST 以具完整 owner 及穩定 ID 的版本化事件寫入目前已授權的可寫根 UOW 的 Outbox。
+
+連線只持有身分與配送所需資料，不能持有 Operation Scope、交易或 Executor。每個方法由伺服器註冊可信的 Scope 選擇流程與政策，從 operation context 重新授權並在結束時釋放資源。Transport 不執行業務 SQL。寫入操作取得確定 Commit 成功後才能送成功 Completion。原始提交結果不因序列化、取消或傳輸失敗被改寫。
+
+發布檢查目前可信 Scope 與目標相符、方向與頻道匹配且發布政策通過。Outbox envelope 保留事件 ID、版本、已授權的完整 ScopeRef、頻道、目標類型及必要識別。交易內禁止直接推播；Rollback 不得留下可配送的成功事件。Commit Unknown 返回 Unknown，之後的 Outbox 派送只依獨立讀取確定可見的持久化資料，不能改寫原操作結果。接收 Adapter 驗證信任來源、固定路由、版本與 owner 一致性後才交給本地配送。
+
+### 17.4 多節點、容量及停機
+
+- RT-007 — Broker Adapter MUST 讓每個相關的存活節點取得事件並獨立完成本地授權配送。
+- RT-008 — 即時通訊模組 MUST 以有界資源政策接受工作與寫入，依 Runtime Quiesce／Drain 完成停機。
+
+既有 NATS JetStream 承載已持久化事件，使用隔離的部署路由及獨立節點消費身分。節點不能以共用競爭消費群組取代 fan-out。新節點開始 live 窗口；短暫 Broker 中斷在有限重試及保留期限內恢復。每次重送沿用原 ID。節點在完成有界本地交接與處置後 ACK，保留期限及去重容量均有界，ACK 遺失或節點故障可能導致重送。持久化、Broker 接受、節點處理與連線寫入分別計量；沒有代表 client 收件的伺服器 ACK。
+
+啟動驗證協商表、連線數、訊息與佇列 bytes、每連線訂閱與待處理工作、每節點處理並行度、操作與握手期限、心跳及寫入期限皆有正有限上限。超限拒絕新工作，配送佇列滿載或寫入逾時結束該慢連線，其他連線仍可接入工作。Quiesce 停止新連線、invocation、subscription 與 Broker 認領。已 admission 工作在 Drain 期限內可完成，逾期取消並有界清理。各資源由單一擁有者關閉。內部錯誤保留可判斷 cause，協定回覆不揭露敏感內情。Logs／Trace 不記錄 Token 或敏感 payload，Metrics 採有界標籤且不含 Tenant／Scope／Principal ID。
+
+### 17.5 組裝、範例及相容性
+
+- RT-009 — 框架發行包 MUST 提供使用 Root 與 constructor DI 的選用即時通訊模組，通過 [M7 符合性矩陣](#s-13-realtime)。
+
+中立核心只使用既有 Principal、Tenant、Scope、Policy 與相關公開 Port。組織 Provider 及替代 Provider 經中立契約裝配。一般應用宣告直接根模組依賴、明確註冊 handler／constructor 並注入公開服務。未啟用時保留原 Root 與低階入口；兩種 CLI Profile 可選用相符的模組與範例。發行包提供可運行 server、官方 client 工作範例、組織與撤權演示、設定／遷移文件和同來源驗收證據。
+
+**設計理由（說明性）。** 候選 [philippseith/signalr](https://github.com/philippseith/signalr) 採 MIT 授權，可查核的 [v0.8.0 標籤](https://github.com/philippseith/signalr/releases/tag/v0.8.0) 日期為 2025-08-14。候選提供 WebSocket、SSE、TCP、JSON、MessagePack 及以 Hub 方法為基礎的派送。[候選握手程式](https://github.com/philippseith/signalr/blob/master/server.go) 的協定表包含 MessagePack，派送能力超出本章宣告的範圍。選用 [coder/websocket](https://github.com/coder/websocket) 作為 RFC 6455 升級與 framing 基礎，Hub 格式及派送由獨立 Adapter 控制。相容性以官方 [Hub Protocol](https://github.com/dotnet/aspnetcore/blob/main/src/SignalR/docs/specs/HubProtocol.md) 與 [Transport Protocol](https://github.com/dotnet/aspnetcore/blob/main/src/SignalR/docs/specs/TransportProtocols.md) 為依據，並由 A96／A97 實測。
 
 ## 附錄 A｜關鍵時序快查（說明性）
 

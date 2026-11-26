@@ -1,0 +1,16 @@
+package app
+
+import (
+	"context"
+	"net/http"
+
+	"github.com/cymondez/pangolin-framework/kernel/module"
+)
+
+type realtimeState struct{}
+
+func (realtimeState) refs() []module.Ref { return nil }
+func (realtimeState) roots() []any       { return nil }
+func (realtimeState) mount(context.Context, module.Runtime, *http.ServeMux, *drainParticipant) error {
+	return nil
+}
