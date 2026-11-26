@@ -280,7 +280,8 @@ def build_release_m7(report, output, root=ROOT):
     official = m7_index.read_release_e2e(output, root)
     client_dependencies = validate_client_dependencies(output, root)
     prepared = (report.get("prepare") or {}).get("realtime") or {}
-    if not isinstance(prepared, dict) or not prepared.get("provisioned") or prepared.get("binary") not in report.get("artifacts", {}):
+    if not isinstance(prepared, dict) or not prepared.get("provisioned") \
+            or not isinstance(prepared.get("database"), str):
         raise ValueError("M7 release evidence requires recorded realtime fixture preparation")
     drills = m0.load(output / "release-drills" / "release-drills.json")
     release_drills = report.get("release_drills", {})
