@@ -14,11 +14,20 @@ import m0
 
 def http(url, token=None, body=None, headers=None):
     request = urllib.request.Request(url, data=None if body is None else json.dumps(body).encode(), headers={"Content-Type":"application/json", **({"Authorization":"Bearer " + token} if token else {}), **(headers or {})})
-    try:
-        with urllib.request.urlopen(request, timeout=3) as response:
-            return response.status, response.read()
-    except urllib.error.HTTPError as error:
-        return error.code, error.read()
+    reset = None
+    for attempt in range(3):
+        try:
+            with urllib.request.urlopen(request, timeout=3) as response:
+                return response.status, response.read()
+        except urllib.error.HTTPError as error:
+            return error.code, error.read()
+        except (ConnectionResetError, urllib.error.URLError) as error:
+            # A loopback write during coverage counter rotation can reset the
+            # TCP stream before any status line; the same request is re-issued
+            # and the final verdict still must be a real response.
+            reset = error
+            time.sleep(.2)
+    raise reset
 
 
 def run(output, project, packages, execute):
