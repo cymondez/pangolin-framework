@@ -63,7 +63,13 @@ def main(milestone=3):
             "PANGOLIN_M1_ADMIN_DSN":"postgres://pangolin_bootstrap:local-bootstrap-only@postgres:5432/pangolin_m0?sslmode=disable",
             "PANGOLIN_M1_APP_DSN":"postgres://pangolin_app:local-app-only@postgres:5432/pangolin_m0?sslmode=disable",
             "PANGOLIN_M1_WORKER_DSN":"postgres://pangolin_worker:local-worker-only@postgres:5432/pangolin_m0?sslmode=disable",
-            "PANGOLIN_M1_NATS_URL":"nats://nats:4222","PANGOLIN_M1_ISSUER":os.getenv("PANGOLIN_M1_ISSUER","http://127.0.0.1:18180"),
+            "PANGOLIN_M1_NATS_URL":"nats://nats:4222",
+            # The IdP container signs tokens with its configured issuer URL
+            # verbatim (compose default http://127.0.0.1:<idp port>), while
+            # the runner fetches JWKS and fixture tokens over the compose
+            # service name; authn compares the signed `iss` string with the
+            # validator's issuer, so both must carry the same value here.
+            "PANGOLIN_M1_ISSUER":os.getenv("PANGOLIN_M1_ISSUER","http://127.0.0.1:18180"),
             "PANGOLIN_M1_TOKEN_URL":"http://test-idp:8080/token","PANGOLIN_JWKS_URL":"http://test-idp:8080/jwks.json",
             "PANGOLIN_M3_BROKER_RESTART_DIR":"/source/artifacts/m"+str(milestone)+"-linux-broker-barrier",
             "CGO_ENABLED":"1","GOTOOLCHAIN":"local",
