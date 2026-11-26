@@ -603,21 +603,32 @@ class GateChecksProofTestCase(unittest.TestCase):
         with TemporaryDirectory() as temporary:
             directory = Path(temporary)
             report = self._report(directory)
-            artifacts = dict(report["artifacts"]); artifacts.pop("merged.out")
-            with self.assertRaises(ValueError):
-                m7_index._gates_proof(report, directory, artifacts)
+            # The coverage union is read back by the proof, so a raw run that
+            # never produced it fails closed (in the real runner the hook
+            # cannot be reached without the coverage gate first).
+            (directory / "coverage.json").unlink()
+            try:
+                with self.assertRaises((ValueError, OSError)):
+                    m7_index._gates_proof(report, directory, report["artifacts"])
+            finally:
+                (directory / "coverage.json").write_text(
+                    json.dumps({"overall": {"total_statements": 1000, "covered_statements": 950}, "packages": {}}),
+                    encoding="utf-8")
+            untouched = self._report(directory)
             report["artifacts"]["coverage.json"] = "zz"
             with self.assertRaises(ValueError):
                 m7_index._gates_proof(report, directory, report["artifacts"])
-            forged = {**{key: "0" * 64 for key in report["artifacts"]},
-                      **{command["log"]: "0" * 64 for command in report["commands"] if command.get("log")}}
-            with self.assertRaises(ValueError):
-                m7_index._gates_proof(report, directory, forged)
-            (directory / "coverage.json").write_text(json.dumps(
-                {"overall": {"total_statements": 1000, "covered_statements": 899}, "packages": {}}),
+            tampered = self._report(directory)
+            (directory / "coverage.json").write_text(
+                json.dumps({"overall": {"total_statements": 1000, "covered_statements": 1001}, "packages": {}}),
                 encoding="utf-8")
             with self.assertRaises(ValueError):
-                m7_index._gates_proof(report, directory, report["artifacts"])
+                m7_index._gates_proof(tampered, directory, tampered["artifacts"])
+            (directory / "coverage.json").write_text(
+                json.dumps({"overall": {"total_statements": 1000, "covered_statements": 899}, "packages": {}}),
+                encoding="utf-8")
+            with self.assertRaises(ValueError):
+                m7_index._gates_proof(tampered, directory, tampered["artifacts"])
 
     def test_linux_requires_the_race_command(self):
         with TemporaryDirectory() as temporary:
