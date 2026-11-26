@@ -474,7 +474,8 @@ class GateInventoryTestCase(unittest.TestCase):
     def test_full_inventory_tracks_every_present_hand_written_package(self):
         full = m0.go_packages(tags=True)
         names = [name for name in m0.command(["git", "-c", "core.quotepath=false", "ls-files", "--cached", "--others", "--exclude-standard", "--", "*.go"]).splitlines() if name.strip()]
-        names = [name for name in names if (ROOT / name).is_file()]
+        names = [name for name in names if (ROOT / name).is_file()
+                 and ".." not in Path(name).parts and not name.startswith(("..", "/", "\\"))]
         # Nested modules (go.mod inside the tree) are separate module units and
         # are excluded for either list, exactly like historical ./....
         def nested(name):
@@ -502,6 +503,20 @@ class GateInventoryTestCase(unittest.TestCase):
         self.assertIn("./tests/rootmodules", default)
         self.assertNotIn("./tests/rootmodules", m0.go_build_packages())
         self.assertLessEqual(set(m0.go_build_packages()), set(default))
+
+    def test_ignored_gate_tempdir_module_keeps_legacy_go_list_semantics(self):
+        # The gate runs go test under m0.go_environment with GOTMPDIR inside
+        # the repository; go test then redirects t.TempDir beneath the ignored
+        # .cache tree. Such a fixture root resolves git ancestors but owns no
+        # git scope, so it must use the historical `go list ./...` inventory.
+        import tempfile
+        (ROOT / ".cache" / "go-tmp").mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=ROOT / ".cache" / "go-tmp") as temporary:
+            Path(temporary, "kernel", "check").mkdir(parents=True, exist_ok=True)
+            Path(temporary, "go.mod").write_text("module github.com/cymondez/pangolin-framework\n\ngo 1.27.0\n", encoding="utf-8")
+            Path(temporary, "kernel", "check", "f.go").write_text("package check\nfunc F() int { return 1 }\n", encoding="utf-8")
+            self.assertEqual(m0._go_git_scope(temporary), False)
+            self.assertEqual(m0.go_packages(root=temporary), ["./kernel/check"])
 
 
 class GateChecksProofTestCase(unittest.TestCase):

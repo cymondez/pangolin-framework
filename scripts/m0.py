@@ -42,28 +42,34 @@ def command(args, root=ROOT):
     return subprocess.run(args, cwd=root, env=go_environment(root), capture_output=True, text=True, encoding="utf-8", errors="replace", check=True).stdout
 
 
-def in_git_repository(root=ROOT):
-    """Distinguish a git work tree from a standalone module without silently
-    accepting other git failures."""
+def _go_git_scope(root):
+    """Whether root owns a git scope for its own Go inventory: inside a work
+    tree (rev-parse) and not itself git-ignored — a test fixture under an
+    ignored path resolves git ancestors but is never enumerated by ls-files.
+    Any other git failure fails closed (no silent fallback)."""
     root = Path(root)
-    result = subprocess.run(["git", "-c", "core.quotepath=false", "rev-parse", "--show-toplevel"], cwd=root, env=go_environment(root), capture_output=True, text=True, encoding="utf-8", errors="replace")
-    if result.returncode == 0:
-        return True
-    if result.returncode == 128 and "not a git repository" in result.stderr:
+    rev = subprocess.run(["git", "-c", "core.quotepath=false", "rev-parse", "--show-toplevel"], cwd=root, env=go_environment(root), capture_output=True, text=True, encoding="utf-8", errors="replace")
+    if rev.returncode == 128 and "not a git repository" in rev.stderr:
         return False
-    raise ValueError("resolving the source repository failed (no silent fallback): " + (result.stderr or "").strip()[:200])
-
-
+    if rev.returncode != 0:
+        raise ValueError("resolving the source repository failed (no silent fallback): " + (rev.stderr or "").strip()[:200])
+    check = subprocess.run(["git", "-c", "core.quotepath=false", "check-ignore", "-q", "."], cwd=root, env=go_environment(root), capture_output=True, text=True, encoding="utf-8", errors="replace")
+    if check.returncode in (0, 1):
+        return check.returncode != 0
+    raise ValueError("checking the git ignore state of the inventory root failed (no silent fallback): " + (check.stderr or "").strip()[:200])
 def _go_sources(root=ROOT):
     """Tracked Go source inventory: (package dir args, `go list -e -json` entries)."""
     root = Path(root)
-    if not in_git_repository(root):
-        # A module genuinely outside git (temporary fixtures) keeps the
-        # earlier `go list` inventory semantics.
+    if not _go_git_scope(root):
+        # A module genuinely outside git — or physically inside an ignored
+        # path such as a repo-internal GOTMPDIR test fixture — has no git
+        # scope of its own and keeps the earlier `go list` semantics.
         listing = subprocess.run(["go", "list", "-e", "-json", "./..."], cwd=root, env=go_environment(root), capture_output=True, text=True, encoding="utf-8", errors="replace")
         return ["./..."], json_stream(listing.stdout) if listing.stdout else []
     names = [name for name in command(["git", "-c", "core.quotepath=false", "ls-files", "--cached", "--others", "--exclude-standard", "--", "*.go"], root).splitlines() if name.strip()]
-    names = [name for name in names if (root / name).is_file()]
+    names = [name for name in names
+             if not name.startswith(("..", "/", "\\")) and ".." not in Path(name).parts
+             and (root / name).is_file()]
     if not names:
         raise ValueError("no tracked Go source files in the working tree")
     # Nested modules (a go.mod inside the tree, e.g. examples/basics) are

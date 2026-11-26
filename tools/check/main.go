@@ -4,6 +4,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -85,28 +86,93 @@ func checkCoverage(root, profile string, out io.Writer) error {
 	return nil
 }
 
-// gitRepository reports whether root belongs to a git work tree, preserving
-// the historical behavior for modules genuinely outside a repository while
-// failing closed on any other git resolution error (missing binary,
-// permissions, corrupted repository).
-func gitRepository(root string) (bool, error) {
+// gitScope answers whether root's Go inventory must come from git: root must
+// be inside a git work tree (rev-parse) AND not itself git-ignored — a test
+// fixture placed under an ignored path such as .cache/go-tmp resolves git up
+// the ancestor chain but has no git scope of its own, and its files can never
+// be enumerated by ls-files. Any other git failure fails closed (no silent
+// fallback).
+func gitScope(root string) (bool, error) {
 	if _, err := exec.LookPath("git"); err != nil {
 		return false, fmt.Errorf("git is required to derive the tracked package inventory: %w", err)
 	}
-	command := exec.Command("git", "-c", "core.quotepath=false", "rev-parse", "--show-toplevel")
-	command.Dir = root
-	var stderr bytes.Buffer
-	command.Stderr = &stderr
-	err := command.Run()
-	if err == nil {
-		return true, nil
+	rev := exec.Command("git", "-c", "core.quotepath=false", "rev-parse", "--show-toplevel")
+	rev.Dir = root
+	var revErr bytes.Buffer
+	rev.Stderr = &revErr
+	if err := rev.Run(); err != nil {
+		if exitError, ok := err.(*exec.ExitError); ok && exitError.ExitCode() == 128 &&
+			strings.Contains(revErr.String(), "not a git repository") {
+			return false, nil
+		}
+		return false, fmt.Errorf("resolving the source repository failed (no silent fallback): %v: %s", err, strings.TrimSpace(revErr.String()))
 	}
-	if exitError, ok := err.(*exec.ExitError); ok && exitError.ExitCode() == 128 &&
-		strings.Contains(stderr.String(), "not a git repository") {
-		return false, nil
+	check := exec.Command("git", "-c", "core.quotepath=false", "check-ignore", "-q", ".")
+	check.Dir = root
+	err := check.Run()
+	var ignored bool
+	switch {
+	case err == nil:
+		ignored = true
+	case errors.Is(err, exec.ErrNotFound):
+		return false, fmt.Errorf("git is required to derive the tracked package inventory: %w", err)
+	default:
+		var exitError *exec.ExitError
+		if !errors.As(err, &exitError) {
+			return false, fmt.Errorf("checking the git ignore state of the inventory root failed (no silent fallback): %v", err)
+		}
+		if exitError.ExitCode() != 1 {
+			return false, fmt.Errorf("checking the git ignore state of the inventory root failed (no silent fallback): unexpected exit %d", exitError.ExitCode())
+		}
+		ignored = false
 	}
-	return false, fmt.Errorf("resolving the source repository failed (no silent fallback): %v: %s", err, strings.TrimSpace(stderr.String()))
+	return !ignored, nil
 }
+
+// gitFiles returns the tracked and untracked-but-unignored Go files of root's
+// git scope. A root genuinely outside any repository — or itself ignored —
+// has no git scope; the caller falls back to the historical `go list ./...`
+// inventory. No other failure falls back silently.
+func gitFiles(root string) ([]string, error) {
+	scoped, err := gitScope(root)
+	if err != nil {
+		return nil, err
+	}
+	if !scoped {
+		return nil, errGitless
+	}
+	command := exec.Command("git", "-c", "core.quotepath=false", "ls-files", "--cached", "--others", "--exclude-standard", "--", "*.go")
+	command.Dir = root
+	output, err := command.Output()
+	if err != nil {
+		return nil, err
+	}
+	var names []string
+	for _, name := range strings.Split(strings.ReplaceAll(string(output), "\r\n", "\n"), "\n") {
+		name = filepath.ToSlash(name)
+		if name != "" && !escapesRoot(name) {
+			names = append(names, name)
+		}
+	}
+	return names, nil
+}
+
+// escapesRoot reports whether a git-provided relative name leaves the
+// inventory root (../ walk-up or absolute paths).
+func escapesRoot(name string) bool {
+	if name == "" || path.IsAbs(name) || filepath.IsAbs(filepath.FromSlash(name)) {
+		return true
+	}
+	for _, part := range strings.Split(name, "/") {
+		if part == ".." {
+			return true
+		}
+	}
+	return false
+}
+
+// errGitless marks a root outside any git repository.
+var errGitless = errors.New("root outside any git repository")
 
 // trackedPackageInventory reproduces the scripts/m0.py Gate package list: the
 // Go packages derived from `git ls-files --cached --others --exclude-standard
@@ -116,27 +182,22 @@ func gitRepository(root string) (bool, error) {
 // keeps the earlier `go list ./...` inventory semantics; no other error falls
 // back silently.
 func trackedPackageInventory(root string) ([]byte, error) {
-	repository, err := gitRepository(root)
-	if err != nil {
-		return nil, err
-	}
-	if !repository {
+	listing, err := gitFiles(root)
+	if errors.Is(err, errGitless) {
 		command := exec.Command("go", "list", "-json", "./...")
 		command.Dir = root
 		return command.Output()
 	}
-	command := exec.Command("git", "-c", "core.quotepath=false", "ls-files", "--cached", "--others", "--exclude-standard", "--", "*.go")
-	command.Dir = root
-	listing, err := command.Output()
 	if err != nil {
 		return nil, err
 	}
+	// A test/temp module placed under a GOTMPDIR that itself lives inside a
+	// repository (the gate's m0.go_environment default) resolves git up the
+	// ancestor chain; names outside the inventory root (the repo's own files
+	// with ../ prefixes) are already dropped by gitFiles, and the nested
+	// module boundary still applies to what remains.
 	seed := map[string]bool{}
-	for _, name := range strings.Split(strings.ReplaceAll(string(listing), "\r\n", "\n"), "\n") {
-		name = filepath.ToSlash(name)
-		if name == "" {
-			continue
-		}
+	for _, name := range listing {
 		if _, err := os.Stat(filepath.Join(root, filepath.FromSlash(name))); err != nil {
 			continue
 		}

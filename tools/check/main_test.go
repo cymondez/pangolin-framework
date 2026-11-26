@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestCheckCLI(t *testing.T) {
@@ -109,8 +110,12 @@ func TestCoverageCLIRejectsIncompleteEvidence(t *testing.T) {
 	}
 }
 
-// A module genuinely outside git keeps the earlier `go list ./...` inventory
-// semantics; no other git failure may fall back silently.
+// A module fixture outside any git scope keeps the earlier `go list ./...`
+// inventory semantics; no other git failure may fall back silently. Under a
+// GOTMPDIR inside the repository go test redirects t.TempDir into the
+// git-ignored .cache tree, so the fixture is git-ignored on disk even though
+// git resolves an ancestor work tree — the scope test, not geography, binds
+// the backend, and both backends must produce the same inventory here.
 func TestTrackedPackageInventoryGitlessModuleKeepsLegacySemantics(t *testing.T) {
 	root := t.TempDir()
 	if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte("module github.com/cymondez/pangolin-framework\n\ngo 1.27.0\n"), 0644); err != nil {
@@ -122,8 +127,10 @@ func TestTrackedPackageInventoryGitlessModuleKeepsLegacySemantics(t *testing.T) 
 	if err := os.WriteFile(filepath.Join(root, "kernel", "check", "f.go"), []byte("package check\nfunc F() int { return 1 }\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
-	if repository, err := gitRepository(root); err != nil || repository {
-		t.Fatalf("temp module outside git must resolve as gitless: repository=%v err=%v", repository, err)
+	if scoped, err := gitScope(root); err != nil {
+		t.Fatal(err)
+	} else if scoped {
+		t.Fatalf("a git-ignored or ancestor-resolved temp module must not claim its own git scope")
 	}
 	data, err := trackedPackageInventory(root)
 	if err != nil {
@@ -131,6 +138,9 @@ func TestTrackedPackageInventoryGitlessModuleKeepsLegacySemantics(t *testing.T) 
 	}
 	if !strings.Contains(string(data), `"ImportPath": "github.com/cymondez/pangolin-framework/kernel/check"`) {
 		t.Fatalf("legacy inventory missed the module package: %s", data)
+	}
+	if strings.Contains(string(data), `"../`) || strings.Contains(string(data), `\..\`) {
+		t.Fatalf("inventory escaped the module root: %s", data)
 	}
 }
 
@@ -150,7 +160,14 @@ func TestTrackedPackageInventoryRepositoryExcludesIgnoredDirectories(t *testing.
 			t.Fatal(err)
 		}
 	}
-	work := t.TempDir()
+	// The seeded repository must own its own git scope; under a repo-internal
+	// GOTMPDIR the default temp location is ignored, so build the fixture on
+	// explicit disk outside any ignore rules of this repository.
+	work := filepath.Join(os.TempDir(), "m7-toolcheck-repo-"+time.Now().Format("150405.000000000"))
+	if err := os.MkdirAll(work, 0755); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { os.RemoveAll(work) })
 	seed(work, ".gitignore", "/artifacts/\n")
 	seed(work, "go.mod", "module github.com/cymondez/pangolin-framework\n\ngo 1.27.0\n")
 	seed(work, "kernel/check/f.go", "package check\nfunc F() int { return 1 }\n")
@@ -166,8 +183,8 @@ func TestTrackedPackageInventoryRepositoryExcludesIgnoredDirectories(t *testing.
 			t.Fatalf("git setup %v: %v: %s", argv, err, out)
 		}
 	}
-	if repository, err := gitRepository(work); err != nil || !repository {
-		t.Fatalf("seeded repository must resolve: repository=%v err=%v", repository, err)
+	if scoped, err := gitScope(work); err != nil || !scoped {
+		t.Fatalf("seeded repository must own its own git scope: scoped=%v err=%v", scoped, err)
 	}
 	data, err := trackedPackageInventory(work)
 	if err != nil {
