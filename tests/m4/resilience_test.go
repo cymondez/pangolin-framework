@@ -90,6 +90,8 @@ func TestA63Resilience(t *testing.T) {
 	p := outbox.Policy{Lease: time.Second, SendTimeout: 100 * time.Millisecond, RetryInitial: time.Millisecond, RetryMax: 5 * time.Millisecond, MaxAttempts: 3}
 	store, err := eventpg.NewBoundedStore(f.queue, p, eventpg.Capacity{Outbox: 4, Inbox: 4})
 	must(t, err)
+	provisionQueue(t, f, "outbox", 4, "resize")
+	provisionQueue(t, f, "inbox", 4, "resize")
 	sample := func(phase string) {
 		st, e := store.Stats(ctx, "outbox")
 		must(t, e)

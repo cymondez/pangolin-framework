@@ -13,7 +13,7 @@ description: 生成兩種 Bookstore Profile、新增模組與 migration、查驗
 |---|---|
 | `pangolin new bookstore --template modular-monolith` | 建立預設 tenant-only 專案 |
 | `pangolin new bookstore-org --template modular-monolith --with organization` | 同時加入完整 Enterprise／Organization 與 Scope-aware schema |
-| `pangolin module add catalog --depends persistence,authorization` | 建立 module.go、README，加入編譯期 registry |
+| `pangolin module add catalog --depends persistence,authorization` | 產生 Root 模式 module.go（`ModuleMetadata`／`DependsOn`／`RootBuilder` hooks），framework 名稱翻譯為 `foundation` Type 邊並登記 UserRoot 聚合 |
 | `pangolin migrate create add_books --module catalog` | 產生全專案唯一序號的 Goose SQL 骨架 |
 | `pangolin migrate status` | 查詢實際資料庫的 Goose ledger |
 | `pangolin doctor` | 檢查 Go／Compose、專案及 Runtime checksum |
@@ -25,6 +25,8 @@ description: 生成兩種 Bookstore Profile、新增模組與 migration、查驗
 ## 既有檔案與重複執行
 
 new 拒絕已存在的目標目錄。重複 module／migration 拒絕；手動編輯過的 registry 不被覆寫。generate openapi 遇到相同內容可重入，遇到不同內容則保留原檔並回錯誤。doctor 可重複執行，不啟動服務。
+
+生成 app 的入口走 Root 裝配：`modules/registry.go` 產出 user-modules 的 `UserRoot` 聚合（Type 相依閉環、菱形去重），`foundation` 套件的 `foundation.Module` 平台模組擁有 DB／事件資源與公開框架契約（`foundation.UnitOfWork`、`foundation.Scopes`、`foundation.Registry`、`foundation.Publisher`、`foundation.Idempotency` 等），`StartRoot` 之後才在 seal 內取得任何資源。`module add --depends persistence`（或 `authorization`／`organization`）把 framework 名稱翻譯成 `module.Of[foundation.Module]()` Type 邊；你的建構子直接以型別取得框架服務，例如 `func NewCatalogService(units uow.UnitOfWorkManager, scopes foundation.Scopes) *CatalogService`，再以 `b.Services().Add(NewCatalogService)` 註冊。不需要 app root 匯入：根模組僅保留 HTTP／drain 組裝與相容檢查；`bookstore` 名稱是生成網域示例，不是 user module 依賴。
 
 ## 遷移與環境
 

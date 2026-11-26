@@ -180,6 +180,16 @@ flowchart TB
 5. 按拓撲順序 `Start`，全部成功才對外報告 Ready；失敗時反向回收已成功啟動的模組。
 6. 停機時先停止接收流量，等待正在執行的工作，再依相反順序 `Stop`；超時後保留錯誤並結束。
 
+**Root 裝配模式（Type 相依閉環，2026-11-25 增補）。** 除上述「明確加入模組＋`Registry.Register`」裝配外，模組系統另提供以 Host 為起點的 Root 裝配模式：主程式以**模組 Type 參照**宣告根模組，模組集合即由這些 Type 參照遞推所得的傳遞閉包，並**依 Type 去重**——同一 Type 經多條路徑被參照時僅參與一次；閉合集合成員隨後依與本節相同規則檢查唯一 Name、相依完整性、版本約束與 DAG，並維持穩定拓撲排序。
+
+- Root 裝配模式的圖邊以 Type 參照為主，不是 Name 字串。一般模組只需宣告 Type 相依清單並在 `Configure` 註冊建構子；模組中繼資料採零值預設加明示覆寫（zero-value metadata only），生命週期 hook 全部可選（未提供即 no-op），Base 中繼資料的 Version 預設為 `0.1.0`，即唯一產品版本；里程碑推進不改寫（依 ADR11）。
+- 既有 `Dependency{Name, VersionConstraint}` 結構不得變更，既有未鍵名（unkeyed）字面值用法維持相容。Type 相依的版本約束經**新增的加法 API** 表達，使用 §11.2 經 ENV04 固定後的版本範圍語法解析與驗證，未指定時視為不受約束；約束失敗按相依路徑報錯。
+- 重複模組名、相依循環、無法解析的（invalid）Type 參照與版本不相容，一律在**任何生命週期 hook（PreConfigure／Configure／PostConfigure）或資源建構子執行之前**拒絕，錯誤攜帶完整相依路徑；驗證失敗不產生 Start、不註冊 Provider、不執行任何建構子，也不部分初始化。
+- 三階段跨模組順序維持**完整 phase barrier**：全部模組的 PreConfigure 完成後才允許任何模組開始 Configure，Configure 與 PostConfigure 同理。某階段失敗即阻止其後所有階段與全部資源建構；啟動失敗時回收已取得資源，規則與本節第 5、6 步相同。
+- **形式需求關係：** 上述 invalid 圖拒絕、閉環確定性與驗證先於 hook 由 MOD-001（A01）驗證；phase barrier 與啟動失敗清理由 MOD-002（A02）驗證。既有需求句及其 M1 證據描述的是既有裝配路徑，原文不改、不重編；Root 模式行為依 §13.6 的加法命名情境追蹤。
+
+**向後相容：** 既有 `runtime.Host.Start(ctx, []module.Module)` 明示清單裝配、`kernel/module` Registry 及 §2.2 的公開契約完全保留原語意。Root 模式僅經新增的 root 進入點啟用，不改變既有路徑的驗證範圍，也不得回頭改寫既有需求句；兩種模式共用 §14.3 停機契約與資源單一 owner 規則。
+
 <a id="s-2.2"></a>
 
 ### 2.2 公開 Go 契約
@@ -216,6 +226,28 @@ DI Token 以 `(Name, Type)` 為身分，透過 `NewKey[T]` 保留服務型別；
 
 `Builder` 僅可供註冊與組態操作，不可在 `Configure` 時解析尚未建立的 Runtime Service；所有 `Start` 回呼應可辨識失敗並回收資源，禁止默默吞掉錯誤。**熱重載模組不在首版範圍**。
 
+**Root 裝配 DI 契約（2026-11-25 增補）。** Root 裝配模式下，所有 Provide／Replace／binding 操作（建構子註冊、契約 export、衝突 binding）一律具備 **Trusted Host provenance**：Host 在呼叫各模組各階段 hook 時攜帶明確模組身分，任何 hook 內操作皆歸屬該模組；provenance 之外的註冊路徑（全域初始化、任意呼叫點或借用他人 hook 的寫入）一律拒絕。Replace 除需非空理由外，仍須以 provenance 記錄來源模組，Seal 後不可新增／替換。模組 `Start`／`Stop` 只取得**逐模組生命週期 Resolver**，其可見集合與 §2.3 Root 規則一致；模組不得繞經全域 Resolver 解析自身權責依賴之外的服務（無 global resolver escape）；Host 啟動期自身的組合解析僅限其擁有的 composition root，並維持既有 StartupChecks 檢查。自訂名稱的低階 Provider 在 Root 裝配下保持精確 `(Name, Type)` 身分，`Export(token)` 是把它交給其他模組解析的唯一明示 by-type 橋接；`kernel/di` standalone Registry 與既有明示清單裝配語意一併維持原狀。
+
+契約可視性以**契約擁有者**為中心，不以實作來源為中心。非具象（介面）Type 只有在其契約擁有者模組**明示 export** 後才可被其他模組解析；未經進階宣告時，介面候選來自契約擁有者自身 package 內的型別，契約擁有者對其自有契約的介面配對（owner-local interface matching）明確允許、不需額外宣告。要解析某契約（或被替換的具象公開服務）時，消費方的**直接相依要求指向契約擁有者**，而非任何實作模組——Root 安裝的實作模組（如 organization Provider、認證 Adapter）對其直接相依的中立契約經進階 As／binding 明示貢獻後，僅相依契約擁有者的消費方即可取得該契約的實作；消費方不需要、預設也看不到實作模組本身。跨擁有者貢獻必須由實作所屬 package 經**進階 As／binding 宣告**明示將其實作關聯到該契約，且該實作模組必須直接相依契約擁有者。禁止的是**未經宣告關聯的隱式跨擁有者 export**（implicit cross-owner export prohibited）：另一 package 的型別不得僅因結構上滿足介面就自動進入該契約的候選，未關聯的跨擁有者候選一律排除；結構滿足本身不是 export 依據。契約 export 集中在擁有者 package 的單一宣告位置；實作側的 As／binding 集中在實作 package；一般模組 hook 內僅做建構子註冊（單行 `return b.Services().Add(NewX)`）。Seal 時確定性判決：某契約在該 Root 閉合下的有效實作為零 → missing 錯誤；多於一個 → ambiguity 錯誤；兩者皆於封存前報出且錯誤內容穩定，列出候選型別與貢獻模組。
+
+**擁有者本模組私有介面注入（owner-local private interface，2026-11-25 修正增補）。** 介面參數的解析依其 key 是否屬**已載入圖中的公開契約**分為兩條路；public wins，私有路徑不得繞過：
+
+- **私有路徑（預設）：** 某 module 的建構子參數是介面（或任何未以 `Export` 捲入公開契約集合的抽象 Type），且**該 module 自身的建構子**恰好產生一個與之 assignment 相容的具象時，引擎**必須在無 `Export` 的情況下自動推論出這個唯一本模組候選**——`Add(NewRepo)` 與 `Add(NewUseCase)` 直接可組合，模組內部 Repository／Use Case 介面不需要也不應被迫公開 export（此即 §4.3 邊界的正確行為）。推論不產生任何 export 副作用、不註冊公開契約、不允許其他模組的型別或實作加入候選。
+- **Key 決定權：** 私有介面 binding／alias以其**消費 module 加 reflect.Type** 為鍵——同一 Go 介面型別在兩個模組各自私下使用時互為獨立映射，不互相污染、不跨模組可見。生命週期 Resolver 與明示 `module.OpenScope` 使用**同一 owner-private 映射**：模組 Start／Stop／scope 內可解析自身私有介面與直接相依模組的公開 export，但任何其他模組的私有介面永不暴露。
+- **判例順序：** 若同 key 已是被某模組 `Export` 的公開契約（loaded public contract owner），則一律回到公開路徑（擁有者 export＋消費方直接相依契約擁有者）；**owner-local matching 不能繞過已載入公開契約擁有者的相依要求**——私有推論只適用於未被公開契約捲入的 key。低階自訂名稱 token 仍維持精確 `(Name, Type)`，不因結構滿足自動加入任何候選。
+- **失敗語意：** 缺本模組候選（無任何相容自有建構子）或多於一個相容自有建構子形成私有 ambiguity 時，一律在**任何 factory 執行前**於 Seal 報出（diagnostic 點名消費 module 與介面型別）。
+- **私有 Bind：** 該 module 對自己的私有 ambiguity 可用明示 `Bind` 選擇自有候選，**不需要將契約 export**；既有公開契約的 bind 組裝規則（§ 上段）完全不受影響。禁止的替代方案：不得以「強制 export 本模組內部契約」作為解法。
+
+**明示歧義化解 binding 僅用於化解真實 ambiguity**；未存在 ambiguity 時對同一契約的多餘化解 binding 同樣在 Seal 拒絕；binding 許可是契約擁有者本人，或（僅於真實 ambiguity、實作型別確實符合某候選時）一個**直接相依契約擁有者與所選實作模組兩者**的其他組合成員。**跨擁有者替換（`Replace`／`ReplaceContract`）僅對已 export 的契約身分合法：**替換方必須直接相依契約擁有者；`ReplaceContract` 需要**既有明示實作目標**（先前的 As 貢獻、擁有者自身候選或同身分低階 Provider）與非空理由，不得對「從未存在實作」的契約建立首次供給（首次供給走 `Add`＋`As`）；替換保留契約 token、export 擁有者與 Identity，僅移動實作來源並記錄新來源模組與理由，未 export 的私人服務一律不可被外部替換；替換排除範圍是**契約層級**——替換介面 I 不影響同一具象同時滿足的另一介面或具象服務。Root 裝配提供 **有界明示操作 scope**：`module.OpenScope(ctx, resolver)` 把 Start／Stop hook 取得的逐模組生命週期 Resolver 轉成模組自有 `di.Scope`——Resolver 本身刻意不解開任何暫時 scope，Operation 服務只能經此明示 scope 取得；scope 內每次 Resolve 維持與該 Resolver 完全相同的不可變可視集合（自身註冊＋直接相依擁有者的 export），owner binding 於建立時固定且不可更換，Close 由呼叫端持有並執行內層有界清理（與 Container 單一 owner 規則一致、冪等），nil／typed-nil／非生命週期 Resolver（含 raw Container 或委派包裝）一律拒絕；root Runtime、組合引擎與 raw Container 永不出現在回傳值上。**Foundation Provider 擁有者**：CLI 生成的應用以獨立可 import 的 `foundation.Module` 作為全部框架契約（UOW、Scope 能力、Publisher、Idempotency 等）的擁有者，user module 經 `module add --depends persistence,authorization（或 organization）` 產生的 CLI 中繼資料別名翻譯為 foundation Type 邊，框架服務以 typed constructor 注入；一般模組建構子註冊仍是單行 `Add`，不接觸低階 token；把生成領域樣本 `bookstore` 宣告為依賴會被明確拒絕（錯誤訊息指向 foundation capabilities），不得靜默略過；既有「app root 自行擁有全部框架資源」的裝配形狀在引擎可視性檢查即失敗（診斷點名消費方、型別與 Owner 邊），遷移方式是 user module 改宣告 foundation Type 邊而非 import app root package（避免 package cycle，理由由 rootmodules 回歸測試記錄）。最終 Go 簽章沿用 M0 慣例固定於 `kernel/module`、`kernel/di` contracts，並由 `tests/contract/api.json` 檢查；簽章不構成第二份行為權威。
+
+```go
+// 使用示例（2026-11-25 實作後定型）：一般模組只宣告 Type 相依，hook 內以單行
+// b.Services().Add(NewX) 註冊建構子（預設 Transient；Singleton／Operation 明示 opt-in）。
+func (m *CatalogModule) Configure(b module.RootBuilder) error {
+    return b.Services().Add(NewCatalogService)
+}
+```
+
 <a id="s-2.3"></a>
 
 ### 2.3 DI 與 Provider 作用域
@@ -225,6 +257,14 @@ DI Token 以 `(Name, Type)` 為身分，透過 `NewKey[T]` 保留服務型別；
 - **Request/Operation Scope：** `context.Context` 傳遞 Principal、Tenant、Trace、UOW 等操作範圍資料；不模擬執行緒區域變數。
 - Provider Registry 依 §16 規定 在啟動前完成相依圖的靜態驗證；需 Request Scope 的物件則在 Scope 中實際建構及釋放；相同鍵重複註冊預設錯誤，覆寫需使用明確 API 與記錄原因。
 - Factory 依 §16 規定 遵循錯誤傳回與清理契約；不得在 Provider 建構期間觸發服務呼叫造成隱性循環。
+- Container 的全域鎖只保護索引與生命週期狀態；不得在持有該鎖時呼叫 Provider Factory 或 Cleanup。Singleton 的單次建構及同一 Operation／Provider 的單次解析另以該鍵協調，等待者可用自己的 context 取消；無相依關係的不同鍵解析不互相等待，已宣告的 Factory 相依仍按其依賴順序解析。
+- Close 先停止新解析、取消進行中的 Factory，再等待進入中的解析並按反向建構順序清理。等待受有界 cleanup timeout 控制；若 Factory 忽略取消並在 Close 返回後才交回資源，Container 仍保有該資源的清理責任並於它返回後清理。Close 不得把此資源交還呼叫方或遺失 owner。
+- **Root 裝配註冊（2026-11-25 增補）：** 建構子註冊預設 **Transient**；Singleton 與 Operation 必須經註冊選項明示 opt-in。註冊與解析鍵是**精確具象型別**；解析相依僅取自各建構子的簽名參數型別（允許簽名反射 signature reflection），禁止 package／符號掃描、struct tag 注入或任何結構滿足式自動配線。
+- Root 裝配的契約可視性以契約擁有者為中心（細則見 §2.2）：消費方解析契約只須**直接相依契約擁有者**；實作貢獻由實作 package 經進階 As／binding 明示關聯到該契約，且實作模組直接相依契約擁有者；未經宣告關聯的跨擁有者型別不進入候選，契約擁有者本 package 內的介面配對不受此限。
+- Root 裝配的**擁有者本模組私有介面注入不強制 export**（細則見 §2.2）：module 自身建構子恰好提供唯一相容具象時，介面參數在無 `Export` 下自動解析（鍵為消費 module＋reflect.Type，同介面在兩模組私下使用互為獨立）；私有路徑不得繞過已載入公開契約擁有者的直接相依要求，也不得使其他模組私有介面經生命週期 Resolver／`module.OpenScope` 暴露；私有 missing／ambiguity 一律在 factory 前報出，私有 `Bind` 由該 module 選擇自有候選而無須 export。
+- Root 裝配下，Singleton 的相依鏈經由任何 Transient 節點觸及 Operation 服務即視為捕獲：**不得以 Transient 註冊稀釋或「清洗」Operation 依賴進入 Singleton**（擴大既有禁止規則而非放寬）；違反的圖在封存前拒絕。
+- Root 裝配的 Start／Stop hook 不自動取得 Operation 服務：逐模組生命週期 Resolver 刻意不短暫開閉 scope；需要 Operation 服務的模組以 `module.OpenScope(ctx, resolver)` 開啟**有界明示操作 scope**（細則見 §2.2），scope 內每次解析維持 Resolver 原有可視集合、owner 固定、Close 由呼叫端負責且內層資源單一清理；raw Container、root Runtime 與組合引擎不經此 API 洩漏。
+- 建構子可經進階註冊選項宣告資源清理與生命週期覆寫；清理仍由 Container 擁有並遵守上述單一 owner、有界 timeout、鎖外執行與部分建構回收規則；`Module.Stop` 不重複關閉 Factory 擁有的資源，也沒有經由 Transient 讓 Singleton 代管 Operation 資源的途徑。
 
 <a id="s-2.4"></a>
 
@@ -332,6 +372,8 @@ Aggregate 可保留尚未派送的事件（或由 Use Case 明確追加）；Rep
 ### 4.3 跨模組互動
 
 允許的整合方式：直接呼叫公開 Application Port（同程序同步）、本機 Domain/Application Event（同程序流程）、版本化 Distributed Integration Event（跨服務非同步）。禁止其他模組直接操作對方的資料表、依賴私有 Go package、或持有對方 Aggregate 的具體實作。跨模組共享查詢優先使用 Query Port 或專用 Read Model。
+
+**中立公開契約的擁有權（2026-11-25 增補）。** 中立介面 Type（如 `security/scope` 等 Port）的**契約擁有者固定且獨立於實作來源**：擁有者明示 export 該契約；實作的註冊／替換來源可以是其他模組（組織 Provider、認證 Adapter 等），但替換仍須遵守 §7.12 的公開契約、Scope ID／membership／revision 保留規則，契約本身不因替換換手。消費方解析該契約只須**直接相依契約擁有者**；Root 安裝的實作模組對其直接依賴的中立契約經進階 As／binding 明示貢獻後即成為該契約的可見實作，消費方不需相依實作模組。未被任何擁有者宣告關聯的跨擁有者型別不會進入候選，結構滿足本身不構成隱式 export；契約擁有者本 package 內對其契約的介面配對（owner-local matching）明確允許。**public export 的範圍只及於跨模組公開 Port：** 模組內部 Repository／Use Case 等私有介面的注入由 §2.2 的擁有者本模組私有介面推論承載，不需要也不得被強制 Export 才可解析——「把內部服務 export 成公開契約」不是合規解法。契約 export 集中在擁有者 package，實作側 As／binding 集中在實作 package（細則見 §2.2／§2.3 Root 裝配契約）。此邊界不得以「可編譯」「剛好滿足介面」宣稱符合性。
 
 <a id="s-5"></a>
 
@@ -519,7 +561,7 @@ Disposed 是資源生命週期，不覆蓋保存的 Outcome。Begin 前失敗是
 
 `SaveChanges(ctx)` 只 flush，不能當作 Commit／Complete。pgx/sqlc Adapter 的 SQL 通常已即時送至當前 Tx，因此可沒有待 flush 項目；它仍檢查 Scope、取消與錯誤狀態。`INSERT ... RETURNING` 可在提交前取回 ID，不代表資料已對外持久化。非交易唯讀沒有待寫入變更；查詢結果也不承諾跨多次查詢的一致快照。
 
-公開 Scope 不能再 Commit、恢復 rollback-only 或重用 Executor。進入 Completing 後只允許 Manager 控制的 Handler／flush 工作，不能從其他 goroutine 新增工作；任何普通外部重入被拒絕。
+公開 Scope 不能再 Commit、恢復 rollback-only 或重用 Executor。進入 Completing 後，Manager 只把不可由呼叫方偽造的 completion context 傳給其控制的 Local Event Handler／flush 工作；此 context 可透過標準 Application.Command／Query 以 Required 加入同一根 Scope。子 Scope 遵守根交易與唯讀視圖限制，不能 Commit 或取得 RequiresNew。completion context 只供 Handler／flush 目前的同步控制流程使用；Handler MUST NOT 保留或分享它以啟動並行／非同步工作。普通 callback context 等其他不含 Manager marker 的 context 重入回 UOW_BUSY。Manager 依受控 completion 路徑識別 context，不宣稱辨識 goroutine 身分。任何在 completion Required 入口或 callback 發生的失敗都必須由 Manager 將根標成 rollback-only；Handler 捕捉該錯誤並回傳 nil 也不能恢復提交。
 
 <a id="s-5.5"></a>
 
@@ -786,6 +828,9 @@ Receiver 保存完整 envelope、驗證後 producer identity 與 payload fingerp
 - **Schema：** 不允許任意 `any` 物件跨服務序列化後不做版本管理；需有 Serializer Registry。
 - **安全：** Broker Credential 最小權限，訊息不得包含機密原文，租戶資訊必須驗證而非盲信。
 - **背壓：** Outbox 積壓數、最老待派送時間、失敗率、Consumer Lag 均納入告警。
+- **持久佇列容量：** 啟用 bounded admission 的 Outbox、Inbox 與 Jobs 全域硬上限由部署期 provisioning 設定；容量配置不是 Tenant 權限或公平性配額。每筆保留中的佇列資料都必須在同一資料庫交易中持有唯一 permit，包含尚在 retention 窗口內的成功、取消及 dead 終態；佇列列刪除時同交易釋放 permit。佇列 INSERT 不得以所有寫入共用的交易鎖串行化，或每次全表 `count(*)` 才准入；同租戶與不同租戶併發不得因容量 admission 共用單一全域序列化點。此機制只保證設定的硬上限與提交原子性，不承諾 Tenant 公平性或延遲上限。
+- **容量部署與超限：** 專用 Migration／Deployment role 透過狹化 provisioning Port 安裝或調整容量；既有佇列列由獨立的 provisioning 交易採用 permit，目標容量低於保留列數時拒絕調整。Application／Worker role 不得自行改寫 permit 或部署容量。已啟用 bounded admission 的部署若容量未配置、呼叫端與部署設定不一致、或仍使用舊 admission 契約時 fail closed 並回傳可辨識服務錯誤；硬上限已滿時拒絕新增工作並回傳可退避的容量錯誤，不得提早刪除仍在 retention 保證內的項目或靜默放寬上限。未安裝 permit schema 的既有 unbounded Event Store 組裝仍依其明示 legacy 行為運作；套用 permit schema 後，舊 admission 契約會明確拒絕寫入。
+- **相容升級：** 套用 permit schema／admission migration 前先停止舊版佇列寫入者，完成遷移與容量 provisioning 後才啟動新版本。新 schema 下舊版 admission 會明確拒絕；不得假設新舊二進位可混合寫入。
 - **移除事件：** 需先確認全部 Consumer 已完成版本升級，不准直接刪除仍在使用的 Event Schema。
 
 <a id="s-7"></a>
@@ -867,6 +912,7 @@ WITH CHECK (
 ### 7.4 Authentication / Authorization
 
 - Authentication：OIDC/OAuth 2.0 JWT 驗證 Issuer、Audience、Expiry、Signature、JWKS Rotation；拒絕無法確認演算法與來源的 Token。
+- JWKS Key Cache：驗證器快取一組已取得且可用於驗證的 key set，快取擁有有界 TTL、每次取用 fetch Timeout（含每個等待者的個別取消語意）、取用 cooldown 與 key 數量／回應大小上限；快取鎖在進行網路取用時不得全程持有。Refresh（缺失 kid 或快取過期）必須單一併發合併且允許任一等待者取消而不觸發重複取用。快取過期且端點不可用時必須 fail closed；過期快取不視為可用驗證材料。回應缺 key、為 null 或非陣列視為格式錯誤並保留未過期快照；明確的空 key 陣列在允許的 refresh 中代表撤回。同一 kid 的簽章輪換在 TTL 到期後可觀察；快取僅管理簽章驗證材料，不得取代、繞過或改變既有的 Tenant／Scope Permission 判斷。預設值（TTL 5m、cooldown 5s、fetch timeout 5s、32 keys、64 KiB 上限）記錄於 `security/authn` README 並由該 package 為唯一擁有者。此段釐清 SEC-001 與 A12 的既驗證行為，不新增需求 ID 或版本變更。
 - Authorization：`Principal`、Permission、Role、Resource Policy 三種判斷；**預設拒絕**，且所有敏感 Use Case 除 Transport 外仍應明確授權。
 - Permission Provider：User 明確拒絕優先於允許；接著依 User → Role → Tenant Default → System Default 遞降尋找允許（此順序為本產品規則，須測試）。
 - Feature Flag：控制功能可用性與商業方案限制，**不等同**權限授予。
@@ -1081,6 +1127,10 @@ v0.1.0 的授權與治理變更以本地一致的權威投影及同 DB UOW 為�
 ### 8.1 Repository 設計原則
 
 Domain/Application 定義專用 Repository Port，PostgreSQL Adapter 以 `pgx` 與 `sqlc` 實作。查詢需具明確的排序、分頁、資源上限，避免通用 `ListAll`。跨 Aggregate 查詢使用 Read Model；聚合寫入應維持單一交易範圍。
+
+中立 `database.Executor` 依操作宣告 SQL 意圖：`Exec`、`QueryRowWrite`、`QueryWrite` 是寫入；`QueryRow`、`Query` 是讀取。`QueryRowWrite` 用於會回傳單列的 INSERT／UPDATE／DELETE，`QueryWrite` 用於會回傳多列的寫入。所有寫入方法先檢查目前 UOW 為可寫交易；ReadOnly 根與 ReadOnly Required 子視圖一律拒絕。Adapter 與 Repository 不得把會變更資料的 SQL 傳給讀取方法。
+
+讀取方法的寫入限制是呼叫端 API 契約，不是任意 SQL 分類器或安全沙箱；中立 Port 不承諾辨識或阻擋被錯誤傳入 `Query`／`QueryRow` 的變更語句。引擎唯讀交易屬獨立 capability：要求強制引擎唯讀的 Profile 必須在組裝時拒絕不具該能力的 Adapter。故 SQLite 的 UOW 寫入 guard 保護明示寫入 API，不宣稱 SQLite 可對誤用讀取 API 的 SQL 強制唯讀。
 
 <a id="s-8.2"></a>
 
@@ -1338,7 +1388,7 @@ pangolin doctor
 pangolin generate openapi
 ```
 
-`--with organization` 是單一模組選項，同時加入 Enterprise／Organization 與其 migration／Scope-aware Bookstore；沒有只啟用半套 Enterprise 的旗標。既有專案要新增／移除此能力走 §7.9／§7.12 的遷移與啟動檢查，不只改設定。
+`--with organization` 是單一模組選項，同時加入 Enterprise／Organization 與其 migration／Scope-aware Bookstore；沒有只啟用半套 Enterprise 的旗標。既有專案要新增／移除此能力走 §7.9／§7.12 的遷移與啟動檢查，不只改設定。`module add` 的 `--depends persistence,authorization、organization` 是 CLI 中繼資料別名，一律翻譯為生成 `foundation.Module` 擁有者的 Type 邊（框架契約服務經 typed constructor 注入，註冊仍是單行 `Add`）；宣告依賴生成領域樣本 `bookstore` 會得到明確錯誤並指向 foundation capabilities，不靜默略過。
 
 每個命令依 §16 擁有確定的輸入、非零失敗退出碼、`--help`、可重入行為與完整測試。`new` 產出目錄必須能直接執行 `go test ./...`，並在本機 Docker Compose 下建立可讀寫 Bookstore API。命令與範本驗收使用同版 Runtime；其生成物適用相同的安全與交易契約。
 
@@ -1517,6 +1567,8 @@ CI 量測順序：
 ### 13.6 案例子情境與證據索引
 
 A01–A95 是穩定案例群組 ID。每列含多個刺激／邊界時拆成具名 subtests，例如 A76/required-switch、A76/requires-new-switch；群組只有全部適用子情境通過才算通過，不能選一個 happy path 代表整列。每個 Profile manifest 列出需求 ID、案例／subtest、適用理由、狀態、證據檔及來源 commit。N/A 僅依 §13.4 的適用邊界，不用來隱藏未實作。
+
+行為增補可循 `A63/permit-*` 前例，以**同一需求 ID 下的加法具名情境**追蹤，不重編、不重名任何既有 ID 或 subtest。2026-11-25 的 Root 裝配／建構子 DI 增補使用 `A01/root-*`（14 項）、`A02/root-*`（14 項）、`A46/root-*`（72 項）、`A74/root-*`（1 項，`root-required-scope-kinds-rejected`：Root 路徑 `RequiredScopeKinds` 缺 scope registry 的啟動拒絕，語意屬 §7.10 必要能力供給，映射至 kernel/runtime 既有測試）情境家族（語意見 §2.1–§2.3 與 §7.10，交付見里程碑規劃書的加法映射）；全部 101 項情境（75 前批＋26 本批）已註冊為正式具名 subtests（生成自 contract matrix，profile 皆 required，契約總數 532＝421 原情境＋10 `A63/permit-*`＋101 root-*），並在 `tests/contract/m1.json`（M1 映射 147 項）與 `tests/contract/m2.json`（M2 映射含 A74/root-*）映射到kernel/module（含 services_private_test.go／private_resolution_root_test.go／services_private_correction_test.go 的擁有者本模組私有介面注入 25 項）、kernel/runtime、kernel/app、tests/rootmodules 與 internal/scaffold 的既有測試函式——含 Stop 階段逐模組受限 Resolver 的端到端負面／正向情境、非擁有者正向與缺邊負面 `Bind`、六個有界明示 `module.OpenScope` suite、hook panic 保留原始 panic 值、Foundation typed injection、既有 app-root 擁有形狀的誠實拒絕重現、私有介面（無 Export 注入、跨模組私有隔離、公開契約優先、缺漏／ambiguity／私有 Bind／ReplaceBinding、laundering／cycle、低階相依 alias 轉譯、Start／Stop／OpenScope 同映射與隔離）。家族案例**尚未經同版 Gate 或累積回歸驗證**，未通過前一律不得寫入通過集合或 Verified 狀態。2026-11-25 的**擁有者本模組私有介面注入修正**（§2.2）已隨引擎補正落地並以 25 項 `A46/root-private-*` 情境註冊映射；未來其他行為增補同樣以家族加法情境追蹤，不得以既有情境或假映射代替。
 
 <a id="s-14"></a>
 

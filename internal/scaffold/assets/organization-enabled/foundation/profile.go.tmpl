@@ -1,0 +1,260 @@
+// Profile wiring of the organization-enabled assembly: the deployment
+// identity, required scope kinds, migration and seed data, and the profile
+// composition that swaps the scope registry for the organization provider
+// and mounts the organization control-plane handler — every swap under
+// contracts owned by Module, never changing the contract owner.
+package foundation
+
+import (
+	"context"
+	"database/sql"
+	"errors"
+	"io/fs"
+	"net/http"
+	"time"
+
+	"github.com/cymondez/pangolin-framework/events/distributed"
+	"github.com/cymondez/pangolin-framework/kernel/di"
+	"github.com/cymondez/pangolin-framework/kernel/module"
+	"github.com/cymondez/pangolin-framework/modules/organization"
+	orghttp "github.com/cymondez/pangolin-framework/modules/organization/transport/http"
+	"github.com/cymondez/pangolin-framework/persistence/idempotency"
+	"github.com/cymondez/pangolin-framework/persistence/migration"
+	"github.com/cymondez/pangolin-framework/persistence/uow"
+	"github.com/cymondez/pangolin-framework/platform/audit"
+	"github.com/cymondez/pangolin-framework/security/authn"
+	"github.com/cymondez/pangolin-framework/security/scope"
+	"github.com/cymondez/pangolin-framework/tenancy"
+	tenantpg "github.com/cymondez/pangolin-framework/tenancy/postgres"
+	transport "github.com/cymondez/pangolin-framework/transport/http"
+	"{{MODULE}}/internal/infrastructure"
+)
+
+// ProfileName identifies this assembly for the deployment compatibility
+// check.
+const ProfileName = "organization-enabled"
+
+// ScopeKinds declares the scope kinds the startup composition must provide
+// before any module accepts work.
+func ScopeKinds() []string { return []string{"tenant", "org.enterprise", "org.organization"} }
+
+// Migrations adds the organization migration source to the deployment
+// ordering.
+func Migrations() (map[string]fs.FS, []migration.ModuleMigrations) {
+	return map[string]fs.FS{"organization": organization.Migrations()}, []migration.ModuleMigrations{{Module: "organization", Directory: "organization", DependsOn: []string{"scope", "tenant"}}}
+}
+
+// Seeds are explicit disposable development data, never production migrations.
+func Seed(ctx context.Context, db *sql.DB) error {
+	_, err := db.ExecContext(ctx, `
+INSERT INTO pangolin.resource_scopes(tenant_id,scope_kind,scope_id) VALUES
+ ('tenant-a','org.enterprise','00000000-0000-4000-8000-000000000001'),
+ ('tenant-a','org.organization','00000000-0000-4000-8000-000000000002'),
+ ('tenant-a','org.organization','00000000-0000-4000-8000-000000000003') ON CONFLICT DO NOTHING;
+INSERT INTO pangolin_organization.enterprises(tenant_id,id,slug) VALUES('tenant-a','00000000-0000-4000-8000-000000000001','demo-enterprise') ON CONFLICT DO NOTHING;
+INSERT INTO pangolin_organization.organizations(tenant_id,id,enterprise_id,slug) VALUES
+ ('tenant-a','00000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000001','demo-org-a'),
+ ('tenant-a','00000000-0000-4000-8000-000000000003',NULL,'demo-org-b') ON CONFLICT DO NOTHING;
+INSERT INTO pangolin_organization.organization_memberships(tenant_id,organization_id,principal_kind,principal_id,role) VALUES
+ ('tenant-a','00000000-0000-4000-8000-000000000002','user','alice','owner'),
+ ('tenant-a','00000000-0000-4000-8000-000000000003','user','alice','owner') ON CONFLICT DO NOTHING;
+INSERT INTO pangolin_organization.enterprise_roles(tenant_id,enterprise_id,principal_kind,principal_id,role) VALUES('tenant-a','00000000-0000-4000-8000-000000000001','user','alice','owner') ON CONFLICT DO NOTHING;
+INSERT INTO pangolin_organization.owners(tenant_id,scope_kind,scope_id,principal_kind,principal_id) SELECT tenant_id,scope_kind,scope_id,'user','alice' FROM pangolin.resource_scopes WHERE scope_kind LIKE 'org.%' ON CONFLICT DO NOTHING;
+`)
+	return err
+}
+
+// profileSchemas returns the bookstore baseline plus every published
+// organization event type.
+func profileSchemas() []distributed.Schema {
+	result := baseSchemas()
+	for _, name := range []string{"enterprise.created", "organization.created", "organization.membership.changed", "organization.membership.removed", "enterprise.role.changed", "organization.transferred", "scope.suspended", "scope.active", "scope.archived", "organization.provider.imported"} {
+		result = append(result, distributed.Schema{Type: name, Version: 1})
+	}
+	return result
+}
+
+// composeProfile exchanges the implementation of foundation-owned contracts:
+// the scope registry gains the organization scope provider, the idempotency
+// store authorizes replays against that same realized registry, and the
+// optional control-plane handler becomes the organization handler. The swap
+// is a ReplaceContract/Replace against the same identities Module
+// registered, so the contract owner and the resolution surface are unchanged.
+func composeProfile(b module.RootBuilder) error {
+	// ONE private singleton bundle composes the organization runtime: store,
+	// realized registry and idempotency store are built in a single factory,
+	// and the idempotency authorization callback closes over the registry
+	// field, which is fully initialized before the factory returns and keeps
+	// failing closed while nil. The bundle depends only on foundation
+	// resources — never on the Scopes or Idempotency contracts — so the
+	// constructor graph stays acyclic while the business store, every
+	// idempotency replay and the control plane resolve the same instances.
+	if err := b.Services().Add(newOrganizationRuntime, module.Singleton()); err != nil {
+		return err
+	}
+	if err := b.Services().Add(newOrganizationStoreProjection, module.Singleton()); err != nil {
+		return err
+	}
+	if err := b.Services().Export(module.Service[*organization.Store]()); err != nil {
+		return err
+	}
+	if err := b.Services().ReplaceContract(Scopes, newOrganizationScopesProjection, "organization-enabled profile: scope-aware registry with organization provider composed by the private runtime bundle", module.Singleton()); err != nil {
+		return err
+	}
+	if err := b.Services().Replace(newOrganizationIdempotencyProjection, "organization-enabled profile: idempotency operation authorization delegates to the realized organization registry of the runtime bundle", module.Singleton()); err != nil {
+		return err
+	}
+	// The handler swap is a low-level provider replacement: the RootBuilder
+	// Replace path keeps the exact token identity and the export owner while
+	// moving the implementation source.
+	return b.Replace(di.Provider{Key: OptionalHandler, Lifetime: di.Singleton, DependsOn: []di.Token{module.Service[*organization.Store](), module.Contract[uow.UnitOfWorkManager](), Tenants, Validator, Scopes}, Factory: func(ctx context.Context, resolve di.Resolver) (any, di.Cleanup, error) {
+		handler, err := newOrganizationHandler(ctx, resolve)
+		if err != nil {
+			return nil, nil, err
+		}
+		return handler, nil, nil
+	}}, "organization-enabled profile: organization control-plane handler under the foundation contract")
+}
+
+// organizationRuntime is the private atomic composition bundle of the
+// organization profile; nothing outside this package consumes the type.
+type organizationRuntime struct {
+	Store    *organization.Store
+	Registry *scope.Registry
+	Idem     *idempotency.Store
+}
+
+// newOrganizationRuntime builds the whole organization runtime in one factory:
+// the store receives the local idempotency store, whose authorization callback
+// closes over the registry of this same bundle, so organization writes and
+// every replay check run against the exact registry the HTTP entry surface
+// binds and authorizes on.
+func newOrganizationRuntime(db AuthorityDB, units uow.UnitOfWorkManager, effects infrastructure.Effects) (*organizationRuntime, error) {
+	rt := &organizationRuntime{}
+	var err error
+	rt.Idem, err = newIdempotencyStore(func(c context.Context, operation string) error {
+		if rt.Registry == nil {
+			// Nil only before this factory finishes; no replay may be
+			// authorized from an uninitialized composition.
+			return scope.ErrDenied
+		}
+		return rt.Registry.Authorize(c, operation)
+	})
+	if err != nil {
+		return nil, err
+	}
+	if rt.Store, err = newOrganizationStore(db, units, rt.Idem, effects); err != nil {
+		return nil, err
+	}
+	provider, err := organization.NewProvider(rt.Store)
+	if err != nil {
+		return nil, err
+	}
+	if rt.Registry, err = scope.NewRegistry(tenancy.Identity, tenancy.Provider{Authority: tenantpg.Authority{Pool: db.Pool}, Permission: permission}, provider); err != nil {
+		return nil, err
+	}
+	return rt, nil
+}
+
+// Projections keep every published service identity while moving the
+// implementation source to the private bundle: ordinary modules keep
+// injecting the exported foundation contracts exactly by type.
+func newOrganizationStoreProjection(rt *organizationRuntime) *organization.Store { return rt.Store }
+
+func newOrganizationScopesProjection(rt *organizationRuntime) *scope.Registry { return rt.Registry }
+
+func newOrganizationIdempotencyProjection(rt *organizationRuntime) *idempotency.Store { return rt.Idem }
+
+// newOrganizationStore is the organization write model over the authority
+// database with the organization permission and effect policies layered on
+// the baseline application policy; the runtime bundle factory calls it with
+// the local idempotency store.
+func newOrganizationStore(db AuthorityDB, units uow.UnitOfWorkManager, idem *idempotency.Store, effects infrastructure.Effects) (*organization.Store, error) {
+	return organization.NewStore(organization.StoreOptions{AuthorityPool: db.Pool, Manager: units, Identity: tenancy.Identity, Tenants: tenantpg.Authority{Pool: db.Pool}, Idempotency: idem, Permissions: organization.PermissionFunc(func(_ context.Context, s organization.Snapshot, action string) error {
+		if s.Principal.ID != "alice" {
+			return scope.ErrDenied
+		}
+		if s.Role == "tenant" {
+			switch action {
+			case "tenant.enterprise.create", "tenant.organization.create", "tenant.scope.recover":
+				return nil
+			}
+			return scope.ErrDenied
+		}
+		if action == "books.read" || action == "books.write" || s.Role == "owner" {
+			return nil
+		}
+		return scope.ErrDenied
+	}), Effects: organization.EffectsFunc(func(c context.Context, v organization.Change) error {
+		operation, err := effects.Operation(c)
+		if err != nil {
+			return err
+		}
+		if err := (audit.Recorder{}).Record(c, audit.Record{Action: v.Action, Resource: v.Target.ID, Result: "success", Trace: operation}); err != nil {
+			return err
+		}
+		return effects.Event(c, v.Action, v.Payload)
+	}), UseChecker: organization.UseCheckerFunc(func(c context.Context, r scope.ScopeRef) (bool, error) {
+		var used bool
+		err := db.Pool.QueryRow(c, "SELECT bookstore.scope_in_use($1,$2,$3)", r.TenantID, r.Kind, r.ID).Scan(&used)
+		return used, err
+	})})
+}
+
+// newOrganizationHandler builds the control-plane handler under the foundation
+// contracts: same authenticated pipeline, same tenant/scope headers.
+func newOrganizationHandler(ctx context.Context, resolve di.Resolver) (http.Handler, error) {
+	storeValue, err := resolve.Resolve(ctx, module.Service[*organization.Store]())
+	if err != nil {
+		return nil, err
+	}
+	store, ok := storeValue.(*organization.Store)
+	if !ok {
+		return nil, errors.New("organization store is not the framework store")
+	}
+	managerValue, err := resolve.Resolve(ctx, module.Contract[uow.UnitOfWorkManager]())
+	if err != nil {
+		return nil, err
+	}
+	manager, ok := managerValue.(uow.UnitOfWorkManager)
+	if !ok {
+		return nil, errors.New("unit-of-work contract is not the framework manager")
+	}
+	tenantsValue, err := resolve.Resolve(ctx, Tenants)
+	if err != nil {
+		return nil, err
+	}
+	tenants, ok := tenantsValue.(*tenancy.Resolver)
+	if !ok {
+		return nil, errors.New("tenant resolver is not the framework resolver")
+	}
+	validatorValue, err := resolve.Resolve(ctx, Validator)
+	if err != nil {
+		return nil, err
+	}
+	validator, ok := validatorValue.(*authn.Validator)
+	if !ok {
+		return nil, errors.New("credential validator is not the framework validator")
+	}
+	scopesValue, err := resolve.Resolve(ctx, Scopes)
+	if err != nil {
+		return nil, err
+	}
+	registry, ok := scopesValue.(*scope.Registry)
+	if !ok {
+		return nil, errors.New("scope contract is not the framework registry")
+	}
+	return orghttp.NewHandler(orghttp.Options{Management: store, Manager: manager, Timeout: 5 * time.Second, MaxBodyBytes: 1 << 20, AuthenticateCredential: validator.AuthenticateCredential, Credentials: transport.BearerCredentials(), ResolveTenant: func(c context.Context, r *http.Request) (context.Context, error) {
+		return tenants.Resolve(c, "", r.Header.Get("X-Tenant-ID"))
+	}, ResolveScope: func(c context.Context, r *http.Request) (context.Context, error) {
+		_, tenant, _ := tenancy.Identity(c)
+		kind, id := r.Header.Get("X-Scope-Kind"), r.Header.Get("X-Scope-ID")
+		if kind == "" && id == "" {
+			kind, id = "tenant", tenant
+		}
+		if kind == "" || id == "" {
+			return nil, scope.ErrRequired
+		}
+		return registry.Bind(c, scope.ScopeRef{TenantID: tenant, Kind: kind, ID: id})
+	}, Authorize: registry.Authorize})
+}

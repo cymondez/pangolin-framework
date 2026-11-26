@@ -84,11 +84,33 @@ func (v *neutralView) Query(ctx context.Context, query string, args ...any) (dat
 	return ex.Query(ctx, query, args...)
 }
 
+func (v *neutralView) QueryWrite(ctx context.Context, query string, args ...any) (database.Rows, error) {
+	if err := v.enter(ctx, true); err != nil {
+		return nil, err
+	}
+	ex, err := Current(ctx, true)
+	if err != nil {
+		return nil, err
+	}
+	return ex.Query(ctx, query, args...)
+}
+
 func (v *neutralView) QueryRow(ctx context.Context, query string, args ...any) database.Row {
 	if err := v.enter(ctx, false); err != nil {
 		return failedNeutralRow{err}
 	}
 	ex, err := Current(ctx, false)
+	if err != nil {
+		return failedNeutralRow{err}
+	}
+	return ex.QueryRow(ctx, query, args...)
+}
+
+func (v *neutralView) QueryRowWrite(ctx context.Context, query string, args ...any) database.Row {
+	if err := v.enter(ctx, true); err != nil {
+		return failedNeutralRow{err}
+	}
+	ex, err := Current(ctx, true)
 	if err != nil {
 		return failedNeutralRow{err}
 	}

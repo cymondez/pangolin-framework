@@ -260,7 +260,7 @@ class ReleaseGates(unittest.TestCase):
         mapping = m0.load(ROOT / "tests/contract/m6.json")
         m6.validate_mapping(mapping)
         m1.check_module_docs(mapping)
-        self.assertEqual(release_manifest.check_closure(self.mappings, self.groups)["mapped"], 421)
+        self.assertEqual(release_manifest.check_closure(self.mappings, self.groups)["mapped"], 532)
         # Repo-content release declarations all validate today; required release
         # assets are checked fail-closed by check_assets/the full gate instead.
         summary = release_manifest.check_structure(self.manifest)

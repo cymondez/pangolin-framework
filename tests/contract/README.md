@@ -1,6 +1,6 @@
 # 符合性驗收底稿
 
-`cases.json` 保存實作規範 v1.3 的 A01–A95、需求 ID、唯一交付 milestone；其中 planned 是完整產品驗收計畫旗標，不作執行結果；M1 的 9 項正式交付／47 個子情境已由 [同版驗收紀錄](../../docs/evidence/M1.md) 證明。`subtests.json` 已依 §13.6 拆成 421 個具名子情境，引用唯一規範列的 setup／刺激／預期與 fingerprint。`profiles/` 逐項記錄三種組裝的適用性、理由、狀態與 evidence 路徑；實際 Runtime 測試函式依 M1–M6 交付。
+`cases.json` 保存實作規範 v1.3 的 A01–A95、需求 ID、唯一交付 milestone；其中 planned 是完整產品驗收計畫旗標，不作執行結果；M1 的 9 項正式交付／47 個子情境已由 [同版驗收紀錄](../../docs/evidence/M1.md) 證明。`subtests.json` 依 §13.6 拆成 532 個具名子情境（含 2026-11-25 設計修正後的 10 項 `A63/permit-*` 與 101 項 Root 裝配加法情境——`A01/root-*` 14、`A02/root-*` 14、`A46/root-*` 72、`A74/root-*` 1，後者映射到 kernel/module、kernel/runtime、kernel/app、tests/rootmodules、internal/scaffold 既有測試；既有 M1 驗收紀錄的 47 項歷史計數不變）。`profiles/` 逐項記錄三種組裝的適用性、理由、狀態與 evidence 路徑；實際 Runtime 測試函式依 M1–M6 交付。
 
 `go run ./tools/check` 檢查規範定義、驗收映射、里程碑映射及 manifest 的一致性，不執行 95 項 Runtime 驗收。`-release` 必須失敗；不允許將 manifest 手改成 verified 來通過。
 

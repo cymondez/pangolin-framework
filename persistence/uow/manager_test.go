@@ -90,6 +90,25 @@ func TestRequiredTransactionLifecycle(t *testing.T) {
 		t.Fatal("ended scope")
 	}
 }
+
+func TestExpiredRequiredChildDoesNotPoisonActiveRoot(t *testing.T) {
+	ctx := testContext(t)
+	tx := &testTx{}
+	m, _ := NewManager(testResource{tx: tx}, defaults())
+	var expired context.Context
+	err := m.Within(ctx, Options{Mode: ReadWrite}, func(root context.Context) error {
+		if err := m.Within(root, Options{Mode: ReadOnly}, func(child context.Context) error { expired = child; return nil }); err != nil {
+			return err
+		}
+		if err := m.Within(expired, Options{Mode: ReadOnly}, func(context.Context) error { t.Fatal("expired child callback ran"); return nil }); !errors.Is(err, ErrClosed) {
+			t.Fatalf("expired child reentry: %v", err)
+		}
+		return nil
+	})
+	if err != nil || tx.commits != 1 || tx.rollbacks != 0 {
+		t.Fatalf("stale view poisoned live root: err=%v tx=%+v", err, tx)
+	}
+}
 func TestRollbackUnknownPanicAndHooks(t *testing.T) {
 	cause := errors.New("injected")
 	ctx := testContext(t)

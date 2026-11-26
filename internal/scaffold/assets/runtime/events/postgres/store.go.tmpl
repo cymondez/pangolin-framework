@@ -8,6 +8,7 @@ import (
 	"embed"
 	"errors"
 	"log/slog"
+	"strconv"
 	"time"
 
 	"github.com/cymondez/pangolin-framework/events/distributed"
@@ -17,6 +18,7 @@ import (
 	persistence "github.com/cymondez/pangolin-framework/persistence/postgres"
 	"github.com/cymondez/pangolin-framework/security/scope"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -52,16 +54,16 @@ func (s *Store) Append(ctx context.Context, e distributed.Envelope, raw []byte) 
 		return err
 	}
 	if s.capacity.Outbox > 0 {
-		var admitted bool
-		if err = ex.QueryRow(ctx, `SELECT pangolin_events.admit('outbox',$1,'','')`, s.capacity.Outbox).Scan(&admitted); err != nil {
-			return err
-		}
-		if !admitted {
-			return ErrCapacity
-		}
+		// The configured capacity is sent twice: as the literal GUC value for
+		// the trigger's config check and as the integer argument to it.
+		_, err = ex.Exec(ctx, `WITH cfg AS (SELECT set_config('`+gucOutboxCapacity+`','`+strconv.Itoa(s.capacity.Outbox)+`',true),pangolin_events.check_capacity_config('outbox',$6)) INSERT INTO pangolin_events.outbox(event_id,tenant_id,scope_kind,scope_id,envelope) SELECT $1,$2,$3,$4,$5 FROM cfg`, e.ID, e.TenantID, e.ScopeKind, e.ScopeID, raw, s.capacity.Outbox)
+	} else {
+		_, err = ex.Exec(ctx, `INSERT INTO pangolin_events.outbox(event_id,tenant_id,scope_kind,scope_id,envelope) VALUES($1,$2,$3,$4,$5)`, e.ID, e.TenantID, e.ScopeKind, e.ScopeID, raw)
 	}
-	_, err = ex.Exec(ctx, `INSERT INTO pangolin_events.outbox(event_id,tenant_id,scope_kind,scope_id,envelope) VALUES($1,$2,$3,$4,$5)`, e.ID, e.TenantID, e.ScopeKind, e.ScopeID, raw)
-	return err
+	if err != nil {
+		return capacityOf(err)
+	}
+	return nil
 }
 func rollback(tx pgx.Tx) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
@@ -133,18 +135,14 @@ func (s *Store) Persist(ctx context.Context, group string, e distributed.Envelop
 	}
 	defer rollback(tx)
 	hash := sha256.Sum256(raw)
+	var tag pgconn.CommandTag
 	if s.capacity.Inbox > 0 {
-		var admitted bool
-		if err = tx.QueryRow(ctx, `SELECT pangolin_events.admit('inbox',$1,$2,$3)`, s.capacity.Inbox, group, e.ID).Scan(&admitted); err != nil {
-			return err
-		}
-		if !admitted {
-			return ErrCapacity
-		}
+		tag, err = tx.Exec(ctx, `WITH cfg AS (SELECT set_config('`+gucInboxCapacity+`','`+strconv.Itoa(s.capacity.Inbox)+`',true),pangolin_events.check_capacity_config('inbox',$9)) INSERT INTO pangolin_events.inbox(consumer_group,event_id,tenant_id,scope_kind,scope_id,envelope,fingerprint,verified_producer) SELECT $1,$2,$3,$4,$5,$6,$7,$8 FROM cfg ON CONFLICT(consumer_group,event_id) DO NOTHING`, group, e.ID, e.TenantID, e.ScopeKind, e.ScopeID, raw, hash[:], producer, s.capacity.Inbox)
+	} else {
+		tag, err = tx.Exec(ctx, `INSERT INTO pangolin_events.inbox(consumer_group,event_id,tenant_id,scope_kind,scope_id,envelope,fingerprint,verified_producer) VALUES($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT(consumer_group,event_id) DO NOTHING`, group, e.ID, e.TenantID, e.ScopeKind, e.ScopeID, raw, hash[:], producer)
 	}
-	tag, err := tx.Exec(ctx, `INSERT INTO pangolin_events.inbox(consumer_group,event_id,tenant_id,scope_kind,scope_id,envelope,fingerprint,verified_producer) VALUES($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT(consumer_group,event_id) DO NOTHING`, group, e.ID, e.TenantID, e.ScopeKind, e.ScopeID, raw, hash[:], producer)
 	if err != nil {
-		return err
+		return capacityOf(err)
 	}
 	var stored, storedHash []byte
 	var trusted string

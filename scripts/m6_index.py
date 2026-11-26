@@ -2,7 +2,8 @@
 
 build_index(report, directory) turns one same-commit verification report into
 the release evidence index demanded by specification 13.6: every one of the
-421 named subtests, one row per release profile, with the applicability reason
+532 named subtests (431 legacy plus the 2026-11-25 supplemental root-DI
+families), one row per release profile, with the applicability reason
 taken verbatim from the planned profile manifests and the actual runtime
 evidence bound to the exact raw artifact (path, sha256, test identity).  The
 index never invents success flags: a required row is only written after the
@@ -21,7 +22,7 @@ import release_manifest
 
 ROOT = m0.ROOT
 BASELINE = "v1.3"
-NAMED_SUBTESTS = 421
+NAMED_SUBTESTS = release_manifest.NAMED_SUBTESTS
 TEMPLATE_PROFILES = ("tenant-only", "organization-enabled")
 TEMPLATE_CONTRACT = "both-profiles-build-test-start"
 EVIDENCE_FILE = "profile-evidence.json"

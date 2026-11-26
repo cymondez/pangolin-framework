@@ -5,3 +5,4 @@
 *.test
 *.out
 __pycache__/
+/.workflow/root-module-di/

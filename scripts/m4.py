@@ -42,7 +42,7 @@ def gate(commit,mapping):
         if report['platform']['GOOS']+'-'+report['platform']['GOARCH']!=label:raise ValueError('wrong evidence platform')
         reports[label]=report
     if reports['windows-amd64']['source_sha256']!=reports['linux-amd64']['source_sha256']:raise ValueError('different source trees')
-    result={'milestone':'M4','status':'verified','source_commit':commit,'source_sha256':reports['windows-amd64']['source_sha256'],'baseline':'v1.3','named_subtests':18,'reports':{label:m0.digest(root/label/'report.json') for label in reports}}
+    result={'milestone':'M4','status':'verified','source_commit':commit,'source_sha256':reports['windows-amd64']['source_sha256'],'baseline':'v1.3','named_subtests':sum(len(mapping[k]) for k in ('unit_tests','integration_tests','python_tests')),'reports':{label:m0.digest(root/label/'report.json') for label in reports}}
     (root/'gate.json').write_text(json.dumps(result,indent=2)+'\n');print(json.dumps(result,indent=2))
 
 def main():

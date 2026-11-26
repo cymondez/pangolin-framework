@@ -23,3 +23,16 @@ defer done() // 必須在 Tx／cursor／lease 釋放後才呼叫
 Scope 能力由 scope.RegistryKey 的 singleton Registry 提供；Start 之前核對所有模組 RequiredScopeKinds。缺少 Registry／Kind 或重複 Provider 皆不能 Ready。測試包含 tenant-only、organization-enabled 與替代 Provider 組裝。
 
 `Options.StartupChecks` 在封存 Provider 後、任何 Module.Start 前依序執行。持久化應用在此註冊 Goose Schema Compatibility 與完整 Scope Inventory；失敗回收已取得資源，不能 Ready。檢查 slice 在建構時複製，nil callback 拒絕；具體 DB／組織查驗經注入 Port，Runtime 不 import Adapter。
+
+## Root 裝配模式
+
+`StartRoot(ctx, host, roots...)` 與 `Host` 的 `StartRoot(ctx, []any)` 方法實作見 [root.go](root.go)，進入舊路徑不變：`Host.Start(ctx, []module.Module)` 與其錯誤／清理語意原樣保留，Root 模式只透過新增進入點啟用。Root 模組是以指標提供的命名 struct instance（宣告 `ModuleMetadata`／`DependsOn` 與選用的 hook 介面），loader 在任何 hook 前完成閉環驗證。
+
+```go
+plan, err := module.LoadRoot(&appRoot{})    // 診斷用規劃，不執行任何 hook
+err = runtime.StartRoot(ctx, host, &appRoot{})
+```
+
+執行順序：閉環驗證（重名、循環、無效 Type、版本不符，錯誤攜帶相依路徑）→ 三階段完整屏障（全部模組 PreConfigure → Configure → PostConfigure）→ Config 載入（模組 SetDefault 併入 defaults 層）→ provenance 封存 Seal → StartupChecks → RequiredScopeKinds → 依拓撲順序 Start → Ready。每個 hook 只取得自己的 trusted RootBuilder；hook 返回（含錯誤與 panic）後 builder 與引擎註冊把手即被撤銷，hook 外操作一律拒絕。Start／Stop 只拿到逐模組受限 Resolver，解析自身與直接相依的 export 契約，沒有全域 Resolver 逃逸。失敗與 panic 沿既有 `shutdown` 路徑：先 Drain 參與者，反序 Stop，最後 `container.Close`；建構子 Cleanup 由 Container 擁有，`Stop` 不重複關閉。
+
+`kernel/app.Run(ctx, root, opts...)` 是簡單正式應用的預設入口：有界預算、全部 `config.StartupRules()` 必要鍵作為 defaults、opt-in `Sources`／`StartupChecks`／`Participants`，ctx 取消後以有界 Stop 收尾；不需要外部服務或環境變數。

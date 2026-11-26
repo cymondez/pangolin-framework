@@ -47,6 +47,104 @@
           "assertion_ref": "A01.expected",
           "status": "planned",
           "evidence": "artifacts/{commit}/{profile}/A01/stable-layer-order/"
+        },
+        {
+          "id": "A01/root-dedup-shared-diamond",
+          "stimulus_variant": "root-dedup-shared-diamond",
+          "assertion_ref": "A01.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A01/root-dedup-shared-diamond/"
+        },
+        {
+          "id": "A01/root-dedup-root-pointer",
+          "stimulus_variant": "root-dedup-root-pointer",
+          "assertion_ref": "A01.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A01/root-dedup-root-pointer/"
+        },
+        {
+          "id": "A01/root-distinct-instances-rejected",
+          "stimulus_variant": "root-distinct-instances-rejected",
+          "assertion_ref": "A01.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A01/root-distinct-instances-rejected/"
+        },
+        {
+          "id": "A01/root-stable-layer-order",
+          "stimulus_variant": "root-stable-layer-order",
+          "assertion_ref": "A01.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A01/root-stable-layer-order/"
+        },
+        {
+          "id": "A01/root-invalid-graphs",
+          "stimulus_variant": "root-invalid-graphs",
+          "assertion_ref": "A01.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A01/root-invalid-graphs/"
+        },
+        {
+          "id": "A01/root-invalid-graph-runs-no-hooks",
+          "stimulus_variant": "root-invalid-graph-runs-no-hooks",
+          "assertion_ref": "A01.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A01/root-invalid-graph-runs-no-hooks/"
+        },
+        {
+          "id": "A01/root-typed-nil-no-hooks-cross-package",
+          "stimulus_variant": "root-typed-nil-no-hooks-cross-package",
+          "assertion_ref": "A01.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A01/root-typed-nil-no-hooks-cross-package/"
+        },
+        {
+          "id": "A01/root-ref-safety",
+          "stimulus_variant": "root-ref-safety",
+          "assertion_ref": "A01.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A01/root-ref-safety/"
+        },
+        {
+          "id": "A01/root-shared-edge-constraint-validated",
+          "stimulus_variant": "root-shared-edge-constraint-validated",
+          "assertion_ref": "A01.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A01/root-shared-edge-constraint-validated/"
+        },
+        {
+          "id": "A01/root-base-metadata-defaults",
+          "stimulus_variant": "root-base-metadata-defaults",
+          "assertion_ref": "A01.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A01/root-base-metadata-defaults/"
+        },
+        {
+          "id": "A01/root-legacy-flat-start-unchanged",
+          "stimulus_variant": "root-legacy-flat-start-unchanged",
+          "assertion_ref": "A01.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A01/root-legacy-flat-start-unchanged/"
+        },
+        {
+          "id": "A01/root-app-defaults-validated-before-hooks",
+          "stimulus_variant": "root-app-defaults-validated-before-hooks",
+          "assertion_ref": "A01.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A01/root-app-defaults-validated-before-hooks/"
+        },
+        {
+          "id": "A01/root-app-defaults-validated-cross-package",
+          "stimulus_variant": "root-app-defaults-validated-cross-package",
+          "assertion_ref": "A01.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A01/root-app-defaults-validated-cross-package/"
+        },
+        {
+          "id": "A01/root-starthost-invalid-rejected",
+          "stimulus_variant": "root-starthost-invalid-rejected",
+          "assertion_ref": "A01.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A01/root-starthost-invalid-rejected/"
         }
       ]
     },
@@ -88,6 +186,104 @@
           "assertion_ref": "A02.expected",
           "status": "planned",
           "evidence": "artifacts/{commit}/{profile}/A02/no-ready-on-failure/"
+        },
+        {
+          "id": "A02/root-phase-barriers",
+          "stimulus_variant": "root-phase-barriers",
+          "assertion_ref": "A02.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A02/root-phase-barriers/"
+        },
+        {
+          "id": "A02/root-phase-barriers-cross-package",
+          "stimulus_variant": "root-phase-barriers-cross-package",
+          "assertion_ref": "A02.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A02/root-phase-barriers-cross-package/"
+        },
+        {
+          "id": "A02/root-lifecycle-stop-reversed",
+          "stimulus_variant": "root-lifecycle-stop-reversed",
+          "assertion_ref": "A02.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A02/root-lifecycle-stop-reversed/"
+        },
+        {
+          "id": "A02/root-start-failure-reverse-cleanup",
+          "stimulus_variant": "root-start-failure-reverse-cleanup",
+          "assertion_ref": "A02.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A02/root-start-failure-reverse-cleanup/"
+        },
+        {
+          "id": "A02/root-start-failure-no-ready",
+          "stimulus_variant": "root-start-failure-no-ready",
+          "assertion_ref": "A02.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A02/root-start-failure-no-ready/"
+        },
+        {
+          "id": "A02/root-start-failure-cross-package",
+          "stimulus_variant": "root-start-failure-cross-package",
+          "assertion_ref": "A02.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A02/root-start-failure-cross-package/"
+        },
+        {
+          "id": "A02/root-hook-panic-reclaims",
+          "stimulus_variant": "root-hook-panic-reclaims",
+          "assertion_ref": "A02.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A02/root-hook-panic-reclaims/"
+        },
+        {
+          "id": "A02/root-app-run-bounded-stop-on-cancel",
+          "stimulus_variant": "root-app-run-bounded-stop-on-cancel",
+          "assertion_ref": "A02.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A02/root-app-run-bounded-stop-on-cancel/"
+        },
+        {
+          "id": "A02/root-app-defaults-reach-module-start",
+          "stimulus_variant": "root-app-defaults-reach-module-start",
+          "assertion_ref": "A02.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A02/root-app-defaults-reach-module-start/"
+        },
+        {
+          "id": "A02/root-app-caller-defaults-override",
+          "stimulus_variant": "root-app-caller-defaults-override",
+          "assertion_ref": "A02.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A02/root-app-caller-defaults-override/"
+        },
+        {
+          "id": "A02/root-app-defaults-no-alias",
+          "stimulus_variant": "root-app-defaults-no-alias",
+          "assertion_ref": "A02.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A02/root-app-defaults-no-alias/"
+        },
+        {
+          "id": "A02/root-stop-resolver-hidden-denied",
+          "stimulus_variant": "root-stop-resolver-hidden-denied",
+          "assertion_ref": "A02.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A02/root-stop-resolver-hidden-denied/"
+        },
+        {
+          "id": "A02/root-stop-resolver-direct-allowed",
+          "stimulus_variant": "root-stop-resolver-direct-allowed",
+          "assertion_ref": "A02.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A02/root-stop-resolver-direct-allowed/"
+        },
+        {
+          "id": "A02/root-hook-panic-identity",
+          "stimulus_variant": "root-hook-panic-identity",
+          "assertion_ref": "A02.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A02/root-hook-panic-identity/"
         }
       ]
     },
@@ -1843,6 +2039,510 @@
           "assertion_ref": "A46.expected",
           "status": "planned",
           "evidence": "artifacts/{commit}/{profile}/A46/captive-scope/"
+        },
+        {
+          "id": "A46/root-constructor-shapes",
+          "stimulus_variant": "root-constructor-shapes",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-constructor-shapes/"
+        },
+        {
+          "id": "A46/root-lifetime-default-transient",
+          "stimulus_variant": "root-lifetime-default-transient",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-lifetime-default-transient/"
+        },
+        {
+          "id": "A46/root-lifetime-singleton-shared",
+          "stimulus_variant": "root-lifetime-singleton-shared",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-lifetime-singleton-shared/"
+        },
+        {
+          "id": "A46/root-operation-explicit-scope",
+          "stimulus_variant": "root-operation-explicit-scope",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-operation-explicit-scope/"
+        },
+        {
+          "id": "A46/root-contract-visibility-chain-valid",
+          "stimulus_variant": "root-contract-visibility-chain-valid",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-contract-visibility-chain-valid/"
+        },
+        {
+          "id": "A46/root-indirect-dependency-denied",
+          "stimulus_variant": "root-indirect-dependency-denied",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-indirect-dependency-denied/"
+        },
+        {
+          "id": "A46/root-visibility-owner-runtime",
+          "stimulus_variant": "root-visibility-owner-runtime",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-visibility-owner-runtime/"
+        },
+        {
+          "id": "A46/root-visibility-cross-package",
+          "stimulus_variant": "root-visibility-cross-package",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-visibility-cross-package/"
+        },
+        {
+          "id": "A46/root-missing-provider-diagnostics",
+          "stimulus_variant": "root-missing-provider-diagnostics",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-missing-provider-diagnostics/"
+        },
+        {
+          "id": "A46/root-ambiguity-and-binding",
+          "stimulus_variant": "root-ambiguity-and-binding",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-ambiguity-and-binding/"
+        },
+        {
+          "id": "A46/root-bind-permission-seal",
+          "stimulus_variant": "root-bind-permission-seal",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-bind-permission-seal/"
+        },
+        {
+          "id": "A46/root-canonical-tokens",
+          "stimulus_variant": "root-canonical-tokens",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-canonical-tokens/"
+        },
+        {
+          "id": "A46/root-type-identity",
+          "stimulus_variant": "root-type-identity",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-type-identity/"
+        },
+        {
+          "id": "A46/root-low-level-tokens",
+          "stimulus_variant": "root-low-level-tokens",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-low-level-tokens/"
+        },
+        {
+          "id": "A46/root-low-level-factory-contract",
+          "stimulus_variant": "root-low-level-factory-contract",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-low-level-factory-contract/"
+        },
+        {
+          "id": "A46/root-cross-owner-as-candidate",
+          "stimulus_variant": "root-cross-owner-as-candidate",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-cross-owner-as-candidate/"
+        },
+        {
+          "id": "A46/root-as-without-owner-dep-fails",
+          "stimulus_variant": "root-as-without-owner-dep-fails",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-as-without-owner-dep-fails/"
+        },
+        {
+          "id": "A46/root-as-implementation-checked",
+          "stimulus_variant": "root-as-implementation-checked",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-as-implementation-checked/"
+        },
+        {
+          "id": "A46/root-plan-validation",
+          "stimulus_variant": "root-plan-validation",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-plan-validation/"
+        },
+        {
+          "id": "A46/root-seal-one-shot",
+          "stimulus_variant": "root-seal-one-shot",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-seal-one-shot/"
+        },
+        {
+          "id": "A46/root-seal-failure-one-shot",
+          "stimulus_variant": "root-seal-failure-one-shot",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-seal-failure-one-shot/"
+        },
+        {
+          "id": "A46/root-laundering-rejected",
+          "stimulus_variant": "root-laundering-rejected",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-laundering-rejected/"
+        },
+        {
+          "id": "A46/root-laundering-contract-rejected",
+          "stimulus_variant": "root-laundering-contract-rejected",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-laundering-contract-rejected/"
+        },
+        {
+          "id": "A46/root-cleanup-order-failure",
+          "stimulus_variant": "root-cleanup-order-failure",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-cleanup-order-failure/"
+        },
+        {
+          "id": "A46/root-lifecycle-resolver-boundary",
+          "stimulus_variant": "root-lifecycle-resolver-boundary",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-lifecycle-resolver-boundary/"
+        },
+        {
+          "id": "A46/root-edge-diagnostics",
+          "stimulus_variant": "root-edge-diagnostics",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-edge-diagnostics/"
+        },
+        {
+          "id": "A46/root-provenance-windows",
+          "stimulus_variant": "root-provenance-windows",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-provenance-windows/"
+        },
+        {
+          "id": "A46/root-revocation-failure-paths",
+          "stimulus_variant": "root-revocation-failure-paths",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-revocation-failure-paths/"
+        },
+        {
+          "id": "A46/root-builder-revoke-waits-inflight",
+          "stimulus_variant": "root-builder-revoke-waits-inflight",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-builder-revoke-waits-inflight/"
+        },
+        {
+          "id": "A46/root-builder-invalidated-after-hook-error",
+          "stimulus_variant": "root-builder-invalidated-after-hook-error",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-builder-invalidated-after-hook-error/"
+        },
+        {
+          "id": "A46/root-replace-operations",
+          "stimulus_variant": "root-replace-operations",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-replace-operations/"
+        },
+        {
+          "id": "A46/root-neutral-concrete-replace",
+          "stimulus_variant": "root-neutral-concrete-replace",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-neutral-concrete-replace/"
+        },
+        {
+          "id": "A46/root-contract-scoped-exclusion",
+          "stimulus_variant": "root-contract-scoped-exclusion",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-contract-scoped-exclusion/"
+        },
+        {
+          "id": "A46/root-neutral-replacement-identity",
+          "stimulus_variant": "root-neutral-replacement-identity",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-neutral-replacement-identity/"
+        },
+        {
+          "id": "A46/root-non-owner-bind-selected-or-denied",
+          "stimulus_variant": "root-non-owner-bind-selected-or-denied",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-non-owner-bind-selected-or-denied/"
+        },
+        {
+          "id": "A46/root-openscope-identity-cleanup-boundaries",
+          "stimulus_variant": "root-openscope-identity-cleanup-boundaries",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-openscope-identity-cleanup-boundaries/"
+        },
+        {
+          "id": "A46/root-openscope-distinct-scopes",
+          "stimulus_variant": "root-openscope-distinct-scopes",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-openscope-distinct-scopes/"
+        },
+        {
+          "id": "A46/root-openscope-single-factory-per-scope",
+          "stimulus_variant": "root-openscope-single-factory-per-scope",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-openscope-single-factory-per-scope/"
+        },
+        {
+          "id": "A46/root-openscope-resolver-guard",
+          "stimulus_variant": "root-openscope-resolver-guard",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-openscope-resolver-guard/"
+        },
+        {
+          "id": "A46/root-openscope-neutral-replacement",
+          "stimulus_variant": "root-openscope-neutral-replacement",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-openscope-neutral-replacement/"
+        },
+        {
+          "id": "A46/root-openscope-cancel-and-closed",
+          "stimulus_variant": "root-openscope-cancel-and-closed",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-openscope-cancel-and-closed/"
+        },
+        {
+          "id": "A46/root-foundation-typed-injection",
+          "stimulus_variant": "root-foundation-typed-injection",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-foundation-typed-injection/"
+        },
+        {
+          "id": "A46/root-legacy-root-owned-injection-rejected",
+          "stimulus_variant": "root-legacy-root-owned-injection-rejected",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-legacy-root-owned-injection-rejected/"
+        },
+        {
+          "id": "A46/root-legacy-registry-injection-rejected",
+          "stimulus_variant": "root-legacy-registry-injection-rejected",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-legacy-registry-injection-rejected/"
+        },
+        {
+          "id": "A46/root-legacy-export-needs-owner-edge",
+          "stimulus_variant": "root-legacy-export-needs-owner-edge",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-legacy-export-needs-owner-edge/"
+        },
+        {
+          "id": "A46/root-builder-parallel-setdefault-window",
+          "stimulus_variant": "root-builder-parallel-setdefault-window",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-builder-parallel-setdefault-window/"
+        },
+        {
+          "id": "A46/root-builder-replace-own-provider",
+          "stimulus_variant": "root-builder-replace-own-provider",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-builder-replace-own-provider/"
+        },
+        {
+          "id": "A46/root-private-inference-compose",
+          "stimulus_variant": "root-private-inference-compose",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-private-inference-compose/"
+        },
+        {
+          "id": "A46/root-private-hidden-from-dependent",
+          "stimulus_variant": "root-private-hidden-from-dependent",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-private-hidden-from-dependent/"
+        },
+        {
+          "id": "A46/root-private-shared-type-independent",
+          "stimulus_variant": "root-private-shared-type-independent",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-private-shared-type-independent/"
+        },
+        {
+          "id": "A46/root-private-ambiguity-and-bind",
+          "stimulus_variant": "root-private-ambiguity-and-bind",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-private-ambiguity-and-bind/"
+        },
+        {
+          "id": "A46/root-private-reversed-registration-order",
+          "stimulus_variant": "root-private-reversed-registration-order",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-private-reversed-registration-order/"
+        },
+        {
+          "id": "A46/root-private-public-owner-authority",
+          "stimulus_variant": "root-private-public-owner-authority",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-private-public-owner-authority/"
+        },
+        {
+          "id": "A46/root-private-lifetime-and-scopes",
+          "stimulus_variant": "root-private-lifetime-and-scopes",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-private-lifetime-and-scopes/"
+        },
+        {
+          "id": "A46/root-private-alias-identity-fence",
+          "stimulus_variant": "root-private-alias-identity-fence",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-private-alias-identity-fence/"
+        },
+        {
+          "id": "A46/root-private-dangling-bindings",
+          "stimulus_variant": "root-private-dangling-bindings",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-private-dangling-bindings/"
+        },
+        {
+          "id": "A46/root-private-replace-binding",
+          "stimulus_variant": "root-private-replace-binding",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-private-replace-binding/"
+        },
+        {
+          "id": "A46/root-private-laundering-and-cycle",
+          "stimulus_variant": "root-private-laundering-and-cycle",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-private-laundering-and-cycle/"
+        },
+        {
+          "id": "A46/root-private-as-serves-own-private",
+          "stimulus_variant": "root-private-as-serves-own-private",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-private-as-serves-own-private/"
+        },
+        {
+          "id": "A46/root-private-as-survives-contract-replacement",
+          "stimulus_variant": "root-private-as-survives-contract-replacement",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-private-as-survives-contract-replacement/"
+        },
+        {
+          "id": "A46/root-private-as-unexported-own",
+          "stimulus_variant": "root-private-as-unexported-own",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-private-as-unexported-own/"
+        },
+        {
+          "id": "A46/root-private-as-public-authority",
+          "stimulus_variant": "root-private-as-public-authority",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-private-as-public-authority/"
+        },
+        {
+          "id": "A46/root-private-foreign-unexported-no-shadow",
+          "stimulus_variant": "root-private-foreign-unexported-no-shadow",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-private-foreign-unexported-no-shadow/"
+        },
+        {
+          "id": "A46/root-private-foreign-missing-mentions-owner",
+          "stimulus_variant": "root-private-foreign-missing-mentions-owner",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-private-foreign-missing-mentions-owner/"
+        },
+        {
+          "id": "A46/root-private-bindonly-lifecycle",
+          "stimulus_variant": "root-private-bindonly-lifecycle",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-private-bindonly-lifecycle/"
+        },
+        {
+          "id": "A46/root-private-lowlevel-alias-translation",
+          "stimulus_variant": "root-private-lowlevel-alias-translation",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-private-lowlevel-alias-translation/"
+        },
+        {
+          "id": "A46/root-private-alias-fence-correction",
+          "stimulus_variant": "root-private-alias-fence-correction",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-private-alias-fence-correction/"
+        },
+        {
+          "id": "A46/root-private-shared-param-one-alias",
+          "stimulus_variant": "root-private-shared-param-one-alias",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-private-shared-param-one-alias/"
+        },
+        {
+          "id": "A46/root-private-runtime-startstop",
+          "stimulus_variant": "root-private-runtime-startstop",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-private-runtime-startstop/"
+        },
+        {
+          "id": "A46/root-private-runtime-openscope-operation",
+          "stimulus_variant": "root-private-runtime-openscope-operation",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-private-runtime-openscope-operation/"
+        },
+        {
+          "id": "A46/root-private-runtime-hidden-from-dependent",
+          "stimulus_variant": "root-private-runtime-hidden-from-dependent",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-private-runtime-hidden-from-dependent/"
+        },
+        {
+          "id": "A46/root-private-runtime-shared-independent",
+          "stimulus_variant": "root-private-runtime-shared-independent",
+          "assertion_ref": "A46.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A46/root-private-runtime-shared-independent/"
         }
       ]
     },
@@ -2610,6 +3310,76 @@
           "assertion_ref": "A63.expected",
           "status": "planned",
           "evidence": "artifacts/{commit}/{profile}/A63/tenant-load-competition/"
+        },
+        {
+          "id": "A63/permit-event-spoof-release",
+          "stimulus_variant": "permit-event-spoof-release",
+          "assertion_ref": "A63.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A63/permit-event-spoof-release/"
+        },
+        {
+          "id": "A63/permit-jobs-spoof-release",
+          "stimulus_variant": "permit-jobs-spoof-release",
+          "assertion_ref": "A63.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A63/permit-jobs-spoof-release/"
+        },
+        {
+          "id": "A63/permit-holey-resize",
+          "stimulus_variant": "permit-holey-resize",
+          "assertion_ref": "A63.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A63/permit-holey-resize/"
+        },
+        {
+          "id": "A63/permit-capacity-guc",
+          "stimulus_variant": "permit-capacity-guc",
+          "assertion_ref": "A63.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A63/permit-capacity-guc/"
+        },
+        {
+          "id": "A63/permit-provision-atomic",
+          "stimulus_variant": "permit-provision-atomic",
+          "assertion_ref": "A63.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A63/permit-provision-atomic/"
+        },
+        {
+          "id": "A63/permit-no-cross-tenant-lock",
+          "stimulus_variant": "permit-no-cross-tenant-lock",
+          "assertion_ref": "A63.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A63/permit-no-cross-tenant-lock/"
+        },
+        {
+          "id": "A63/permit-adopt-upgrade",
+          "stimulus_variant": "permit-adopt-upgrade",
+          "assertion_ref": "A63.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A63/permit-adopt-upgrade/"
+        },
+        {
+          "id": "A63/permit-race-crash",
+          "stimulus_variant": "permit-race-crash",
+          "assertion_ref": "A63.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A63/permit-race-crash/"
+        },
+        {
+          "id": "A63/permit-typed-failures-rls",
+          "stimulus_variant": "permit-typed-failures-rls",
+          "assertion_ref": "A63.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A63/permit-typed-failures-rls/"
+        },
+        {
+          "id": "A63/permit-event-capacity",
+          "stimulus_variant": "permit-event-capacity",
+          "assertion_ref": "A63.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A63/permit-event-capacity/"
         }
       ]
     },
@@ -3187,6 +3957,13 @@
           "assertion_ref": "A74.expected",
           "status": "planned",
           "evidence": "artifacts/{commit}/{profile}/A74/unsupported-kind-no-fallback/"
+        },
+        {
+          "id": "A74/root-required-scope-kinds-rejected",
+          "stimulus_variant": "root-required-scope-kinds-rejected",
+          "assertion_ref": "A74.expected",
+          "status": "planned",
+          "evidence": "artifacts/{commit}/{profile}/A74/root-required-scope-kinds-rejected/"
         }
       ]
     },

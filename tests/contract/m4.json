@@ -9,6 +9,16 @@
     "A66/redaction": "github.com/cymondez/pangolin-framework/observability:TestA66Observability/redaction"
   },
   "integration_tests": {
+    "A63/permit-event-spoof-release": "github.com/cymondez/pangolin-framework/tests/m4:TestPermitIntegrityLunaEventSpoofAndRelease",
+    "A63/permit-jobs-spoof-release": "github.com/cymondez/pangolin-framework/tests/m4:TestPermitIntegrityLunaSpoofAndOwnerRelease",
+    "A63/permit-holey-resize": "github.com/cymondez/pangolin-framework/tests/m4:TestPermitIntegrityLunaHoleyShrinkGrow",
+    "A63/permit-capacity-guc": "github.com/cymondez/pangolin-framework/tests/m4:TestPermitIntegrityLunaMissingAndWrongGUC",
+    "A63/permit-provision-atomic": "github.com/cymondez/pangolin-framework/tests/m4:TestPermitIntegrityLunaProvisionQueuesAtomicity",
+    "A63/permit-no-cross-tenant-lock": "github.com/cymondez/pangolin-framework/tests/m4:TestPermitJobsNoCrossTenantSerialization",
+    "A63/permit-adopt-upgrade": "github.com/cymondez/pangolin-framework/tests/m4:TestPermitEventUpgradeAdoption",
+    "A63/permit-race-crash": "github.com/cymondez/pangolin-framework/tests/m4:TestPermitDuplicateRacesAndCrashRecovery",
+    "A63/permit-typed-failures-rls": "github.com/cymondez/pangolin-framework/tests/m4:TestPermitTypedFailuresAndRLS",
+    "A63/permit-event-capacity": "github.com/cymondez/pangolin-framework/tests/m4:TestEventCapacity",
     "A63/broker-offline": "github.com/cymondez/pangolin-framework/tests/m4:TestA63Resilience/broker-offline",
     "A63/capacity-limit": "github.com/cymondez/pangolin-framework/tests/m4:TestA63Resilience/capacity-limit",
     "A63/retry-limit": "github.com/cymondez/pangolin-framework/tests/m4:TestA63Resilience/retry-limit",

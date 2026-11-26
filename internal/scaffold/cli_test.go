@@ -54,8 +54,20 @@ func TestA67(t *testing.T) {
 			t.Fatal(out)
 		}
 		raw, _ := os.ReadFile(filepath.Join(dir, "modules", "registry.go"))
-		if !strings.Contains(string(raw), "m_catalog.Module()") {
-			t.Fatal("unregistered module")
+		if !strings.Contains(string(raw), "module.Of[m_catalog.Module]()") || !strings.Contains(string(raw), "type UserRoot struct{}") {
+			t.Fatal("user module not registered in the root aggregator")
+		}
+		module, err := os.ReadFile(filepath.Join(dir, "modules", "catalog", "module.go"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(string(module), "module.RootBuilder") || !strings.Contains(string(module), "ModuleMetadata() module.Metadata") {
+			t.Fatal("generated module is not a root-mode module")
+		}
+		// Framework dependency names translate into the foundation Type
+		// edge; they are never silently omitted.
+		if !strings.Contains(string(module), "module.Of[foundation.Module]()") || !strings.Contains(string(module), "example.com/bookstore/foundation") {
+			t.Fatalf("framework dependency did not translate to the foundation Type edge: %s", module)
 		}
 		if _, err := os.Stat(filepath.Join(dir, "modules", "catalog", "README.md")); err != nil {
 			t.Fatal(err)
@@ -100,7 +112,7 @@ func TestA67(t *testing.T) {
 	})
 	t.Run("invalid-arguments", func(t *testing.T) {
 		dir := create(t, false)
-		for _, args := range [][]string{{"unknown"}, {"new"}, {"new", "../escape"}, {"new", "x", "--template", "bad"}, {"new", "x", "--with", "enterprise"}, {"new", "x", "--unknown"}, {"new", "x", "extra"}, {"module", "add", "m", "extra"}, {"module", "add", "m", "--depends", "missing"}, {"module", "add", "m", "--depends", "m"}, {"module", "add", "m", "--depends", "persistence,persistence"}, {"migrate", "create", "bad", "--module", "missing"}, {"migrate", "create", "bad", "--module", "bookstore", "extra"}, {"migrate", "status", "extra"}, {"doctor", "extra"}, {"generate", "openapi", "extra"}} {
+		for _, args := range [][]string{{"unknown"}, {"new"}, {"new", "../escape"}, {"new", "x", "--template", "bad"}, {"new", "x", "--with", "enterprise"}, {"new", "x", "--unknown"}, {"new", "x", "extra"}, {"module", "add", "m", "extra"}, {"module", "add", "m", "--depends", "missing"}, {"module", "add", "m", "--depends", "m"}, {"module", "add", "m", "--depends", "bookstore"}, {"module", "add", "m", "--depends", "persistence,persistence"}, {"migrate", "create", "bad", "--module", "missing"}, {"migrate", "create", "bad", "--module", "bookstore", "extra"}, {"migrate", "status", "extra"}, {"doctor", "extra"}, {"generate", "openapi", "extra"}} {
 			if code, out := invoke(t, dir, args...); code == 0 {
 				t.Fatal(args, out)
 			}
@@ -159,14 +171,14 @@ func TestA67(t *testing.T) {
 func TestA94(t *testing.T) {
 	t.Run("default-tenant-template", func(t *testing.T) {
 		dir := create(t, false)
-		raw, _ := os.ReadFile(filepath.Join(dir, "internal", "app", "profile.go"))
+		raw, _ := os.ReadFile(filepath.Join(dir, "foundation", "profile.go"))
 		if strings.Contains(string(raw), "modules/organization") {
 			t.Fatal("tenant imports organization")
 		}
 	})
 	t.Run("explicit-organization-template", func(t *testing.T) {
 		dir := create(t, true)
-		raw, _ := os.ReadFile(filepath.Join(dir, "internal", "app", "profile.go"))
+		raw, _ := os.ReadFile(filepath.Join(dir, "foundation", "profile.go"))
 		if !strings.Contains(string(raw), "organization.NewStore") || !strings.Contains(string(raw), "orghttp.NewHandler") {
 			t.Fatal("incomplete profile")
 		}

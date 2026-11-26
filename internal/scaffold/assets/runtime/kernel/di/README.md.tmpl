@@ -24,4 +24,8 @@ Token 身分由 Name 與 Go Type 共同決定。Factory 必須在 DependsOn 宣�
 
 Factory 回傳 error 時仍會執行其回傳的 Cleanup，保留主要與清理錯誤；Singleton 建構失敗／panic 會回收已取得資源。Cleanup 必須遵守 context deadline，避免阻塞停機；同一資源只能指定一個 owner。不要在 Module.Stop 再次關閉 Factory 擁有的連線池。
 
-驗證：`go test ./kernel/di`。A46 包含三種 lifetime、明確替換、封存、相依錯誤、部分失敗、Scope 清理與併發解析。
+Factory 與 Cleanup 都在 container metadata lock 之外執行。Singleton 使用 provider key 協調單次建構；Operation 使用 scope 與 provider key 協調單次建構，同 key 的等待者可由自己的 context 取消。其他 key 的 Resolve 與 OpenScope 不受慢 Factory 或 Cleanup 阻塞。Factory Resolver 在 Factory 返回時立即失效，且只可解析 DependsOn 中宣告的服務。
+
+Scope／Container Close 先停止新操作並取消進行中的 Factory context，再等已進入的解析離開後清理資源。呼叫端提供的 deadline 或 Registry cleanup timeout（取較早者）限制 Close 等待時間；僅取消訊號不會略過清理。若 Factory 忽略取消而晚回傳資源，背景收尾仍會接手並清理，Close 不會把該資源交給呼叫者或漏掉清理。並行與重複 Close 共用同一次清理結果；Container 會等所有 Operation Cleanup 完成後才清 Singleton。每組資源依反向建構順序清理。
+
+驗證：`go test -count 1 -timeout 120s ./kernel/di`。A46 包含三種 lifetime、明確替換、封存、相依錯誤、部分失敗、Scope 清理、單一建構及慢 Factory／Cleanup 下互不相關的併發解析。

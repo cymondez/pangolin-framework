@@ -376,6 +376,8 @@ flowchart LR
 | M5 | ORG-013 | A94；同 commit 的執行結果與規範要求證據 | Verified |
 | M6 | ORG-014 | A95；同 commit 的執行結果與規範要求證據 | Verified（來源 1d7ef1cf；見 M6 驗收紀錄） |
 
+**Root 裝配／建構子 DI 增補映射（2026-11-25）。** 依[實作規範 §13.6](panGOlin-framework_實作規範書.md#s-13.6)，Root 裝配模式——Type 相依閉環與去重、驗證先於任何 hook／建構子、完整三階段 phase barrier、建構子註冊（預設 Transient）、契約擁有者中心可視性、Trusted provenance、有界明示 `module.OpenScope` 操作 scope、Foundation 獨立可 import 的 Provider 擁有者與 CLI framework 別名——以對應需求的加法具名情境追蹤，各需求的首次交付仍只有上表一列：MOD-001 由 `A01/root-*`（14 項）、MOD-002 由 `A02/root-*`（14 項）、MOD-003 由 `A46/root-*`（47 項）家族承載細項（家族語意見實作規範 §2.1–§2.3 增補）。全部 75 項情境已註冊為 `tests/contract/subtests.json` 的正式具名 subtests（契約總數 506），並映射到 kernel/module、kernel/runtime、kernel/app、tests/rootmodules 與 internal/scaffold 的既有測試函式（見 `tests/contract/m1.json`；M1 映射 122 項）。家族案例通過同版 Gate／累積回歸與同源既有路徑回歸前，此增補仍為 `In progress`，沒有任何 Verified 狀態；執行責任見 §6.1 WP19。上表 MOD 列與 A01／A02／A46 原案例及 M1 證據描述既有裝配路徑，原文與來源 commit `9eb10df6` 不變，也不由本增補推論任何新機制已驗收。尚未註冊為情境的已知缺口：Root 裝配路徑上 `RequiredScopeKinds` 缺 registry 的啟動拒絕（`TestRootRequiredScopeKindsWithoutRegistryFails` 已存在，未歸入任何家族）待 primary 決定是否以 `A74/root-*` 家族納管。
+
 <a id="work-items"></a>
 
 ## 6. 工作包與執行規則
@@ -404,6 +406,7 @@ flowchart LR
 | WP16 平台服務 | M5／Go C | Scoped Cache／Settings／Features | A65、A80 |
 | WP17 CLI 與指南 | M5／Go C、Go A | 兩 Profile 範本、命令、OpenAPI、指南 | A67、A94 |
 | WP18 發布驗收 | M6／技術負責人、QA、SRE | release manifest、全量報告、升級／復原演練 | A70、A72、A95 及全部累積 Gate |
+| WP19 Root 裝配與建構子 DI | 2026-11-25 增補／Core（kernel 擁有者） | Root Type 閉環去重、驗證先於 hook、完整 phase barrier、建構子 DI（Transient 預設）、契約擁有者可視性、Trusted provenance、逐模組生命週期 Resolver、有界明示 `module.OpenScope`、擁有者本模組私有介面注入（無 Export、module＋reflect.Type 鍵、公開契約優先）、Foundation Provider 擁有者與 CLI framework 別名；`A01/root-*` 14、`A02/root-*` 14、`A46/root-*` 72、`A74/root-*` 1（RequiredScopeKinds 缺 registry 拒絕，映射 m2.json）共 101 項已註冊並映射 | §13.6 的加法情境家族通過，且同源既有路徑回歸與累積 Gate 通過；未通過前不標 Verified |
 
 ### 6.2 Issue 與驗收證據格式
 

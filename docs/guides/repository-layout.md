@@ -14,6 +14,7 @@ examples/bookstore/
   infrastructure/                         Repository、SQL／sqlc、事件與 Read Model 薄片
   transport/http/                         範例專用 HTTP Handler
   internal/testkit/cmd/                    範例專用故障／對帳程序
+examples/moduleapp/                        Root 裝配正式示範（獨立 module；catalog 契約 package 分離）
 internal/testkit/                         共用測試 IdP／Profile fixture
 internal/quality/                         非公開 Go 品質檢查實作
 tests/                                   跨套件驗收、契約／fixture／coverage 資料
@@ -60,3 +61,5 @@ M4 的背景工作契約與 Worker 在 platform/jobs，PostgreSQL queue Adapter�
 M5 的 Cache／Settings／Features 在 platform 下；CLI main 在 cmd/pangolin、非公開命令與 embed 模板在 internal/scaffold。純文字 assets 由 scripts/template_bundle.py 固定同版 Runtime，禁止 framework import examples。跨套件 CLI 驗收在 tests/m5；完整組織 Authority／平台回歸重用 tests/m3/platform_test.go。tests/contract/m5.json 索引正式情境與模組 README。
 
 後續資料存取修正以 persistence/database 定義中立 Resource／Executor／Dialect；各引擎 Adapter 在 persistence/{postgres,mysql,sqlite}，跨引擎契約在 tests/database。業務 Application 使用自己的 Repository Port，Repository 使用中立 Executor；連線池與 Driver 型別只在組裝／Adapter。引擎專用 schema／migration 仍由實際擁有者維護，不因新增中立 Port 就宣稱全數跨引擎可用。
+
+Root 裝配／建構子 DI 增補落在 kernel/module（root_types.go、root_loader.go、services.go）、kernel/runtime/root.go 與 kernel/app，新增 tests/rootmodules 與 examples/moduleapp；完整入口與現況見 [Root DI 指南](root-module-di.md)。

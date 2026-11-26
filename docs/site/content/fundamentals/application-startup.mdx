@@ -1,22 +1,54 @@
 ---
 title: 應用啟動與停止
-description: 讓 Host 依相依順序啟動多個模組，並在結束時反序停止。
+description: Root 裝配依相依順序啟動多個模組，結束時反序停止。
 ---
 
 import CodeBlock from '@theme/CodeBlock';
-import source from '../_snippets/lifecycle.go';
+import source from '../_snippets/root-lifecycle.go';
+import legacySource from '../_snippets/lifecycle.go';
 
-當應用有多個模組，Host 會先完成設定與服務組裝，再按照相依順序啟動。結束時反序停止，讓被依賴的資源保持可用直到工作完成。
+當應用有多個模組，Root 裝配會先完成所有模組的組態與服務組裝，再按相依順序啟動；context 結束時反序停止，讓被依賴的資源保持可用直到工作完成。
 
 ## 執行範例
 
 從 `pangolin-framework/examples/basics` 執行：
 
 ```bash
-go run ./lifecycle
+go run ./root-lifecycle
 ```
 
 預期結果：
+
+```text
+start storage
+start books
+stop books
+stop storage
+```
+
+`books` 以 Type 參照（`module.Of[storageModule]()`）宣告相依，因此只要把 books 當根模組交給 `app.Run`，loader 就會把 storage 納入規劃。`storage` 在這裡是示範模組名稱，不會連接資料庫。完整程式如下，也可複製到自己的 `main.go` 執行：
+
+<CodeBlock language="go" title="examples/basics/root-lifecycle/main.go">{source}</CodeBlock>
+
+## 啟動完成了什麼？
+
+`app.Run` 在呼叫端 context 結束前持續運行：先完成**所有**模組的 PreConfigure → Configure → PostConfigure、封存服務組合，再依相依順序逐模組 Start；全部 Start 成功後應用才接收工作。console 範例以一秒期限結束；長駐應用把 `signal.NotifyContext`（Ctrl+C）或 HTTP 關閉訊號的 context 交給 `app.Run`，並以 `app.Participants` 註冊 drain 參與者。
+
+持久化應用在 `app.StartupChecks` 註冊 schema 相容性與完整 Scope inventory 檢查。檢查在服務組合封存後、任何模組 Start 前執行；缺少必要 Provider 或保留中的 owner Kind 就拒絕啟動，詳見[部署遷移](../data/migrations.md)。
+
+## 應用仍在處理請求時怎麼停止？
+
+HTTP 或 Worker 可以透過 Participant 接入停止流程：先停止接收新工作（Quiesce）、等現有工作完成（Drain），期限到達時取消。這能避免資料庫先被關閉，請求卻仍在寫入。
+
+用 `runtime.NewWorkGroup()` 追蹤操作；進入時呼叫 Enter，釋放交易等資源後才呼叫回傳的 done。HTTP listener 的 Shutdown 仍需由你的應用接入。需要自訂 runtime 預算時，以 `runtime.New` 建立主機並用 `runtime.StartRoot(ctx, host, root)` 啟動同一個根模組；CLI 生成的應用正是這樣組裝，見[用 CLI 建立自己的 Bookstore](../tutorials/generated-bookstore.md)，長時間執行的 HTTP 範例見 [Bookstore](../tutorials/bookstore.md)。
+
+## 進階相容路徑：明示清單組裝
+
+舊式 `Host.Start(ctx, []module.Module)` 仍然可用並持續支援（未棄用）：模組以結構值宣告（欄位式鉤子與 `module.Dependency` 相依），明示傳入切片，並用 `host.Ready()` 查詢就緒狀態。維護以這種形狀組裝的既有應用時使用：
+
+<CodeBlock language="go" title="examples/basics/lifecycle/main.go（進階相容版本）">{legacySource}</CodeBlock>
+
+從 `examples/basics` 執行 `go run ./lifecycle`，預期結果：
 
 ```text
 start storage
@@ -26,20 +58,4 @@ stop books
 stop storage
 ```
 
-storage 在這裡是示範模組名稱，不會連接資料庫。完整程式如下，也可複製到自己的 `main.go` 執行：
-
-<CodeBlock language="go" title="main.go">{source}</CodeBlock>
-
-## Ready 代表什麼？
-
 `host.Start` 成功後 `host.Ready()` 才為 true。HTTP 應用可以把它接到健康檢查，避免尚未準備完成就接收請求。
-
-持久化應用在 `runtime.Options.StartupChecks` 註冊 schema 相容性與完整 Scope inventory 檢查。檢查在 Provider seal 後、任何模組 Start 前執行；缺少必要 Provider 或保留中的 owner Kind 就拒絕 Ready，詳見[部署遷移](../data/migrations.md)。
-
-## 應用仍在處理請求時怎麼停止？
-
-HTTP 或 Worker 可以透過 Participant 接入停止流程：先停止接收新工作（Quiesce）、等現有工作完成（Drain），期限到達時取消。這能避免資料庫先被關閉，請求卻仍在寫入。
-
-用 `runtime.NewWorkGroup()` 追蹤操作；進入時呼叫 Enter，釋放交易等資源後才呼叫回傳的 done。HTTP listener 的 Shutdown 仍需由你的應用接入。
-
-一般 console 程式可先使用本例的 Start／Stop；需要長時間執行的 HTTP 範例請繼續 [Bookstore](../tutorials/bookstore.md)。

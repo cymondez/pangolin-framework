@@ -259,12 +259,12 @@ class IndexTestCase(TestCase):
 class ClosureTestCase(TestCase):
     maxDiff = None
 
-    def test_production_mappings_map_exactly_421_subtests(self):
+    def test_production_mappings_map_exactly_532_subtests(self):
         groups = m6_index._subtest_groups(m6_index.ROOT)
         closure = release_manifest.check_closure(m6_index._mappings(m6_index.ROOT), groups)
-        self.assertEqual(closure["mapped"], 421)
-        self.assertEqual(closure["milestones"], {"M1": 47, "M2": 133, "M3": 185, "M4": 18, "M5": 25, "M6": 13})
-        self.assertEqual(sum(1 for _ in (subtest for group in groups for subtest in group["subtests"])), 421)
+        self.assertEqual(closure["mapped"], 532)
+        self.assertEqual(closure["milestones"], {"M1": 147, "M2": 134, "M3": 185, "M4": 28, "M5": 25, "M6": 13})
+        self.assertEqual(sum(1 for _ in (subtest for group in groups for subtest in group["subtests"])), 532)
 
     def test_builder_rejects_duplicate_production_mapping(self):
         root = Path(m6_index.ROOT)

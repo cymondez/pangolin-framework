@@ -21,7 +21,7 @@ const (
 
 // expectedUpgradeVersions is the complete pending set a previous (M1-era
 // tenant-only) deployment receives on the v0.1.0 forward upgrade.
-var expectedUpgradeVersions = []int64{3000001, 3000002, 3100001, 3100002, 3100003, 3100004, 3200001, 3200002, 3300001, 4000001, 4000002}
+var expectedUpgradeVersions = []int64{3000001, 3000002, 3100001, 3100002, 3100003, 3100004, 3200001, 3200002, 3300001, 4000001, 4000002, 4100002, 4100003}
 
 // TestM6ForwardUpgrade seeds a previous-version tenant-only database through
 // the real fixture schema and app-role RLS sessions, then applies the actual

@@ -911,6 +911,122 @@ func TestSQLiteSessionIdentityAndCapabilities(t *testing.T) {
 	}
 }
 
+func TestSQLiteExplicitWriteReturningGuards(t *testing.T) {
+	r := openSQLite(t, "write-returning")
+	m := newManager(t, r)
+	if _, err := r.Pool().Exec(`CREATE TABLE returned_values(id INTEGER PRIMARY KEY, value TEXT NOT NULL)`); err != nil {
+		t.Fatal(err)
+	}
+	ctx := trustedContext(t, "tenant-a")
+	insertReturning := `INSERT INTO returned_values(value) VALUES(?) RETURNING id`
+	count := func() int {
+		var n int
+		if err := r.Pool().QueryRow(`SELECT count(*) FROM returned_values`).Scan(&n); err != nil {
+			t.Fatal(err)
+		}
+		return n
+	}
+	t.Run("readonly-root-rejects-before-sql", func(t *testing.T) {
+		err := m.Within(ctx, uow.Options{}, func(work context.Context) error {
+			ex, err := Current(work)
+			if err != nil {
+				return err
+			}
+			return ex.QueryRowWrite(work, insertReturning, "root-forbidden").Scan(new(int64))
+		})
+		if !errors.Is(err, uow.ErrReadOnly) || count() != 0 {
+			t.Fatalf("err=%v count=%d", err, count())
+		}
+	})
+	t.Run("readonly-root-rejects-multirow-before-sql", func(t *testing.T) {
+		err := m.Within(ctx, uow.Options{}, func(work context.Context) error {
+			ex, err := Current(work)
+			if err != nil {
+				return err
+			}
+			_, err = ex.QueryWrite(work, `INSERT INTO returned_values(value) VALUES(?),(?) RETURNING id`, "multi-forbidden-a", "multi-forbidden-b")
+			return err
+		})
+		if !errors.Is(err, uow.ErrReadOnly) || count() != 0 {
+			t.Fatalf("err=%v count=%d", err, count())
+		}
+	})
+	t.Run("readonly-required-child-rejects-before-sql", func(t *testing.T) {
+		err := m.Within(ctx, uow.Options{Mode: uow.ReadWrite}, func(work context.Context) error {
+			return m.Within(work, uow.Options{Mode: uow.ReadOnly}, func(child context.Context) error {
+				ex, err := Current(child)
+				if err != nil {
+					return err
+				}
+				return ex.QueryRowWrite(child, insertReturning, "child-forbidden").Scan(new(int64))
+			})
+		})
+		if !errors.Is(err, uow.ErrReadOnly) || count() != 0 {
+			t.Fatalf("err=%v count=%d", err, count())
+		}
+	})
+	t.Run("readwrite-returning-commits", func(t *testing.T) {
+		var id int64
+		err := m.Within(ctx, uow.Options{Mode: uow.ReadWrite}, func(work context.Context) error {
+			ex, err := Current(work)
+			if err != nil {
+				return err
+			}
+			return ex.QueryRowWrite(work, insertReturning, "committed").Scan(&id)
+		})
+		if err != nil || id == 0 || count() != 1 {
+			t.Fatalf("err=%v id=%d count=%d", err, id, count())
+		}
+	})
+	t.Run("readwrite-returning-rolls-back", func(t *testing.T) {
+		cause := errors.New("force rollback after RETURNING")
+		err := m.Within(ctx, uow.Options{Mode: uow.ReadWrite}, func(work context.Context) error {
+			ex, err := Current(work)
+			if err != nil {
+				return err
+			}
+			if err := ex.QueryRowWrite(work, insertReturning, "rolled-back").Scan(new(int64)); err != nil {
+				return err
+			}
+			return cause
+		})
+		if !errors.Is(err, cause) || count() != 1 {
+			t.Fatalf("err=%v count=%d", err, count())
+		}
+	})
+	t.Run("readwrite-multirow-returning-commits", func(t *testing.T) {
+		err := m.Within(ctx, uow.Options{Mode: uow.ReadWrite}, func(work context.Context) error {
+			ex, err := Current(work)
+			if err != nil {
+				return err
+			}
+			rows, err := ex.QueryWrite(work, `INSERT INTO returned_values(value) VALUES(?),(?) RETURNING id`, "multi-a", "multi-b")
+			if err != nil {
+				return err
+			}
+			defer rows.Close()
+			seen := 0
+			for rows.Next() {
+				var id int64
+				if err := rows.Scan(&id); err != nil {
+					return err
+				}
+				seen++
+			}
+			if err := rows.Err(); err != nil {
+				return err
+			}
+			if seen != 2 {
+				return errors.New("write-returning row count mismatch")
+			}
+			return nil
+		})
+		if err != nil || count() != 3 {
+			t.Fatalf("err=%v count=%d", err, count())
+		}
+	})
+}
+
 func TestSQLitePooledReads(t *testing.T) {
 	r := openSQLite(t, "pooled")
 	setupFixture(t, r)

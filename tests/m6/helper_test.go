@@ -47,7 +47,7 @@ const (
 
 // currentDeploymentVersion is the highest applied migration version of a
 // complete v0.1.0 deployment (framework capacity migrations).
-const currentDeploymentVersion int64 = 4000002
+const currentDeploymentVersion int64 = 4100003
 
 func must(t *testing.T, err error) {
 	t.Helper()

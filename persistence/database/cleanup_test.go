@@ -638,3 +638,49 @@ func TestCursorCloseAndErrRaceSessionCleanup(t *testing.T) {
 	// the discard happens in the cleanup job, so wait bounded.
 	requireIdlePoolSoon(t, r)
 }
+
+// watcherStressIterations bounds the concurrent stress sweep; it is a bounded
+// stress run, not a proof over all possible goroutine interleavings.
+const watcherStressIterations = 32
+
+// TestSessionTeardownSingleOwnerUnderWatcher is a bounded stress test
+// exercising the watcher race window against the finish sequencing: canceling
+// the transaction context arms database/sql's own transaction watcher, whose
+// rollback path is free to close the *sql.Conn wrapper while finish drives
+// the same connection. The wrapper's handshake can then report done=false
+// with dc=nil to a concurrent Raw or Close and panic. The fix orders the
+// local transaction rollback before the local context cancel inside finish,
+// so the session owns the transaction CAS and the watcher observes
+// ErrTxDone; the sweep asserts the session completes exactly once through
+// every caller and the pool returns to idle. The bounded loop increases the
+// chance of hitting the window under -race on Linux and does not claim to
+// enumerate all interleavings.
+func TestSessionTeardownSingleOwnerUnderWatcher(t *testing.T) {
+	r := barrierResource(t, "watcher-single-owner")
+	ctx := trustedContext(t, "tenant-a")
+	for i := 0; i < watcherStressIterations; i++ {
+		work, txObj, err := r.Begin(ctx, uow.EffectiveOptions{DatabaseKey: r.DatabaseKey(), Transactional: true, Mode: uow.ReadWrite})
+		if err != nil {
+			t.Fatal(err)
+		}
+		s := txObj.(*session)
+		var wg sync.WaitGroup
+		wg.Add(6)
+		go func() { defer wg.Done(); s.finish(true) }()
+		go func() { defer wg.Done(); s.finish(false) }()
+		go func() { defer wg.Done(); _ = s.Commit(work) }()
+		go func() { defer wg.Done(); _ = s.Rollback(work) }()
+		go func() { defer wg.Done(); waitCleanup(context.Background(), s.scheduleCleanup()) }()
+		// Arms the watcher concurrently; the synchronous transaction end
+		// inside finish leaves it with an already-ended transaction on any
+		// ordering.
+		go func() { defer wg.Done(); s.cancelTx() }()
+		wg.Wait()
+		select {
+		case <-s.cleanupDone:
+		default:
+			t.Fatalf("iteration %d: cleanup never finished its single job", i)
+		}
+		requireIdlePoolSoon(t, r)
+	}
+}

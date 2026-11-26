@@ -4,7 +4,7 @@
 
 部署時使用 Goose 將 `Migrations` 的 `migrations/4000001_jobs.sql` 與 Tenant、Scope Catalog、Audit 等來源合併；jobs 依賴 Scope Catalog，API 啟動只檢查 schema，不執行 migration。應用 role 不是 table owner、superuser 或 BYPASSRLS；遷移擁有者必須與應用 role 分離。
 
-`Enqueue(ctx, Job)` 在已授權可寫 UOW 內使用受控 Executor，要求 owner／actor 和 binding 相同。與業務資料一併 Commit／Rollback；全域容量 admission 透過窄化 SECURITY DEFINER function 和 transaction advisory lock 序列化。Function 只回傳是否有容量，不回傳其他 owner 資料。MaxPending 包含保留的全部工作，滿額回 `JOB_CAPACITY_EXCEEDED`，呼叫端回 429 並退避；容量不以單 Tenant 的 RLS 可見筆數估算。
+`Enqueue(ctx, Job)` 在已授權可寫 UOW 內使用受控 Executor，要求 owner／actor 和 binding 相同。與業務資料一併 Commit／Rollback；容量由預配置 permit slots 承載並在同一 INSERT 敘述內由觸發器認領 free slot（`FOR UPDATE SKIP LOCKED`）：無全域 advisory lock、無全表計數，保留終態仍計入 MaxPending，DELETE／Purge 釋放 slot。呼叫端 MaxPending 與部署組態在 admission 同一敘述以索引 config 查核對；部署以狹化 `ProvisionQueue(ctx, *sql.DB, capacity, action)` 一次交易鎖定 jobs 與 permit 表、回填採用既有資料列、低於現有列數時拒絕，`install` 已存在時拒絕，`resize` 重複執行為冪等部署入口。滿額回 `JOB_CAPACITY_EXCEEDED`（429 退避）；未配置／組態不一致／未授權無界存取分別回 `JOB_CAPACITY_UNPROVISIONED`／`JOB_CAPACITY_CONFIG_CONFLICT`／`JOB_CAPACITY_REQUIRED`（503 族），舊 `admit` 函式呼叫回 `JOB_CAPACITY_UPGRADE_REQUIRED`。容量不以單 Tenant 的 RLS 可見筆數估算。
 
 Claim 使用短交易、`FOR UPDATE SKIP LOCKED`、唯一 lease_token 與 attempts 計數；交易外執行 Handler。Finish／Release／取消監測都核對 ID、token、processing 狀態與有效期限；舊 token 回 `JOB_LEASE_LOST`。Document fingerprint 與資料列 owner 不符時隔離為 dead，禁止執行副作用。到期工作及重試耗盡工作轉 dead。
 

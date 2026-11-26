@@ -24,7 +24,7 @@ callback 返回 nil 後仍需檢查取消／rollback-only 並確認 Commit。Com
 
 驗證：`go test ./persistence/uow`；真實 PostgreSQL 提交／回滾／RLS 用 [M1 整合測試](../../docs/guides/m1-development.md)，不能以 fake Resource 測試代替。
 
-Resource 由 DI 綁定 DatabaseKey，PostgreSQL 以 Pool 身分預設；同根拒絕第二個 key。可選 Flush／BeforeCommit／Prepare／Release 由 Manager 控制完成順序；內部 completion context 才能在 Completing 使用 Executor。Rollback／Release 清理受 CleanupTimeout 約束，主要 cause 保留。
+Resource 由 DI 綁定 DatabaseKey，PostgreSQL 以 Pool 身分預設；同根拒絕第二個 key。可選 Flush／BeforeCommit／Prepare／Release 由 Manager 控制完成順序。完成階段的 Local Event／Flush 可透過標準 Application Command／Query 以 Required 加入同一根 UOW；RequiresNew 與外部重入仍拒絕。巢狀 Required 失敗即使被捕捉仍標記根回滾；已退出的子 view 不得污染仍有效的根。Rollback／Release 清理受 CleanupTimeout 約束，主要 cause 保留。
 
 驗收與邊界見 [M2 指南](../../docs/guides/m2-development.md)，API 變更見 [遷移說明](../../docs/release-notes/m2.md)。
 

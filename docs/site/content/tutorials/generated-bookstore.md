@@ -95,7 +95,7 @@ docker compose up -d --build --wait
 & $pangolin doctor
 ```
 
-catalog 會加入編譯期 registry，並附上 module.go 與 README。依你的需求填寫 Module 的 Provider 與 migration SQL；產生的 migration 只提供結構。先部署 migration，再啟動使用新 schema 的 API。命令說明與環境變數見 [CLI 參考](../reference/cli.md)。
+catalog 會以 Root 模式加入 UserRoot 聚合，並附上 module.go 與 README。在 `Configure` 內用 `b.Services().Add(NewCatalogService)` 註冊建構子（預設 Transient，需要時加 `module.Singleton()`），在 `Start` 內用 `rt.Services()` 解析精確型別。框架能力以型別直接注入：`--depends persistence`／`authorization`（或 `organization`）翻譯為 `foundation` 的 Type 邊，建構子參數直接寫 `uow.UnitOfWorkManager`、`foundation.Scopes`、`foundation.Publisher`、`foundation.Idempotency` 等公開契約；`foundation` 平台模組取得所有 DB／事件資源，`internal/app` 根模組只保留 HTTP 組裝與相容檢查。`bookstore` 名稱是生成網域示例，請依賴 foundation 能力或已註冊的使用者模組。填寫 migration SQL 後，先部署 migration 再啟動使用新 schema 的 API。命令說明與環境變數見 [CLI 參考](../reference/cli.md)。
 
 ## 停止與下一步
 

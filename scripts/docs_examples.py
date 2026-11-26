@@ -25,15 +25,15 @@ def main():
     env.pop('APP_NAME', None)
     commands = []
 
-    def run(args, expected=None, overrides=None, fails=False):
-        result = subprocess.run(args, cwd=project, env={**env, **(overrides or {})},
+    def run(args, expected=None, overrides=None, fails=False, cwd=None):
+        result = subprocess.run(args, cwd=cwd or project, env={**env, **(overrides or {})},
                                 text=True, encoding='utf-8', errors='replace', capture_output=True, timeout=90)
         output = result.stdout.strip()
         if (result.returncode != 0) != fails:
             raise RuntimeError(f'{args}: {result.stdout}{result.stderr}')
         if expected is not None and output != expected:
             raise ValueError(f'{args}: expected {expected!r}, got {output!r}')
-        commands.append({'argv': args, 'exit_code': result.returncode, 'stdout': output})
+        commands.append({'argv': args, 'cwd': str(cwd or project), 'exit_code': result.returncode, 'stdout': output})
         return output
 
     version = (ROOT / 'VERSION').read_text().strip()
@@ -42,7 +42,12 @@ def main():
     run(['go', 'mod', 'edit', '-replace=github.com/cymondez/pangolin-framework=' + ROOT.as_posix()])
     samples = {
         'hello': 'Hello, panGOlin!',
+        'root-greeting': 'Hello, World!',
         'greeting-app': 'Hello, World!',
+        'configuration': 'Application: My App',
+        'dependency-injection': 'Hello, Alice!',
+        'root-lifecycle': 'start storage\nstart books\nstop books\nstop storage',
+        'lifecycle': 'start storage\nstart books\nready: true\nstop books\nstop storage',
         'configuration': 'Application: My App',
         'dependency-injection': 'Hello, Alice!',
         'lifecycle': 'start storage\nstart books\nready: true\nstop books\nstop storage',
@@ -55,11 +60,28 @@ def main():
         shutil.copyfile(ROOT / f'examples/basics/{sample}/main.go', project / 'main.go')
         run(['go', 'mod', 'tidy'])
         run(['go', 'run', '.'], expected)
+        if sample == 'root-greeting':
+            run(['go', 'run', '.'], 'Hello, Reader!', {'APP_NAME': 'Reader'})
         if sample == 'greeting-app':
             run(['go', 'run', '.'], 'Hello, Reader!', {'APP_NAME': 'Reader'})
         if sample == 'configuration':
             run(['go', 'run', '.'], 'Application: Bookstore', {'APP_NAME': 'Bookstore'})
             run(['go', 'run', '.'], overrides={'APP_NAME': ''}, fails=True)
+    # The multi-module Root assembly demo runs inside the checkout itself.
+    run(['go', '-C', 'examples/moduleapp', 'run', '.'], expected=(
+        'planned layers:\n'
+        '  0: [store]\n'
+        '  1: [catalog pricing]\n'
+        '  2: [app]\n'
+        'start store (shared instance 0)\n'
+        'start catalog via *catalog.Service: demo/true="root-composed"\n'
+        'start pricing via *pricing.Prices: 12.00 EUR\n'
+        'start app: catalog ready with 1 entry via *catalog.Service\n'
+        'stop app\n'
+        'stop pricing\n'
+        'stop catalog\n'
+        'stop store'),
+        overrides={'MODULEAPP_DEADLINE': '2s'}, cwd=ROOT)
     # Compile the complete, app-owned repository/service examples printed in the manual.
     books = project / 'books'
     books.mkdir()
@@ -86,7 +108,7 @@ def main():
         if not os.getenv('PANGOLIN_DSN'):raise ValueError('--database requires PANGOLIN_DSN for the disposable Bookstore database')
         run(['go','run','.'],'Required shares root: true\nRequiresNew has new root: true\nParent rolled back: true\nChild committed: true\nScope closed: true')
     report = {'status': 'passed', 'framework_version': version, 'consumer_project': str(project),
-              'samples': list(samples)+(['transactions'] if args.database else []), 'database_example_executed':args.database, 'commands': commands}
+              'samples': list(samples) + ['moduleapp'] + (['transactions'] if args.database else []), 'database_example_executed':args.database, 'commands': commands}
     output = ROOT / 'artifacts/docs'
     output.mkdir(parents=True, exist_ok=True)
     (output / 'beginner-examples.json').write_text(json.dumps(report, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')

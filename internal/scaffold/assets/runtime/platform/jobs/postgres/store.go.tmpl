@@ -8,6 +8,7 @@ import (
 	"embed"
 	"encoding/json"
 	"errors"
+	"strconv"
 	"time"
 
 	"github.com/cymondez/pangolin-framework/persistence/postgres"
@@ -40,7 +41,8 @@ func NewStore(pool *pgxpool.Pool, registry *jobs.Registry, policy jobs.Policy, a
 }
 
 // Enqueue derives ownership and attribution from a trusted binding and participates
-// in its business UOW. The advisory lock serializes capacity admission across instances.
+// in its business UOW. Capacity is consumed inside the same statement's INSERT via
+// trigger-owned permit claims; no global lock or whole-table count is involved.
 func (s *Store) Enqueue(ctx context.Context, j jobs.Job) (returned error) {
 	defer func() {
 		if returned != nil {
@@ -61,20 +63,13 @@ func (s *Store) Enqueue(ctx context.Context, j jobs.Job) (returned error) {
 	if err != nil {
 		return err
 	}
-	var admitted bool
-	if err = ex.QueryRow(ctx, `SELECT pangolin_jobs.admit($1)`, s.policy.MaxPending).Scan(&admitted); err != nil {
-		return err
-	}
-	if !admitted {
-		return jobs.ErrCapacity
-	}
 	raw, err := json.Marshal(j)
 	if err != nil {
 		return err
 	}
 	hash := sha256.Sum256(raw)
-	_, err = ex.Exec(ctx, `INSERT INTO pangolin_jobs.jobs(id,tenant_id,scope_kind,scope_id,document,fingerprint,due_at,deadline) VALUES($1,$2,$3,$4,$5,$6,$7,$8)`, j.ID, b.Ref.TenantID, b.Ref.Kind, b.Ref.ID, raw, hash[:], j.DueAt, j.Deadline)
-	return err
+	_, err = ex.Exec(ctx, `WITH cfg AS (SELECT set_config('`+gucJobsCapacity+`','`+strconv.Itoa(s.policy.MaxPending)+`',true),pangolin_jobs.check_capacity_config($9)) INSERT INTO pangolin_jobs.jobs(id,tenant_id,scope_kind,scope_id,document,fingerprint,due_at,deadline) SELECT $1,$2,$3,$4,$5,$6,$7,$8 FROM cfg`, j.ID, b.Ref.TenantID, b.Ref.Kind, b.Ref.ID, raw, hash[:], j.DueAt, j.Deadline, s.policy.MaxPending)
+	return capacityOf(err)
 }
 func rollback(tx pgx.Tx) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
