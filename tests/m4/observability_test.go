@@ -47,6 +47,8 @@ func TestA66TraceCorrelation(t *testing.T) {
 		p := outbox.Policy{Lease: time.Second, SendTimeout: time.Second, RetryInitial: time.Millisecond, RetryMax: time.Second, MaxAttempts: 3}
 		store, err := eventpg.NewBoundedStore(f.queue, p, eventpg.Capacity{Outbox: 10, Inbox: 10})
 		must(t, err)
+		provisionQueue(t, f, "outbox", 10, "resize")
+		provisionQueue(t, f, "inbox", 10, "resize")
 		manager, publisher := eventManager(t, f, store)
 		var fact distributed.Envelope
 		var traceID trace.TraceID

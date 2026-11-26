@@ -1,47 +1,91 @@
 ---
 title: 依賴注入
-description: 註冊自己的介面與實作，取得服務並選擇適合的存活期間。
+description: 用建構子註冊服務，選擇存活期間，並跨模組公布介面契約。
 ---
 
 import CodeBlock from '@theme/CodeBlock';
-import source from '../_snippets/dependency-injection.go';
+import source from '../_snippets/root-greeting.go';
+import legacySource from '../_snippets/dependency-injection.go';
+import contracts from '../_snippets/moduleapp-contracts.go';
+import catalog from '../_snippets/moduleapp-catalog.go';
+import appRoot from '../_snippets/moduleapp-app.go';
 
-依賴注入（DI）讓你的業務程式接收需要的服務，而不是到處自行建立服務。本例定義 `Greeter` 介面，並註冊 `EnglishGreeter` 實作。
+依賴注入（DI）讓你的業務程式接收需要的服務，而不是到處自行建立服務。Root 裝配的預設做法：模組在 `Configure` 以建構子註冊服務，Start 之後透過受限 resolver 解析。
 
 ## 執行範例
 
 從套件來源的 `examples/basics` 執行：
 
 ```bash
-go run ./dependency-injection
+go run ./root-greeting
 ```
 
-預期輸出 `Hello, Alice!`。也可以在[已建立的專案](../getting-started/installation.md)中，把以下完整程式存成 `main.go`，執行 `go run .`。
+預期輸出 `Hello, World!`（設定 `APP_NAME=Reader` 後為 `Hello, Reader!`）。完整程式見[問候服務教學](../tutorials/greeting-application.mdx)：
 
-<CodeBlock language="go" title="main.go">{source}</CodeBlock>
+<CodeBlock language="go" title="examples/basics/root-greeting/main.go">{source}</CodeBlock>
 
 ## 如何使用
 
-1. `di.NewKey[Greeter]("greeter")` 為服務定義一個含 Go 型別的識別鍵。
-2. `Provide` 註冊實作；Factory 回傳建立好的服務。
-3. `Seal` 完成組裝，之後即可 Resolve。
-4. 取得的結果轉回 Greeter，再呼叫自己的方法。
-5. 應用結束時 Close Container，讓它釋放擁有的資源。
+1. 在 `Configure` 用 `b.Services().Add(NewGreetingService, module.Singleton())` 註冊建構子；解析鍵就是建構子的精確回傳型別。
+2. 省略生命週期選項時預設為 Transient：每次解析建立新物件。
+3. `Start` 之後用 `rt.Services().Resolve(ctx, module.Contract[*GreetingService]())` 取得服務；`module.Contract[T]()` 由 T 的完整型別身分推導出鍵，介面與具象型別皆可用。
+4. 服務清理（Cleanup）由組合容器在應用收尾時執行；你只在自己的資源確實需要關閉時才回傳 Cleanup。
 
-在 Module 內使用 DI 時，把 Provide 放在 Configure，並在 Start 透過 `app.Services()` 取得服務。[問候服務教學](../tutorials/greeting-application.mdx)提供完整組合方式。
+建構子參數會自動解析：`NewService(s *store.Store)` 的 `*store.Store` 若已由自己的模組或直接相依模組提供，直接寫在參數上即可。重複、缺漏或循環在任何建構子執行前就失敗，不會啟動出半套的應用。
 
 ## 選擇存活期間
 
 | 選項 | 何時使用 |
 |---|---|
-| Singleton | 整個應用共用的服務，例如可安全並行使用的連線池 |
-| Transient | 每次取得都要建立新物件 |
-| Operation | 同一次操作共用，操作結束即清理 |
+| 預設（Transient） | 每次取得都要建立新物件 |
+| `module.Singleton()` | 整個應用共用的服務，例如可安全並行使用的連線池 |
+| `module.Operation()` | 同一次操作共用，操作結束即清理 |
 
-Operation 使用 `container.OpenScope(ctx)` 建立範圍，透過 scope.Resolve 取得服務，最後 scope.Close。Singleton 不能保留 Operation 服務，避免跨請求共用本來應該隔離的狀態。
+Operation 服務只能經明示操作範圍解析：在 Start／Stop 內呼叫 `module.OpenScope(ctx, rt.Services())` 取得屬於這個模組的 scope，透過 `scope.Resolve` 取得服務，最後由呼叫端 `scope.Close`（清理只做一次，重複呼叫無害）。Singleton 不能保留 Operation 服務，避免跨請求共用本來應該隔離的狀態。
 
-## 服務有依賴或資源時
+## 跨模組介面契約
 
-Factory 需要其他服務時，在 Provider.DependsOn 宣告所有使用的 Key，再從傳入的 Resolver 取得。重複、遺漏或循環相依會回報錯誤。
+同一模組內以具象型別為鍵就夠了。要讓**其他模組**使用你的服務時，把介面放進可 import 的 contracts 套件，並由擁有契約的模組單一負責 `Export`；消費模組直接相依該擁有者模組，再從自己的受限 resolver 解析契約。以下是可執行的正式示範 `examples/moduleapp` 的完整原始檔：
 
-如果 Factory 建立了需關閉的資源，就回傳 Cleanup。Cleanup 接到的 context 有清理期限，你的關閉動作也要遵守它。
+<CodeBlock language="go" title="examples/moduleapp/catalog/contracts/contracts.go">{contracts}</CodeBlock>
+
+<CodeBlock language="go" title="examples/moduleapp/catalog/module.go（契約擁有者）">{catalog}</CodeBlock>
+
+<CodeBlock language="go" title="examples/moduleapp/app/module.go（消費模組的根）">{appRoot}</CodeBlock>
+
+在套件來源的 `pangolin-framework/examples/moduleapp` 執行：
+
+```bash
+go run .
+```
+
+預期輸出（按 Ctrl+C 結束，可看到同樣的反序停機；非互動環境先設定 `MODULEAPP_DEADLINE=2s`）：
+
+```text
+planned layers:
+  0: [store]
+  1: [catalog pricing]
+  2: [app]
+start store (shared instance 0)
+start catalog via *catalog.Service: demo/true="root-composed"
+start pricing via *pricing.Prices: 12.00 EUR
+start app: catalog ready with 1 entry via *catalog.Service
+stop app
+stop pricing
+stop catalog
+stop store
+```
+
+要點：
+
+- 每個介面契約只有一個擁有者；Export 集中在擁有者模組的 `Configure`。
+- 其他模組提供替代實作時以 `module.As(contract)` 明示貢獻，且必須直接相依契約擁有者；結構上滿足介面本身不會自動跨模組公開。
+- 沒有 Export 的服務對其他模組不可見：此示範中 `*Prices` 只有 pricing 模組自己能解析。
+
+## 進階相容路徑：獨立 DI 容器
+
+不經 root 組合時，`kernel/di` 的 Registry／Container 仍然完整可用（明示清單組裝的舊式應用、非模組工具或測試）：
+
+<CodeBlock language="go" title="examples/basics/dependency-injection/main.go（進階相容版本）">{legacySource}</CodeBlock>
+
+從 `examples/basics` 執行 `go run ./dependency-injection`，預期輸出 `Hello, Alice!`。這條路徑以 `di.NewKey` 定義鍵、`Provide` 註冊 factory、`Seal` 完成驗證並建立 Container，解析後手動 `Close` 清理。Factory 使用的所有鍵都要在 `Provider.DependsOn` 宣告；Cleanup 收到的 context 有清理期限，關閉動作也要遵守它。

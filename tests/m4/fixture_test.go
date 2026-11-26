@@ -101,10 +101,14 @@ func newFixture(t *testing.T, handler func(context.Context, jobs.Job) error) *fi
 	capacity, err := fs.Sub(eventpg.CapacityMigrations, "capacity_migrations")
 	must(t, err)
 	sources := migration.JoinFS(map[string]fs.FS{"tenant": sub(tenantpg.Migrations), "scope": sub(migration.ScopeMigrations), "audit": sub(audit.Migrations), "events": sub(eventpg.Migrations), "jobs": sub(jobpg.Migrations), "capacity": capacity})
-	runner, err := migration.NewPostgres(db, sources, 4000002, 4000002)
+	runner, err := migration.NewPostgres(db, sources, 4000002, 4100003)
 	must(t, err)
 	must(t, runner.Apply(ctx, []migration.ModuleMigrations{{Module: "tenant", Directory: "tenant"}, {Module: "scope", Directory: "scope"}, {Module: "audit", Directory: "audit"}, {Module: "events", Directory: "events"}, {Module: "jobs", Directory: "jobs", DependsOn: []string{"scope"}}, {Module: "capacity", Directory: "capacity", DependsOn: []string{"events"}}}))
 	_, err = f.admin.Exec(ctx, `CREATE TABLE pangolin.job_effects(id text PRIMARY KEY,value int NOT NULL DEFAULT 1);GRANT SELECT,INSERT ON pangolin.job_effects TO pangolin_worker;`)
+	must(t, err)
+	// Deployment provisioning keeps the jobs permit pool consistent with the
+	// fixture policy; event tests provision their own capacity per case.
+	_, err = f.admin.Exec(ctx, `SELECT pangolin_jobs.provision_permits($1,'resize')`, f.policy.MaxPending)
 	must(t, err)
 	if handler == nil {
 		handler = func(context.Context, jobs.Job) error { return nil }
@@ -180,5 +184,15 @@ func (f *fixture) state(t *testing.T, id string) (string, int) {
 func (f *fixture) due(t *testing.T, id string) {
 	t.Helper()
 	_, err := f.admin.Exec(context.Background(), `UPDATE pangolin_jobs.jobs SET due_at=now()-interval '1 second' WHERE id=$1`, id)
+	must(t, err)
+}
+func provisionQueue(t *testing.T, f *fixture, queue string, capacity int, action string) {
+	t.Helper()
+	_, err := f.admin.Exec(context.Background(), `SELECT pangolin_events.provision_queue_permits($1,$2,$3)`, queue, capacity, action)
+	must(t, err)
+}
+func provisionJobs(t *testing.T, f *fixture, capacity int, action string) {
+	t.Helper()
+	_, err := f.admin.Exec(context.Background(), `SELECT pangolin_jobs.provision_permits($1,$2)`, capacity, action)
 	must(t, err)
 }

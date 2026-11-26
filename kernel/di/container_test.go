@@ -5,6 +5,7 @@ import (
 	"errors"
 	"reflect"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -293,4 +294,297 @@ func TestSingletonPanicReleasesPreviouslyAcquiredResources(t *testing.T) {
 		}
 	}()
 	_, _ = r.Seal(bg)
+}
+
+func TestDIUnrelatedWorkDuringBlockedOperationFactory(t *testing.T) {
+	service, singleton := NewKey[*int]("slow-operation"), NewKey[*int]("ready-singleton")
+	entered, release := make(chan struct{}), make(chan struct{})
+	unblock := releaseOnce(release)
+	defer unblock()
+	var calls int32
+	r := newRegistry(t)
+	mustProvide(t, r, Provider{service, Operation, nil, func(context.Context, Resolver) (any, Cleanup, error) {
+		atomic.AddInt32(&calls, 1)
+		close(entered)
+		<-release
+		v := 2
+		return &v, nil, nil
+	}})
+	mustProvide(t, r, value(singleton, Singleton))
+	c := seal(t, r)
+	s, err := c.OpenScope(bg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	resolved := make(chan error, 1)
+	go func() { _, e := s.Resolve(bg, service); resolved <- e }()
+	<-entered
+	assertDICompletes(t, func() error { _, e := c.Resolve(bg, singleton); return e })
+	var another Scope
+	assertDICompletes(t, func() error { var e error; another, e = c.OpenScope(bg); return e })
+	unblock()
+	if err := <-resolved; err != nil {
+		t.Fatal(err)
+	}
+	if atomic.LoadInt32(&calls) != 1 {
+		t.Fatalf("factory calls = %d", calls)
+	}
+	_ = another.Close(bg)
+	_ = s.Close(bg)
+	_ = c.Close(bg)
+}
+
+func TestDIUnrelatedWorkDuringBlockedCleanup(t *testing.T) {
+	service, singleton := NewKey[*int]("operation-with-cleanup"), NewKey[*int]("ready-singleton")
+	cleanupEntered, cleanupRelease := make(chan struct{}), make(chan struct{})
+	unblockCleanup := releaseOnce(cleanupRelease)
+	defer unblockCleanup()
+	r := newRegistry(t)
+	mustProvide(t, r, Provider{service, Operation, nil, func(context.Context, Resolver) (any, Cleanup, error) {
+		v := 1
+		return &v, func(context.Context) error { close(cleanupEntered); <-cleanupRelease; return nil }, nil
+	}})
+	mustProvide(t, r, value(singleton, Singleton))
+	c := seal(t, r)
+	s, _ := c.OpenScope(bg)
+	if _, err := s.Resolve(bg, service); err != nil {
+		t.Fatal(err)
+	}
+	closed := make(chan error, 1)
+	go func() { closed <- s.Close(bg) }()
+	<-cleanupEntered
+	assertDICompletes(t, func() error { _, e := c.Resolve(bg, singleton); return e })
+	var another Scope
+	assertDICompletes(t, func() error { var e error; another, e = c.OpenScope(bg); return e })
+	unblockCleanup()
+	if err := <-closed; err != nil {
+		t.Fatal(err)
+	}
+	_ = another.Close(bg)
+	_ = c.Close(bg)
+}
+
+func TestDIContainerCloseWaitsForInProgressScopeCleanup(t *testing.T) {
+	service, singleton := NewKey[*int]("scope-cleanup"), NewKey[*int]("singleton-cleanup-order")
+	cleanupEntered, cleanupRelease, singletonCleaned := make(chan struct{}), make(chan struct{}), make(chan struct{})
+	unblock := releaseOnce(cleanupRelease)
+	defer unblock()
+	r := newRegistry(t)
+	mustProvide(t, r, Provider{service, Operation, nil, func(context.Context, Resolver) (any, Cleanup, error) {
+		v := 1
+		return &v, func(context.Context) error { close(cleanupEntered); <-cleanupRelease; return nil }, nil
+	}})
+	mustProvide(t, r, Provider{singleton, Singleton, nil, func(context.Context, Resolver) (any, Cleanup, error) {
+		v := 2
+		return &v, func(context.Context) error { close(singletonCleaned); return nil }, nil
+	}})
+	c := seal(t, r)
+	s, _ := c.OpenScope(bg)
+	if _, err := s.Resolve(bg, service); err != nil {
+		t.Fatal(err)
+	}
+	scopeClosed := make(chan error, 1)
+	go func() { scopeClosed <- s.Close(bg) }()
+	<-cleanupEntered
+	containerClosed := make(chan error, 1)
+	go func() { containerClosed <- c.Close(bg) }()
+	waitForDI(t, func() bool {
+		concrete := c.(*container)
+		concrete.mu.Lock()
+		defer concrete.mu.Unlock()
+		return concrete.closed
+	})
+	select {
+	case <-singletonCleaned:
+		t.Fatal("singleton cleanup started before scope cleanup finished")
+	case <-time.After(40 * time.Millisecond):
+	}
+	unblock()
+	if err := <-scopeClosed; err != nil {
+		t.Fatal(err)
+	}
+	if err := <-containerClosed; err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case <-singletonCleaned:
+	default:
+		t.Fatal("singleton cleanup was not run")
+	}
+}
+
+func TestDIOperationWaiterCanCancelAndConstructionIsUnique(t *testing.T) {
+	service := NewKey[*int]("single-operation-construction")
+	entered, release := make(chan struct{}), make(chan struct{})
+	unblock := releaseOnce(release)
+	defer unblock()
+	var calls int32
+	r := newRegistry(t)
+	mustProvide(t, r, Provider{service, Operation, nil, func(context.Context, Resolver) (any, Cleanup, error) {
+		atomic.AddInt32(&calls, 1)
+		close(entered)
+		<-release
+		v := 1
+		return &v, nil, nil
+	}})
+	c := seal(t, r)
+	s, _ := c.OpenScope(bg)
+	first := make(chan error, 1)
+	go func() { _, e := s.Resolve(bg, service); first <- e }()
+	<-entered
+	ctx, cancel := context.WithTimeout(bg, 20*time.Millisecond)
+	defer cancel()
+	if _, err := s.Resolve(ctx, service); !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatalf("waiter error = %v", err)
+	}
+	second := make(chan any, 1)
+	secondErr := make(chan error, 1)
+	go func() { v, e := s.Resolve(bg, service); second <- v; secondErr <- e }()
+	id, _ := identity(service)
+	waitForDI(t, func() bool {
+		concrete := s.(*operation)
+		concrete.container.mu.Lock()
+		defer concrete.container.mu.Unlock()
+		f := concrete.flights[id]
+		return f != nil && f.waiters == 1
+	})
+	unblock()
+	if err := <-first; err != nil {
+		t.Fatal(err)
+	}
+	value, err := <-second, <-secondErr
+	if err != nil || value == nil {
+		t.Fatalf("same-key waiter: value=%v error=%v", value, err)
+	}
+	if atomic.LoadInt32(&calls) != 1 {
+		t.Fatalf("factory calls = %d", calls)
+	}
+	_ = s.Close(bg)
+	_ = c.Close(bg)
+}
+
+func TestDICloseRacingFactoryCleansLateResourceOnce(t *testing.T) {
+	service := NewKey[*int]("late-operation")
+	entered, release, cleanupEntered, cleanupRelease := make(chan struct{}), make(chan struct{}), make(chan struct{}), make(chan struct{})
+	unblock := releaseOnce(release)
+	defer unblock()
+	unblockCleanup := releaseOnce(cleanupRelease)
+	defer unblockCleanup()
+	var cleanups int32
+	r := newRegistry(t)
+	mustProvide(t, r, Provider{service, Operation, nil, func(context.Context, Resolver) (any, Cleanup, error) {
+		close(entered)
+		<-release
+		v := 1
+		return &v, func(context.Context) error {
+			atomic.AddInt32(&cleanups, 1)
+			close(cleanupEntered)
+			<-cleanupRelease
+			return nil
+		}, nil
+	}})
+	c := seal(t, r)
+	s, _ := c.OpenScope(bg)
+	resolved := make(chan error, 1)
+	go func() { _, e := s.Resolve(bg, service); resolved <- e }()
+	<-entered
+	close1, close2 := make(chan error, 1), make(chan error, 1)
+	go func() { close1 <- c.Close(bg) }()
+	go func() { close2 <- c.Close(bg) }()
+	waitForDI(t, func() bool {
+		concrete := c.(*container)
+		concrete.mu.Lock()
+		defer concrete.mu.Unlock()
+		return concrete.closed
+	})
+	unblock()
+	<-cleanupEntered
+	if atomic.LoadInt32(&cleanups) != 1 {
+		t.Fatalf("cleanup calls = %d", cleanups)
+	}
+	unblockCleanup()
+	if err := <-resolved; err == nil {
+		t.Fatal("factory result escaped a closing container")
+	}
+	if err := <-close1; err != nil {
+		t.Fatal(err)
+	}
+	if err := <-close2; err != nil {
+		t.Fatal(err)
+	}
+	_ = s.Close(bg)
+}
+
+func TestDICloseWaitIsBoundedWhileLateFactoryRemainsOwned(t *testing.T) {
+	service := NewKey[*int]("factory-ignoring-cancellation")
+	entered, release := make(chan struct{}), make(chan struct{})
+	unblock := releaseOnce(release)
+	defer unblock()
+	var cleanups int32
+	r, err := NewRegistry(40 * time.Millisecond)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = r.Provide(Provider{service, Operation, nil, func(context.Context, Resolver) (any, Cleanup, error) {
+		close(entered)
+		<-release
+		v := 1
+		return &v, func(context.Context) error { atomic.AddInt32(&cleanups, 1); return nil }, nil
+	}}); err != nil {
+		t.Fatal(err)
+	}
+	c, err := r.Seal(bg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	s, _ := c.OpenScope(bg)
+	resolved := make(chan error, 1)
+	go func() { _, e := s.Resolve(bg, service); resolved <- e }()
+	<-entered
+	started := time.Now()
+	if err := c.Close(bg); !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatalf("close error = %v", err)
+	}
+	if elapsed := time.Since(started); elapsed > 300*time.Millisecond {
+		t.Fatalf("Close exceeded configured bound: %s", elapsed)
+	}
+	unblock()
+	if err := <-resolved; err == nil {
+		t.Fatal("late result escaped closed container")
+	}
+	waitForDI(t, func() bool { return atomic.LoadInt32(&cleanups) == 1 })
+	if err := c.Close(bg); err != nil {
+		t.Fatal(err)
+	}
+	_ = s.Close(bg)
+}
+
+func releaseOnce(ch chan struct{}) func() {
+	var once sync.Once
+	return func() { once.Do(func() { close(ch) }) }
+}
+
+func waitForDI(t *testing.T, ready func() bool) {
+	t.Helper()
+	deadline := time.Now().Add(time.Second)
+	for !ready() {
+		if time.Now().After(deadline) {
+			t.Fatal("timed out waiting for DI state transition")
+		}
+		time.Sleep(time.Millisecond)
+	}
+}
+
+func assertDICompletes(t *testing.T, call func() error) {
+	t.Helper()
+	done := make(chan error, 1)
+	go func() { done <- call() }()
+	select {
+	case err := <-done:
+		if err != nil {
+			t.Fatal(err)
+		}
+	case <-time.After(500 * time.Millisecond):
+		t.Fatal("unrelated DI operation blocked behind callback")
+	}
 }

@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -124,7 +125,8 @@ func (r *registry) Seal(ctx context.Context) (Container, error) {
 		}
 	}
 	r.sealed = true
-	c := &container{providers: r.providers, singletons: map[tokenID]any{}, timeout: r.timeout, scopes: map[*operation]bool{}}
+	lifeCtx, cancel := context.WithCancel(context.Background())
+	c := &container{providers: r.providers, singletons: map[tokenID]any{}, singletonFlights: map[tokenID]*flight{}, timeout: r.timeout, scopes: map[*operation]bool{}, lifeCtx: lifeCtx, lifeCancel: cancel, activeZero: closedSignal(), closeDone: make(chan struct{})}
 	defer func() {
 		if p := recover(); p != nil {
 			_ = c.Close(ctx)
@@ -142,21 +144,41 @@ func (r *registry) Seal(ctx context.Context) (Container, error) {
 }
 
 type owned struct{ cleanup Cleanup }
+type flight struct {
+	done    chan struct{}
+	value   any
+	err     error
+	waiters int
+}
 type container struct {
-	mu         sync.Mutex
-	providers  map[tokenID]Provider
-	singletons map[tokenID]any
-	resources  []owned
-	scopes     map[*operation]bool
-	closed     bool
-	timeout    time.Duration
+	mu               sync.Mutex
+	providers        map[tokenID]Provider
+	singletons       map[tokenID]any
+	singletonFlights map[tokenID]*flight
+	resources        []owned
+	scopes           map[*operation]bool
+	closed           bool
+	active           int
+	activeZero       chan struct{}
+	closeDone        chan struct{}
+	closeErr         error
+	lifeCtx          context.Context
+	lifeCancel       context.CancelFunc
+	timeout          time.Duration
 }
 type operation struct {
-	container *container
-	ctx       context.Context
-	values    map[tokenID]any
-	resources []owned
-	closed    bool
+	container  *container
+	ctx        context.Context
+	lifeCtx    context.Context
+	cancel     context.CancelFunc
+	values     map[tokenID]any
+	flights    map[tokenID]*flight
+	resources  []owned
+	closed     bool
+	active     int
+	activeZero chan struct{}
+	closeDone  chan struct{}
+	closeErr   error
 }
 
 // factoryResolver is deliberately valid only during a factory invocation.
@@ -164,7 +186,7 @@ type factoryResolver struct {
 	container *container
 	scope     *operation
 	allowed   map[tokenID]bool
-	active    bool
+	active    atomic.Bool
 }
 
 func (r *factoryResolver) Resolve(ctx context.Context, key Token) (any, error) {
@@ -172,18 +194,20 @@ func (r *factoryResolver) Resolve(ctx context.Context, key Token) (any, error) {
 	if e != nil {
 		return nil, e
 	}
-	if !r.active || !r.allowed[id] {
+	if !r.active.Load() || !r.allowed[id] {
 		return nil, fmt.Errorf("undeclared or expired factory dependency %s", id.name)
 	}
 	return r.container.resolve(ctx, id, r.scope)
 }
 func (c *container) Resolve(ctx context.Context, key Token) (any, error) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
 	id, e := identity(key)
 	if e != nil {
 		return nil, e
 	}
+	if e := c.enter(nil); e != nil {
+		return nil, e
+	}
+	defer c.leave(nil)
 	return c.resolve(ctx, id, nil)
 }
 func (c *container) resolve(ctx context.Context, id tokenID, s *operation) (value any, err error) {
@@ -193,39 +217,99 @@ func (c *container) resolve(ctx context.Context, id tokenID, s *operation) (valu
 	if e := ctx.Err(); e != nil {
 		return nil, e
 	}
+	c.mu.Lock()
 	if c.closed || s != nil && (s.closed || s.ctx.Err() != nil) {
+		c.mu.Unlock()
 		return nil, fmt.Errorf("DI scope is closed")
 	}
 	p, ok := c.providers[id]
 	if !ok {
+		c.mu.Unlock()
 		return nil, fmt.Errorf("missing provider %s", id.name)
 	}
 	if p.Lifetime == Singleton {
 		if v, ok := c.singletons[id]; ok {
+			c.mu.Unlock()
 			return v, nil
 		}
 	}
 	if p.Lifetime == Operation {
 		if s == nil {
+			c.mu.Unlock()
 			return nil, fmt.Errorf("operation provider requires scope: %s", id.name)
 		}
 		if v, ok := s.values[id]; ok {
+			c.mu.Unlock()
 			return v, nil
 		}
 	}
-	r := &factoryResolver{container: c, scope: s, allowed: map[tokenID]bool{}, active: true}
+	var flights map[tokenID]*flight
+	if p.Lifetime == Singleton {
+		flights = c.singletonFlights
+	} else if p.Lifetime == Operation {
+		flights = s.flights
+	}
+	if f := flights[id]; f != nil {
+		f.waiters++
+		c.mu.Unlock()
+		select {
+		case <-ctx.Done():
+			c.mu.Lock()
+			f.waiters--
+			c.mu.Unlock()
+			return nil, ctx.Err()
+		case <-c.lifeCtx.Done():
+			c.mu.Lock()
+			f.waiters--
+			c.mu.Unlock()
+			return nil, fmt.Errorf("DI container is closing")
+		case <-scopeDone(s):
+			c.mu.Lock()
+			f.waiters--
+			c.mu.Unlock()
+			return nil, fmt.Errorf("DI scope is closing")
+		case <-f.done:
+			c.mu.Lock()
+			f.waiters--
+			value, err := f.value, f.err
+			c.mu.Unlock()
+			return value, err
+		}
+	}
+	var f *flight
+	if flights != nil {
+		f = &flight{done: make(chan struct{})}
+		flights[id] = f
+	}
+	c.mu.Unlock()
+	r := &factoryResolver{container: c, scope: s, allowed: map[tokenID]bool{}}
+	r.active.Store(true)
 	for _, d := range p.DependsOn {
 		key, _ := identity(d)
 		r.allowed[key] = true
 	}
 	var cleanup Cleanup
-	defer func() {
-		r.active = false
-		if v := recover(); v != nil {
-			panic(v)
-		}
+	defer r.active.Store(false)
+	factoryCtx, cancel := context.WithCancel(ctx)
+	stopContainer := context.AfterFunc(c.lifeCtx, cancel)
+	stopScope := func() bool { return true }
+	if s != nil {
+		stopScope = context.AfterFunc(s.lifeCtx, cancel)
+	}
+	defer func() { stopContainer(); stopScope(); cancel() }()
+	func() {
+		defer func() {
+			if panicValue := recover(); panicValue != nil {
+				r.active.Store(false)
+				if f != nil {
+					c.finishFlight(id, s, f, nil, fmt.Errorf("factory %s panicked", id.name))
+				}
+				panic(panicValue)
+			}
+		}()
+		value, cleanup, err = p.Factory(factoryCtx, r)
+		r.active.Store(false)
 	}()
-	value, cleanup, err = p.Factory(ctx, r)
 	if err == nil && (value == nil || !reflect.TypeOf(value).AssignableTo(id.typ)) {
 		err = fmt.Errorf("provider %s returned incompatible type", id.name)
 	}
@@ -233,22 +317,98 @@ func (c *container) resolve(ctx context.Context, id tokenID, s *operation) (valu
 		if cleanup != nil {
 			err = errors.Join(err, c.clean(ctx, []owned{{cleanup}}))
 		}
-		return nil, fmt.Errorf("factory %s: %w", id.name, err)
+		err = fmt.Errorf("factory %s: %w", id.name, err)
+		if f != nil {
+			c.finishFlight(id, s, f, nil, err)
+		}
+		return nil, err
 	}
-	if cleanup != nil {
-		if s != nil && p.Lifetime != Singleton {
-			s.resources = append(s.resources, owned{cleanup})
-		} else {
-			c.resources = append(c.resources, owned{cleanup})
+	var closeErr error
+	c.mu.Lock()
+	if c.closed || s != nil && s.closed {
+		closeErr = fmt.Errorf("DI container or scope closed during factory %s", id.name)
+	} else {
+		if cleanup != nil {
+			if s != nil && p.Lifetime != Singleton {
+				s.resources = append(s.resources, owned{cleanup})
+			} else {
+				c.resources = append(c.resources, owned{cleanup})
+			}
+		}
+		if p.Lifetime == Singleton {
+			c.singletons[id] = value
+		}
+		if p.Lifetime == Operation {
+			s.values[id] = value
 		}
 	}
-	if p.Lifetime == Singleton {
-		c.singletons[id] = value
+	c.mu.Unlock()
+	if closeErr != nil {
+		if cleanup != nil {
+			closeErr = errors.Join(closeErr, c.clean(ctx, []owned{{cleanup}}))
+		}
+		if f != nil {
+			c.finishFlight(id, s, f, nil, closeErr)
+		}
+		return nil, closeErr
 	}
-	if p.Lifetime == Operation {
-		s.values[id] = value
+	if f != nil {
+		c.finishFlight(id, s, f, value, nil)
 	}
 	return value, nil
+}
+
+func (c *container) finishFlight(id tokenID, s *operation, f *flight, value any, err error) {
+	c.mu.Lock()
+	f.value, f.err = value, err
+	if c.providers[id].Lifetime == Operation && s != nil && s.flights[id] == f {
+		delete(s.flights, id)
+	}
+	if c.providers[id].Lifetime == Singleton && c.singletonFlights[id] == f {
+		delete(c.singletonFlights, id)
+	}
+	close(f.done)
+	c.mu.Unlock()
+}
+
+func closedSignal() chan struct{} { ch := make(chan struct{}); close(ch); return ch }
+func (c *container) enter(s *operation) error {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.closed || s != nil && s.closed {
+		return fmt.Errorf("DI container or scope is closed")
+	}
+	if c.active == 0 {
+		c.activeZero = make(chan struct{})
+	}
+	c.active++
+	if s != nil {
+		if s.active == 0 {
+			s.activeZero = make(chan struct{})
+		}
+		s.active++
+	}
+	return nil
+}
+func (c *container) leave(s *operation) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.active--
+	if c.active == 0 {
+		close(c.activeZero)
+	}
+	if s != nil {
+		s.active--
+		if s.active == 0 {
+			close(s.activeZero)
+		}
+	}
+}
+func scopeDone(s *operation) <-chan struct{} {
+	if s == nil {
+		return nil
+	}
+	return s.lifeCtx.Done()
 }
 func (c *container) OpenScope(ctx context.Context) (Scope, error) {
 	c.mu.Lock()
@@ -259,18 +419,21 @@ func (c *container) OpenScope(ctx context.Context) (Scope, error) {
 	if e := ctx.Err(); e != nil {
 		return nil, e
 	}
-	s := &operation{container: c, ctx: ctx, values: map[tokenID]any{}}
+	lifeCtx, cancel := context.WithCancel(ctx)
+	s := &operation{container: c, ctx: ctx, lifeCtx: lifeCtx, cancel: cancel, values: map[tokenID]any{}, flights: map[tokenID]*flight{}, activeZero: closedSignal(), closeDone: make(chan struct{})}
 	c.scopes[s] = true
 	return s, nil
 }
 func (s *operation) Resolve(ctx context.Context, key Token) (any, error) {
 	c := s.container
-	c.mu.Lock()
-	defer c.mu.Unlock()
 	id, e := identity(key)
 	if e != nil {
 		return nil, e
 	}
+	if e := c.enter(s); e != nil {
+		return nil, e
+	}
+	defer c.leave(s)
 	return c.resolve(ctx, id, s)
 }
 func (c *container) clean(ctx context.Context, resources []owned) error {
@@ -288,30 +451,84 @@ func (c *container) clean(ctx context.Context, resources []owned) error {
 func (s *operation) Close(ctx context.Context) error {
 	c := s.container
 	c.mu.Lock()
-	defer c.mu.Unlock()
 	if s.closed {
-		return nil
+		done := s.closeDone
+		c.mu.Unlock()
+		return waitClose(ctx, done, c.timeout, func() error { c.mu.Lock(); defer c.mu.Unlock(); return s.closeErr })
 	}
 	s.closed = true
-	delete(c.scopes, s)
-	resources := s.resources
-	s.resources = nil
-	return c.clean(ctx, resources)
+	s.cancel()
+	wait := s.activeZero
+	c.mu.Unlock()
+	go func() {
+		<-wait
+		c.mu.Lock()
+		resources := s.resources
+		s.resources = nil
+		c.mu.Unlock()
+		err := c.clean(context.Background(), resources)
+		c.mu.Lock()
+		delete(c.scopes, s)
+		s.closeErr = err
+		close(s.closeDone)
+		c.mu.Unlock()
+	}()
+	return waitClose(ctx, s.closeDone, c.timeout, func() error { c.mu.Lock(); defer c.mu.Unlock(); return s.closeErr })
 }
 func (c *container) Close(ctx context.Context) error {
 	c.mu.Lock()
-	defer c.mu.Unlock()
 	if c.closed {
-		return nil
+		done := c.closeDone
+		c.mu.Unlock()
+		return waitClose(ctx, done, c.timeout, func() error { c.mu.Lock(); defer c.mu.Unlock(); return c.closeErr })
 	}
 	c.closed = true
-	resources := append([]owned(nil), c.resources...)
+	c.lifeCancel()
+	wait := c.activeZero
+	scopes := make([]*operation, 0, len(c.scopes))
 	for s := range c.scopes {
-		s.closed = true
-		resources = append(resources, s.resources...)
-		s.resources = nil
+		scopes = append(scopes, s)
 	}
-	c.scopes = nil
-	c.resources = nil
-	return c.clean(ctx, resources)
+	c.mu.Unlock()
+	go func() {
+		<-wait
+		var err error
+		for _, s := range scopes {
+			_ = s.Close(context.Background())
+			<-s.closeDone
+			c.mu.Lock()
+			scopeErr := s.closeErr
+			c.mu.Unlock()
+			err = errors.Join(err, scopeErr)
+		}
+		c.mu.Lock()
+		resources := append([]owned(nil), c.resources...)
+		c.resources = nil
+		c.mu.Unlock()
+		err = errors.Join(err, c.clean(context.Background(), resources))
+		c.mu.Lock()
+		c.closeErr = err
+		close(c.closeDone)
+		c.mu.Unlock()
+	}()
+	return waitClose(ctx, c.closeDone, c.timeout, func() error { c.mu.Lock(); defer c.mu.Unlock(); return c.closeErr })
+}
+
+func waitClose(ctx context.Context, done <-chan struct{}, timeout time.Duration, result func() error) error {
+	base := context.Background()
+	if ctx != nil {
+		if deadline, ok := ctx.Deadline(); ok {
+			var cancel context.CancelFunc
+			base, cancel = context.WithDeadline(base, deadline)
+			defer cancel()
+		}
+	}
+	waitCtx, cancel := context.WithTimeout(base, timeout)
+	defer cancel()
+	select {
+	case <-done:
+		return result()
+	case <-waitCtx.Done():
+		return waitCtx.Err()
+	}
 }

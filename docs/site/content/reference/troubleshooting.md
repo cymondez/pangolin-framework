@@ -17,6 +17,10 @@ description: 排查安裝、執行範例、登入、租戶與交易的常見問�
 
 環境變數只屬於設定它的終端。PowerShell 使用 `$env:APP_NAME = 'Reader'`；macOS／Linux 可用 `APP_NAME=Reader go run .`。執行現成範例時，工作位置應為 examples/basics。
 
+## 啟動錯誤提到 missing provider 或 constructors must return concrete values
+
+`missing provider X` 表示沒有任何模組提供 X：具象型別要在使用它的模組以建構子註冊；介面契約還要由契約擁有者 Export，且消費模組必須直接相依該擁有者。`constructors must return concrete values` 表示 `Add` 的建構子回傳了介面型別：改回傳具象型別，需要對外公開契約時再以 `module.As` 明示貢獻。見[依賴注入](../fundamentals/dependency-injection.mdx)。
+
 ## Bookstore 環境無法啟動
 
 確認 Docker Engine 可連線、Compose 可用，且教學的 ports 沒被占用。`pwsh ./examples/bookstore/scripts/demo.ps1 status` 可查看自己的服務；不要重設共用 Engine 來處理單一應用錯誤。

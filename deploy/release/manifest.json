@@ -3,7 +3,7 @@
   "product_version": "0.1.0",
   "version_scope": "v0.1.0",
   "requirements": 95,
-  "subtests": 421,
+  "subtests": 532,
   "profiles": [
     {
       "profile": "tenant-only",

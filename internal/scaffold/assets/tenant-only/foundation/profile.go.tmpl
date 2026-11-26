@@ -1,0 +1,41 @@
+// Profile wiring of the tenant-only assembly. The file exists per profile:
+// it owns the deployment identity, the required scope kinds, migration and
+// seed data and the profile composition that runs inside the foundation
+// module graph. This profile keeps the foundation defaults and the nil
+// control-plane handler, so composeProfile has nothing to contribute or
+// replace.
+package foundation
+
+import (
+	"context"
+	"database/sql"
+	"io/fs"
+
+	"github.com/cymondez/pangolin-framework/events/distributed"
+	"github.com/cymondez/pangolin-framework/kernel/module"
+	"github.com/cymondez/pangolin-framework/persistence/migration"
+)
+
+// ProfileName identifies this assembly for the deployment compatibility
+// check.
+const ProfileName = "tenant-only"
+
+// ScopeKinds declares the scope kinds the startup composition must provide
+// before any module accepts work.
+func ScopeKinds() []string { return []string{"tenant"} }
+
+// Migrations adds the profile-specific migration sources to the deployment
+// ordering.
+func Migrations() (map[string]fs.FS, []migration.ModuleMigrations) { return nil, nil }
+
+// Seed writes the disposable development seed for this profile.
+func Seed(context.Context, *sql.DB) error { return nil }
+
+// profileSchemas returns the bookstore baseline; the tenant-only assembly
+// publishes no additional organization event types.
+func profileSchemas() []distributed.Schema { return baseSchemas() }
+
+// composeProfile runs after the Module registration: nothing to swap, the
+// default scope registry and the nil control-plane handler are exactly this
+// profile's implementation.
+func composeProfile(module.RootBuilder) error { return nil }

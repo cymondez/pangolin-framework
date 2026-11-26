@@ -1,8 +1,9 @@
 """Release manifest validation and same-commit release evidence collection.
 
 The committed manifest (deploy/release/manifest.json) declares the v0.1.0
-release: baseline, product version, 95 unique requirement deliveries, 421
-named subtests, three profile applicability rows, runtime/CLI/template version
+release: baseline, product version, 95 unique requirement deliveries, 532
+named subtests (431 legacy plus 10 A63/permit-* and 101 A01/A02/A46/A74 root-*
+supplemental), three profile applicability rows, runtime/CLI/template version
 bindings, published event schemas, critical coverage packages, required
 release assets and release drills. Every declaration is re-validated against
 authoritative sources (specification, milestone plan, contract files, Go
@@ -23,6 +24,11 @@ ROOT = m0.ROOT
 BASELINE = "v1.3"
 PRODUCT_VERSION = "0.1.0"
 VERSION_SCOPE = "v0.1.0"
+# 431 legacy named subtests plus the 2026-11-25 supplemental root-DI families
+# (A63/permit-*, A01/A02/A46 root-* incl. Stop-resolver visibility, explicit
+# module.OpenScope suites, non-owner binding and foundation typed injection);
+# the total is derived in contract_matrix.
+NAMED_SUBTESTS = 532
 MANIFEST_REL = "deploy/release/manifest.json"
 GATES = ("windows-amd64", "linux-amd64")
 PROFILES = ("tenant-only", "organization-enabled", "replacement-contract")
@@ -73,8 +79,8 @@ def check_structure(manifest):
         raise ValueError("release manifest keys missing or unknown: " + ", ".join(missing or sorted(set(manifest) - set(keys))))
     if manifest["baseline"] != BASELINE or manifest["product_version"] != PRODUCT_VERSION or manifest["version_scope"] != VERSION_SCOPE:
         raise ValueError("release baseline/version scope drift")
-    if manifest["requirements"] != 95 or manifest["subtests"] != 421:
-        raise ValueError("release must bind 95 requirements and 421 named subtests")
+    if manifest["requirements"] != 95 or manifest["subtests"] != NAMED_SUBTESTS:
+        raise ValueError("release must bind 95 requirements and " + str(NAMED_SUBTESTS) + " named subtests")
     if [p["profile"] for p in manifest["profiles"]] != list(PROFILES):
         raise ValueError("release profiles must list all three applicability rows")
     for profile in manifest["profiles"]:
@@ -200,7 +206,7 @@ def check_event_schemas(manifest, root=ROOT):
             raise ValueError("published event schema not found in its source: " + entry["type"])
     # The generated organization-enabled profile is the publishing deployment
     # unit for organization events; the Bookstore example publishes its own.
-    template = root / "internal/scaffold/assets/organization-enabled/internal/app/profile.go.tmpl"
+    template = root / "internal/scaffold/assets/organization-enabled/foundation/profile.go.tmpl"
     organization = re.search(r"for _, name := range \[\]string\{([^}]*)\}", template.read_text(encoding="utf-8-sig"))
     organization_version = re.search(r"Version:\s*([0-9]+)", template.read_text(encoding="utf-8-sig"))
     if not organization or not organization_version:

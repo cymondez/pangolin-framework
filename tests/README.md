@@ -4,6 +4,8 @@
 
 [M4 驗收](m4/README.md) 保存持久化 Jobs、Broker 容量恢復、10,000 筆負載、活躍停機與 OpenTelemetry 案例；目前各項是否 Verified 仍由同版 Gate 決定。
 
+[rootmodules 驗收](rootmodules/README.md) 以 Root 裝配模式跨套件驗證菱形閉環去重、三階段屏障、可視性邊界、契約 Identity 保留替換與失敗反序清理；對應 Root DI 加法情境，正式需求 ID A01／A02／A46 不變。
+
 | 位置／入口 | 責任 |
 |---|---|
 | [M6 發布驗收](m6/README.md) | A70／A72／A95、真實重建／升級／備份還原／負載／安全、完整發布映射與 Profile 證據索引 |

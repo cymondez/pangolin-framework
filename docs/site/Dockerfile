@@ -5,6 +5,7 @@ COPY docs/site/package.json docs/site/package-lock.json ./
 RUN npm ci --no-audit --no-fund
 COPY VERSION /workspace/VERSION
 COPY examples/basics/ /workspace/examples/basics/
+COPY examples/moduleapp/ /workspace/examples/moduleapp/
 COPY docs/site/ ./
 ARG FRAMEWORK_VERSION
 ARG DOCS_URL=http://localhost:18088

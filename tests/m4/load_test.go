@@ -41,6 +41,7 @@ func TestCapacityLoad(t *testing.T) {
 	var err error
 	f.store, err = jobpg.NewStore(f.queue, f.registry, f.policy, func(context.Context, string) error { return nil })
 	must(t, err)
+	provisionJobs(t, f, records, "resize")
 	prototype := f.job(t)
 	prototype.Deadline = time.Now().Add(10 * time.Minute)
 	ctx := f.bind(t, context.Background(), f.tenant, prototype.Actor)

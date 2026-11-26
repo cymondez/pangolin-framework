@@ -28,7 +28,7 @@ python scripts/m6.py gate --commit <完整來源 SHA>
 
 ## 驗收與證據
 
-M6 必須保留 M0–M5 累積回歸與資料庫補正，執行 A01–A95 的 421 個具名情境，核對 tenant-only、organization-enabled、replacement-contract 的適用性。必要案例失敗、缺失或 skip，以及任一關鍵 package 的原始 coverage 計數不足 90.00%，均阻擋發布；不能以平均百分比或另一 Profile 的成功掩蓋。
+M6 必須保留 M0–M5 累積回歸與資料庫補正，執行 A01–A95 的 532 個具名情境（含 2026-11-25 設計修正後新增的 10 項 `A63/permit-*` 與 101 項 Root 裝配增補情境——`A01/root-*` 14、`A02/root-*` 14、`A46/root-*` 72（含擁有者本模組私有介面注入）、`A74/root-*` 1；其餘 421 項既有 ID 不變），核對 tenant-only、organization-enabled、replacement-contract 的適用性。必要案例失敗、缺失或 skip，以及任一關鍵 package 的原始 coverage 計數不足 90.00%，均阻擋發布；不能以平均百分比或另一 Profile 的成功掩蓋。
 
 另外保存乾淨重建、前向升級、實際備份／還原與獨立連線對帳、含 p95／p99 的效能基線、安全審查及版本一致的發布清單。每份證據綁定來源 commit、來源 bytes、固定依賴、Profile、seed、命令、結果與原始檔案 hash。效能數字描述該硬體與負載，不構成生產容量承諾。
 

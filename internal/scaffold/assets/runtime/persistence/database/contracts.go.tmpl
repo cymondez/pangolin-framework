@@ -169,17 +169,27 @@ type Rows interface {
 	Err() error
 }
 
-// Executor never exposes Begin, Commit, Rollback or raw connections. Exec is
-// a write and requires a read-write transaction; queries are read-only. A
-// missing row is reported as sql.ErrNoRows on Scan.
+// Executor never exposes Begin, Commit, Rollback or raw connections. Exec, QueryRowWrite, and
+// QueryWrite carry explicit write intent and require a read-write
+// transaction. Query and QueryRow are for read SQL by caller contract. This
+// intent API is not an arbitrary-SQL sandbox: a caller can still misuse a
+// read method with a mutating statement, and not every engine enforces
+// transaction-level read-only mode.
 type Executor interface {
 	// DatabaseKey is the resource identity this executor is bound to.
 	DatabaseKey() string
 	// Exec runs a write statement and requires a read-write transaction.
 	Exec(ctx context.Context, query string, args ...any) (ExecResult, error)
-	// Query runs a read-only cursor statement.
+	// QueryRowWrite runs a write statement that returns one row (for example
+	// INSERT ... RETURNING). It is guarded as a write before SQL is sent.
+	QueryRowWrite(ctx context.Context, query string, args ...any) Row
+	// QueryWrite runs a write statement that returns rows and is guarded as a
+	// write before SQL is sent.
+	QueryWrite(ctx context.Context, query string, args ...any) (Rows, error)
+	// Query runs a read cursor. The caller must use read SQL; this is not an
+	// engine-enforced SQL classifier.
 	Query(ctx context.Context, query string, args ...any) (Rows, error)
-	// QueryRow runs a read-only single-row statement; it reports a missing
+	// QueryRow runs a read single-row statement; it reports a missing
 	// row as sql.ErrNoRows on Scan, not as a returned error.
 	QueryRow(ctx context.Context, query string, args ...any) Row
 }

@@ -28,6 +28,7 @@ type host struct {
 	sources      []config.Source
 	participants []Participant
 	started      []module.Module
+	rootStarted  []rootStarted
 	container    di.Container
 	reader       config.Reader
 	attempted    bool
@@ -135,52 +136,18 @@ func (h *host) Start(ctx context.Context, modules []module.Module) (err error) {
 		}
 	}
 	sources := append([]config.Source(nil), h.sources...)
-	found := false
-	for i, s := range sources {
-		if s.Name == "defaults" {
-			v := map[string]string{}
-			for k, x := range b.defaults {
-				v[k] = x
-			}
-			for k, x := range s.Values {
-				v[k] = x
-			}
-			sources[i].Values = v
-			found = true
-		}
-	}
-	if !found {
-		sources = append(sources, config.Source{Name: "defaults", Values: b.defaults})
-	}
-	h.reader, err = config.NewLoader(config.StartupRules()).Load(sources)
-	if err != nil {
+	if h.reader, err = config.NewLoader(config.StartupRules()).Load(h.mergeDefaults(sources, b.defaults)); err != nil {
 		return err
 	}
 	h.container, err = providers.Seal(ctx)
 	if err != nil {
 		return err
 	}
-	// Check all declared capabilities before any module can accept work.
-	for _, check := range h.options.StartupChecks {
-		if err = check(ctx, view{h.container, h.reader}); err != nil {
-			return fmt.Errorf("startup compatibility: %w", err)
-		}
+	if err = h.runStartupChecks(ctx); err != nil {
+		return err
 	}
-	for _, m := range plan.Ordered {
-		if len(m.RequiredScopeKinds) == 0 {
-			continue
-		}
-		value, resolveErr := h.container.Resolve(ctx, scope.RegistryKey)
-		if resolveErr != nil {
-			return fmt.Errorf("module %s scope registry: %w", m.Name, resolveErr)
-		}
-		registry, ok := value.(*scope.Registry)
-		if !ok || registry == nil {
-			return fmt.Errorf("invalid scope registry")
-		}
-		if err = registry.Require(m.RequiredScopeKinds...); err != nil {
-			return fmt.Errorf("module %s: %w", m.Name, err)
-		}
+	if err = h.checkScopeKinds(ctx, plan.Ordered); err != nil {
+		return err
 	}
 	for _, m := range plan.Ordered {
 		if err = ctx.Err(); err != nil {
@@ -211,11 +178,76 @@ func (h *host) cleanup(ctx context.Context) error {
 		}
 	}
 	h.started = nil
+	for i := len(h.rootStarted) - 1; i >= 0; i-- {
+		e := h.rootStarted[i]
+		if e.stop != nil {
+			err = errors.Join(err, e.stop(cleanup, view{e.services, e.reader}))
+		}
+	}
+	h.rootStarted = nil
 	if h.container != nil {
 		err = errors.Join(err, h.container.Close(cleanup))
 		h.container = nil
 	}
 	return err
+}
+
+// mergeDefaults merges module defaults into the defaults layer; a caller
+// defaults source keeps its override precedence within the layer.
+func (h *host) mergeDefaults(sources []config.Source, defaults map[string]string) []config.Source {
+	found := false
+	for i, s := range sources {
+		if s.Name != "defaults" {
+			continue
+		}
+		v := map[string]string{}
+		for k, x := range defaults {
+			v[k] = x
+		}
+		for k, x := range s.Values {
+			v[k] = x
+		}
+		sources[i].Values = v
+		found = true
+	}
+	if !found {
+		sources = append(sources, config.Source{Name: "defaults", Values: defaults})
+	}
+	return sources
+}
+
+func (h *host) readerWithDefaults(defaults map[string]string) (config.Reader, error) {
+	return config.NewLoader(config.StartupRules()).Load(h.mergeDefaults(append([]config.Source(nil), h.sources...), defaults))
+}
+
+func (h *host) runStartupChecks(ctx context.Context) error {
+	// Check all declared capabilities before any module can accept work.
+	for _, check := range h.options.StartupChecks {
+		if err := check(ctx, view{h.container, h.reader}); err != nil {
+			return fmt.Errorf("startup compatibility: %w", err)
+		}
+	}
+	return nil
+}
+
+func (h *host) checkScopeKinds(ctx context.Context, ordered []module.Module) error {
+	for _, m := range ordered {
+		if len(m.RequiredScopeKinds) == 0 {
+			continue
+		}
+		value, resolveErr := h.container.Resolve(ctx, scope.RegistryKey)
+		if resolveErr != nil {
+			return fmt.Errorf("module %s scope registry: %w", m.Name, resolveErr)
+		}
+		registry, ok := value.(*scope.Registry)
+		if !ok || registry == nil {
+			return fmt.Errorf("invalid scope registry")
+		}
+		if err := registry.Require(m.RequiredScopeKinds...); err != nil {
+			return fmt.Errorf("module %s: %w", m.Name, err)
+		}
+	}
+	return nil
 }
 func (h *host) Stop(ctx context.Context) error {
 	h.mu.Lock()

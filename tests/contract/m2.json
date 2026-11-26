@@ -82,7 +82,8 @@
     "A74/replacement-provider": "github.com/cymondez/pangolin-framework/modules/organization:TestM2Assembly",
     "A74/missing-required-provider": "github.com/cymondez/pangolin-framework/modules/organization:TestM2Assembly",
     "A74/duplicate-kind": "github.com/cymondez/pangolin-framework/modules/organization:TestM2Assembly",
-    "A74/unsupported-kind-no-fallback": "github.com/cymondez/pangolin-framework/modules/organization:TestM2Assembly"
+    "A74/unsupported-kind-no-fallback": "github.com/cymondez/pangolin-framework/modules/organization:TestM2Assembly",
+    "A74/root-required-scope-kinds-rejected": "github.com/cymondez/pangolin-framework/kernel/runtime:TestRootRequiredScopeKindsWithoutRegistryFails"
   },
   "integration_tests": {
     "A03/required-two-repositories-outer-rollback": "github.com/cymondez/pangolin-framework/tests/m2:TestM2Transactions/A03-required-rollback",

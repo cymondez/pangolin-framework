@@ -7,6 +7,8 @@
 !examples/basics/
 !examples/basics/**
 examples/basics/.cache/
+!examples/moduleapp/
+!examples/moduleapp/**
 docs/site/node_modules/
 docs/site/build/
 docs/site/.docusaurus/

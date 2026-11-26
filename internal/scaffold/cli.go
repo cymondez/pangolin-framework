@@ -329,30 +329,39 @@ func (c CLI) newProject(args []string) error {
 	fmt.Fprintln(c.Out, "Created", name, "profile", profile, "runtime", Version)
 	return nil
 }
+
+// registryBytes emits the version-bound generated modules root file in the
+// root-mode form: an exported UserRoot aggregator whose DependsOn declares
+// every user module Type, plus ForRoot() returning the instances handed to
+// StartRoot. Framework composition (pools, registry, HTTP) stays in the app
+// template; user modules depend only on each other and their own services.
 func registryBytes(p Project) ([]byte, error) {
 	names := make([]string, 0, len(p.Modules))
 	for name := range p.Modules {
 		names = append(names, name)
 	}
 	sort.Strings(names)
-	var imports, body strings.Builder
+	var imports, refs strings.Builder
 	for _, name := range names {
 		if name == "persistence" || name == "authorization" || name == "bookstore" || name == "organization" {
-			fmt.Fprintf(&body, "{Name:%q,Version:%q,DependsOn:[]module.Dependency{", name, Version)
-			for _, dep := range p.Modules[name] {
-				fmt.Fprintf(&body, "{Name:%q,VersionConstraint:%q},", dep, "="+Version)
-			}
-			body.WriteString("}},")
-		} else {
-			fmt.Fprintf(&imports, "m_%s %q\n", name, "example.com/"+p.Name+"/modules/"+name)
-			fmt.Fprintf(&body, "m_%s.Module(),\n", name)
+			continue
 		}
+		fmt.Fprintf(&imports, "m_%s %q\n", name, "example.com/"+p.Name+"/modules/"+name)
+		fmt.Fprintf(&refs, "module.Of[m_%s.Module](),\n", name)
 	}
-	raw, err := format.Source([]byte("package modules\nimport(\"github.com/cymondez/pangolin-framework/kernel/module\"\n" + imports.String() + ")\nfunc All()[]module.Module{return []module.Module{\n" + body.String() + "}}\n"))
+	raw := "package modules\nimport (\n\"github.com/cymondez/pangolin-framework/kernel/module\"\n" + imports.String() + ")\n" +
+		"\n// UserRoot aggregates every user module as one typed root dependency;\n" +
+		"// the loader plans and dedupes reachable Types exactly once.\n" +
+		"type UserRoot struct{}\n" +
+		"func (UserRoot) ModuleMetadata() module.Metadata { return module.Metadata{Name: \"user-modules\"} }\n" +
+		"func (UserRoot) DependsOn() []module.Ref { return []module.Ref{\n" + refs.String() + "} }\n" +
+		"\n// ForRoot returns the user root instances handed to runtime.StartRoot.\n" +
+		"func ForRoot() []any { return []any{&UserRoot{}} }\n"
+	out, err := format.Source([]byte(raw))
 	if err != nil {
 		return nil, err
 	}
-	return raw, nil
+	return out, nil
 }
 func writeRegistry(root string, p Project) error {
 	raw, err := registryBytes(p)
@@ -413,11 +422,52 @@ func (c CLI) addModule(args []string) error {
 		return errors.New("module directory already exists")
 	}
 	var body strings.Builder
-	fmt.Fprintf(&body, "package %s\nimport \"github.com/cymondez/pangolin-framework/kernel/module\"\nfunc Module()module.Module{return module.Module{Name:%q,Version:%q,DependsOn:[]module.Dependency{", name, name, Version)
+	importList := []string{"\"github.com/cymondez/pangolin-framework/kernel/module\""}
+	var refs strings.Builder
+	framework := false
 	for _, d := range dependencies {
-		fmt.Fprintf(&body, "{Name:%q,VersionConstraint:%q},", d, "="+Version)
+		switch d {
+		case "persistence", "authorization", "organization":
+			// Framework capability names translate into the foundation Type
+			// edge below; they are never silently omitted.
+			framework = true
+			continue
+		case "bookstore":
+			return errors.New("bookstore is the generated domain sample: user modules depend on foundation capabilities (persistence, authorization) or registered user modules")
+		}
+		if d == name || !namePattern.MatchString(d) {
+			continue
+		}
+		importList = append(importList, fmt.Sprintf("\"example.com/%s/modules/%s\"", p.Name, d))
+		refs.WriteString("module.Of[" + d + ".Module](),")
 	}
-	body.WriteString("}}}\n")
+	if framework {
+		importList = append(importList, fmt.Sprintf("%q", "example.com/"+p.Name+"/foundation"))
+	}
+	fmt.Fprintf(&body, "package %s\nimport (\n%s\n)\ntype Module struct{}\n", name, strings.Join(importList, "\n"))
+	fmt.Fprintf(&body, "func (m *Module) ModuleMetadata() module.Metadata { return module.Metadata{Name: %q, Version: %q} }\n", name, Version)
+	if framework || refs.Len() > 0 {
+		// Root-mode Type dependencies: direct user module edges plus the
+		// foundation module that owns every framework contract. Framework
+		// composition (HTTP, drain) stays in internal/app.
+		fmt.Fprintf(&body, "func (m *Module) DependsOn() []module.Ref { return []module.Ref{")
+		if framework {
+			body.WriteString("module.Of[foundation.Module](),")
+		}
+		body.WriteString(refs.String())
+		body.WriteString("} }\n")
+	}
+	body.WriteString("func (m *Module) PreConfigure(b module.RootBuilder) error { return b.SetDefault(\"" + name + ".installed\", \"true\") }\n")
+	body.WriteString("// Configure registers your constructors. Framework services are typed\n")
+	body.WriteString("// constructor dependencies owned by the foundation module, for example:\n")
+	body.WriteString("//\n")
+	body.WriteString("// func New" + strings.ToUpper(name[:1]) + name[1:] + "Service(units uow.UnitOfWorkManager, scopes foundation.Scopes) *New" + strings.ToUpper(name[:1]) + name[1:] + "Service {\n")
+	body.WriteString("//\treturn &New" + strings.ToUpper(name[:1]) + name[1:] + "Service{units: units, scopes: scopes}\n")
+	body.WriteString("// }\n")
+	body.WriteString("//\n")
+	body.WriteString("// return b.Services().Add(New" + strings.ToUpper(name[:1]) + name[1:] + "Service)\n")
+	body.WriteString("func (m *Module) Configure(b module.RootBuilder) error { return nil }\n")
+	body.WriteString("// Start and Stop are optional; Start resolves services via rt.Services().\n")
 	raw, err := format.Source([]byte(body.String()))
 	if err != nil {
 		return err
@@ -425,7 +475,7 @@ func (c CLI) addModule(args []string) error {
 	if err = writeFile(filepath.Join(target, "module.go"), raw); err != nil {
 		return err
 	}
-	if err = writeFile(filepath.Join(target, "README.md"), []byte("# "+name+"\n\nModule() declares explicit dependencies. Register providers in Configure; own resources via DI cleanup. No business behavior is generated. Run go test ./... from the project root.\n")); err != nil {
+	if err = writeFile(filepath.Join(target, "README.md"), []byte("# "+name+"\n\nModule() declares root-mode module metadata and Type dependencies. Register constructors in Configure via b.Services().Add(...); resolve them in Start from rt.Services() with the exact concrete type. Framework services are typed constructor dependencies owned by the foundation module: declare --depends persistence/authorization (or organization) to add the foundation.Type edge and inject the published contracts (uow.UnitOfWorkManager, foundation.Scopes, foundation.Publisher, foundation.Idempotency). HTTP and drain composition stays in internal/app. Run go test ./... from the project root.\n")); err != nil {
 		return err
 	}
 	if err = writeRegistry(c.Dir, p); err != nil {

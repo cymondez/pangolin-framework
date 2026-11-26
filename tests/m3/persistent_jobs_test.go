@@ -37,11 +37,15 @@ func TestM4PersistentOrganizationJobs(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer db.Close()
-	runner, err := migration.NewPostgres(db, sub(jobpg.Migrations), 4000001, 4000001)
+	runner, err := migration.NewPostgres(db, sub(jobpg.Migrations), 4000001, 4100003)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if err = runner.Apply(context.Background(), []migration.ModuleMigrations{{Module: "jobs", Directory: "."}}); err != nil {
+		t.Fatal(err)
+	}
+	policy := jobs.Policy{Lease: 5 * time.Second, ExecutionTimeout: 2 * time.Second, CleanupTimeout: time.Second, PollInterval: time.Millisecond, RetryInitial: time.Millisecond, RetryMax: time.Second, MaxAttempts: 3, Concurrency: 1, BatchSize: 1, MaxPending: 10, Retention: time.Hour}
+	if err = jobpg.ProvisionQueue(context.Background(), db, policy.MaxPending, "resize"); err != nil {
 		t.Fatal(err)
 	}
 	registry, err := jobs.NewRegistry(1024, jobs.Definition{Type: "project", Version: 1, Validate: func(json.RawMessage) error { return nil }, Handle: func(c context.Context, j jobs.Job) error {
@@ -57,7 +61,6 @@ func TestM4PersistentOrganizationJobs(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	policy := jobs.Policy{Lease: 5 * time.Second, ExecutionTimeout: 2 * time.Second, CleanupTimeout: time.Second, PollInterval: time.Millisecond, RetryInitial: time.Millisecond, RetryMax: time.Second, MaxAttempts: 3, Concurrency: 1, BatchSize: 1, MaxPending: 10, Retention: time.Hour}
 	store, err := jobpg.NewStore(g.worker, registry, policy, func(context.Context, string) error { return nil })
 	if err != nil {
 		t.Fatal(err)

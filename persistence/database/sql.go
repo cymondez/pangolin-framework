@@ -192,13 +192,23 @@ func (s *session) Bind(ctx context.Context) (Executor, error) {
 	return &view{session: s, work: ctx}, nil
 }
 
-// finish ends the dedicated connection exactly once: the transaction context
-// is canceled first, which unblocks an in-flight statement and makes
-// database/sql roll the transaction back; the connection is then discarded
-// (never returned for reuse) or released. finish is idempotent and safe to
-// call from any goroutine.
+// finish ends the dedicated connection exactly once: the transaction is
+// ended synchronously FIRST so database/sql's context watcher can no longer
+// roll it back and close/discard the *sql.Conn wrapper behind our back, then
+// the transaction context is canceled, and only after that the connection is
+// discarded (never returned for reuse) or released. An already-ended
+// transaction reports ErrTxDone and leaves the connection untouched, which
+// also makes this path cheap after a normal Commit or Rollback. The
+// watcher-driven close races the wrapper's own closemu handshake (Raw can
+// otherwise observe done=false and dc=nil between the load and the read
+// lock), so ending the transaction inside this Once is what makes the
+// teardown single-owner. finish is idempotent and safe to call from any
+// goroutine.
 func (s *session) finish(discard bool) {
 	s.finishOnce.Do(func() {
+		if s.tx != nil {
+			_ = s.tx.Rollback()
+		}
 		if s.cancelTx != nil {
 			s.cancelTx()
 		}
@@ -272,12 +282,17 @@ func (o *busyOwner) end() {
 
 // scheduleCleanup runs the single session-owned cleanup job exactly once
 // per session and returns its persistent done channel. The job marks the
-// session closing, cancels the transaction context FIRST (so a blocking
-// cursor or row closer cannot prevent the cancellation that would unblock
-// it), closes the statement owner found at that point, then discards the
-// dedicated connection: the busy path cannot prove the transaction ended
-// cleanly, so the connection is never returned for reuse. A statement
-// registering after closing was marked ends itself immediately.
+// session closing, closes the statement owner found at that point (its
+// cancel unblocks the in-flight driver call and its closer releases the
+// transaction's read lock), then discards the dedicated connection via
+// finish: the busy path cannot prove the transaction ended cleanly, so the
+// connection is never returned for reuse. The synchronous transaction end
+// inside finish must see no reader anymore, which is why the owner closes
+// before finish, and why the transaction context is canceled by finish
+// itself (after the Transaction's CAS) instead of here: canceling early
+// would let database/sql's context watcher close the *sql.Conn wrapper
+// concurrently with the teardown. A statement registering after closing was
+// marked ends itself immediately.
 func (s *session) scheduleCleanup() <-chan struct{} {
 	s.cleanupOnce.Do(func() {
 		s.cleanupDone = make(chan struct{})
@@ -285,13 +300,6 @@ func (s *session) scheduleCleanup() <-chan struct{} {
 			s.busyMu.Lock()
 			s.closing = true
 			s.busyMu.Unlock()
-			// cancelTx before any arbitrary closer: the transaction context
-			// is the session's own and never blocks, and its cancellation
-			// aborts in-flight driver calls the closer depends on. Pooled
-			// sessions have no transaction context to cancel.
-			if s.cancelTx != nil {
-				s.cancelTx()
-			}
 			if owner := s.takeBusy(); owner != nil {
 				owner.close()
 			}
@@ -500,7 +508,16 @@ func (v *view) Exec(ctx context.Context, query string, args ...any) (ExecResult,
 }
 
 func (v *view) Query(ctx context.Context, query string, args ...any) (Rows, error) {
-	if err := v.enter(ctx, false); err != nil {
+	return v.query(ctx, false, query, args...)
+}
+
+// QueryWrite executes a write-returning cursor after the write guard.
+func (v *view) QueryWrite(ctx context.Context, query string, args ...any) (Rows, error) {
+	return v.query(ctx, true, query, args...)
+}
+
+func (v *view) query(ctx context.Context, write bool, query string, args ...any) (Rows, error) {
+	if err := v.enter(ctx, write); err != nil {
 		return nil, err
 	}
 	// One owner spans the whole statement: cancel aborts the in-flight
@@ -537,7 +554,16 @@ func (v *view) Query(ctx context.Context, query string, args ...any) (Rows, erro
 }
 
 func (v *view) QueryRow(ctx context.Context, query string, args ...any) Row {
-	if err := v.enter(ctx, false); err != nil {
+	return v.queryRow(ctx, false, query, args...)
+}
+
+// QueryRowWrite executes a write-returning statement after the write guard.
+func (v *view) QueryRowWrite(ctx context.Context, query string, args ...any) Row {
+	return v.queryRow(ctx, true, query, args...)
+}
+
+func (v *view) queryRow(ctx context.Context, write bool, query string, args ...any) Row {
+	if err := v.enter(ctx, write); err != nil {
 		return failedRow{err}
 	}
 	stmtCtx, cancel := context.WithCancel(ctx)

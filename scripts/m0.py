@@ -56,6 +56,10 @@ def api_surface(root=ROOT):
     for package in packages:
         if "/internal/" in package or "/tools/" in package or "/tests/" in package:
             continue
+        # Generated/history reproduction packages under artifacts/ are working
+        # archives, not published framework API.
+        if package.startswith(MODULE + "/artifacts/"):
+            continue
         text = command(["go", "doc", "-all", package], root).replace("\r\n", "\n")
         result[package] = {"sha256": hashlib.sha256(text.encode()).hexdigest(), "surface": text}
     return {"baseline": "v1.3", "packages": result}

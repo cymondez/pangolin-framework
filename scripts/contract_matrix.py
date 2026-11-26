@@ -11,8 +11,8 @@ import re
 ROOT = Path(__file__).resolve().parents[1]
 # Each name selects one stimulus already present in the authoritative row.
 SCENARIOS = {
-  1: "duplicate-name missing-dependency incompatible-version cycle stable-layer-order",
-  2: "phase-order partial-start-failure reverse-cleanup no-ready-on-failure",
+  1: "duplicate-name missing-dependency incompatible-version cycle stable-layer-order root-dedup-shared-diamond root-dedup-root-pointer root-distinct-instances-rejected root-stable-layer-order root-invalid-graphs root-invalid-graph-runs-no-hooks root-typed-nil-no-hooks-cross-package root-ref-safety root-shared-edge-constraint-validated root-base-metadata-defaults root-legacy-flat-start-unchanged root-app-defaults-validated-before-hooks root-app-defaults-validated-cross-package root-starthost-invalid-rejected",
+  2: "phase-order partial-start-failure reverse-cleanup no-ready-on-failure root-phase-barriers root-phase-barriers-cross-package root-lifecycle-stop-reversed root-start-failure-reverse-cleanup root-start-failure-no-ready root-start-failure-cross-package root-hook-panic-reclaims root-app-run-bounded-stop-on-cancel root-app-defaults-reach-module-start root-app-caller-defaults-override root-app-defaults-no-alias root-stop-resolver-hidden-denied root-stop-resolver-direct-allowed root-hook-panic-identity",
   3: "required-two-repositories-outer-rollback",
   4: "handler-chain-commit handler-error outbox-error audit-error",
   5: "precommit-failure explicit-rollback-response",
@@ -56,7 +56,7 @@ SCENARIOS = {
  43: "read-only-child-query read-only-child-write-rejected",
  44: "requires-new-tenant-switch requires-new-principal-switch",
  45: "allowed-import forbidden-import-regression",
- 46: "singleton transient operation missing-provider cycle duplicate-provider explicit-replace sealed-registry factory-failure scoped-cleanup captive-scope",
+ 46: "singleton transient operation missing-provider cycle duplicate-provider explicit-replace sealed-registry factory-failure scoped-cleanup captive-scope root-constructor-shapes root-lifetime-default-transient root-lifetime-singleton-shared root-operation-explicit-scope root-contract-visibility-chain-valid root-indirect-dependency-denied root-visibility-owner-runtime root-visibility-cross-package root-missing-provider-diagnostics root-ambiguity-and-binding root-bind-permission-seal root-canonical-tokens root-type-identity root-low-level-tokens root-low-level-factory-contract root-cross-owner-as-candidate root-as-without-owner-dep-fails root-as-implementation-checked root-plan-validation root-seal-one-shot root-seal-failure-one-shot root-laundering-rejected root-laundering-contract-rejected root-cleanup-order-failure root-lifecycle-resolver-boundary root-edge-diagnostics root-provenance-windows root-revocation-failure-paths root-builder-revoke-waits-inflight root-builder-invalidated-after-hook-error root-replace-operations root-neutral-concrete-replace root-contract-scoped-exclusion root-neutral-replacement-identity root-non-owner-bind-selected-or-denied root-openscope-identity-cleanup-boundaries root-openscope-distinct-scopes root-openscope-single-factory-per-scope root-openscope-resolver-guard root-openscope-neutral-replacement root-openscope-cancel-and-closed root-foundation-typed-injection root-legacy-root-owned-injection-rejected root-legacy-registry-injection-rejected root-legacy-export-needs-owner-edge root-builder-parallel-setdefault-window root-builder-replace-own-provider root-private-inference-compose root-private-hidden-from-dependent root-private-shared-type-independent root-private-ambiguity-and-bind root-private-reversed-registration-order root-private-public-owner-authority root-private-lifetime-and-scopes root-private-alias-identity-fence root-private-dangling-bindings root-private-replace-binding root-private-laundering-and-cycle root-private-as-serves-own-private root-private-as-survives-contract-replacement root-private-as-unexported-own root-private-as-public-authority root-private-foreign-unexported-no-shadow root-private-foreign-missing-mentions-owner root-private-bindonly-lifecycle root-private-lowlevel-alias-translation root-private-alias-fence-correction root-private-shared-param-one-alias root-private-runtime-startstop root-private-runtime-openscope-operation root-private-runtime-hidden-from-dependent root-private-runtime-shared-independent",
  47: "four-layer-precedence missing-timeout invalid-config sealed-config secret-redaction",
  48: "invalid-identity entry-denied malformed-dto oversized-body valid-request resource-policy problem-details",
  49: "two-short-scopes no-transaction-for-connection-lifetime",
@@ -73,7 +73,7 @@ SCENARIOS = {
  60: "same-key-same-body same-key-different-body holder-rollback wait-timeout",
  61: "authorized-success other-principal-denied pending-not-failed retention-boundary expired-guarantee",
  62: "success-required-audit auth-denial-log business-rollback-log audit-write-failure telemetry-failure",
- 63: "broker-offline capacity-limit retry-limit dead-replay recovery-drain tenant-load-competition",
+  63: "broker-offline capacity-limit retry-limit dead-replay recovery-drain tenant-load-competition permit-event-spoof-release permit-jobs-spoof-release permit-holey-resize permit-capacity-guc permit-provision-atomic permit-no-cross-tenant-lock permit-adopt-upgrade permit-race-crash permit-typed-failures-rls permit-event-capacity",
  64: "bounded-retry cancellation stale-lease manual-replay-audit tenant-tamper handler-idempotency",
  65: "tenant-cache-isolation setting-precedence feature-permission invalidation-failure ttl-version-convergence",
  66: "trace-correlation alerting liveness required-dependency-unready optional-broker-outage redaction",
@@ -84,7 +84,7 @@ SCENARIOS = {
  71: "new-increment previous-increment-regression same-commit-evidence",
  72: "clean-rebuild forward-upgrade backup-restore load-baseline security-review",
  73: "full-tuple-identity missing-field tenant-id-mismatch parent-not-union",
- 74: "tenant-only organization-enabled replacement-provider missing-required-provider duplicate-kind unsupported-kind-no-fallback",
+ 74: "tenant-only organization-enabled replacement-provider missing-required-provider duplicate-kind unsupported-kind-no-fallback root-required-scope-kinds-rejected",
  75: "header-route-conflict dto-owner-tamper unauthorized-scope provider-tenant-mismatch provider-request-mismatch direct-application-entry",
  76: "required-switch requires-new-switch new-authorized-top-level",
  77: "missing-owner-filter forged-owner parent-cannot-read-child org-cannot-use-tenant-only missing-scope pool-reuse",

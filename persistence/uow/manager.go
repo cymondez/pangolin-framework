@@ -79,7 +79,7 @@ func (m *manager) Current(ctx context.Context) (Scope, bool) {
 	}
 	v.root.mu.Lock()
 	defer v.root.mu.Unlock()
-	if !v.active || !v.root.active || v.root.suspended || v.root.completing {
+	if !v.active || !v.root.active || v.root.suspended || v.root.completing && ctx.Value(completingKey{}) != v.root {
 		return nil, false
 	}
 	return v, true
@@ -149,12 +149,19 @@ func (m *manager) Within(ctx context.Context, o Options, callback func(context.C
 		defer func() { finish(err) }()
 	}
 	p := currentView(ctx)
+	completionJoin := false
+	if p != nil && ctx.Value(completingKey{}) == p.root {
+		// A Resource completion hook (Local Event drain/flush) may call the
+		// normal Application Command/Query boundary. This marker is private
+		// to Manager and is only installed on its controlled completion path.
+		completionJoin = true
+	}
 	reject := func(code, cause error) error {
 		id := ""
 		if p != nil {
 			id = p.root.id
 			if o.Propagation == Required {
-				_ = p.SetRollbackOnly(errors.Join(code, cause))
+				markRollback(p, errors.Join(code, cause))
 			}
 		}
 		return fail(code, id, NotStarted, cause)
@@ -178,7 +185,7 @@ func (m *manager) Within(ctx context.Context, o Options, callback func(context.C
 		if suspended {
 			return reject(ErrSuspended, nil)
 		}
-		if completing {
+		if completing && !(completionJoin && o.Propagation == Required) {
 			return reject(ErrBusy, nil)
 		}
 		if e := bindingError(b, p.root.binding); e != nil {
@@ -377,8 +384,23 @@ func (m *manager) Within(ctx context.Context, o Options, callback func(context.C
 	outcome = Committed
 	return nil
 }
+
+// markRollback records failure while the root is active, including during
+// controlled completion. SetRollbackOnly intentionally remains unavailable
+// to application code once completion has started.
+func markRollback(v *view, cause error) {
+	if cause == nil {
+		cause = ErrRollbackOnly
+	}
+	r := v.root
+	r.mu.Lock()
+	if v.active && r.active && !r.suspended {
+		r.rollback = errors.Join(r.rollback, cause)
+	}
+	r.mu.Unlock()
+}
 func (m *manager) join(ctx context.Context, p *view, o Options, callback func(context.Context) error) (err error) {
-	conflict := func(code error) error { _ = p.SetRollbackOnly(code); return fail(code, p.root.id, NotStarted, nil) }
+	conflict := func(code error) error { markRollback(p, code); return fail(code, p.root.id, NotStarted, nil) }
 	if m.key != p.options.DatabaseKey {
 		return conflict(ErrResourceMismatch)
 	}

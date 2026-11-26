@@ -1,12 +1,12 @@
 ---
 title: 第一個應用
-description: 在自己的專案建立 main.go，啟動第一個 panGOlin 模組並看到執行結果。
+description: 在自己的專案建立 main.go，用 Root 裝配啟動第一個 panGOlin 應用並看到執行結果。
 ---
 
 import CodeBlock from '@theme/CodeBlock';
 import source from '../_snippets/hello.go';
 
-這一頁會建立一個能直接執行的 console 應用。它啟動一個名為 `hello` 的功能模組、印出訊息，再正常停止。
+這一頁會建立一個能直接執行的 console 應用。它以 root 裝配啟動一個名為 `hello` 的功能模組、印出訊息，再正常停止。
 
 ## 開始前
 
@@ -31,7 +31,7 @@ go run .
 Hello, panGOlin!
 ```
 
-程式輸出後正常結束，不需要保持終端機開啟。
+程式在約一秒後正常結束。`app.Run` 會一直運行到 context 結束：真正的長駐應用會把 Ctrl+C 或關閉訊號的 context 交給它；這裡的 `context.WithTimeout` 用一秒期限代表一次示範執行。
 
 ## 3. 改成你的訊息
 
@@ -45,11 +45,10 @@ fmt.Println("Hello, my application!")
 
 ## 剛才用了什麼？
 
-- **Module** 是一個功能單位。這個例子的模組名稱為 `hello`，Start 是它啟動時要執行的工作。
-- **Host** 負責啟動與停止應用。把模組交給 `host.Start`，由它處理啟動順序。
-- **context** 傳遞取消與逾時。結束時呼叫 `host.Stop`，讓應用有時間釋放資源。
-- `uow.*` 四個設定是 Host 需要的操作逾時預設；你可以先保留範例值，它們不會建立資料庫。
+- **Module** 用普通 Go struct 型別宣告：`module.Base` 提供名稱與版本，`Start` 方法是它啟動時要執行的工作。
+- **`app.Run(ctx, root)`** 把根模組交給 kernel runtime：組合設定層、驗證模組相依，先完成所有模組的組態與服務組裝才依序 Start，context 結束時反序 Stop。uow 等必要的啟動預設已由 `app.Run` 內建，不需要額外設定。
+- **context** 攜帶取消與逾時；把期限傳給 `app.Run` 一起收尾（含 Stop）。
 
 ## 下一步
 
-接著完成[可設定的問候服務](../tutorials/greeting-application.mdx)，把自己的服務註冊到應用，並從環境變數讀取名字。
+接著完成[可設定的問候服務](../tutorials/greeting-application.mdx)，註冊自己的服務與設定，並從環境變數讀取名字。

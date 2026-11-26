@@ -11,7 +11,7 @@ import m0,m1,m4
 class M4Gates(unittest.TestCase):
     def test_mapping_and_documentation(self):
         mapping=m0.load(ROOT/'tests/contract/m4.json');m4.validate_mapping(mapping);m1.check_module_docs(mapping)
-        self.assertEqual(sum(len(mapping[k]) for k in ('unit_tests','integration_tests','python_tests')),18)
+        self.assertEqual(sum(len(mapping[k]) for k in ('unit_tests','integration_tests','python_tests')),28)
     def test_missing_duplicate_pending_and_blank(self):
         original=m0.load(ROOT/'tests/contract/m4.json');key=next(iter(original['unit_tests']))
         for mode in ('missing','duplicate','pending','blank'):

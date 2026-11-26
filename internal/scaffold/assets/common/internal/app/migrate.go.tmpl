@@ -18,6 +18,7 @@ import (
 	"github.com/cymondez/pangolin-framework/platform/audit"
 	tenantpg "github.com/cymondez/pangolin-framework/tenancy/postgres"
 	_ "github.com/jackc/pgx/v5/stdlib"
+	"{{MODULE}}/foundation"
 )
 
 //go:embed migrations/*.sql
@@ -72,7 +73,7 @@ func Migrate(ctx context.Context, seed bool) error {
 	}
 	sources["capacity"] = capacity
 	modules = append(modules, migration.ModuleMigrations{Module: "capacity", Directory: "capacity", DependsOn: []string{"events"}})
-	profileSources, profileModules := profileMigrations()
+	profileSources, profileModules := foundation.Migrations()
 	for k, v := range profileSources {
 		sources[k] = v
 	}
@@ -114,11 +115,16 @@ func Migrate(ctx context.Context, seed bool) error {
 	if err = runner.Apply(ctx, modules); err != nil {
 		return err
 	}
+	// Deployment-only permit provisioning keeps the bounded queues' configured
+	// capacities authoritative; rerunning is an idempotent no-op.
+	if err = eventpg.ProvisionQueues(ctx, db, 100000, 100000, "resize"); err != nil {
+		return err
+	}
 	if seed {
 		if _, err = db.ExecContext(ctx, `INSERT INTO pangolin_security.tenant_memberships VALUES('tenant-a','user','alice','active',1),('tenant-b','user','alice','active',1) ON CONFLICT DO NOTHING;INSERT INTO pangolin.resource_scopes(tenant_id,scope_kind,scope_id) VALUES('tenant-a','tenant','tenant-a'),('tenant-b','tenant','tenant-b') ON CONFLICT DO NOTHING`); err != nil {
 			return err
 		}
-		return seedProfile(ctx, db)
+		return foundation.Seed(ctx, db)
 	}
 	return nil
 }

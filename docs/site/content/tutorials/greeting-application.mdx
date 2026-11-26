@@ -1,24 +1,25 @@
 ---
 title: 建立可設定的問候服務
-description: 延續第一個應用，學習將自己的服務、設定與 Module 組合起來。
+description: 延續第一個應用，用建構子註冊自己的服務，並從設定與環境變數讀取名字。
 ---
 
 import CodeBlock from '@theme/CodeBlock';
-import source from '../_snippets/greeting-app.go';
+import source from '../_snippets/root-greeting.go';
+import legacySource from '../_snippets/greeting-app.go';
 
-完成這個教學後，你的應用會從環境讀取名字，透過自己定義的 `GreetingService` 輸出問候訊息。
+完成這個教學後，你的應用會從設定層讀取名字，透過自己定義的 `GreetingService` 輸出問候訊息。
 
 先完成[第一個應用](../getting-started/quickstart.mdx)。仍使用同一個 `hello-pangolin` 專案，不需要新增依賴或外部服務。
 
 ## 1. 認識這次新增的服務
 
-`GreetingService` 是你自己的 Go 型別。它提供 `Greet(name)` 方法，並透過 constructor 資料接收輸出位置。
+`GreetingService` 是你自己的 Go 型別，提供 `Greet(name)` 方法。把服務以建構子註冊到依賴注入（Dependency Injection，DI）組合引擎，需要時才解析；測試時可以換成別的實作。
 
-應用將服務註冊到 DI（Dependency Injection，依賴注入）容器，之後需要它時再取得。這樣可以在測試時換成別的實作或輸出位置。
+一般應用服務以具象型別直接註冊即可，不需要先定義介面；要讓其他模組使用你的服務時，才把介面放進可 import 的 contracts 套件，見[依賴注入](../fundamentals/dependency-injection.mdx)。
 
 ## 2. 設定名字的來源
 
-程式預設使用 `World`，如果有 `APP_NAME` 環境變數，則用它覆寫 `app.name`。Module 啟動時透過 `app.Config().Lookup("app.name")` 讀取。
+程式先在 `Configure` 用 `b.SetDefault("app.name", "World")` 宣告模組預設值。如果終端機設定了 `APP_NAME` 環境變數，`main` 會以 `app.Sources` 加上 environment 層覆寫預設。設定優先序是「內建與模組預設 < 檔案 < 環境 < CLI」，右邊的來源覆寫左邊。
 
 ## 3. 替換 main.go
 
@@ -26,7 +27,7 @@ import source from '../_snippets/greeting-app.go';
 
 <CodeBlock language="go" title="hello-pangolin/main.go">{source}</CodeBlock>
 
-在 `Configure` 中使用 `b.Provide` 註冊服務；`di.Singleton` 表示整個應用只建立一份。`Start` 取得它並呼叫 `Greet`。
+在 `Configure` 中以 `b.Services().Add(NewGreetingService, module.Singleton())` 註冊建構子：解析鍵是建構子的精確回傳型別 `*GreetingService`，`module.Singleton()` 表示整個應用只建立一份；省略它時預設每次解析建立新物件（Transient）。`Start` 用 `rt.Services().Resolve(ctx, module.Contract[*GreetingService]())` 取得服務，並以 `rt.Config().Lookup("app.name")` 讀取設定。
 
 ## 4. 執行並改變設定
 
@@ -52,8 +53,14 @@ APP_NAME=Reader go run .
 
 這次應該看到 `Hello, Reader!`。
 
+## 進階相容路徑
+
+以下等價版本仍然可用並持續支援（未棄用）：把 `module.Module` 結構值交給明示的 `Host.Start` 清單，並在 Module 內以 `b.Provide`（`di.Provider`）註冊服務。維護以這種形狀組裝的既有應用時使用：
+
+<CodeBlock language="go" title="examples/basics/greeting-app/main.go（進階相容版本）">{legacySource}</CodeBlock>
+
 ## 接著可以做什麼？
 
-- [依賴注入](../fundamentals/dependency-injection.mdx)：把型別改成介面、選擇服務存活期間。
+- [依賴注入](../fundamentals/dependency-injection.mdx)：選擇服務存活期間、跨模組介面契約與建構子參數解析。
 - [設定](../fundamentals/configuration.mdx)：加入必要欄位與輸入驗證。
 - [Bookstore](bookstore.md)：把同樣的組裝方式用到 HTTP 與資料庫應用。

@@ -44,6 +44,118 @@
       "evidence": "artifacts/{commit}/{profile}/A01/stable-layer-order/"
     },
     {
+      "id": "A01/root-dedup-shared-diamond",
+      "requirement": "MOD-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A01/root-dedup-shared-diamond/"
+    },
+    {
+      "id": "A01/root-dedup-root-pointer",
+      "requirement": "MOD-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A01/root-dedup-root-pointer/"
+    },
+    {
+      "id": "A01/root-distinct-instances-rejected",
+      "requirement": "MOD-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A01/root-distinct-instances-rejected/"
+    },
+    {
+      "id": "A01/root-stable-layer-order",
+      "requirement": "MOD-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A01/root-stable-layer-order/"
+    },
+    {
+      "id": "A01/root-invalid-graphs",
+      "requirement": "MOD-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A01/root-invalid-graphs/"
+    },
+    {
+      "id": "A01/root-invalid-graph-runs-no-hooks",
+      "requirement": "MOD-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A01/root-invalid-graph-runs-no-hooks/"
+    },
+    {
+      "id": "A01/root-typed-nil-no-hooks-cross-package",
+      "requirement": "MOD-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A01/root-typed-nil-no-hooks-cross-package/"
+    },
+    {
+      "id": "A01/root-ref-safety",
+      "requirement": "MOD-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A01/root-ref-safety/"
+    },
+    {
+      "id": "A01/root-shared-edge-constraint-validated",
+      "requirement": "MOD-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A01/root-shared-edge-constraint-validated/"
+    },
+    {
+      "id": "A01/root-base-metadata-defaults",
+      "requirement": "MOD-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A01/root-base-metadata-defaults/"
+    },
+    {
+      "id": "A01/root-legacy-flat-start-unchanged",
+      "requirement": "MOD-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A01/root-legacy-flat-start-unchanged/"
+    },
+    {
+      "id": "A01/root-app-defaults-validated-before-hooks",
+      "requirement": "MOD-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A01/root-app-defaults-validated-before-hooks/"
+    },
+    {
+      "id": "A01/root-app-defaults-validated-cross-package",
+      "requirement": "MOD-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A01/root-app-defaults-validated-cross-package/"
+    },
+    {
+      "id": "A01/root-starthost-invalid-rejected",
+      "requirement": "MOD-001",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A01/root-starthost-invalid-rejected/"
+    },
+    {
       "id": "A02/phase-order",
       "requirement": "MOD-002",
       "applicability": "required",
@@ -74,6 +186,118 @@
       "reason": "§13.4: framework/core contract or applicable negative scenario",
       "status": "planned",
       "evidence": "artifacts/{commit}/{profile}/A02/no-ready-on-failure/"
+    },
+    {
+      "id": "A02/root-phase-barriers",
+      "requirement": "MOD-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A02/root-phase-barriers/"
+    },
+    {
+      "id": "A02/root-phase-barriers-cross-package",
+      "requirement": "MOD-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A02/root-phase-barriers-cross-package/"
+    },
+    {
+      "id": "A02/root-lifecycle-stop-reversed",
+      "requirement": "MOD-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A02/root-lifecycle-stop-reversed/"
+    },
+    {
+      "id": "A02/root-start-failure-reverse-cleanup",
+      "requirement": "MOD-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A02/root-start-failure-reverse-cleanup/"
+    },
+    {
+      "id": "A02/root-start-failure-no-ready",
+      "requirement": "MOD-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A02/root-start-failure-no-ready/"
+    },
+    {
+      "id": "A02/root-start-failure-cross-package",
+      "requirement": "MOD-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A02/root-start-failure-cross-package/"
+    },
+    {
+      "id": "A02/root-hook-panic-reclaims",
+      "requirement": "MOD-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A02/root-hook-panic-reclaims/"
+    },
+    {
+      "id": "A02/root-app-run-bounded-stop-on-cancel",
+      "requirement": "MOD-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A02/root-app-run-bounded-stop-on-cancel/"
+    },
+    {
+      "id": "A02/root-app-defaults-reach-module-start",
+      "requirement": "MOD-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A02/root-app-defaults-reach-module-start/"
+    },
+    {
+      "id": "A02/root-app-caller-defaults-override",
+      "requirement": "MOD-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A02/root-app-caller-defaults-override/"
+    },
+    {
+      "id": "A02/root-app-defaults-no-alias",
+      "requirement": "MOD-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A02/root-app-defaults-no-alias/"
+    },
+    {
+      "id": "A02/root-stop-resolver-hidden-denied",
+      "requirement": "MOD-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A02/root-stop-resolver-hidden-denied/"
+    },
+    {
+      "id": "A02/root-stop-resolver-direct-allowed",
+      "requirement": "MOD-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A02/root-stop-resolver-direct-allowed/"
+    },
+    {
+      "id": "A02/root-hook-panic-identity",
+      "requirement": "MOD-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A02/root-hook-panic-identity/"
     },
     {
       "id": "A03/required-two-repositories-outer-rollback",
@@ -1428,6 +1652,582 @@
       "evidence": "artifacts/{commit}/{profile}/A46/captive-scope/"
     },
     {
+      "id": "A46/root-constructor-shapes",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-constructor-shapes/"
+    },
+    {
+      "id": "A46/root-lifetime-default-transient",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-lifetime-default-transient/"
+    },
+    {
+      "id": "A46/root-lifetime-singleton-shared",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-lifetime-singleton-shared/"
+    },
+    {
+      "id": "A46/root-operation-explicit-scope",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-operation-explicit-scope/"
+    },
+    {
+      "id": "A46/root-contract-visibility-chain-valid",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-contract-visibility-chain-valid/"
+    },
+    {
+      "id": "A46/root-indirect-dependency-denied",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-indirect-dependency-denied/"
+    },
+    {
+      "id": "A46/root-visibility-owner-runtime",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-visibility-owner-runtime/"
+    },
+    {
+      "id": "A46/root-visibility-cross-package",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-visibility-cross-package/"
+    },
+    {
+      "id": "A46/root-missing-provider-diagnostics",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-missing-provider-diagnostics/"
+    },
+    {
+      "id": "A46/root-ambiguity-and-binding",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-ambiguity-and-binding/"
+    },
+    {
+      "id": "A46/root-bind-permission-seal",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-bind-permission-seal/"
+    },
+    {
+      "id": "A46/root-canonical-tokens",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-canonical-tokens/"
+    },
+    {
+      "id": "A46/root-type-identity",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-type-identity/"
+    },
+    {
+      "id": "A46/root-low-level-tokens",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-low-level-tokens/"
+    },
+    {
+      "id": "A46/root-low-level-factory-contract",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-low-level-factory-contract/"
+    },
+    {
+      "id": "A46/root-cross-owner-as-candidate",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-cross-owner-as-candidate/"
+    },
+    {
+      "id": "A46/root-as-without-owner-dep-fails",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-as-without-owner-dep-fails/"
+    },
+    {
+      "id": "A46/root-as-implementation-checked",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-as-implementation-checked/"
+    },
+    {
+      "id": "A46/root-plan-validation",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-plan-validation/"
+    },
+    {
+      "id": "A46/root-seal-one-shot",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-seal-one-shot/"
+    },
+    {
+      "id": "A46/root-seal-failure-one-shot",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-seal-failure-one-shot/"
+    },
+    {
+      "id": "A46/root-laundering-rejected",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-laundering-rejected/"
+    },
+    {
+      "id": "A46/root-laundering-contract-rejected",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-laundering-contract-rejected/"
+    },
+    {
+      "id": "A46/root-cleanup-order-failure",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-cleanup-order-failure/"
+    },
+    {
+      "id": "A46/root-lifecycle-resolver-boundary",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-lifecycle-resolver-boundary/"
+    },
+    {
+      "id": "A46/root-edge-diagnostics",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-edge-diagnostics/"
+    },
+    {
+      "id": "A46/root-provenance-windows",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-provenance-windows/"
+    },
+    {
+      "id": "A46/root-revocation-failure-paths",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-revocation-failure-paths/"
+    },
+    {
+      "id": "A46/root-builder-revoke-waits-inflight",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-builder-revoke-waits-inflight/"
+    },
+    {
+      "id": "A46/root-builder-invalidated-after-hook-error",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-builder-invalidated-after-hook-error/"
+    },
+    {
+      "id": "A46/root-replace-operations",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-replace-operations/"
+    },
+    {
+      "id": "A46/root-neutral-concrete-replace",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-neutral-concrete-replace/"
+    },
+    {
+      "id": "A46/root-contract-scoped-exclusion",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-contract-scoped-exclusion/"
+    },
+    {
+      "id": "A46/root-neutral-replacement-identity",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-neutral-replacement-identity/"
+    },
+    {
+      "id": "A46/root-non-owner-bind-selected-or-denied",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-non-owner-bind-selected-or-denied/"
+    },
+    {
+      "id": "A46/root-openscope-identity-cleanup-boundaries",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-openscope-identity-cleanup-boundaries/"
+    },
+    {
+      "id": "A46/root-openscope-distinct-scopes",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-openscope-distinct-scopes/"
+    },
+    {
+      "id": "A46/root-openscope-single-factory-per-scope",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-openscope-single-factory-per-scope/"
+    },
+    {
+      "id": "A46/root-openscope-resolver-guard",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-openscope-resolver-guard/"
+    },
+    {
+      "id": "A46/root-openscope-neutral-replacement",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-openscope-neutral-replacement/"
+    },
+    {
+      "id": "A46/root-openscope-cancel-and-closed",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-openscope-cancel-and-closed/"
+    },
+    {
+      "id": "A46/root-foundation-typed-injection",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-foundation-typed-injection/"
+    },
+    {
+      "id": "A46/root-legacy-root-owned-injection-rejected",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-legacy-root-owned-injection-rejected/"
+    },
+    {
+      "id": "A46/root-legacy-registry-injection-rejected",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-legacy-registry-injection-rejected/"
+    },
+    {
+      "id": "A46/root-legacy-export-needs-owner-edge",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-legacy-export-needs-owner-edge/"
+    },
+    {
+      "id": "A46/root-builder-parallel-setdefault-window",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-builder-parallel-setdefault-window/"
+    },
+    {
+      "id": "A46/root-builder-replace-own-provider",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-builder-replace-own-provider/"
+    },
+    {
+      "id": "A46/root-private-inference-compose",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-private-inference-compose/"
+    },
+    {
+      "id": "A46/root-private-hidden-from-dependent",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-private-hidden-from-dependent/"
+    },
+    {
+      "id": "A46/root-private-shared-type-independent",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-private-shared-type-independent/"
+    },
+    {
+      "id": "A46/root-private-ambiguity-and-bind",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-private-ambiguity-and-bind/"
+    },
+    {
+      "id": "A46/root-private-reversed-registration-order",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-private-reversed-registration-order/"
+    },
+    {
+      "id": "A46/root-private-public-owner-authority",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-private-public-owner-authority/"
+    },
+    {
+      "id": "A46/root-private-lifetime-and-scopes",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-private-lifetime-and-scopes/"
+    },
+    {
+      "id": "A46/root-private-alias-identity-fence",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-private-alias-identity-fence/"
+    },
+    {
+      "id": "A46/root-private-dangling-bindings",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-private-dangling-bindings/"
+    },
+    {
+      "id": "A46/root-private-replace-binding",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-private-replace-binding/"
+    },
+    {
+      "id": "A46/root-private-laundering-and-cycle",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-private-laundering-and-cycle/"
+    },
+    {
+      "id": "A46/root-private-as-serves-own-private",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-private-as-serves-own-private/"
+    },
+    {
+      "id": "A46/root-private-as-survives-contract-replacement",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-private-as-survives-contract-replacement/"
+    },
+    {
+      "id": "A46/root-private-as-unexported-own",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-private-as-unexported-own/"
+    },
+    {
+      "id": "A46/root-private-as-public-authority",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-private-as-public-authority/"
+    },
+    {
+      "id": "A46/root-private-foreign-unexported-no-shadow",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-private-foreign-unexported-no-shadow/"
+    },
+    {
+      "id": "A46/root-private-foreign-missing-mentions-owner",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-private-foreign-missing-mentions-owner/"
+    },
+    {
+      "id": "A46/root-private-bindonly-lifecycle",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-private-bindonly-lifecycle/"
+    },
+    {
+      "id": "A46/root-private-lowlevel-alias-translation",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-private-lowlevel-alias-translation/"
+    },
+    {
+      "id": "A46/root-private-alias-fence-correction",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-private-alias-fence-correction/"
+    },
+    {
+      "id": "A46/root-private-shared-param-one-alias",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-private-shared-param-one-alias/"
+    },
+    {
+      "id": "A46/root-private-runtime-startstop",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-private-runtime-startstop/"
+    },
+    {
+      "id": "A46/root-private-runtime-openscope-operation",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-private-runtime-openscope-operation/"
+    },
+    {
+      "id": "A46/root-private-runtime-hidden-from-dependent",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-private-runtime-hidden-from-dependent/"
+    },
+    {
+      "id": "A46/root-private-runtime-shared-independent",
+      "requirement": "MOD-003",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A46/root-private-runtime-shared-independent/"
+    },
+    {
       "id": "A47/four-layer-precedence",
       "requirement": "CFG-001",
       "applicability": "required",
@@ -2052,6 +2852,86 @@
       "evidence": "artifacts/{commit}/{profile}/A63/tenant-load-competition/"
     },
     {
+      "id": "A63/permit-event-spoof-release",
+      "requirement": "OPS-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A63/permit-event-spoof-release/"
+    },
+    {
+      "id": "A63/permit-jobs-spoof-release",
+      "requirement": "OPS-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A63/permit-jobs-spoof-release/"
+    },
+    {
+      "id": "A63/permit-holey-resize",
+      "requirement": "OPS-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A63/permit-holey-resize/"
+    },
+    {
+      "id": "A63/permit-capacity-guc",
+      "requirement": "OPS-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A63/permit-capacity-guc/"
+    },
+    {
+      "id": "A63/permit-provision-atomic",
+      "requirement": "OPS-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A63/permit-provision-atomic/"
+    },
+    {
+      "id": "A63/permit-no-cross-tenant-lock",
+      "requirement": "OPS-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A63/permit-no-cross-tenant-lock/"
+    },
+    {
+      "id": "A63/permit-adopt-upgrade",
+      "requirement": "OPS-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A63/permit-adopt-upgrade/"
+    },
+    {
+      "id": "A63/permit-race-crash",
+      "requirement": "OPS-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A63/permit-race-crash/"
+    },
+    {
+      "id": "A63/permit-typed-failures-rls",
+      "requirement": "OPS-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A63/permit-typed-failures-rls/"
+    },
+    {
+      "id": "A63/permit-event-capacity",
+      "requirement": "OPS-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A63/permit-event-capacity/"
+    },
+    {
       "id": "A64/bounded-retry",
       "requirement": "JOB-001",
       "applicability": "required",
@@ -2546,6 +3426,14 @@
       "reason": "§13.4: framework/core contract or applicable negative scenario",
       "status": "planned",
       "evidence": "artifacts/{commit}/{profile}/A74/unsupported-kind-no-fallback/"
+    },
+    {
+      "id": "A74/root-required-scope-kinds-rejected",
+      "requirement": "SCP-002",
+      "applicability": "required",
+      "reason": "§13.4: framework/core contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A74/root-required-scope-kinds-rejected/"
     },
     {
       "id": "A75/header-route-conflict",

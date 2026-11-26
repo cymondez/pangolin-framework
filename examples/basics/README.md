@@ -6,11 +6,13 @@
 
 | 命令 | 學習目標 |
 |---|---|
-| `go run ./hello` | 建立並執行第一個模組 |
-| `go run ./greeting-app` | 組合 Module、DI 與應用設定 |
+| `go run ./hello` | 建立並執行第一個 Root 裝配模組（`kernel/app.Run`） |
+| `go run ./root-greeting` | Root 裝配：建構子註冊、模組預設與環境覆寫 |
+| `go run ./greeting-app` | 進階相容：明示 `module.Module` 清單與 `Host.Start` |
 | `go run ./configuration` | 預設設定與環境覆寫 |
-| `go run ./dependency-injection` | 以介面注入服務與關閉 Container |
-| `go run ./lifecycle` | 模組相依、啟動與反序停機 |
+| `go run ./dependency-injection` | 進階相容：獨立 `kernel/di` Registry／Container |
+| `go run ./root-lifecycle` | Root 裝配：Type 參照相依、依序啟動與反序停機 |
+| `go run ./lifecycle` | 進階相容：明示清單的多模組啟停與 `host.Ready` |
 | `go run ./event-envelope` | 建立、編碼與讀回 Integration Event |
 | `go run ./authorization` | Tenant／Scope 授權、User deny 優先與 Feature 不授權 |
 | `go run ./platform-services` | Settings／Features／Cache 分層設定、quota 上限與租戶隔離快取 |

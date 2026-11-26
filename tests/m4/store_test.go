@@ -117,6 +117,8 @@ func TestEventCapacity(t *testing.T) {
 	}
 	store, e := eventpg.NewBoundedStore(f.queue, p, eventpg.Capacity{Outbox: 1, Inbox: 1})
 	must(t, e)
+	provisionQueue(t, f, "outbox", 1, "resize")
+	provisionQueue(t, f, "inbox", 1, "resize")
 	if _, e = store.Stats(context.Background(), "invalid"); e == nil {
 		t.Fatal("invalid queue")
 	}
