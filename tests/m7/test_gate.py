@@ -658,5 +658,88 @@ class ClientDependenciesProofTestCase(unittest.TestCase):
         self.assertIn("deploy/release/m7-client-dependencies.json", manifest["assets"])
 
 
+class RealtimePreparedGateTestCase(unittest.TestCase):
+    """The M7 cross-platform gate must not require the per-run realtime
+    fixture identity to match: the random database name and the intentionally
+    Linux-only child race differ between correct Windows and Linux reports,
+    so they are validated strictly per platform and only the platform-
+    independent invariants (provisioned, covered_child_binary) are compared."""
+
+    def _report(self, goos, database, race, binary):
+        return {"platform": {"GOOS": goos, "GOARCH": "amd64"},
+                "prepare": {"realtime": {"database": database, "database_tool": "realtime-db.exe",
+                                         "binary": binary, "provisioned": True, "race": race,
+                                         "coverage_dir": "realtime-cov", "covered_child_binary": True}},
+                "artifacts": {binary: "0" * 64}}
+
+    def _evidence(self, database, child_race):
+        return {"status": "passed", "baseline": "v1.3", "product_version": "0.1.0",
+                "version_scope": "0.1.0-additive", "versions": {"runtime": "0.1.0"},
+                "requirements": 104, "named_subtests": 593, "profiles": 3, "closure": {},
+                "regressions": {}, "critical_packages": [], "template_profiles": ["tenant-only"],
+                "realtime_official_client": {"status": "passed", "profiles": 3, "tests": 3},
+                "realtime_prepared": {"database": database, "provisioned": True,
+                                      "covered_child_binary": True, "child_race": child_race},
+                "client_dependencies": {"status": "locked"},
+                "manifest_sha256": "0" * 64, "release_manifest_sha256": "1" * 64, "gates": []}
+
+    def test_differing_database_and_child_race_are_valid_per_platform(self):
+        windows = self._report("windows", "m5_template_m7rt_" + "1a2b3c4d5e6f", False, "realtime-demo.exe")
+        linux = self._report("linux", "m5_template_m7rt_" + "7f8e9d0c1b2a", True, "realtime-demo")
+        self.assertNotEqual(windows["prepare"]["realtime"]["database"], linux["prepare"]["realtime"]["database"])
+        self.assertNotEqual(windows["prepare"]["realtime"]["race"], linux["prepare"]["realtime"]["race"])
+        m7.validate_realtime_prepared(windows, windows["artifacts"])
+        m7.validate_realtime_prepared(linux, linux["artifacts"])
+
+    def test_differing_database_and_child_race_pass_the_cross_platform_gate(self):
+        m7.compare_release_declarations(self._evidence("m5_template_m7rt_" + "1a2b3c4d5e6f", False),
+                                        self._evidence("m5_template_m7rt_" + "7f8e9d0c1b2a", True))
+
+    def test_wrongly_configured_child_race_fails_per_platform(self):
+        raced_windows = self._report("windows", "m5_template_m7rt_" + "1a2b3c4d5e6f", True, "realtime-demo.exe")
+        with self.assertRaises(ValueError):
+            m7.validate_realtime_prepared(raced_windows, raced_windows["artifacts"])
+        unraced_linux = self._report("linux", "m5_template_m7rt_" + "7f8e9d0c1b2a", False, "realtime-demo")
+        with self.assertRaises(ValueError):
+            m7.validate_realtime_prepared(unraced_linux, unraced_linux["artifacts"])
+        absent_race = self._report("linux", "m5_template_m7rt_" + "7f8e9d0c1b2a", True, "realtime-demo")
+        del absent_race["prepare"]["realtime"]["race"]
+        with self.assertRaises(ValueError):
+            m7.validate_realtime_prepared(absent_race, absent_race["artifacts"])
+
+    def test_database_identity_format_fails_closed(self):
+        for database in ("m5_template_m7rt_" + "1a2b3c4d5e6", "m5_template_m7rt_" + "1a2b3c4d5e6ff",
+                         "m5_template_m7rt_" + "g1a2b3c4d5e6", "m5_template_m7rtX" + "1a2b3c4d5e6f", 17):
+            forged = self._report("linux", database, True, "realtime-demo")
+            with self.assertRaises(ValueError):
+                m7.validate_realtime_prepared(forged, forged["artifacts"])
+
+    def test_missing_prepared_invariants_fail_per_platform(self):
+        for field in ("provisioned", "covered_child_binary"):
+            forged = self._report("linux", "m5_template_m7rt_" + "1a2b3c4d5e6f", True, "realtime-demo")
+            forged["prepare"]["realtime"][field] = False
+            with self.assertRaises(ValueError):
+                m7.validate_realtime_prepared(forged, forged["artifacts"])
+        unrecorded = self._report("linux", "m5_template_m7rt_" + "1a2b3c4d5e6f", True, "realtime-demo")
+        unrecorded["artifacts"] = {}
+        with self.assertRaises(ValueError):
+            m7.validate_realtime_prepared(unrecorded, unrecorded["artifacts"])
+        with self.assertRaises(ValueError):
+            m7.validate_realtime_prepared({"platform": {"GOOS": "linux", "GOARCH": "amd64"}, "artifacts": {}}, {})
+
+    def test_realtime_invariant_and_declaration_divergence_still_gates(self):
+        windows = self._evidence("m5_template_m7rt_" + "1a2b3c4d5e6f", False)
+        linux = self._evidence("m5_template_m7rt_" + "7f8e9d0c1b2a", True)
+        for field in ("provisioned", "covered_child_binary"):
+            forged = copy.deepcopy(linux)
+            forged["realtime_prepared"][field] = False
+            with self.assertRaises(ValueError):
+                m7.compare_release_declarations(windows, forged)
+        declared = copy.deepcopy(linux)
+        declared["requirements"] = 103
+        with self.assertRaises(ValueError):
+            m7.compare_release_declarations(windows, declared)
+
+
 if __name__ == "__main__":
     unittest.main()
