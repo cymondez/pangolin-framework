@@ -344,6 +344,27 @@ def release_steps(report, output, execute):
                             "release": {"evidence": m7_index.RELEASE_EVIDENCE_FILE, "drills": [entry["name"] for entry in evidence["drills"]["entries"]]}}
 
 
+REALTIME_DATABASE_FORMAT = re.compile(r"m5_template_m7rt_[0-9a-f]{12}")
+
+
+def validate_realtime_prepared(report, artifacts):
+    """Per-platform realtime fixture evidence, fail-closed on the whole shape.
+
+    The dedicated database name is random per run and the child demo binary
+    races only on Linux (bool(requested_race) and GOOS == linux), so both
+    deliberately differ across platforms; they are validated strictly per
+    report here and never compared cross-platform by the M7 gate."""
+    realtime = (report.get("prepare") or {}).get("realtime")
+    goos = (report.get("platform") or {}).get("GOOS")
+    if not isinstance(realtime, dict) \
+            or not realtime.get("provisioned") or realtime.get("covered_child_binary") is not True \
+            or realtime.get("race") is not (goos == "linux") \
+            or not isinstance(realtime.get("database"), str) \
+            or not REALTIME_DATABASE_FORMAT.fullmatch(realtime["database"]) \
+            or realtime.get("binary") not in artifacts:
+        raise ValueError("M7 realtime preparation evidence is missing or forged")
+
+
 def validate_report(report, commit, directory):
     directory = Path(directory)
     # Cumulative M1..M5 chain revalidation with the M7 report label.
@@ -379,12 +400,7 @@ def validate_report(report, commit, directory):
                  "realtime-coverage", "realtime-db-drop"):
         if not any(command["name"] == name and command["exit_code"] == 0 for command in report["commands"]):
             raise ValueError("M7 acceptance command missing or failed: " + name)
-    prepared = report.get("prepare")
-    if not isinstance(prepared, dict) or not isinstance(prepared.get("realtime"), dict) \
-            or not prepared["realtime"].get("provisioned") or not isinstance(prepared["realtime"].get("database"), str) \
-            or not prepared["realtime"].get("database").startswith("m5_template_m7rt_") \
-            or prepared["realtime"].get("binary") not in artifacts:
-        raise ValueError("M7 realtime preparation evidence is missing or forged")
+    validate_realtime_prepared(report, artifacts)
     for path in (MAPPING_REL, MANIFEST_REL, "deploy/release/m7-client-dependencies.json"):
         if report["inputs"].get(path) != m0.digest(ROOT / path):
             raise ValueError("M7 acceptance input changed after verification: " + path)
@@ -416,6 +432,24 @@ def validate_report(report, commit, directory):
         raise ValueError("M7 release evidence is not bound to the verified source")
 
 
+def compare_release_declarations(windows, linux):
+    """Cross-platform agreement on every release declaration.
+
+    realtime_prepared carries the per-run random database name and the
+    intentionally Linux-only child race, so only its platform-independent
+    invariants (provisioned, covered_child_binary) are compared here; the
+    platform-specific fields stay validated per report instead."""
+    for key in ("status", "baseline", "product_version", "version_scope", "versions", "requirements", "named_subtests",
+                "profiles", "closure", "regressions", "critical_packages", "template_profiles",
+                "realtime_official_client", "client_dependencies",
+                "manifest_sha256", "release_manifest_sha256", "gates"):
+        if windows[key] != linux[key]:
+            raise ValueError("M7 release declarations differ across platforms: " + key)
+    for key in ("provisioned", "covered_child_binary"):
+        if windows["realtime_prepared"][key] != linux["realtime_prepared"][key]:
+            raise ValueError("M7 realtime fixture invariants differ across platforms: " + key)
+
+
 def gate(commit, mapping):
     root = ROOT / "artifacts" / commit / "m7"
     reports = {}
@@ -432,12 +466,7 @@ def gate(commit, mapping):
     for label, report in reports.items():
         if evidence[label]["commit"] != commit or evidence[label]["source_sha256"] != report["source_sha256"]:
             raise ValueError("M7 evidence is not bound to the verified source: " + label)
-    for key in ("status", "baseline", "product_version", "version_scope", "versions", "requirements", "named_subtests",
-                "profiles", "closure", "regressions", "critical_packages", "template_profiles",
-                "realtime_official_client", "realtime_prepared", "client_dependencies",
-                "manifest_sha256", "release_manifest_sha256", "gates"):
-        if evidence["windows-amd64"][key] != evidence["linux-amd64"][key]:
-            raise ValueError("M7 release declarations differ across platforms: " + key)
+    compare_release_declarations(evidence["windows-amd64"], evidence["linux-amd64"])
     result = {"milestone": "M7", "status": "verified", "source_commit": commit,
               "source_sha256": reports["windows-amd64"]["source_sha256"], "baseline": "v1.3",
               "named_subtests": sum(len(mapping[key]) for key in FIELDS),

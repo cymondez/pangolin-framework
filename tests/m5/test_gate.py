@@ -39,5 +39,15 @@ class M5Gates(unittest.TestCase):
         with self.assertRaises(Accepted):m1_e2e.run(ROOT/'artifacts','pangolin-m7-guard','',stop)
         for project in ('pangolin-docs','pangolin-m8-dev'):
             with self.assertRaises(ValueError):m1_e2e.run(ROOT/'artifacts',project,'',stop)
+    def test_compose_project_guard_accepts_additive_milestones(self):
+        import m5_compose
+        for project in ('pangolin-m5-compose','pangolin-m6-compose','pangolin-m7-formal-x'):
+            with self.subTest(project=project):
+                with self.assertRaises(NotADirectoryError if sys.platform.startswith('win') else FileNotFoundError):
+                    m5_compose.run(ROOT/'.cache'/'m5-compose-guard',project)
+        for project in ('pangolin-docs','pangolin-m8-dev'):
+            with self.subTest(project=project):
+                with self.assertRaises(ValueError):
+                    m5_compose.run(ROOT/'.cache'/'m5-compose-guard',project)
 
 if __name__=='__main__':unittest.main()
