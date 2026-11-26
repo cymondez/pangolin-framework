@@ -9,6 +9,7 @@ import json
 import math
 import os
 from pathlib import Path
+import posixpath
 import re
 import shutil
 import subprocess
@@ -41,6 +42,93 @@ def command(args, root=ROOT):
     return subprocess.run(args, cwd=root, env=go_environment(root), capture_output=True, text=True, encoding="utf-8", errors="replace", check=True).stdout
 
 
+def in_git_repository(root=ROOT):
+    """Distinguish a git work tree from a standalone module without silently
+    accepting other git failures."""
+    root = Path(root)
+    result = subprocess.run(["git", "-c", "core.quotepath=false", "rev-parse", "--show-toplevel"], cwd=root, env=go_environment(root), capture_output=True, text=True, encoding="utf-8", errors="replace")
+    if result.returncode == 0:
+        return True
+    if result.returncode == 128 and "not a git repository" in result.stderr:
+        return False
+    raise ValueError("resolving the source repository failed (no silent fallback): " + (result.stderr or "").strip()[:200])
+
+
+def _go_sources(root=ROOT):
+    """Tracked Go source inventory: (package dir args, `go list -e -json` entries)."""
+    root = Path(root)
+    if not in_git_repository(root):
+        # A module genuinely outside git (temporary fixtures) keeps the
+        # earlier `go list` inventory semantics.
+        listing = subprocess.run(["go", "list", "-e", "-json", "./..."], cwd=root, env=go_environment(root), capture_output=True, text=True, encoding="utf-8", errors="replace")
+        return ["./..."], json_stream(listing.stdout) if listing.stdout else []
+    names = [name for name in command(["git", "-c", "core.quotepath=false", "ls-files", "--cached", "--others", "--exclude-standard", "--", "*.go"], root).splitlines() if name.strip()]
+    names = [name for name in names if (root / name).is_file()]
+    if not names:
+        raise ValueError("no tracked Go source files in the working tree")
+    # Nested modules (a go.mod inside the tree, e.g. examples/basics) are
+    # separate module units the historical `./...` patterns never crossed.
+    def _nested(directory):
+        parts = [part for part in directory.split("/") if part]
+        return any((root / Path(*parts[:index + 1]) / "go.mod").is_file() for index in range(len(parts)))
+    names = [name for name in names if not _nested(posixpath.dirname(name))]
+    counts = {}
+    for name in names:
+        counts[posixpath.dirname(name)] = counts.get(posixpath.dirname(name), 0) + 1
+    if sum(counts.values()) != len(names):
+        raise ValueError("go package inventory does not cover every tracked Go file")
+    dirs = sorted("./" + directory if directory else "./" for directory in counts)
+    listing = subprocess.run(["go", "list", "-e", "-json", *dirs], cwd=root, env=go_environment(root), capture_output=True, text=True, encoding="utf-8", errors="replace")
+    if listing.returncode:
+        raise ValueError("go package inventory failed: " + listing.stderr.strip()[:400])
+    return dirs, json_stream(listing.stdout)
+
+
+def _inventory_path(entry):
+    path = entry["ImportPath"]
+    if path == MODULE:
+        return "./"
+    return "./" + path[len(MODULE) + 1:] if path.startswith(MODULE + "/") else path
+
+
+def go_packages(root=ROOT, tags=False):
+    """Complete Gate inventory of Go packages from tracked source files.
+
+    `go list ./...` also walks ignored generated/bug-reproducer directories
+    under artifacts/; the engineering gates instead derive the package list
+    from git ls-files, so every tracked hand-written package (including
+    build-tagged sources and test-only packages) is included and only ignored
+    generated/artifact directories are excluded. Untracked, non-ignored Go
+    files count as well: they belong to the same working-tree source identity.
+
+    With tags=False (default) the list keeps exactly the packages the
+    historical `./...` patterns selected under default build constraints:
+    directories whose tracked Go files are excluded by build constraints
+    (the integration-tagged tests/mN suites) are omitted and only run under
+    `-tags=integration`. With tags=True the full tracked list is returned for
+    those tagged commands.
+    """
+    dirs, entries = _go_sources(root)
+    if tags:
+        return dirs
+    default = [_inventory_path(entry) for entry in entries
+               if "build constraints exclude" not in ((entry.get("Error") or {}).get("Err", ""))]
+    if not default:
+        raise ValueError("default go package inventory is empty")
+    return sorted(default)
+
+
+def go_build_packages(root=ROOT):
+    """Packages with non-test sources: `go build` rejects test-only packages
+    that the historical `./...` pattern silently skipped."""
+    _, entries = _go_sources(root)
+    buildable = [_inventory_path(entry) for entry in entries
+                 if entry.get("GoFiles") and "build constraints exclude" not in ((entry.get("Error") or {}).get("Err", ""))]
+    if not buildable:
+        raise ValueError("go build package inventory is empty")
+    return sorted(buildable)
+
+
 def json_stream(text):
     decoder, records = json.JSONDecoder(), []
     while text.strip():
@@ -51,7 +139,7 @@ def json_stream(text):
 
 
 def api_surface(root=ROOT):
-    packages = command(["go", "list", "./..."], root).splitlines()
+    packages = command(["go", "list", *go_packages(root)], root).splitlines()
     result = {}
     for package in packages:
         if "/internal/" in package or "/tools/" in package or "/tests/" in package:
@@ -70,7 +158,9 @@ def check_api(expected, actual):
         raise ValueError("public API surface changed; review the specification/ADR and run m0.py freeze-api explicitly")
 
 
-def check_profiles(groups, profiles):
+def check_profiles(groups, profiles, max_milestone=None):
+    if max_milestone is not None:
+        groups = [group for group in groups if int(group["milestone"][1:]) <= max_milestone]
     expected = {s["id"]: g for g in groups for s in g["subtests"]}
     if len(expected) != sum(len(g["subtests"]) for g in groups):
         raise ValueError("duplicate named subtest")
@@ -80,7 +170,12 @@ def check_profiles(groups, profiles):
             raise ValueError("a profile plan cannot claim runtime verification")
         for entry in profile["subtests"]:
             ident = entry["id"]
-            if ident not in expected or ident in seen or entry["requirement"] != expected[ident]["requirement"]:
+            if ident not in expected:
+                if max_milestone is None:
+                    raise ValueError("invalid profile/subtest mapping: " + ident)
+                # Out-of-scope appendix rows are validated by the gate of their own milestone scope.
+                continue
+            if ident in seen or entry["requirement"] != expected[ident]["requirement"]:
                 raise ValueError("invalid profile/subtest mapping: " + ident)
             seen.add(ident)
             if not entry["reason"] or entry["evidence"] != next(s["evidence"] for s in expected[ident]["subtests"] if s["id"] == ident):
@@ -145,9 +240,11 @@ def check_data(root=ROOT):
     matrix = load(root / "tests/contract/subtests.json")
     cases = load(root / "tests/contract/cases.json")["cases"]
     spec = (root / "design/panGOlin-framework_實作規範書.md").read_text(encoding="utf-8-sig")
+    plan = (root / "design/panGOlin-framework_里程碑規劃書.md").read_text(encoding="utf-8-sig")
     rows = {line.split("|")[1].strip(): [part.strip() for part in line.strip("|").split("|")] for line in spec.splitlines() if re.match(r"^\| A\d{2} \|", line)}
-    if len(matrix["groups"]) != 95:
-        raise ValueError("expected 95 subtest groups")
+    appendix_plan = re.findall(r"(?m)^\| M7 \| (RT-\d{3}) \| (A\d{2,3}) \|", plan)
+    if len(matrix["groups"]) != 95 + len(appendix_plan):
+        raise ValueError("expected " + str(95 + len(appendix_plan)) + " subtest groups")
     for group, case in zip(matrix["groups"], cases):
         if any(group[key] != case[key] for key in ("id", "requirement", "milestone", "status")):
             raise ValueError("case/subtest group drift")
@@ -161,6 +258,33 @@ def check_data(root=ROOT):
             raise ValueError("subtest decomposition drift")
         if any(s["status"] != "planned" or s["assertion_ref"] != group["id"] + ".expected" for s in group["subtests"]):
             raise ValueError("planned subtest cannot claim runtime success")
+    if len(cases) != len(matrix["groups"]) - len(appendix_plan):
+        raise ValueError("case plan drift")
+    appendix = matrix["groups"][95:]
+    if appendix:
+        appendix_rows = {[part.strip() for part in line.strip("|").split("|")][0]: [part.strip() for part in line.strip("|").split("|")]
+                         for line in spec.splitlines() if re.match(r"^\| RT-\d{3} \|", line)}
+        if len(appendix_rows) != len(appendix_plan):
+            raise ValueError("realtime specification rows missing")
+        for (requirement, case_id), group in zip(appendix_plan, appendix):
+            if group["milestone"] != "M7" or group["requirement"] != requirement or group["id"] != case_id:
+                raise ValueError("realtime milestone plan drift: " + group["id"])
+            row = appendix_rows.get(requirement)
+            if not row or row[1] != case_id or [group["stimulus"], group["expected"]] != row[2:]:
+                raise ValueError("realtime specification row changed: " + group["id"])
+            if group["fixture"] != "tests/fixtures/manifest.json":
+                raise ValueError("unknown group fixture reference")
+            if "source_sha256" in group:
+                raise ValueError("realtime appendix binds the specification directly, not a historical hash")
+            names = contract_matrix.SCENARIOS[int(group["id"][1:])].split()
+            if [s["id"] for s in group["subtests"]] != [group["id"] + "/" + name for name in names]:
+                raise ValueError("subtest decomposition drift")
+            if any(s["assertion_ref"] != group["id"] + ".expected" for s in group["subtests"]):
+                raise ValueError("planned subtest cannot claim runtime success")
+            if any(s["status"] not in ("planned", "pending") for s in group["subtests"]):
+                raise ValueError("planned subtest cannot claim runtime success")
+        if len(appendix) != 9:
+            raise ValueError("expected 9 realtime requirement subtest groups")
     profiles = [load(root / f"tests/contract/profiles/{p}.json") for p in ("tenant-only", "organization-enabled", "replacement-contract")]
     if [p["profile"] for p in profiles] != ["tenant-only", "organization-enabled", "replacement-contract"]:
         raise ValueError("profile identity does not match its manifest path")
@@ -179,7 +303,7 @@ def check_data(root=ROOT):
     if modules["layers"] != [["a"], ["b", "c"]] or modules["partial_start_failure"]["ready"]:
         raise ValueError("lifecycle fixture has contradictory observations")
     check_config(load(root / "deploy/profiles/local.json"))
-    return {"groups": 95, "named_subtests": sum(len(g["subtests"]) for g in matrix["groups"]), "profiles": 3, "fixture_files": len(fixtures["files"])}
+    return {"groups": len(matrix["groups"]), "named_subtests": sum(len(g["subtests"]) for g in matrix["groups"]), "profiles": 3, "fixture_files": len(fixtures["files"])}
 
 
 def check(root=ROOT):
@@ -187,7 +311,7 @@ def check(root=ROOT):
     framework_version = product_version.check(root)
     result = check_data(root)
     check_api(load(root / "tests/contract/api.json"), api_surface(root))
-    packages = json_stream(command(["go", "list", "-json", "./..."], root))
+    packages = json_stream(command(["go", "list", "-json", *go_packages(root)], root))
     check_imports(packages)
     # A separate tenant-only dependency graph must not capture organization ports/implementation.
     tenant = command(["go", "list", "-deps", "./internal/testkit/assemblies/tenant"], root).splitlines()
@@ -225,13 +349,15 @@ def verify(args):
             commands = [[sys.executable, "scripts/smoke.py", "--project", args.project, "--nats-port", str(args.nats_port), "--nats-proxy-port", str(args.nats_proxy_port), "--idp-port", str(args.idp_port), "--toxi-port", str(args.toxi_port)]]
         else:
             report["inventory"] = check(root)
-            commands = [["go", "build", "./..."], ["go", "vet", "./..."], ["go", "run", "./tools/check"], [sys.executable, "-m", "unittest", "discover", "-s", "tests/m0", "-p", "test_*.py"]]
-            packages = ",".join(p for p in command(["go", "list", "./..."], root).splitlines() if "/internal/testkit/" not in p)
+            go_dirs = go_packages(root)
+            go_build_dirs = go_build_packages(root)
+            commands = [["go", "build", *go_build_dirs], ["go", "vet", *go_dirs], ["go", "run", "./tools/check"], [sys.executable, "-m", "unittest", "discover", "-s", "tests/m0", "-p", "test_*.py"]]
+            packages = ",".join(p for p in command(["go", "list", *go_dirs], root).splitlines() if "/internal/testkit/" not in p)
             profile = output / "unit.out"
-            commands += [["go", "test", "-json", "-coverpkg=" + packages, "-covermode=atomic", "-coverprofile=" + str(profile), "./..."], ["go", "run", "./tools/check", "-coverage", str(profile)]]
+            commands += [["go", "test", "-json", "-coverpkg=" + packages, "-covermode=atomic", "-coverprofile=" + str(profile), *go_dirs], ["go", "run", "./tools/check", "-coverage", str(profile)]]
             commands.append(["go", "run", "./tools/check", "-release"])
             if args.race:
-                commands.append(["go", "test", "-race", "./..."])
+                commands.append(["go", "test", "-race", *go_dirs])
             report["race"] = "required-pending" if args.race else "not-run-on-this-platform"
         for index, argv in enumerate(commands):
             started = time.monotonic()
@@ -290,7 +416,7 @@ def validate_report(report, name, commit, directory):
             raise ValueError("unimplemented-runtime release guard proof missing")
         if report["platform"] != name:
             raise ValueError("platform evidence mislabeled")
-    if name == "linux-amd64" and (report["race"] != "passed" or ["go","test","-race","./..."] not in commands):
+    if name == "linux-amd64" and (report["race"] != "passed" or not any(argv[:3] == ["go", "test", "-race"] for argv in commands)):
         raise ValueError("race command proof missing")
     if name == "environment" and not any("scripts/smoke.py" in argv for argv in commands):
         raise ValueError("environment command proof missing")

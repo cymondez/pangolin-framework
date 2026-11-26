@@ -10,8 +10,8 @@ import m0
 
 @contextlib.contextmanager
 def broker_restart(project, directory, milestone=3):
-    if milestone not in (3,4,5,6) or not re.fullmatch(r"pangolin-m"+str(milestone)+r"-[a-z0-9-]+",project or ""):
-        raise ValueError("M3 broker restart requires a dedicated pangolin-m3-* project")
+    if milestone not in (3,4,5,6,7) or not re.fullmatch(r"pangolin-m"+str(milestone)+r"-[a-z0-9-]+",project or ""):
+        raise ValueError("broker restart requires a dedicated pangolin-m3..m7 milestone project")
     directory=Path(directory).resolve();directory.mkdir(parents=True,exist_ok=True)
     if not directory.is_relative_to((m0.ROOT/"artifacts").resolve()):
         raise ValueError("restart barrier must stay inside workspace artifacts")

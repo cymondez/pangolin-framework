@@ -9,4 +9,4 @@
 
 連線以 `Authenticator` 重新檢查現行憑證及帳號。部署需接上能檢測撤銷的來源。發布政策亦應依業務內容確認目的 owner。本模組沒有全域 JoinGroup、跨租戶 Publish、離線投遞或 client ACK。
 
-用 `go test ./modules/realtime/...` 驗證套件。以 [Root 範例](../../examples/realtime/README.md) 執行官方 client、Outbox 和兩節點實測。
+用 `go test ./modules/realtime/...` 驗證套件。publish／JetStream 案例（真實 PostgreSQL／NATS）由 `PANGOLIN_REALTIME_APP_DSN`／`PANGOLIN_REALTIME_NATS_URL` 啟用，缺變數時 skip；引用覆蓋值必須連同前置條件。以 [Root 範例](../../examples/realtime/README.md) 執行官方 client、Outbox 和兩節點實測；本模組目前驗證範圍與未完成驗收見 [SignalR 現況報告](../../docs/evidence/SignalR-status.md)。

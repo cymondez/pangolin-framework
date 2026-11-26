@@ -36,7 +36,8 @@ class M5Gates(unittest.TestCase):
         def stop(*args):raise Accepted()
         with self.assertRaises(Accepted):m1_e2e.run(ROOT/'artifacts','pangolin-m5-guard','',stop)
         with self.assertRaises(Accepted):m1_e2e.run(ROOT/'artifacts','pangolin-m6-guard','',stop)
-        for project in ('pangolin-docs','pangolin-m7-dev'):
+        with self.assertRaises(Accepted):m1_e2e.run(ROOT/'artifacts','pangolin-m7-guard','',stop)
+        for project in ('pangolin-docs','pangolin-m8-dev'):
             with self.assertRaises(ValueError):m1_e2e.run(ROOT/'artifacts',project,'',stop)
 
 if __name__=='__main__':unittest.main()

@@ -18,7 +18,9 @@ class BaselineChecks(unittest.TestCase):
         cls.profiles = [m0.load(ROOT / f"tests/contract/profiles/{p}.json") for p in ("tenant-only", "organization-enabled", "replacement-contract")]
 
     def test_all_named_plans_and_fixture_references(self):
-        self.assertEqual(m0.check_data(ROOT), {"groups":95,"named_subtests":532,"profiles":3,"fixture_files":4})
+        # The live tree carries the 9-requirement RT appendix (RT-001..RT-009);
+        # the exact historical 95/532 plan stays enforced for M6-or-earlier scopes.
+        self.assertEqual(m0.check_data(ROOT), {"groups":104,"named_subtests":593,"profiles":3,"fixture_files":4})
 
     def test_product_version_rejects_milestone_and_module_drift(self):
         self.assertEqual(product_version.check(ROOT), "0.1.0")

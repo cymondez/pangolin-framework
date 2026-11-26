@@ -127,7 +127,7 @@ def gate(commit):
     (root/"gate.json").write_text(json.dumps(result,indent=2)+"\n");print(json.dumps(result,indent=2))
 
 
-def verify(args, increment=None, extra_steps=None):
+def verify(args, increment=None, extra_steps=None, coverage_steps=None, prepare=None):
     milestone=increment["milestone"] if increment else "M1"
     increments=([m0.load(ROOT/("tests/contract/m"+str(n)+".json")) for n in range(2,int(milestone[1:]))]+[increment]) if increment else []
     commit=m0.revision();source=source_hash();dirty=not m0.clean()
@@ -138,7 +138,7 @@ def verify(args, increment=None, extra_steps=None):
     output=ROOT/"artifacts"/(milestone.lower()+"-development-"+source[:12]+"/"+label if dirty else commit+"/"+milestone.lower()+"/"+label)
     output.mkdir(parents=True,exist_ok=True)
     if int(milestone[1:])>=4:os.environ["PANGOLIN_M4_METRICS_DIR"]=str(output)
-    report={"milestone":milestone,"commit":commit,"source_sha256":source,"working_tree_dirty":dirty,"baseline":"v1.3","platform":platform,"seed":20261121,"project":args.project,"status":"failed","commands":[]}
+    report={"milestone":milestone,"commit":commit,"source_sha256":source,"working_tree_dirty":dirty,"baseline":"v1.3","platform":platform,"requested_race":bool(args.race),"seed":20261121,"project":args.project,"status":"failed","commands":[]}
     mapping=m0.load(ROOT/"tests/contract/m1.json");validate_mapping(mapping)
     check_module_docs(mapping)
     for extra in increments: check_module_docs(extra)
@@ -146,9 +146,9 @@ def verify(args, increment=None, extra_steps=None):
     for extra in increments:
         name="tests/contract/"+extra["milestone"].lower()+".json"
         report["inputs"][name]=m0.digest(ROOT/name)
-    def execute(argv,name=None):
+    def execute(argv,name=None,env=None):
         index=len(report["commands"]);name=name or "e2e-step";log=output/f"{index:02d}-{name}.log";started=time.monotonic()
-        result=subprocess.run(argv,cwd=ROOT,env=m0.go_environment(ROOT),capture_output=True,text=True,encoding="utf-8",errors="replace")
+        result=subprocess.run(argv,cwd=ROOT,env=env or m0.go_environment(ROOT),capture_output=True,text=True,encoding="utf-8",errors="replace")
         log.write_text(result.stdout+result.stderr,encoding="utf-8")
         report["commands"].append({"name":name,"argv":argv,"exit_code":result.returncode,"log":log.name,"sha256":m0.digest(log),"seconds":round(time.monotonic()-started,3)})
         if result.returncode: raise ValueError("gate failed: "+name+"; see "+str(log))
@@ -159,26 +159,33 @@ def verify(args, increment=None, extra_steps=None):
         return result.stdout
     try:
         execute([sys.executable,"scripts/m0.py","check"],"inventory")
-        (output/"go-list.json").write_text(m0.command(["go","list","-json","./..."]),encoding="utf-8")
+        go_dirs=m0.go_packages()
+        build_dirs=m0.go_build_packages()
+        (output/"go-list.json").write_text(m0.command(["go","list","-json",*go_dirs]),encoding="utf-8")
         (output/"exclusions.json").write_bytes((ROOT/"tests/coverage/exclusions.json").read_bytes())
         (output/"dependencies.json").write_bytes((ROOT/"deploy/dependencies.json").read_bytes())
-        execute(["go","build","./..."],"build")
-        execute(["go","vet","./..."],"vet")
+        execute(["go","build",*build_dirs],"build")
+        execute(["go","vet",*go_dirs],"vet")
         execute(["go","mod","verify"],"go-module-verify")
         execute([sys.executable,"-m","unittest","discover","-v","-s","tests/m0","-p","test_*.py"],"m0-regression")
         execute([sys.executable,"-m","unittest","discover","-v","-s","tests/m1","-p","test_*.py"],"m1-regression")
         for extra in increments:
             name=extra["milestone"].lower()
             execute([sys.executable,"-m","unittest","discover","-v","-s","tests/"+name,"-p","test_*.py"],name+"-regression")
-        packages=",".join(p for p in m0.command(["go","list","./..."]).splitlines() if "/internal/testkit/" not in p and "/infrastructure/internal/" not in p)
-        unit=execute(["go","test","-count=1","-json","-covermode=atomic","-coverpkg="+packages,"-coverprofile="+str(output/"unit.out"),"./..."],"unit")
+        packages=",".join(p for p in m0.command(["go","list",*go_dirs]).splitlines() if "/internal/testkit/" not in p and "/infrastructure/internal/" not in p)
+        # Later milestones prepare same-source runtime fixtures (covered child
+        # binaries, environment) before the unit suite so no acceptance test
+        # ever skips for a missing environment; the run records what was done.
+        if prepare:
+            report["prepare"]=prepare(report,output,execute,packages) or report.get("prepare")
+        unit=execute(["go","test","-count=1","-json","-covermode=atomic","-coverpkg="+packages,"-coverprofile="+str(output/"unit.out"),*go_dirs],"unit")
         report["tests"]=validate_tests(unit,[*mapping["go_tests"].values(),*(test for extra in increments for test in [*extra["unit_tests"].values(),*extra.get("regression_tests",[])])])
         integration=execute(["go","test","-p=1","-count=1","-json","-tags=integration","-covermode=atomic","-coverpkg="+packages,"-coverprofile="+str(output/"integration.out"),"./tests/m1",*("./tests/"+extra["milestone"].lower() for extra in increments),*database_packages(milestone,ROOT/"tests/database")],"integration")
         report["integration_tests"]=validate_tests(integration,required_integration_tests(increments))
         report["e2e"]=m1_e2e.run(output,args.project,packages,execute)
         report["commands"].append({"name":"e2e","exit_code":0})
         profiles=[output/"unit.out",output/"integration.out",output/"e2e.out"]
-        if milestone in ("M5","M6"):
+        if milestone in ("M5","M6","M7"):
             execute([sys.executable,"scripts/template_bundle.py","--check"],"template-source")
             cli=output/("pangolin.exe" if os.name=="nt" else "pangolin")
             execute(["go","build","-cover","-covermode=atomic","-coverpkg="+packages,"-o",str(cli),"./cmd/pangolin"],"cli-build")
@@ -193,12 +200,15 @@ def verify(args, increment=None, extra_steps=None):
             if os.name=="nt" or os.getenv("PANGOLIN_M5_COMPOSE")=="1":
                 execute([sys.executable,"scripts/m5_compose.py","--output",str(output),"--project",args.project],"templates-compose")
         if args.race:
-            race=execute(["go","test","-p=1","-count=1","-json","-race","-tags=integration","./..."],"race");validate_tests(race)
+            race=execute(["go","test","-p=1","-count=1","-json","-race","-tags=integration",*m0.go_packages(tags=True)],"race");validate_tests(race)
         sqlc=os.getenv("PANGOLIN_SQLC",str(ROOT/".cache/bin"/("sqlc.exe" if os.name=="nt" else "sqlc")))
         if execute([sqlc,"version"],"generation-version").strip()!="v1.31.1":raise ValueError("wrong sqlc version")
         generated=list((ROOT/"examples/bookstore/infrastructure/internal").glob("*/*.go"));before={str(p.relative_to(ROOT)):m0.digest(p) for p in generated}
         execute([sqlc,"generate"],"generation")
         if before!={str(p.relative_to(ROOT)):m0.digest(p) for p in generated}:raise ValueError("sqlc generated source drift")
+        # Later additive milestones (M7) contribute instrumented official-client
+        # E2E coverage to the same raw atomic union before the release gate.
+        if coverage_steps: profiles.extend(coverage_steps(report,output,execute,packages))
         merge_profiles(profiles,output/"merged.out")
         counts=execute(["go","run","./tools/check","-coverage",str(output/"merged.out")],"coverage")
         (output/"coverage.json").write_text(json.dumps(json.loads(counts.splitlines()[0]),indent=2)+"\n",encoding="utf-8")

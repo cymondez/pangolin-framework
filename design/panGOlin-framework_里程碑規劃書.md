@@ -462,7 +462,7 @@ Core／Scope Port 先固定再分工；治理資料與業務資料的交界由 A
 
 ## 9. M7 可選即時通訊
 
-**狀態** Planned。Root 與 D1–D5 接合基線是 `c868bfd8da2ef1c4855a2e7cfa326b1fcf51f7a1`。正式 Gate 綁定 M7 實作來源。時程待工作包估算。
+**狀態** In progress（2026-11-26：A96–A104 實作已併入 develop `326c881`，聚焦單元／整合／pinned Linux race／env-gated 聚焦 coverage 通過；正式 Gate 未執行，不標 Verified。聚焦證據與剩餘缺口見 [SignalR 現況報告](../docs/evidence/SignalR-status.md)。）Root 與 D1–D5 接合基線是 `c868bfd8da2ef1c4855a2e7cfa326b1fcf51f7a1`。正式 Gate 綁定 M7 實作來源。時程待工作包估算。
 
 | 工作包 | 責任 | 交付物 | 案例 |
 |---|---|---|---|

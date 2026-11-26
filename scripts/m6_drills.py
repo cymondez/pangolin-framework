@@ -74,12 +74,12 @@ class Drills:
         if (self.output / "release-drills.json").is_file():
             raise ValueError("refusing to overwrite an existing release-drills.json: " + str(self.output))
         self.output.mkdir(parents=True, exist_ok=True)
-        if not re.fullmatch(r"pangolin-m6-[a-z0-9-]+", args.project):
-            raise ValueError("--project must be a dedicated pangolin-m6-* project: " + str(args.project))
+        if not re.fullmatch(r"pangolin-m[67]-[a-z0-9-]+", args.project):
+            raise ValueError("--project must be a dedicated pangolin-m6-* or pangolin-m7-* project: " + str(args.project))
         self.project = args.project
         self.compose_project = args.compose_project or os.getenv("PANGOLIN_M6_COMPOSE_PROJECT") or args.project.removesuffix("-drills")
-        if not re.fullmatch(r"pangolin-m6-[a-z0-9-]+", self.compose_project):
-            raise ValueError("compose project must be a dedicated pangolin-m6-* project: " + self.compose_project)
+        if not re.fullmatch(r"pangolin-m[67]-[a-z0-9-]+", self.compose_project):
+            raise ValueError("compose project must be a dedicated pangolin-m6-* or pangolin-m7-* project: " + self.compose_project)
         self.compose_files = args.compose_file or [os.getenv("PANGOLIN_M6_COMPOSE_FILE") or "deploy/compose/m1.yaml"]
         for name in self.compose_files:
             if not (ROOT / name).is_file():

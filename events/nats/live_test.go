@@ -180,3 +180,84 @@ func TestLiveFanOutAckRejectAndClose(t *testing.T) {
 		t.Fatalf("consumer survived close: %v", err)
 	}
 }
+
+// A102/broker-redelivery: an acknowledgement lost at the transport boundary
+// must redeliver the same stable envelope to the same node consumer per
+// AckWait, and a late acknowledgement stops the broker redelivery. The proof
+// uses the live JetStream delivery the node receiver consumes, never a mock.
+func TestLiveAckWaitRedeliverySameConsumer(t *testing.T) {
+	f := startFixture(t)
+	f.provisionSmall(t)
+	sub, err := f.broker.SubscribeLive(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := f.broker.Send(context.Background(), liveEvent("redeliver-node")); err != nil {
+		t.Fatal(err)
+	}
+	delivery, err := sub.Next(timeoutContext(t, 5*time.Second))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if delivery.Invalid || delivery.Envelope.ID != "redeliver-node" {
+		t.Fatalf("unexpected first delivery %+v", delivery)
+	}
+	firstMeta, err := delivery.msg.Metadata()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if firstMeta.NumDelivered != 1 {
+		t.Fatalf("first delivery attempt %d", firstMeta.NumDelivered)
+	}
+	info, err := f.js.ConsumerInfo(f.stream, sub.name)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if info.NumAckPending != 1 || info.NumRedelivered != 0 {
+		t.Fatalf("consumer before the ack loss: ack=%d redelivered=%d", info.NumAckPending, info.NumRedelivered)
+	}
+	// No acknowledgement is sent: the transport loses the ACK. The broker must
+	// redeliver the same message to the same consumer after its AckWait.
+	redelivery, err := sub.Next(timeoutContext(t, 14*time.Second))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if redelivery.Invalid || redelivery.Envelope.ID != "redeliver-node" {
+		t.Fatalf("redelivered envelope changed identity: %+v", redelivery.Envelope)
+	}
+	redeliveryMeta, err := redelivery.msg.Metadata()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if redeliveryMeta.NumDelivered != 2 {
+		t.Fatalf("redelivery attempt %d", redeliveryMeta.NumDelivered)
+	}
+	info, err = f.js.ConsumerInfo(f.stream, sub.name)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if info.NumRedelivered != 1 || info.NumAckPending != 1 {
+		t.Fatalf("consumer after the redelivery: ack=%d redelivered=%d", info.NumAckPending, info.NumRedelivered)
+	}
+	// The late acknowledgement stops further redelivery for this consumer.
+	if err := redelivery.Ack(timeoutContext(t, 2*time.Second)); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := sub.Next(timeoutContext(t, 7*time.Second)); err == nil {
+		t.Fatal("redelivery continued after the late acknowledgement")
+	}
+	info, err = f.js.ConsumerInfo(f.stream, sub.name)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if info.NumAckPending != 0 || info.NumPending != 0 {
+		t.Fatalf("consumer after the late ack: ack=%d pending=%d", info.NumAckPending, info.NumPending)
+	}
+}
+
+func timeoutContext(t *testing.T, wait time.Duration) context.Context {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(context.Background(), wait)
+	t.Cleanup(cancel)
+	return ctx
+}

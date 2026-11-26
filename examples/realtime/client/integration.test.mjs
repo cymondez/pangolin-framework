@@ -23,14 +23,24 @@ function deadline(promise, label) {
   ])
 }
 
-async function start(t, profile, stream) {
+async function start(closed, profile, stream) {
   const child = spawn(binary, ["--listen", "127.0.0.1:0", "--profile", profile, "--stream", stream, "--stop-on-stdin-eof"], {
     stdio: ["pipe", "pipe", "pipe"],
   })
   let logs = ""
   child.stderr.on("data", line => { logs += line })
   const exited = once(child, "exit")
-  t.after(async () => {
+  const lines = createInterface({input: child.stdout})
+  const url = await deadline(new Promise((resolve, reject) => {
+    lines.on("line", line => {
+      if (line.startsWith("LISTEN ")) resolve(line.slice("LISTEN ".length))
+    })
+    exited.then(([code]) => reject(new Error(`server exited during startup (${code})\n${logs}`)), reject)
+  }), "server did not become ready").catch(error => {
+    if (child.exitCode === null) child.kill()
+    throw error
+  })
+  closed.push(async () => {
     if (child.exitCode === null) child.stdin.end()
     try {
       const [code] = await deadline(exited, "server did not drain")
@@ -39,16 +49,10 @@ async function start(t, profile, stream) {
       if (child.exitCode === null) child.kill()
     }
   })
-  const lines = createInterface({input: child.stdout})
-  return deadline(new Promise((resolve, reject) => {
-    lines.on("line", line => {
-      if (line.startsWith("LISTEN ")) resolve(line.slice("LISTEN ".length))
-    })
-    exited.then(([code]) => reject(new Error(`server exited during startup (${code})\n${logs}`)), reject)
-  }), "server did not become ready")
+  return url
 }
 
-async function client(t, url, actor) {
+async function client(closed, url, actor) {
   const messages = []
   const listeners = new Map()
   let wire
@@ -84,7 +88,7 @@ async function client(t, url, actor) {
     }
   })
   await connection.start()
-  t.after(() => connection.stop())
+  closed.push(() => connection.stop())
   return {
     connection, messages, pinged,
     invoke: (...args) => connection.invoke(...args),
@@ -131,16 +135,45 @@ async function invalidProtocol(url, negotiationToken) {
   }
 }
 
+// Owned close functions run in strict reverse order after the test body on
+// every exit path: clients stop first, both server processes drain last, and
+// only then is the profile's own stream deleted. Deleting earlier would fail
+// Receiver.Close in the draining servers, and the cleanup binary is idempotent
+// so a failed or partially started profile is still cleaned up.
+async function finalize(stream, closed) {
+  const errors = []
+  for (let index = closed.length - 1; index >= 0; index--) {
+    try {
+      await closed[index]()
+    } catch (error) {
+      errors.push(error)
+    }
+  }
+  if (binary) {
+    try {
+      await run(binary, ["--cleanup-stream", stream], {timeout: 20_000})
+    } catch (error) {
+      errors.push(new Error(`fixture cleanup of ${stream} failed: ${error.message}`, {cause: error}))
+    }
+  }
+  if (errors.length === 1) throw errors[0]
+  if (errors.length > 1) throw new AggregateError(errors, "fixture shutdown and stream cleanup failed")
+}
+
 for (const profile of ["tenant-only", "organization-enabled", "replacement-contract"]) {
   test(`${profile} official clients and two independent live nodes`, {timeout: 55_000}, async t => {
     assert.ok(binary && key, "set PANGOLIN_REALTIME_BINARY and PANGOLIN_REALTIME_DEMO_KEY")
     const stream = "RT_" + randomBytes(8).toString("hex")
+    // The single after hook guarantees the stream is deleted even when the
+    // body fails right after provisioning, once every process has stopped.
+    const closed = [] // owned close functions, executed in reverse order
+    t.after(() => finalize(stream, closed))
     await run(binary, ["--provision", "--stream", stream], {timeout: 20_000})
-    const url1 = await start(t, profile, stream)
-    const url2 = await start(t, profile, stream)
-    const a = await client(t, url1, "alpha/alice")
-    const a2 = await client(t, url2, "alpha/alice")
-    const b = await client(t, url2, "beta/alice")
+    const url1 = await start(closed, profile, stream)
+    const url2 = await start(closed, profile, stream)
+    const a = await client(closed, url1, "alpha/alice")
+    const a2 = await client(closed, url2, "alpha/alice")
+    const b = await client(closed, url2, "beta/alice")
     assert.equal(await a.invoke("Echo", "official"), "official")
     await assert.rejects(a.invoke("UnknownMethod"), /REALTIME_METHOD_UNKNOWN/)
     await assert.rejects(a.invoke("Echo", 12), /REALTIME_INVALID/)
@@ -192,9 +225,9 @@ for (const profile of ["tenant-only", "organization-enabled", "replacement-contr
       return
     }
 
-    const governor = await client(t, url2, "alpha/governor")
-    const otherTenantGovernor = await client(t, url1, "beta/governor")
-    const bob = await client(t, url2, "alpha/bob")
+    const governor = await client(closed, url2, "alpha/governor")
+    const otherTenantGovernor = await client(closed, url1, "beta/governor")
+    const bob = await client(closed, url2, "alpha/bob")
     const secondEnterprise = ent("alpha", "22222222-2222-2222-2222-222222222222")
     await governor.invoke("Subscribe", ent("alpha"))
     await assert.rejects(governor.invoke("Subscribe", org("alpha", orgOne)), /PERMISSION_DENIED/)

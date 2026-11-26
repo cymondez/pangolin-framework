@@ -1,6 +1,6 @@
 # NATS：JetStream 可靠傳輸
 
-`ConnectLive` 與 `SubscribeLive` 提供即時通訊 fan-out。每次訂閱建立一個獨立的 DeliverNew consumer，使用 literal subject 和 limits-retention file stream。節點離開時由 subscription 刪除自己的 consumer，broker 連線仍由組裝端關閉。原有的 `Connect`、`Subscribe` 繼續用於 Outbox／Inbox 工作分攤。
+`ConnectLive` 與 `SubscribeLive` 提供即時通訊 fan-out。每次訂閱建立一個獨立的 DeliverNew consumer，使用 literal subject 和 limits-retention file stream。節點離開時由 subscription 刪除自己的 consumer，broker 連線仍由組裝端關閉。原有的 `Connect`、`Subscribe` 繼續用於 Outbox／Inbox 工作分攤。live 套件由 `PANGOLIN_REALTIME_NATS_URL` 啟用真實伺服器案例，缺變數時 skip；真實服務驗證見 [Root 範例](../../examples/realtime/README.md) 與 [SignalR 現況報告](../../docs/evidence/SignalR-status.md)。
 
 此套件將 [BrokerPublisher](../distributed/README.md) 對接真實 NATS JetStream。實作見 [broker.go](broker.go)，server／image digest 固定於部署配置；client 固定於 go.mod／go.sum。
 

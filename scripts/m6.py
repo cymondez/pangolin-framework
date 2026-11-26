@@ -51,8 +51,8 @@ def prepare_pg_clients(project):
     if native:
         os.environ["PANGOLIN_M6_PG_MODE"] = "host"
     else:
-        if not re.fullmatch(r"pangolin-m6-[a-z0-9-]+", project):
-            raise ValueError("PostgreSQL client fallback requires the isolated M6 project")
+        if not re.fullmatch(r"pangolin-m[67]-[a-z0-9-]+", project):
+            raise ValueError("PostgreSQL client fallback requires the isolated M6/M7 project")
         os.environ["PANGOLIN_M6_PG_MODE"] = "container"
         os.environ["PANGOLIN_M6_PG_CONTAINER_ARGV"] = json.dumps([
             "docker", "compose", "-p", project, "-f", str(ROOT / "deploy/compose/m1.yaml"),
@@ -76,10 +76,11 @@ def validate_mapping(mapping):
 
 
 def drills_project(project):
-    """The drills script reuses the running pangolin-m6-* service project for
-    its docker compose pg-client fallback and never starts or stops services."""
-    if not re.fullmatch(r"pangolin-m6-[a-z0-9-]+", project):
-        raise ValueError("M6 drills require the dedicated pangolin-m6-* service project: " + project)
+    """The drills script reuses the running pangolin-m6-*/pangolin-m7-* service
+    project for its docker compose pg-client fallback and never starts or stops
+    services."""
+    if not re.fullmatch(r"pangolin-m[67]-[a-z0-9-]+", project):
+        raise ValueError("M6 drills require the dedicated pangolin-m6-* or pangolin-m7-* service project: " + project)
     return project
 
 

@@ -31,6 +31,7 @@ func run() error {
 	profile := flag.String("profile", "tenant-only", "tenant-only, organization-enabled, or replacement-contract")
 	stream := flag.String("stream", "PANGOLIN_REALTIME_DEMO", "dedicated JetStream stream")
 	setup := flag.Bool("provision", false, "apply demo migrations and provision its JetStream stream")
+	cleanupTarget := flag.String("cleanup-stream", "", "delete exactly this demo fixture stream and exit (NATS only)")
 	stopOnEOF := flag.Bool("stop-on-stdin-eof", false, "stop when the test controller closes stdin")
 	flag.Parse()
 
@@ -38,6 +39,12 @@ func run() error {
 	defer cancel()
 	if *stopOnEOF {
 		go func() { _, _ = io.Copy(io.Discard, os.Stdin); cancel() }()
+	}
+	if *setup && *cleanupTarget != "" {
+		return errors.New("--provision and --cleanup-stream are mutually exclusive")
+	}
+	if *cleanupTarget != "" {
+		return cleanupStream(ctx, os.Getenv("PANGOLIN_REALTIME_NATS_URL"), *cleanupTarget)
 	}
 	settings := demoSettings{
 		appDSN: os.Getenv("PANGOLIN_REALTIME_APP_DSN"), workerDSN: os.Getenv("PANGOLIN_REALTIME_WORKER_DSN"),

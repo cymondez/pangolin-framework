@@ -12,7 +12,7 @@ import m3_fixture
 def main(milestone=3):
     p=argparse.ArgumentParser(description=__doc__);p.add_argument("--project",required=True);args=p.parse_args()
     project=args.project
-    if milestone not in (3,4,5,6) or not re.fullmatch(r"pangolin-m"+str(milestone)+r"-[a-z0-9-]+",project):p.error("dedicated milestone project required")
+    if milestone not in (3,4,5,6,7) or not re.fullmatch(r"pangolin-m"+str(milestone)+r"-[a-z0-9-]+",project):p.error("dedicated milestone project required")
     image=m0.load(m0.ROOT/"deploy/toolchain.json")["go_image"]
     runner_id=None
     if milestone==6:
@@ -22,6 +22,15 @@ def main(milestone=3):
         image=project+"-runner"
         subprocess.run(["docker","build","-f",str(m0.ROOT/"deploy/docker/Dockerfile.m6-runner"),
                         "--label","dev.pangolin.source-commit="+m0.revision(),"-t",image,str(m0.ROOT)],check=True)
+        runner_id=subprocess.check_output(["docker","image","inspect",image,"--format","{{.Id}}"],text=True).strip()
+    elif milestone==7:
+        # The M7 runner adds pinned Node.js to the exact M6 toolchain set so
+        # the official @microsoft/signalr client harness runs inside the fixed
+        # OCI environment; Node/npm versions are recorded by the M7 gate.
+        image=project+"-runner"
+        subprocess.run(["docker","build","-f",str(m0.ROOT/"deploy/docker/Dockerfile.m7-runner"),
+                        "--label","dev.pangolin.source-commit="+m0.revision(),"--label","dev.pangolin.purpose=m7-test-runner",
+                        "-t",image,str(m0.ROOT)],check=True)
         runner_id=subprocess.check_output(["docker","image","inspect",image,"--format","{{.Id}}"],text=True).strip()
     network=project+"_default";cache=project+"-linux-cache"
     # Named cache belongs to this test project and is removed by its cleanup.
@@ -34,6 +43,18 @@ def main(milestone=3):
         drills=Path(host_drills).resolve()
         if not drills.is_relative_to(m0.ROOT) or not (drills/"release-drills.json").is_file():
             p.error("host M6 drills require a release-drills.json inside this repository tree")
+        host_drills="/source/"+drills.relative_to(m0.ROOT).as_posix()
+    if milestone==7:
+        # The pinned OCI runner has no Docker socket or host privileges, and a
+        # same-source release drill can never be re-executed inside it; the
+        # host must run the five drills against the same source bytes first.
+        if not host_drills:
+            p.error("M7 Linux gate requires host-run drills (PANGOLIN_M6_DRILLS_DIR) executed on this host")
+        if not os.getenv("PANGOLIN_M7_DEMO_KEY"):
+            p.error("M7 Linux gate requires PANGOLIN_M7_DEMO_KEY for the official-client harness")
+        drills=Path(host_drills).resolve()
+        if not drills.is_relative_to(m0.ROOT) or not (drills/"release-drills.json").is_file():
+            p.error("host M7 drills require a release-drills.json inside this repository tree")
         host_drills="/source/"+drills.relative_to(m0.ROOT).as_posix()
     with m3_fixture.broker_restart(project,m0.ROOT/"artifacts"/("m"+str(milestone)+"-linux-broker-barrier"),milestone=milestone):
         environment={
@@ -51,6 +72,14 @@ def main(milestone=3):
             environment["PANGOLIN_M6_RUNNER_IMAGE_ID"]=runner_id
             environment["PANGOLIN_M6_RUNNER_IMAGE"]=image
             if host_drills:environment["PANGOLIN_M6_DRILLS_DIR"]=host_drills
+        if milestone==7:
+            environment["PANGOLIN_M7_RUNNER_IMAGE_ID"]=runner_id
+            environment["PANGOLIN_M7_RUNNER_IMAGE"]=image
+            environment["PANGOLIN_M6_DRILLS_DIR"]=host_drills
+            environment["PANGOLIN_M7_DEMO_KEY"]=os.environ["PANGOLIN_M7_DEMO_KEY"]
+            # The official-client harness installs its committed package-lock
+            # dependencies inside the runner; keep the npm cache on the volume.
+            environment["npm_config_cache"]="/cache/npm-cache"
         if milestone>=5:
             environment["PANGOLIN_DATABASE_POSTGRES_DSN"]=environment["PANGOLIN_M1_APP_DSN"]
             environment["PANGOLIN_DATABASE_MYSQL_DSN"]="pangolin_database:local-database-only@tcp(mysql:3306)/pangolin_db_contracts"

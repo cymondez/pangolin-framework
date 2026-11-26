@@ -33,15 +33,18 @@ def _mappings(root):
     return {number: m0.load(root / f"tests/contract/m{number}.json") for number in range(1, 7)}
 
 
-def _subtest_groups(root):
-    return m0.load(Path(root) / "tests/contract/subtests.json")["groups"]
-
+def _subtest_groups(root, max_milestone=6):
+    """Groups within the requested milestone scope (the M6 index is M1-M6)."""
+    groups = m0.load(Path(root) / "tests/contract/subtests.json")["groups"]
+    return [group for group in groups
+            if isinstance(group.get("milestone"), str) and group["milestone"][1:].isdigit()
+            and int(group["milestone"][1:]) <= max_milestone]
 
 def _profiles(root, groups):
     root = Path(root)
     names = list(release_manifest.PROFILES)
     manifests = [m0.load(root / f"tests/contract/profiles/{name}.json") for name in names]
-    m0.check_profiles(groups, manifests)
+    m0.check_profiles(groups, manifests, max_milestone=6)
     return list(zip(names, manifests))
 
 

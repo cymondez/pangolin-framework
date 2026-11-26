@@ -106,10 +106,22 @@ SCENARIOS = {
  93: "tenant-owner-backfill interrupted-backfill interrupted-policy-switch forward-resume no-permissive-policy-union",
  94: "default-tenant-template explicit-organization-template complete-module-migrations no-half-enterprise-template",
  95: "organization-contract-fails applicable-case-skipped critical-package-below-threshold tenant-only-build-independent",
+ 96: "concurrent-consume official-negotiate origin-rejected token-binding unsupported-transport unsupported-version",
+ 97: "heartbeat official-error official-invoke official-push reconnect cancel invalid-frame invalid-method oversize",
+ 98: "enterprise-child-negative multi-membership cross-tenant-host-negative forged-owner scope-collision tenant-collision unsubscribe user-devices",
+ 99: "reconnect-denied authority-down before-write disabled-account invalid-credential membership-revocation permission-deny disabled-scope",
+ 100: "no-commit-no-success exact-method-owner no-long-uow operation-scope-close commit-unknown",
+ 101: "outbox-committed outbox-rollback stable-envelope wrong-owner wrong-producer unknown-reconcile",
+ 102: "two-live-processes wrong-scope-negative broker-redelivery node-restart no-client-ack",
+ 103: "active-drain admission-capacity close-once queue-full slow-client write-timeout redaction",
+ 104: "generated-profiles organization-enabled replacement-contract root-constructor tenant-only-graph legacy-off cumulative-gates",
 }
 
 
 def generate(root=ROOT):
+    existing = root / "tests/contract/subtests.json"
+    if existing.is_file() and len(json.loads(existing.read_text(encoding="utf-8-sig"))["groups"]) > 95:
+        raise ValueError("the extended M7 contract inventory is frozen; refresh SCENARIOS/appendix edits by hand and rerun the M7 gate instead")
     spec = (root / "design/panGOlin-framework_實作規範書.md").read_text(encoding="utf-8-sig")
     base = json.loads((root / "tests/contract/cases.json").read_text())
     rows = {}

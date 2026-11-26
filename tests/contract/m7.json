@@ -4,7 +4,7 @@
   "unit_tests": {
     "A96/official-negotiate": "github.com/cymondez/pangolin-framework/modules/realtime/signalr:TestA96RT001/official-negotiate",
     "A96/token-binding": "github.com/cymondez/pangolin-framework/modules/realtime/signalr:TestA96RT001/token-binding",
-    "A96/concurrent-consume": "github.com/cymondez/pangolin-framework/modules/realtime:TestA96RT001/concurrent-consume",
+    "A96/concurrent-consume": "github.com/cymondez/pangolin-framework/modules/realtime/signalr:TestA96RT001/concurrent-consume",
     "A96/unsupported-version": "github.com/cymondez/pangolin-framework/modules/realtime/signalr:TestA96RT001/unsupported-version",
     "A96/unsupported-transport": "github.com/cymondez/pangolin-framework/modules/realtime/signalr:TestA96RT001/unsupported-transport",
     "A96/origin-rejected": "github.com/cymondez/pangolin-framework/modules/realtime/signalr:TestA96RT001/origin-rejected",
@@ -36,9 +36,19 @@
     "A103/queue-full": "github.com/cymondez/pangolin-framework/modules/realtime:TestA103RT008/queue-full",
     "A103/write-timeout": "github.com/cymondez/pangolin-framework/modules/realtime:TestA103RT008/write-timeout",
     "A103/active-drain": "github.com/cymondez/pangolin-framework/modules/realtime:TestA103RT008/active-drain",
-    "A103/close-once": "github.com/cymondez/pangolin-framework/modules/realtime:TestA103RT008/close-once"
+    "A103/close-once": "github.com/cymondez/pangolin-framework/modules/realtime:TestA103RT008/close-once",
+    "A104/generated-profiles": "github.com/cymondez/pangolin-framework/internal/scaffold:TestGeneratedRealtimeProfiles",
+    "A99/disabled-scope": "github.com/cymondez/pangolin-framework/examples/realtime:TestA99DisabledScope",
+    "A102/broker-redelivery": "github.com/cymondez/pangolin-framework/events/nats:TestLiveAckWaitRedeliverySameConsumer",
+    "A103/redaction": "github.com/cymondez/pangolin-framework/modules/realtime/signalr:TestA103Redaction"
   },
-  "integration_tests": {},
+  "integration_tests": {
+    "A100/commit-unknown": "github.com/cymondez/pangolin-framework/tests/m7:TestA100CommitUnknown",
+    "A101/unknown-reconcile": "github.com/cymondez/pangolin-framework/tests/m7:TestA101UnknownReconcile",
+    "A102/node-restart": "github.com/cymondez/pangolin-framework/tests/m7:TestA102NodeRestart",
+    "A102/no-client-ack": "github.com/cymondez/pangolin-framework/tests/m7:TestA102NoClientAck",
+    "A104/legacy-off": "github.com/cymondez/pangolin-framework/tests/m7:TestA104LegacyOff"
+  },
   "python_tests": {},
   "regression_tests": [],
   "regression_integration_tests": [],
@@ -58,47 +68,12 @@
     "A104/root-constructor": "examples-realtime-official-client",
     "A104/tenant-only-graph": "examples-realtime-official-client",
     "A104/organization-enabled": "examples-realtime-official-client",
-    "A104/replacement-contract": "examples-realtime-official-client",
-    "A104/generated-profiles": "examples-realtime-official-client"
+    "A104/replacement-contract": "examples-realtime-official-client"
   },
-  "pending": [
-    {
-      "id": "A99/disabled-scope",
-      "reason": "需要在 session 存續期間由 scope registry 移除 kind 的真實撤權語意（ErrKindUnsupported 路徑）；單元無法在 Hub 建構後卸除 provider，屬 M7 正式 Gate 的整合撤權範圍。"
-    },
-    {
-      "id": "A100/commit-unknown",
-      "reason": "UOC-UNKNOWN 需要真實交易提交結果不可判讀的 PG 故障注入；單元測試的 fake UOW 不能作為提交語意的完成證據，映射到整合故障注入後補登。"
-    },
-    {
-      "id": "A101/unknown-reconcile",
-      "reason": "依賴 A100/commit-unknown 的 UOW_COMMIT_UNKNOWN 對帳流程，需真實 PG 與獨立連線對帳；無單元可用且 integration.test.mjs 未涵蓋。"
-    },
-    {
-      "id": "A102/broker-redelivery",
-      "reason": "JetStream 去重與重送語意（jetstream.Receiver）需要真實 NATS 消費者；Mock 不作為 Broker 語意證據（§13）。"
-    },
-    {
-      "id": "A102/node-restart",
-      "reason": "節點重啟後續訂閱恢復需要兩個 server process 的 docker 生命週期操作；整合環境尚未提供 restart 流程腳本。"
-    },
-    {
-      "id": "A102/no-client-ack",
-      "reason": "無法消費的 client 不應重複入隊：需真實 Broker ack/retry 與 socket 寫入失敗注入；單元無法重建 Broker 重送語意。"
-    },
-    {
-      "id": "A103/redaction",
-      "reason": "遮罩責任在 observability 共用機制（M4 已驗收）；realtime 指標鍵不含租戶/組織 label 與 payload 值，正式 Gate 由 observability 套件既有案例與 §9.6 審查確認。"
-    },
-    {
-      "id": "A104/legacy-off",
-      "reason": "「停用 realtime 後舊入口仍可用」需要 Root 停用組裝對照環境（有/無 realtime Module 的兩份 Profile），目前 generate 的 Profile 未含無 realtime 變體；M7 正式 Gate 以 Root DI 回歸補齊。"
-    },
-    {
-      "id": "A104/cumulative-gates",
-      "reason": "累積 Gate（M1–M6 回歸、coverage、race、靜態分析）屬發布驗收執行，不在本包範圍。"
-    }
-  ],
+  "pending": [],
   "thin_slices": [],
-  "module_docs": []
+  "module_docs": [],
+  "gate_checks": {
+    "A104/cumulative-gates": "m7-cumulative-gates"
+  }
 }

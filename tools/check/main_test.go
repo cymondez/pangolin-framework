@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -105,5 +106,77 @@ func TestCoverageCLIRejectsIncompleteEvidence(t *testing.T) {
 	write("profile.out", "mode: atomic\n"+strings.Join(rows, "\n")+"\n")
 	if err := checkCoverage(root, profile, io.Discard); err != nil {
 		t.Fatal(err)
+	}
+}
+
+// A module genuinely outside git keeps the earlier `go list ./...` inventory
+// semantics; no other git failure may fall back silently.
+func TestTrackedPackageInventoryGitlessModuleKeepsLegacySemantics(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte("module github.com/cymondez/pangolin-framework\n\ngo 1.27.0\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Join(root, "kernel", "check"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "kernel", "check", "f.go"), []byte("package check\nfunc F() int { return 1 }\n"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if repository, err := gitRepository(root); err != nil || repository {
+		t.Fatalf("temp module outside git must resolve as gitless: repository=%v err=%v", repository, err)
+	}
+	data, err := trackedPackageInventory(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(data), `"ImportPath": "github.com/cymondez/pangolin-framework/kernel/check"`) {
+		t.Fatalf("legacy inventory missed the module package: %s", data)
+	}
+}
+
+// Inside a real git repository the tracked inventory excludes ignored
+// directories and stays identical to the git ls-files package list.
+func TestTrackedPackageInventoryRepositoryExcludesIgnoredDirectories(t *testing.T) {
+	if _, err := os.Stat(filepath.Join("..", "..", ".git")); err != nil {
+		t.Skip("not a git checkout")
+	}
+	seed := func(root, name, body string) {
+		t.Helper()
+		path := filepath.Join(root, name)
+		if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(path, []byte(body), 0644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	work := t.TempDir()
+	seed(work, ".gitignore", "/artifacts/\n")
+	seed(work, "go.mod", "module github.com/cymondez/pangolin-framework\n\ngo 1.27.0\n")
+	seed(work, "kernel/check/f.go", "package check\nfunc F() int { return 1 }\n")
+	seed(work, "artifacts/design-review/x_test.go", "package designreview\n")
+	commands := [][]string{
+		{"git", "init", "-q"},
+		{"git", "-c", "core.quotepath=false", "add", "."},
+	}
+	for _, argv := range commands {
+		command := exec.Command(argv[0], argv[1:]...)
+		command.Dir = work
+		if out, err := command.CombinedOutput(); err != nil {
+			t.Fatalf("git setup %v: %v: %s", argv, err, out)
+		}
+	}
+	if repository, err := gitRepository(work); err != nil || !repository {
+		t.Fatalf("seeded repository must resolve: repository=%v err=%v", repository, err)
+	}
+	data, err := trackedPackageInventory(work)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(data), "artifacts/design-review") {
+		t.Fatalf("ignored directory entered the tracked inventory: %s", data)
+	}
+	if !strings.Contains(string(data), `"ImportPath": "github.com/cymondez/pangolin-framework/kernel/check"`) {
+		t.Fatalf("tracked package missing from the inventory: %s", data)
 	}
 }

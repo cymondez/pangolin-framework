@@ -1,0 +1,72 @@
+{
+  "milestone": "M7",
+  "baseline": "v1.3",
+  "product_version": "0.1.0",
+  "version_scope": "v0.1.0",
+  "requirements": 104,
+  "subtests": 593,
+  "profiles": [
+    {
+      "profile": "tenant-only",
+      "applicability_source": "tests/contract/profiles/tenant-only.json"
+    },
+    {
+      "profile": "organization-enabled",
+      "applicability_source": "tests/contract/profiles/organization-enabled.json"
+    },
+    {
+      "profile": "replacement-contract",
+      "applicability_source": "tests/contract/profiles/replacement-contract.json"
+    }
+  ],
+  "critical_packages": [
+    "kernel",
+    "persistence/uow",
+    "persistence/postgres",
+    "persistence/database",
+    "persistence/mysql",
+    "persistence/sqlite",
+    "security",
+    "tenancy",
+    "events",
+    "platform/audit",
+    "modules/organization",
+    "modules/realtime",
+    "events/nats"
+  ],
+  "drills": [
+    "clean-rebuild",
+    "forward-upgrade",
+    "backup-restore",
+    "load-baseline",
+    "security-review"
+  ],
+  "gates": [
+    "windows-amd64",
+    "linux-amd64"
+  ],
+  "version_bindings": {
+    "runtime": {
+      "version": "0.1.0",
+      "file": "VERSION"
+    },
+    "cli": {
+      "version": "0.1.0",
+      "file": "internal/scaffold/cli.go"
+    },
+    "template": {
+      "version": "0.1.0",
+      "source": "internal/scaffold/assets",
+      "runtime_require": "v0.1.0"
+    }
+  },
+  "assets": [
+    "deploy/release/m7.json",
+    "deploy/release/m7-client-dependencies.json",
+    "deploy/release/manifest.json",
+    "deploy/docker/Dockerfile.m7-runner",
+    "docs/guides/m7-development.md",
+    "modules/realtime/README.md",
+    "events/nats/README.md"
+  ]
+}

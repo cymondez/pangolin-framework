@@ -497,7 +497,8 @@
     "tenancy",
     "events",
     "platform/audit",
-    "modules/organization"
+    "modules/organization",
+    "modules/realtime"
   ],
   "assets": [
     "deploy/dependencies.json",

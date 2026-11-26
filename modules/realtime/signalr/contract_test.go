@@ -15,10 +15,12 @@ import (
 	"net/http/httptest"
 	"slices"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/coder/websocket"
+	"github.com/cymondez/pangolin-framework/events/distributed"
 	"github.com/cymondez/pangolin-framework/modules/realtime"
 	"github.com/cymondez/pangolin-framework/security/identity"
 	"github.com/cymondez/pangolin-framework/security/scope"
@@ -92,9 +94,10 @@ func testListener(t *testing.T) *realtime.Hub {
 	return hub
 }
 
-func testEndpoint(t *testing.T) (base string) {
+func testEndpoint(t *testing.T) (base string, hub *realtime.Hub) {
 	t.Helper()
-	endpoint, err := New(testListener(t), Options{
+	hub = testListener(t)
+	endpoint, err := New(hub, Options{
 		Path: "/rt", Origins: []string{"https://portal.example"}, AllowLoopbackCredentials: true,
 		NegotiationLimit: 8, HandshakeConcurrency: 4, NegotiationTTL: 30 * time.Second,
 		HandshakeTimeout: 2 * time.Second, ReadTimeout: 10 * time.Second, WriteTimeout: 2 * time.Second,
@@ -105,12 +108,39 @@ func testEndpoint(t *testing.T) (base string) {
 	}
 	server := httptest.NewServer(endpoint)
 	t.Cleanup(server.Close)
-	return server.URL
+	return server.URL, hub
 }
 
 type negotiation struct {
 	ConnectionToken string `json:"connectionToken"`
 	ConnectionID    string `json:"connectionId"`
+}
+
+// barrierGateway forces both requests of the token-consume race through a
+// controlled Gateway.Open barrier: neither upgrade leaves Open before both
+// have arrived, so the admission decision is deterministic.
+type barrierGateway struct {
+	realtime.Gateway
+	mu      sync.Mutex
+	count   int
+	goahead chan struct{}
+}
+
+func (b *barrierGateway) Open(ctx context.Context, credential identity.Credential, subject realtime.Subject) (*realtime.Session, error) {
+	b.mu.Lock()
+	b.count++
+	second := b.count == 2
+	b.mu.Unlock()
+	if second {
+		close(b.goahead)
+	} else {
+		select {
+		case <-b.goahead:
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		}
+	}
+	return b.Gateway.Open(ctx, credential, subject)
 }
 
 func negotiateRequest(t *testing.T, base, actor, origin, version string) (*http.Response, *negotiation) {
@@ -215,7 +245,7 @@ func handshake(t *testing.T, conn *websocket.Conn) {
 }
 
 func TestA96RT001(t *testing.T) {
-	base := testEndpoint(t)
+	base, hub := testEndpoint(t)
 	t.Run("official-negotiate", func(t *testing.T) {
 		response, parsed := negotiateRequest(t, base, "alpha", "", "1")
 		if response.StatusCode != http.StatusOK {
@@ -285,10 +315,91 @@ func TestA96RT001(t *testing.T) {
 			t.Fatalf("missing CORS echo: %v", got)
 		}
 	})
+	t.Run("concurrent-consume", func(t *testing.T) {
+		// The same negotiation token with a matching credential must admit
+		// exactly one of two simultaneous upgrades. Both WebSocket requests
+		// are forced to arrive at the controlled Gateway.Open barrier before
+		// either consumes the ticket.
+		blocked := &barrierGateway{Gateway: hub, goahead: make(chan struct{})}
+		endpoint, err := New(blocked, Options{
+			Path: "/rt", AllowLoopbackCredentials: true, NegotiationLimit: 8, HandshakeConcurrency: 4,
+			NegotiationTTL: 30 * time.Second, HandshakeTimeout: 2 * time.Second, ReadTimeout: 10 * time.Second,
+			WriteTimeout: 2 * time.Second, KeepAlive: demoKeepAlive, MaxMessage: 512,
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		barrierServer := httptest.NewServer(endpoint)
+		t.Cleanup(barrierServer.Close)
+		// The ticket belongs to the barrier endpoint instance.
+		response, parsed := negotiateRequest(t, barrierServer.URL, "alpha", "", "1")
+		if response.StatusCode != http.StatusOK {
+			t.Fatalf("barrier negotiate rejected: %d", response.StatusCode)
+		}
+		type upgrade struct {
+			conn   *websocket.Conn
+			status int
+		}
+		results := make(chan upgrade, 2)
+		for i := 0; i < 2; i++ {
+			go func() {
+				conn, response := dialUpgrade(t, barrierServer.URL, "alpha", parsed.ConnectionToken)
+				status := 0
+				if response != nil {
+					status = response.StatusCode
+				}
+				results <- upgrade{conn, status}
+			}()
+		}
+		var admitted *websocket.Conn
+		for i := 0; i < 2; i++ {
+			resolve := <-results
+			if resolve.conn != nil {
+				if admitted != nil {
+					t.Fatal("both simultaneous upgrades consumed one token")
+				}
+				admitted = resolve.conn
+			} else if resolve.status != http.StatusNotFound {
+				t.Fatalf("rejected upgrade returned %d, want 404", resolve.status)
+			}
+		}
+		if admitted == nil {
+			t.Fatal("exactly one upgrade must be admitted")
+		}
+		defer admitted.CloseNow()
+		handshake(t, admitted)
+		writeMessage(t, admitted, `{"type":1,"invocationId":"cc1","target":"Subscribe","arguments":[{"tenant":"alpha","kind":"tenant","id":"alpha","channel":"updates"}]}`)
+		if frame := readCompletion(t, admitted, "cc1"); frame.Error != "" {
+			t.Fatalf("subscription rejected: %s", frame.Error)
+		}
+		if err := hub.AcceptEvent(t.Context(), distributed.Envelope{
+			Type: realtime.EventType, SchemaVersion: 1, Producer: "test-realtime", ID: "same-token",
+			TenantID: "alpha", ScopeKind: "tenant", ScopeID: "alpha",
+			Payload: json.RawMessage(`{"channel":"updates","user_id":"same-user","data":42}`),
+		}); err != nil {
+			t.Fatal(err)
+		}
+		ctx, cancel := context.WithTimeout(t.Context(), 2*time.Second)
+		defer cancel()
+		for {
+			_, data, err := admitted.Read(ctx)
+			if err != nil {
+				t.Fatalf("notification missing: %v", err)
+			}
+			raw := bytes.TrimSuffix(data, []byte{recordSeparator})
+			if skipKeepAlive(raw) {
+				continue
+			}
+			if !strings.Contains(string(raw), `"target":"Notification"`) || !strings.Contains(string(raw), `"id":"same-token"`) {
+				t.Fatalf("unexpected frame %s", raw)
+			}
+			break
+		}
+	})
 }
 
 func TestA97RT002(t *testing.T) {
-	base := testEndpoint(t)
+	base, _ := testEndpoint(t)
 	open := func(t *testing.T) *websocket.Conn {
 		t.Helper()
 		_, parsed := negotiateRequest(t, base, "alpha", "", "1")

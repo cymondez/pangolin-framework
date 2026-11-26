@@ -36,12 +36,13 @@ type fixtureAuthority struct {
 	settings demoSettings
 	mu       sync.RWMutex
 	revoked  map[membership]bool
+	disabled map[scope.ScopeRef]bool
 }
 
 func newFixture(settings demoSettings) (*fixtureAuthority, error) {
 	switch settings.profile {
 	case "tenant-only", "organization-enabled", "replacement-contract":
-		return &fixtureAuthority{settings: settings, revoked: make(map[membership]bool)}, nil
+		return &fixtureAuthority{settings: settings, revoked: make(map[membership]bool), disabled: make(map[scope.ScopeRef]bool)}, nil
 	default:
 		return nil, errors.New("unknown realtime demo profile")
 	}
@@ -81,6 +82,11 @@ func (a *fixtureAuthority) Resolve(ctx context.Context, p scope.PrincipalRef, re
 	}
 	a.mu.RLock()
 	defer a.mu.RUnlock()
+	// An authoritative scope-state disable denies every membership read for
+	// that ref: no allow decision is served from stale state.
+	if a.disabled[ref] {
+		return scope.ScopeBinding{}, scope.ErrDenied
+	}
 	member := false
 	switch ref.Kind {
 	case contracts.EnterpriseKind:
@@ -207,4 +213,19 @@ func (a *fixtureAuthority) revoke(ctx context.Context, _ []json.RawMessage) (any
 	a.revoked[membership{binding.Principal, binding.Ref}] = true
 	a.mu.Unlock()
 	return true, nil
+}
+
+// DisableScope flips the authoritative scope state to disabled for the exact
+// ref. This is a trusted test-fixture operation that models an authoritative
+// disable (state withdrawal at the current revision) while a connection stays
+// open; deployments withdraw scope state through their authority stores and
+// must never call this production entry.
+func (a *fixtureAuthority) DisableScope(ref scope.ScopeRef) error {
+	if !a.validOwner(ref) {
+		return scope.ErrDenied
+	}
+	a.mu.Lock()
+	a.disabled[ref] = true
+	a.mu.Unlock()
+	return nil
 }

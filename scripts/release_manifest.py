@@ -279,15 +279,28 @@ def _milestone_fields(mapping):
         fields.append("template_tests")
     if mapping.get("milestone") == "M6":
         fields.append("drills")
+    if mapping.get("milestone") == "M7":
+        fields.append("gate_checks")
     return fields
 
 
 def check_closure(mappings, groups):
-    expected = {subtest["id"] for group in groups for subtest in group["subtests"]}
-    milestone_of = {group["id"]: group["milestone"] for group in groups}
+    """Acceptance closure scoped by the newest milestone of the supplied mappings.
+
+    Historical callers keep their original semantics: passing the M1-M6
+    mappings still expects exactly the M1-M6 named subtests even on a tree
+    whose subtests.json also carries a later appendix.
+    """
+    numbers = sorted(number for number in mappings if isinstance(number, int))
+    scope = max((int(mappings[number]["milestone"][1:]) for number in numbers
+                 if isinstance(mappings[number].get("milestone"), str) and mappings[number]["milestone"][1:].isdigit()), default=0)
+    scoped = [group for group in groups
+              if isinstance(group.get("milestone"), str) and group["milestone"][1:].isdigit() and int(group["milestone"][1:]) <= scope]
+    expected = {subtest["id"] for group in scoped for subtest in group["subtests"]}
+    milestone_of = {group["id"]: group["milestone"] for group in scoped}
     collected = {}
     result = {}
-    for number in range(1, 7):
+    for number in numbers:
         mapping = mappings[number]
         if mapping.get("milestone") != f"M{number}" or mapping.get("baseline") != BASELINE:
             raise ValueError(f"M{number} acceptance mapping is mislabeled")
@@ -331,11 +344,13 @@ def check_report_closure(report, mappings, groups):
     return closure
 
 
-def validate_regression_logs(report, directory):
+def validate_regression_logs(report, directory, extra=None):
     """Re-validate every milestone regression log from its command evidence.
 
     Called inside the m1 hook before the final artifact map exists, so log
     hashes are recomputed directly and bound by the finalized report later.
+    `extra` names additional acceptance regressions (e.g. {"m7-regression": set()})
+    owned by later additive milestones; historical callers are unchanged.
     """
     directory = Path(directory)
     required = {}
@@ -343,6 +358,7 @@ def validate_regression_logs(report, directory):
         mapping = m0.load(ROOT / f"tests/contract/m{number}.json")
         required[f"m{number}-regression"] = set(mapping.get("python_tests", {}).values())
     required["m0-regression"] = set()
+    required.update({name: set(tests) for name, tests in (extra or {}).items()})
     result = {}
     import m1
     for name, expected_tests in required.items():
@@ -494,8 +510,8 @@ def validate_drills(data, directory, commit, source_sha256, platform, project=No
         raise ValueError("inline drills must run on the verifying platform")
     if project is not None and data.get("project") != project:
         raise ValueError("drill project mismatch: " + str(data.get("project")))
-    if not isinstance(data.get("project"), str) or not re.fullmatch(r"pangolin-m6-[a-z0-9-]+", data["project"]):
-        raise ValueError("drills must use a dedicated pangolin-m6-* project")
+    if not isinstance(data.get("project"), str) or not re.fullmatch(r"pangolin-m[67]-[a-z0-9-]+", data["project"]):
+        raise ValueError("drills must use a dedicated pangolin-m6-* or pangolin-m7-* project")
 
     def command_log(command, scope):
         if not isinstance(command, dict) or not {"argv", "exit_code", "log", "sha256"} <= set(command):

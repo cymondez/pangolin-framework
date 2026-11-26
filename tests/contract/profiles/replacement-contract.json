@@ -4258,6 +4258,494 @@
       "reason": "§13.4: framework/core contract or applicable negative scenario",
       "status": "planned",
       "evidence": "artifacts/{commit}/{profile}/A95/tenant-only-build-independent/"
+    },
+    {
+      "id": "A96/concurrent-consume",
+      "requirement": "RT-001",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A96/concurrent-consume/"
+    },
+    {
+      "id": "A96/official-negotiate",
+      "requirement": "RT-001",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A96/official-negotiate/"
+    },
+    {
+      "id": "A96/origin-rejected",
+      "requirement": "RT-001",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A96/origin-rejected/"
+    },
+    {
+      "id": "A96/token-binding",
+      "requirement": "RT-001",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A96/token-binding/"
+    },
+    {
+      "id": "A96/unsupported-transport",
+      "requirement": "RT-001",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A96/unsupported-transport/"
+    },
+    {
+      "id": "A96/unsupported-version",
+      "requirement": "RT-001",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A96/unsupported-version/"
+    },
+    {
+      "id": "A97/heartbeat",
+      "requirement": "RT-002",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A97/heartbeat/"
+    },
+    {
+      "id": "A97/official-error",
+      "requirement": "RT-002",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A97/official-error/"
+    },
+    {
+      "id": "A97/official-invoke",
+      "requirement": "RT-002",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A97/official-invoke/"
+    },
+    {
+      "id": "A97/official-push",
+      "requirement": "RT-002",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A97/official-push/"
+    },
+    {
+      "id": "A97/reconnect",
+      "requirement": "RT-002",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A97/reconnect/"
+    },
+    {
+      "id": "A97/cancel",
+      "requirement": "RT-002",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A97/cancel/"
+    },
+    {
+      "id": "A97/invalid-frame",
+      "requirement": "RT-002",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A97/invalid-frame/"
+    },
+    {
+      "id": "A97/invalid-method",
+      "requirement": "RT-002",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A97/invalid-method/"
+    },
+    {
+      "id": "A97/oversize",
+      "requirement": "RT-002",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A97/oversize/"
+    },
+    {
+      "id": "A98/enterprise-child-negative",
+      "requirement": "RT-003",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A98/enterprise-child-negative/"
+    },
+    {
+      "id": "A98/multi-membership",
+      "requirement": "RT-003",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A98/multi-membership/"
+    },
+    {
+      "id": "A98/cross-tenant-host-negative",
+      "requirement": "RT-003",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A98/cross-tenant-host-negative/"
+    },
+    {
+      "id": "A98/forged-owner",
+      "requirement": "RT-003",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A98/forged-owner/"
+    },
+    {
+      "id": "A98/scope-collision",
+      "requirement": "RT-003",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A98/scope-collision/"
+    },
+    {
+      "id": "A98/tenant-collision",
+      "requirement": "RT-003",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A98/tenant-collision/"
+    },
+    {
+      "id": "A98/unsubscribe",
+      "requirement": "RT-003",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A98/unsubscribe/"
+    },
+    {
+      "id": "A98/user-devices",
+      "requirement": "RT-003",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A98/user-devices/"
+    },
+    {
+      "id": "A99/reconnect-denied",
+      "requirement": "RT-004",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A99/reconnect-denied/"
+    },
+    {
+      "id": "A99/authority-down",
+      "requirement": "RT-004",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A99/authority-down/"
+    },
+    {
+      "id": "A99/before-write",
+      "requirement": "RT-004",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A99/before-write/"
+    },
+    {
+      "id": "A99/disabled-account",
+      "requirement": "RT-004",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A99/disabled-account/"
+    },
+    {
+      "id": "A99/invalid-credential",
+      "requirement": "RT-004",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A99/invalid-credential/"
+    },
+    {
+      "id": "A99/membership-revocation",
+      "requirement": "RT-004",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A99/membership-revocation/"
+    },
+    {
+      "id": "A99/permission-deny",
+      "requirement": "RT-004",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A99/permission-deny/"
+    },
+    {
+      "id": "A99/disabled-scope",
+      "requirement": "RT-004",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A99/disabled-scope/"
+    },
+    {
+      "id": "A100/no-commit-no-success",
+      "requirement": "RT-005",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A100/no-commit-no-success/"
+    },
+    {
+      "id": "A100/exact-method-owner",
+      "requirement": "RT-005",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A100/exact-method-owner/"
+    },
+    {
+      "id": "A100/no-long-uow",
+      "requirement": "RT-005",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A100/no-long-uow/"
+    },
+    {
+      "id": "A100/operation-scope-close",
+      "requirement": "RT-005",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A100/operation-scope-close/"
+    },
+    {
+      "id": "A100/commit-unknown",
+      "requirement": "RT-005",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A100/commit-unknown/"
+    },
+    {
+      "id": "A101/outbox-committed",
+      "requirement": "RT-006",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A101/outbox-committed/"
+    },
+    {
+      "id": "A101/outbox-rollback",
+      "requirement": "RT-006",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A101/outbox-rollback/"
+    },
+    {
+      "id": "A101/stable-envelope",
+      "requirement": "RT-006",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A101/stable-envelope/"
+    },
+    {
+      "id": "A101/wrong-owner",
+      "requirement": "RT-006",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A101/wrong-owner/"
+    },
+    {
+      "id": "A101/wrong-producer",
+      "requirement": "RT-006",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A101/wrong-producer/"
+    },
+    {
+      "id": "A101/unknown-reconcile",
+      "requirement": "RT-006",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A101/unknown-reconcile/"
+    },
+    {
+      "id": "A102/two-live-processes",
+      "requirement": "RT-007",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A102/two-live-processes/"
+    },
+    {
+      "id": "A102/wrong-scope-negative",
+      "requirement": "RT-007",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A102/wrong-scope-negative/"
+    },
+    {
+      "id": "A102/broker-redelivery",
+      "requirement": "RT-007",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A102/broker-redelivery/"
+    },
+    {
+      "id": "A102/node-restart",
+      "requirement": "RT-007",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A102/node-restart/"
+    },
+    {
+      "id": "A102/no-client-ack",
+      "requirement": "RT-007",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A102/no-client-ack/"
+    },
+    {
+      "id": "A103/active-drain",
+      "requirement": "RT-008",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A103/active-drain/"
+    },
+    {
+      "id": "A103/admission-capacity",
+      "requirement": "RT-008",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A103/admission-capacity/"
+    },
+    {
+      "id": "A103/close-once",
+      "requirement": "RT-008",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A103/close-once/"
+    },
+    {
+      "id": "A103/queue-full",
+      "requirement": "RT-008",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A103/queue-full/"
+    },
+    {
+      "id": "A103/slow-client",
+      "requirement": "RT-008",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A103/slow-client/"
+    },
+    {
+      "id": "A103/write-timeout",
+      "requirement": "RT-008",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A103/write-timeout/"
+    },
+    {
+      "id": "A103/redaction",
+      "requirement": "RT-008",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A103/redaction/"
+    },
+    {
+      "id": "A104/generated-profiles",
+      "requirement": "RT-009",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A104/generated-profiles/"
+    },
+    {
+      "id": "A104/organization-enabled",
+      "requirement": "RT-009",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A104/organization-enabled/"
+    },
+    {
+      "id": "A104/replacement-contract",
+      "requirement": "RT-009",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A104/replacement-contract/"
+    },
+    {
+      "id": "A104/root-constructor",
+      "requirement": "RT-009",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A104/root-constructor/"
+    },
+    {
+      "id": "A104/tenant-only-graph",
+      "requirement": "RT-009",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A104/tenant-only-graph/"
+    },
+    {
+      "id": "A104/legacy-off",
+      "requirement": "RT-009",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A104/legacy-off/"
+    },
+    {
+      "id": "A104/cumulative-gates",
+      "requirement": "RT-009",
+      "applicability": "required",
+      "reason": "§13.4: realtime optional-module contract or applicable negative scenario",
+      "status": "planned",
+      "evidence": "artifacts/{commit}/{profile}/A104/cumulative-gates/"
     }
   ]
 }

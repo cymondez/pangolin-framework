@@ -43,4 +43,6 @@ await connection.invoke("Subscribe", {
 
 應用模組宣告直接相依並注入 `realtime.Publisher`。在已授權的寫入 Command 內，以同一 owner 寫入業務資料及通知事件。Outbox worker 將事件送到即時通訊專用的 JetStream subject。只在已授權且正在連線的 session 上配送，client 可用穩定事件 ID 處理重複。需要確認業務成功時，請使用 Command 結果或操作查詢。
 
+> **部署必須自己接上配送 worker。** `--realtime` 生成專案的 API 會啟動每個節點的接收端（receiver）並連線 JetStream，但**不含 Outbox worker**。把 `jetstream.Route` 注入一個以 `outbox.NewWorker` 運作的 dispatch 程序（工作程式或與 API 分開的常駐處理），事件才會從資料庫 Outbox 送到 JetStream；否則通知停留在資料庫，client 收不到推播。生成專案的 `REALTIME.md` 有相同說明。
+
 框架原始碼的 `examples/realtime/README.md` 提供不需要外部 IdP 的 loopback 範例。該範例使用 PostgreSQL、JetStream 與官方 client，可在兩個服務程序上驗證推播、範圍隔離與撤權。

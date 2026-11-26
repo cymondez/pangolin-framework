@@ -309,3 +309,119 @@ func TestReceiverDrainDeadline(t *testing.T) {
 		t.Fatalf("receiver close failed: %v", err)
 	}
 }
+
+// A102/no-client-ack at the node boundary: the receiver acknowledges a
+// processed event even when the subscriber never reads its queue, and a hub
+// that cannot accept events withholds the transport acknowledgement so the
+// broker redelivers the same message to the same node consumer per AckWait.
+func TestReceiverNoClientAckAndRedelivery(t *testing.T) {
+	fixture := startReceiverFixture(t)
+	credentials := identity.Credential{Kind: identity.BearerKind, Value: "alpha"}
+	subject, err := fixture.hub.Authenticate(context.Background(), credentials)
+	if err != nil {
+		t.Fatal(err)
+	}
+	session, err := fixture.hub.Open(context.Background(), credentials, subject)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(session.Close)
+	raw, err := json.Marshal(map[string]string{"tenant": "alpha", "kind": "tenant", "id": "alpha", "channel": "updates"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := session.Invoke(session.Context(), "Subscribe", []json.RawMessage{raw}); err != nil {
+		t.Fatal(err)
+	}
+	receiver, err := Start(context.Background(), fixture.broker, fixture.hub, 4)
+	if err != nil {
+		t.Fatal(err)
+	}
+	consumerName := onlyRealtimeConsumer(t, fixture)
+	// (1) The event is queued to a subscriber that intentionally does not
+	// consume during the probe window; the broker acknowledgement still lands.
+	if err := fixture.broker.Send(context.Background(), realtimeEnvelope("no-client-ack")); err != nil {
+		t.Fatal(err)
+	}
+	waitConsumerAckPending(t, fixture, consumerName, 0, 6*time.Second, "processed event")
+	processed := ""
+	select {
+	case item := <-session.Pending():
+		err := session.WriteDelivery(item, func(_ context.Context, _ string, notification realtime.Notification) error {
+			processed = notification.ID
+			return nil
+		})
+		if err != nil {
+			t.Fatalf("queued event not admitted: %v", err)
+		}
+	case <-time.After(3 * time.Second):
+		t.Fatal("processed event missing from the client queue")
+	}
+	if processed != "no-client-ack" {
+		t.Fatalf("unexpected queued event %q", processed)
+	}
+	// (2) The hub can no longer accept events; the non-ErrInvalid failure
+	// withholds the acknowledgement, so the broker redelivers the message to
+	// the same node consumer per its AckWait.
+	fixture.hub.Cancel()
+	if err := fixture.broker.Send(context.Background(), realtimeEnvelope("lost-ack")); err != nil {
+		t.Fatal(err)
+	}
+	deadline := time.Now().Add(12 * time.Second)
+	for {
+		info, err := fixture.js.ConsumerInfo(fixture.stream, consumerName)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if info.NumRedelivered >= 1 && info.NumAckPending == 1 {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("broker never redelivered the unacked message: %+v", info)
+		}
+		time.Sleep(250 * time.Millisecond)
+	}
+	// The consumer is owned by this receiver: closing removes it, leaving the
+	// unacked message in the stream for the next deployment, never consumed.
+	if err := receiver.Close(context.Background()); err != nil {
+		t.Fatalf("receiver close failed: %v", err)
+	}
+	if _, err := fixture.js.ConsumerInfo(fixture.stream, consumerName); err == nil {
+		t.Fatal("node consumer survived the receiver close")
+	}
+}
+
+// onlyRealtimeConsumer resolves this node's per-process consumer identity.
+func onlyRealtimeConsumer(t *testing.T, fixture receiverFixture) string {
+	t.Helper()
+	for start := time.Now(); time.Since(start) < 5*time.Second; {
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		infos := fixture.js.ConsumersInfo(fixture.stream, natsgo.Context(ctx))
+		consumers := make([]*natsgo.ConsumerInfo, 0)
+		for info := range infos {
+			consumers = append(consumers, info)
+		}
+		cancel()
+		if len(consumers) == 1 && strings.HasPrefix(consumers[0].Name, "realtime-") {
+			return consumers[0].Name
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	t.Fatal("the node consumer was not identifiable")
+	return ""
+}
+
+func waitConsumerAckPending(t *testing.T, fixture receiverFixture, name string, want int, limit time.Duration, note string) {
+	t.Helper()
+	for start := time.Now(); time.Since(start) < limit; {
+		info, err := fixture.js.ConsumerInfo(fixture.stream, name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if info.NumAckPending == want && info.NumRedelivered == 0 {
+			return
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	t.Fatalf("%s: broker acknowledgement did not settle at %d", note, want)
+}
