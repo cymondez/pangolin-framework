@@ -248,6 +248,10 @@ def build_index(report, directory, root=ROOT):
         rows_by_id = {}
         for entry in manifest.get("subtests") or []:
             ident = entry.get("id")
+            if ident not in requirement_of:
+                # Later additive milestones may extend the profile manifests;
+                # this per-profile index covers exactly its own milestone scope.
+                continue
             if ident in rows_by_id:
                 raise ValueError("duplicate profile row: " + ident)
             applicability = entry.get("applicability")
