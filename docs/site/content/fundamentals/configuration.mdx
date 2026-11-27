@@ -1,20 +1,57 @@
 ---
-title: 應用設定
-description: 設定預設值、讀取環境變數並驗證必要欄位。
+title: 應用設定（Configuration）
+description: 理解 panGOlin 啟動組態的分層覆寫順序、必填與格式驗證規則，以及為什麼啟動設定與執行期 Settings 分開管理。
 ---
 
 import CodeBlock from '@theme/CodeBlock';
 import source from '../_snippets/configuration.go';
 
-你的應用通常需要在本機與部署環境使用不同名稱、連線與逾時。`kernel/config` 將這些來源合併成只讀設定。
+> **你在架構中的位置**：`應用入口 main.go` **`[ 讀取並驗證啟動設定（defaults < file < environment < cli）]`** `→ 轉成只讀 config.Reader → 交給模組 Start 使用`
+>
+> **前置建議**：先完成[問候服務教學](../tutorials/greeting-application.mdx)。
 
-## 完整使用範例
+## 為什麼啟動組態要分層且在啟動前驗證？
 
-從 `pangolin-framework/examples/basics` 執行 `go run ./configuration`，預設會看到 `Application: My App`。以下程式也可直接作為[你自己專案](../getting-started/installation.md)的 `main.go`：
+在實務上，線上的設定故障往往是最冤枉的事故之一：
+- 本機跑得好好的，上正式機忘記設 `DATABASE_URL` 或把 `postgres://` 打成 `http://`，結果應用順利啟動，直到第一個客戶送出請求才爆炸。
+- 程式到處散落 `os.Getenv("...")`，沒人說得清楚到底用了哪些環境變數、預設值是多少、如果同時有設定檔與環境變數誰會贏。
 
-<CodeBlock language="go" title="main.go">{source}</CodeBlock>
+`kernel/config` 用三個明確規則消除這些風險：
+1. **固定優先序**：`編譯／模組預設 (defaults) < 設定檔 (file) < 環境變數 (environment) < 命令列參數 (cli)`，右邊一律覆寫左邊，且同一層名稱不能重複註冊。
+2. **顯式白名單映射**：由應用入口明確把外部環境變數映射到設定鍵（例如 `APP_NAME` → `app.name`），不偷偷掃描整個作業系統環境。
+3. **Fail-fast 驗證後轉只讀**：在任何業務模組 `Start` 之前完成全部必填與格式檢查，通過後產出**不可變的 `config.Reader`**，確保執行期間組態不會被意外改寫。
 
-Windows PowerShell 改變設定：
+> **重要區分：`kernel/config` vs `platform/settings`**
+> - **`kernel/config`（本頁）** 管理「**程序如何啟動**」（監聽位址、資料庫連線、逾時上限、外部 IdP URL），屬於啟動期只讀組態。
+> - **`platform/settings`** 管理「**多租戶／使用者的動態偏好與產品設定**」（例如深色主題、通知管道），可在執行期按租戶／使用者分層覆寫，詳見[分層設定與 Features](../platform/settings.mdx)。
+
+---
+
+## 1. 完整可執行範例
+
+從框架原始碼的 `examples/basics` 執行：
+
+```bash
+go run ./configuration
+```
+
+預設會看到 `Application: My App`。這份程式也可以直接貼進你自己專案的 `main.go` 執行：
+
+<CodeBlock language="go" title="examples/basics/configuration/main.go">{source}</CodeBlock>
+
+### 逐段導讀
+
+1. **顯式讀取環境變數（步驟 1）**：使用 `os.LookupEnv("APP_NAME")` 而不是 `os.Getenv`。兩者的關鍵差別在於：`LookupEnv` 能區分「**沒設定環境變數**（應退回預設值）」與「**刻意設為空字串 `APP_NAME=""`**（會覆寫預設值並觸發必填檢查失敗！）」。
+2. **宣告規則並載入（步驟 2）**：`config.NewLoader(rules).Load(sources)` 依序合併來源，再逐一檢查所有 `config.Rule`。
+3. **錯誤優先處理（步驟 3）**：一定要先檢查 `Load` 回傳的 `err`；失敗時立即終止啟動。
+
+---
+
+## 2. 實測覆寫與「非法設定自動拒絕」
+
+### 測試 A：用環境變數覆寫預設值
+
+**Windows PowerShell：**
 
 ```powershell
 $env:APP_NAME = 'Bookstore'
@@ -22,24 +59,55 @@ go run ./configuration
 Remove-Item Env:APP_NAME
 ```
 
-macOS／Linux：
+**macOS／Linux：**
 
 ```bash
 APP_NAME=Bookstore go run ./configuration
 ```
 
-此時應輸出 `Application: Bookstore`。如果程式放在自己的專案，將命令中的 `go run ./configuration` 改成 `go run .`。
+預期輸出：`Application: Bookstore`。
 
-## 覆寫順序
+### 測試 B：刻意傳入空字串，驗證 `Required: true` 生效
 
-`defaults < file < environment < cli`，右邊的來源優先。同一名稱的來源只能提供一次。
+**Windows PowerShell：**
 
-Loader 接收的是 Source.Values；檔案讀取、環境變數名稱與 flags 由你的應用選擇。範例使用 `os.LookupEnv` 明確把 APP_NAME 對應到 app.name。
+```powershell
+$env:APP_NAME = ''
+go run ./configuration
+Remove-Item Env:APP_NAME
+```
 
-## 驗證輸入
+預期結果：程式立即以非零結束碼退出並回報設定驗證失敗，不會印出空白的 `Application:`。
 
-`Required: true` 代表必要設定不能缺少或為空。網址可以使用 `config.URL("postgres", "postgresql")` 驗證允許的 scheme。
+---
 
-請先處理 Load 的錯誤，再使用 Lookup。連線密碼與 Token 等機密由可信環境提供，不放進程式碼或輸出到記錄。
+## 3. 常見驗證規則與機密處理原則
 
-要將設定交給整個應用，請接著閱讀[問候服務教學](../tutorials/greeting-application.mdx)。
+### 內建常用驗證寫法
+
+| 驗證需求 | 規則寫法 | 說明 |
+|---|---|---|
+| 必要欄位（不可缺少或空白） | `{Key: "app.name", Required: true}` | 缺少鍵或值為空字串時啟動立即失敗 |
+| 網址與協定白名單 | `{Key: "database.dsn", Required: true, Validate: config.URL("postgres", "postgresql")}` | 只允許指定 URL scheme，防堵拼錯協定或誤填入非法字串 |
+| 自訂格式檢查 | `{Key: "http.timeout", Validate: func(v string) error { ... }}` | 可自行以 `time.ParseDuration`、`strconv.Atoi` 等檢查正值與上下界 |
+
+### 機密（Secrets）處理鐵律
+
+- **資料庫密碼、JWT 簽章私鑰、API Token** 等機密一律由受信任的環境變數或外部密鑰管理服務（Secret Manager）在部署時注入。
+- **絕對不要**把正式密碼寫進 `SetDefault`、設定檔範例或提交進 Git。
+- **絕對不要**把完整設定 map 或含密碼的 DSN 直接印進結構化日誌（Log）。
+
+---
+
+## 4. 在完整應用中如何接入設定？
+
+在 Root 裝配的完整應用裡，你不需要手動呼叫 `config.NewLoader`：
+1. 各模組在自己的 `Configure(b module.RootBuilder)` 中以 `b.SetDefault("key", "default")` 宣告所屬預設值。
+2. 應用入口 `main.go` 透過 `app.Sources(...)` 傳入 `file`／`environment`／`cli` 來源，透過 `app.ConfigRules(...)` 傳入額外驗證規則。
+3. 模組在 `Start(ctx, rt)` 中從 `rt.Config().Lookup("key")` 讀取只讀結果。
+
+完整的內建設定鍵清單（含 UOW 逾時、觀測、HTTP 等）請見 **[設定鍵參考](../reference/configuration.md)**。
+
+## 下一步
+
+接著閱讀 **[應用啟動與停止](application-startup.mdx)**，看多個模組如何按相依順序啟動，以及服務在處理請求時如何做到零資料遺失的優雅停機（Quiesce & Drain）。

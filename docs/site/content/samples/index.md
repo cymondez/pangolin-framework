@@ -1,64 +1,83 @@
 ---
-title: 套件使用範例
-description: 選擇可以直接執行的 panGOlin 範例，學習各個套件的實際用法。
+title: 套件使用範例總覽
+description: 依學習階段分類的所有可執行 panGOlin 範例程式，每個範例皆附有中文導讀註解、執行命令與預期輸出。
 ---
 
-以下程式各自有完整 `main.go`，可以執行、修改，再搬到你自己的專案。
+這一頁彙整了 panGOlin 所有可直接執行的範例程式。你可以先從**零外部依賴**的基礎範例跑起，確認行為符合預期後，再直接參考或搬移到自己的專案。
 
-## 不需要外部服務的範例
+> **執行目錄提醒**：除非特別標示，基礎範例一律從框架原始碼的 `examples/basics` 目錄執行：
+> ```bash
+> cd pangolin-framework/examples/basics
+> ```
 
-從[安裝頁](../getting-started/installation.md)建立的 **`pangolin-work` 工作資料夾**執行：
+---
 
-```bash
-cd pangolin-framework/examples/basics
-```
+## 階段 1：零外部依賴範例（只需要 Go）
 
-**以下命令都從 `examples/basics` 執行：**
+以下範例不需要 Docker、資料庫或任何外部服務，全部都能在幾秒內跑出明確結果：
 
-| 想學的功能 | 命令 | 預期結果 | 完整程式與說明 |
+### A. 推薦主線範例（新專案必學）
+
+| 學習目標 | 執行命令 | 預期輸出摘要 | 對應教學指南 |
 |---|---|---|---|
-| 第一個 Root 裝配應用 | `go run ./hello` | `Hello, panGOlin!` | [第一個應用](../getting-started/quickstart.mdx) |
-| 註冊服務、設定預設與環境覆寫 | `go run ./root-greeting` | `Hello, World!`；`APP_NAME=Reader` 後 `Hello, Reader!` | [問候服務教學](../tutorials/greeting-application.mdx) |
-| 讀取預設與環境設定 | `go run ./configuration` | `Application: My App` | [設定範例](../fundamentals/configuration.mdx) |
-| 多模組相依與反序停機（Root 預設） | `go run ./root-lifecycle` | 啟動 storage、books，再反序停止 | [啟停範例](../fundamentals/application-startup.mdx) |
-| 判斷權限與明確拒絕 | `go run ./authorization` | read allowed、write denied | [授權範例](../security/authorization.mdx) |
-| 追蹤操作與健康檢查 | `go run ./observability` | Trace correlated、livez／readyz 與 JSON log | [觀測範例](../platform/observability.mdx) |
-| 建立與讀回事件訊息 | `go run ./event-envelope` | 事件 ID、型別、schema 與書籍 JSON | [事件範例](../events/integration-events.mdx) |
-| 進階：明示清單組裝與 `host.Ready` | `go run ./lifecycle` | 啟動 storage、books 與 `ready: true`，再反序停止 | [啟停範例](../fundamentals/application-startup.mdx) |
-| 進階：獨立 DI 容器與介面注入 | `go run ./dependency-injection` | `Hello, Alice!` | [DI 範例](../fundamentals/dependency-injection.mdx) |
-| 進階：舊式 Module 與 `b.Provide` 組合 | `go run ./greeting-app` | `Hello, World!`；`APP_NAME=Reader` 後 `Hello, Reader!` | [問候服務教學](../tutorials/greeting-application.mdx) |
+| 第一個 Root 裝配應用與優雅停機 | `go run ./hello` | `Hello, panGOlin!` | [第一個應用](../getting-started/quickstart.mdx) |
+| 註冊 DI 服務、預設設定與環境變數覆寫 | `go run ./root-greeting` | `Hello, World!`（設 `APP_NAME=Reader` 變 `Hello, Reader!`） | [問候服務教學](../tutorials/greeting-application.mdx) |
+| 讀取設定、優先序覆寫與必填驗證 | `go run ./configuration` | `Application: My App` | [應用設定](../fundamentals/configuration.mdx) |
+| 多模組 Type 相依排序與反序停機 | `go run ./root-lifecycle` | 啟動 `storage` → `books`，反序停止 `books` → `storage` | [應用啟動與停止](../fundamentals/application-startup.mdx) |
+| 權限判斷、User 明確 Deny 與 Feature 不授權 | `go run ./authorization` | `read allowed`、`write denied`、`feature enabled: write denied` | [權限與資源政策](../security/authorization.mdx) |
+| 分層 Settings（5–7 層）、配額與 Scoped Cache | `go run ./platform-services` | 8 行驗證輸出（含租戶快取隔離、版本收斂等） | [分層設定與 Features](../platform/settings.mdx) |
+| 建立與反序列化版本化 Event Envelope | `go run ./event-envelope` | 事件 ID、型別、Schema 版本與書籍 JSON | [事件格式與設計](../events/integration-events.mdx) |
+| OpenTelemetry Trace、JSON Log 與 `/livez`／`/readyz` | `go run ./observability` | `Trace correlated: true`、`/livez: 204`、`/readyz: 204` | [觀測與 Health](../platform/observability.mdx) |
 
-若你設定過 `APP_NAME`，設定／問候範例會使用該值；移除它即可看到表中的預設輸出。
+> **小提醒**：如果你在終端機設定過 `APP_NAME` 環境變數，設定與問候範例會改印該值；移除該環境變數即可恢復表中的預設輸出。
 
-## 多模組契約組合示範
+### B. 進階相容範例（維護舊式組裝對照）
 
-`examples/moduleapp` 是 root 裝配跨模組契約的正式示範（獨立 Go module）。在套件來源的 `pangolin-framework/examples/moduleapp` 執行：
+| 用途 | 執行命令 | 預期輸出摘要 | 對應說明 |
+|---|---|---|---|
+| 明示清單組裝（`Host.Start`）與 `host.Ready()` | `go run ./lifecycle` | 啟動順序、`ready: true` 與反序停機 | [應用啟動與停止](../fundamentals/application-startup.mdx) |
+| 獨立低階 DI 容器（`di.NewRegistry`／`Seal`） | `go run ./dependency-injection` | `Hello, Alice!` | [依賴注入](../fundamentals/dependency-injection.mdx) |
+| 舊式 `module.Module` + `b.Provide` 組合 | `go run ./greeting-app` | `Hello, World!` | [問候服務教學](../tutorials/greeting-application.mdx) |
+
+---
+
+## 階段 2：多模組介面契約示範（獨立 Go Module，不需外部服務）
+
+`examples/moduleapp` 示範真實專案如何把應用拆成 `store`、`catalog`、`pricing`、`app` 四個模組，並由契約擁有者把公開介面獨立在 `catalog/contracts` 套件內 `Export`，同時保護非公開服務不被跨模組存取。
+
+在框架原始碼的 **`pangolin-framework/examples/moduleapp`** 目錄執行：
 
 ```bash
+# Windows PowerShell（非互動環境建議加上 2 秒自動結束）
+$env:MODULEAPP_DEADLINE = '2s'
 go run .
+Remove-Item Env:MODULEAPP_DEADLINE
 ```
 
-非互動環境可先設定 `MODULEAPP_DEADLINE=2s`。預期輸出依 Type 相依的規劃層、各模組服務診斷與反序停機；跨模組介面契約（contracts 套件與 Export）的完整檔案見[依賴注入](../fundamentals/dependency-injection.mdx)。
+```bash
+# macOS / Linux
+MODULEAPP_DEADLINE=2s go run .
+```
 
-## 需要資料庫的交易範例
+完整原始碼與跨模組可見性規則解析見 **[依賴注入：跨模組介面契約](../fundamentals/dependency-injection.mdx)**。
 
-先完成 Bookstore 的服務準備，設定 PANGOLIN_DSN 後，從 `examples/basics` 執行 `go run ./transactions`。五行結果應全部為 true，依序顯示共用根、獨立根、父回滾、子提交及範圍結束。完整程式、命令與對帳方式見[交易傳播教學](../tutorials/transactions.mdx)。
+---
 
-## HTTP、交易與多租戶範例
+## 階段 3：真實資料庫與完整系統範例（需要 Docker）
 
-| 想學的套件 | 執行中的範例 | 使用說明 |
-|---|---|---|
-| persistence/uow | Bookstore 建立書籍交易 | [使用交易](../data/unit-of-work.md) |
-| persistence/postgres | Bookstore Repository | [資料存取](../data/postgresql.md) |
-| security/authn | Bookstore Bearer Token 驗證 | [登入身份](../security/authentication.md) |
-| security/scope | Bookstore Tenant 隔離 | [多租戶](../security/multi-tenancy.md) |
-| events/nats | Bookstore API／Worker 的事件流程 | [Integration Event](../events/integration-events.mdx) |
+當你準備好體驗真實 PostgreSQL 交易、JWT 登入、RLS 多租戶隔離與 NATS 背景事件時，依序操作以下兩項：
 
-[Bookstore 教學](../tutorials/bookstore.md)會帶你：
-
-1. 準備自己的 PostgreSQL、NATS 與本機登入服務。
-2. 啟動 API 與事件 Worker。
-3. 取得登入 Token、建立書籍並讀回。
-4. 嘗試跨租戶存取，觀察拒絕結果。
-
-這個範例需要 Docker。它也示範 UOW 交易、同交易保存事件與背景處理；你可以依照[應用架構](../concepts/architecture.md)將自己的業務功能放入相同分層。
+1. **[Bookstore 完整 API 與事件 Worker](../tutorials/bookstore.md)**
+   - 啟動隔離的 PostgreSQL、NATS 與本機示範 IdP。
+   - 實測登入取 Token、建立書籍（HTTP 201）、跨租戶存取被拒（HTTP 403）與背景 Outbox／Inbox 投影。
+   - 各核心套件對應位置：
+     - `persistence/uow` → [使用交易與工作單元](../data/unit-of-work.md)
+     - `persistence/postgres` → [PostgreSQL Adapter](../data/postgresql.md)
+     - `security/authn` / `security/identity` → [可擴充登入與身分驗證](../security/authentication.md)
+     - `security/scope` / `tenancy` → [多租戶與資料隔離](../security/multi-tenancy.md)
+     - `events/outbox` / `events/inbox` / `events/nats` → [組裝可靠事件配送](../events/reliable-delivery.md)
+2. **[交易傳播實作（`go run ./transactions`）](../tutorials/transactions.mdx)**
+   - 沿用 Bookstore 的示範 PostgreSQL，設定 `PANGOLIN_DSN` 後從 `examples/basics` 執行 `go run ./transactions`。
+   - 印出 5 行 `true`，實際驗證 `Required` 共根、`RequiresNew` 獨立提交、父回滾不影響子提交與舊 Scope 失效。
+3. **[用 CLI 生成獨立專案](../tutorials/generated-bookstore.md)**
+   - 學會使用 `pangolin new` 產出專屬於你自己的專案骨架。

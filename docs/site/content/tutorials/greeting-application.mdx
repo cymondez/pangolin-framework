@@ -1,43 +1,74 @@
 ---
 title: 建立可設定的問候服務
-description: 延續第一個應用，用建構子註冊自己的服務，並從設定與環境變數讀取名字。
+description: 延續第一個應用，學會如何在模組內用建構子註冊 DI 服務、宣告模組預設設定，並用環境變數動態覆寫。
 ---
 
 import CodeBlock from '@theme/CodeBlock';
 import source from '../_snippets/root-greeting.go';
 import legacySource from '../_snippets/greeting-app.go';
 
-完成這個教學後，你的應用會從設定層讀取名字，透過自己定義的 `GreetingService` 輸出問候訊息。
+> **你在架構中的位置**：`應用入口 main.go →` **`[ Module.Configure（宣告預設值 + 註冊 DI 建構子）→ Module.Start（讀取設定 + 解析服務）]`**
+>
+> **前置條件**：已完成[第一個應用](../getting-started/quickstart.mdx)。本頁繼續使用你的 **`hello-pangolin`** 專案，不需要額外套件或資料庫。
 
-先完成[第一個應用](../getting-started/quickstart.mdx)。仍使用同一個 `hello-pangolin` 專案，不需要新增依賴或外部服務。
+上一個範例我們直接在 `Start` 裡寫死 `fmt.Println("Hello, panGOlin!")`。真實專案中，業務邏輯會抽成獨立的 **Service**，而環境差異（名稱、連線位址、逾時）會抽成 **Configuration**。這個教學帶你把這兩塊自然接上 panGOlin 模組。
 
-## 1. 認識這次新增的服務
+---
 
-`GreetingService` 是你自己的 Go 型別，提供 `Greet(name)` 方法。把服務以建構子註冊到依賴注入（Dependency Injection，DI）組合引擎，需要時才解析；測試時可以換成別的實作。
+## 你將學到的三個核心因果
 
-一般應用服務以具象型別直接註冊即可，不需要先定義介面；要讓其他模組使用你的服務時，才把介面放進可 import 的 contracts 套件，見[依賴注入](../fundamentals/dependency-injection.mdx)。
+1. **為什麼要在 `Configure` 註冊服務，而不是在 `Start` 裡直接 `NewGreetingService()`？**
+   把服務交給 DI 容器管理後，Runtime 就能自動解析建構子相依、控管存活期間（Singleton／Transient／Operation）、統一在停機時執行資源清理，而且測試或擴充時能明確替換實作。
+2. **為什麼同模組內的 `GreetingService` 不需要先寫介面（Interface）？**
+   在 Go 裡過度提前抽介面只會增加樣板碼。panGOlin 允許在同模組內直接以具象型別 `*GreetingService` 註冊與解析；**只有當其他模組需要呼叫你時**，才把介面抽到獨立的 `contracts` 套件並 `Export`（詳見[依賴注入](../fundamentals/dependency-injection.mdx)）。
+3. **設定優先序如何運作？**
+   ```text
+   低優先 ──────────────────────────────────────────────────────▶ 高優先
+   內建與模組預設 (SetDefault)  <  設定檔 (file)  <  環境變數 (environment)  <  命令列參數 (cli)
+   ```
+   右邊來源自動覆寫左邊。這讓模組作者只需提供安全的本機預設值，維運人員部署時用環境變數覆寫即可，完全不用改程式。
 
-## 2. 設定名字的來源
+---
 
-程式先在 `Configure` 用 `b.SetDefault("app.name", "World")` 宣告模組預設值。如果終端機設定了 `APP_NAME` 環境變數，`main` 會以 `app.Sources` 加上 environment 層覆寫預設。設定優先序是「內建與模組預設 < 檔案 < 環境 < CLI」，右邊的來源覆寫左邊。
+## 1. 替換 `hello-pangolin/main.go`
 
-## 3. 替換 main.go
-
-以下是完整程式，直接替換上一頁的 `main.go`：
+直接用以下完整程式覆寫上一頁的 `main.go`（請配合每一步的註解閱讀）：
 
 <CodeBlock language="go" title="hello-pangolin/main.go">{source}</CodeBlock>
 
-在 `Configure` 中以 `module.AddSingleton(b.Services(), NewGreetingService)` 註冊建構子：解析鍵是建構子的精確回傳型別 `*GreetingService`，singleton 表示整個應用只建立一份；需要 transient 或 operation 時分別使用 `module.AddTransient`／`module.AddOperation`，都可與 `module.As(contract)` 組合。`Start` 用 `module.Resolve[*GreetingService](ctx, rt.Services())` 取得具型別服務，並以 `rt.Config().Lookup("app.name")` 讀取設定。底層 `di.Resolver.Resolve` 仍保留為相容 API。
+### 逐段導讀：看懂 `Configure` 與 `Start` 的分工
 
-## 4. 執行並改變設定
+1. **`b.SetDefault("app.name", "World")`**（在 `Configure` 內）
+   - 由模組自己宣告它需要的設定鍵與預設值。如果多個模組不小心對同一個鍵宣告衝突預設，啟動前就會報錯，不會默默互蓋。
+2. **`module.AddSingleton(b.Services(), NewGreetingService)`**（在 `Configure` 內）
+   - 透過高階泛型輔助函式註冊建構子，解析鍵就是建構子的精確回傳型別 `*GreetingService`。
+   - `AddSingleton` 代表整個應用只建立一次並共用；若每次取得都要新實例改用 `module.AddTransient`，若每次請求／操作隔離則用 `module.AddOperation`（皆可搭配 `module.As(contract)` 貢獻介面實作）。
+3. **`rt.Config().Lookup("app.name")`**（在 `Start` 內）
+   - 到了 `Start` 階段，所有設定層已經合併且驗證完成並轉成只讀，直接查詢就會拿到最終生效的值。
+4. **`module.Resolve[*GreetingService](ctx, rt.Services())`**（在 `Start` 內）
+   - 使用型別安全的泛型 `Resolve[T]` 取得服務，編譯期就能檢查型別，不需要手動做 `value.(*GreetingService)` 斷言。
+5. **`app.Sources(config.Source{Name: "environment", Values: env})`**（在 `main` 內）
+   - panGOlin 不會偷偷掃描整台主機的所有環境變數。由應用入口明確決定「哪一個環境變數對應到哪一個設定鍵」，避免敏感變數或拼錯名稱造成非預期覆寫。
 
-先執行 `go run .`，預期輸出：
+---
+
+## 2. 執行並實測環境變數覆寫
+
+在 **`hello-pangolin`** 資料夾先執行預設版本：
+
+```bash
+go run .
+```
+
+預期輸出（使用模組預設值 `"World"`）：
 
 ```text
 Hello, World!
 ```
 
-Windows PowerShell：
+接著注入環境變數 `APP_NAME=Reader` 覆寫預設值，再次執行：
+
+**Windows PowerShell：**
 
 ```powershell
 $env:APP_NAME = 'Reader'
@@ -45,22 +76,46 @@ go run .
 Remove-Item Env:APP_NAME
 ```
 
-macOS／Linux：
+**macOS／Linux：**
 
 ```bash
 APP_NAME=Reader go run .
 ```
 
-這次應該看到 `Hello, Reader!`。
+這次應該看到：
 
-## 進階相容路徑
+```text
+Hello, Reader!
+```
 
-以下等價版本仍然可用並持續支援（未棄用）：把 `module.Module` 結構值交給明示的 `Host.Start` 清單，並在 Module 內以 `b.Provide`（`di.Provider`）註冊服務。維護以這種形狀組裝的既有應用時使用：
+> **提示**：你也可以直接從框架原始碼的 `examples/basics` 資料夾執行 `go run ./root-greeting`，看到完全相同的結果。
+
+---
+
+## 新手常見錯誤提醒
+
+- **不要把 `b.Services()` 存成 struct 欄位留到 `Start` 再註冊**：`Configure` 結束後註冊權限會立即撤銷（Revoke），事後呼叫會被框架拒絕，確保服務圖在啟動前就完全定型。
+- **不要在 `Configure` 裡試圖解析服務**：此時其他模組可能還沒註冊完畢；所有解析與實際業務執行都應放在 `Start` 或後續請求處理中。
+
+---
+
+<details>
+<summary>維護舊版應用參考：進階相容路徑（明示清單組裝 <code>Host.Start</code>）</summary>
+
+如果你正在維護早期以結構值 `module.Module` + `runtime.New` + `Host.Start` 切片組裝的既有專案，該路徑依然完整支援（未棄用）。以下是與上方完全等價的相容寫法，但**新專案請優先使用上方的 `app.Run` Root 裝配**：
 
 <CodeBlock language="go" title="examples/basics/greeting-app/main.go（進階相容版本）">{legacySource}</CodeBlock>
 
-## 接著可以做什麼？
+兩者主要差異：明示清單組裝須由呼叫端手動補齊 `uow.*` 必要預設設定、手動建立 `runtime.New` 與 `defer host.Stop(...)`，並以低階 `b.Provide(di.Provider{...})` 註冊服務。
 
-- [依賴注入](../fundamentals/dependency-injection.mdx)：選擇服務存活期間、跨模組介面契約與建構子參數解析。
-- [設定](../fundamentals/configuration.mdx)：加入必要欄位與輸入驗證。
-- [Bookstore](bookstore.md)：把同樣的組裝方式用到 HTTP 與資料庫應用。
+</details>
+
+---
+
+## 下一步
+
+你已經掌握了 panGOlin 的單模組開發循環！接下來可以選擇：
+
+- 想深入了解多模組拆分與跨模組介面契約？閱讀 **[功能模組](../fundamentals/modules.md)** 與 **[依賴注入](../fundamentals/dependency-injection.mdx)**。
+- 想學會幫設定加上必填規則與 URL 驗證？閱讀 **[應用設定](../fundamentals/configuration.mdx)**。
+- 想直接體驗帶登入驗證、PostgreSQL 交易與背景事件的完整 API？前往 **[Bookstore 教學](bookstore.md)**。

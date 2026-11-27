@@ -1,42 +1,70 @@
 ---
 title: SQLite Adapter 組裝
-description: 使用 SQLite 檔案或記憶體資料庫，保留中立 Repository 與 UOW。
+description: 在組裝層接上純 Go SQLite（檔案或記憶體模式），理解 Serializable 強制要求與單一 writer 限制。
 ---
 
-SQLite 使用 pure Go 的 modernc.org/sqlite Driver，不需要額外資料庫服務或 CGO。先依[中立資料存取](database.md)建立 Repository／NewDatabaseService，再由組裝端選擇 SQLite；Application 不依賴 SQLite 型別。
+> **你在架構中的位置**：`Composition Root (composition/sqlite.go)` **`[ sqlite.Open → database.Resource ]`** `→ 傳給 uow.NewManager（明示 Serializable）`
+>
+> **前置建議**：先閱讀[中立資料存取與資料庫選擇](database.md)，準備好 `books/repository.go` 與 `NewDatabaseService`。
 
-## 完整連線組裝
+`persistence/sqlite` 底層使用 pure Go 的 `modernc.org/sqlite` 驅動程式，**不需要安裝任何資料庫伺服器，也不需要 CGO**，非常適合單機工具、邊緣節點服務或快速本機整合測試，同時保留完整的 panGOlin UOW 與中立 Repository 寫法。
 
-將以下檔案放在自己的 composition/sqlite.go。資料檔路徑來自可信啟動設定，不能直接採用請求中的路徑。
+---
+
+## 1. 在組裝端建立 SQLite Resource
+
+以下完整檔案可放在應用的 `composition/sqlite.go`（資料檔路徑應來自受信任的啟動設定，切勿直接取自外部請求參數）：
 
 ```go
 package composition
 
 import (
-    "context"
-    "errors"
-    "github.com/cymondez/pangolin-framework/persistence/database"
-    "github.com/cymondez/pangolin-framework/persistence/sqlite"
+	"context"
+	"errors"
+
+	"github.com/cymondez/pangolin-framework/persistence/database"
+	"github.com/cymondez/pangolin-framework/persistence/sqlite"
 )
 
+// OpenSQLiteResource 開啟 SQLite 檔案資料庫並回傳中立 database.Resource 與清理函式。
+// path 例如 "./data/app.db"；若要改用測試用記憶體資料庫，可在 Config 改設 Memory: true。
 func OpenSQLiteResource(ctx context.Context, path string) (database.Resource, func() error, error) {
-    resource, err := sqlite.Open(sqlite.Config{Path: path, MaxOpen: 4})
-    if err != nil { return nil, nil, err }
-    if err = resource.Pool().PingContext(ctx); err != nil {
-        return nil, nil, errors.Join(err, resource.Pool().Close())
-    }
-    return resource, resource.Pool().Close, nil
+	// 步驟 1：開啟 SQLite Adapter；框架會自動在每個連線啟用外鍵檢查（PRAGMA foreign_keys = ON）。
+	resource, err := sqlite.Open(sqlite.Config{Path: path, MaxOpen: 4})
+	if err != nil {
+		return nil, nil, err
+	}
+	// 步驟 2：啟動前確認檔案可讀寫並可正常回應查詢。
+	if err = resource.Pool().PingContext(ctx); err != nil {
+		return nil, nil, errors.Join(err, resource.Pool().Close())
+	}
+	return resource, resource.Pool().Close, nil
 }
 ```
 
-傳入例如 app.db 的應用資料檔路徑；回傳的 Resource 交給 NewDatabaseService，cleanup 由建立者在 Drain／UOW 清理完成後呼叫。改用 Memory:true 可明示選擇記憶體資料庫；它的存在時間受連線池生命週期影響，不能當作跨程序儲存。
+> **記憶體模式提醒**：設定 `sqlite.Config{Memory: true}` 可建立純記憶體 SQLite，但資料存活期受連線池生命週期影響，**僅適合短生命週期測試，不可作為跨程序或持久化儲存**。
 
-## 交易與隔離
+---
 
-Manager 的 DefaultIsolation 明示設為 uow.Serializable；[共用組裝範例](database.md)已設定。明示 ReadCommitted／RepeatableRead 會被拒絕，不靜默轉換。每個 pooled connection 都啟用外鍵檢查；應用仍需部署自己的 schema、完整 owner 複合唯一鍵及外鍵。
+## 2. 使用 SQLite 必知的 3 個重要特性
 
-Required 共用根交易，RequiresNew 使用另一連線／交易。先完成的子交易不隨父回滾；父層已持有寫鎖時，子寫入可能因 SQLite 單一 writer 限制失敗。應用檢查錯誤，框架不改用 Savepoint 或隱式重試。
+1. **必須明示 `DefaultIsolation: uow.Serializable`**
+   - SQLite 的交易隔離本質為 Serializable。panGOlin 拒絕默默轉換隔離級別——如果你沒在 `uow.DefaultOptions` 明示 `uow.Serializable`（或在單次 `Within` 指定了 `ReadCommitted`／`RepeatableRead`），Begin 階段會直接回錯拒絕。
+   - 上一章[中立資料存取](database.md)的 `NewDatabaseService` 已示範正確設定方式。
+2. **`RequiresNew` 與單一 Writer 鎖限制**
+   - `Required` 會正常共用同一個根交易；`RequiresNew` 會開啟第二條連線與獨立交易（先提交的子交易不隨父回滾）。
+   - 但因 SQLite 同一時間只允許一個 writer，**若父交易已經持有寫鎖，內層 `RequiresNew` 又試圖寫入，將會因鎖衝突失敗**。panGOlin 會忠實回報錯誤，不會偷改成 Savepoint 或隱式重試。
+3. **沒有引擎級 RLS 與引擎唯讀交易**
+   - SQLite 的唯讀保護由 UOW 層攔截宣告的寫入操作；資料隔離則仰賴 Repository 帶入 `database.CurrentOwner(ctx)` 條件，以及資料表自身的複合唯一鍵與外鍵約束（Adapter 已在每條連線自動開啟外鍵檢查）。
+   - 同樣地，框架既有的完整 Bookstore、組織治理、Audit、Outbox／Inbox 與 Jobs 仍為 PostgreSQL 專用 Adapter，詳見[功能相容性](../reference/compatibility.md)。
 
-SQLite 沒有引擎 RLS 或每操作切換的引擎唯讀交易；UOW 限制宣告的寫入，Repository 查詢保留完整可信 owner。要求缺少的引擎能力時用 database.Admit 拒絕組裝。既有完整 Bookstore／治理／事件等持久化 Adapter 仍有專屬 SQL，見[相容性](../reference/compatibility.md)。
+---
 
-查詢後完成 Scan，關閉 Rows 並檢查 Err。SQLite 的取消、未掃描 Row、未關閉 cursor、提交／回滾及 RequiresNew 都有真實 Driver 測試；多租戶資格與 Permission 仍由入口及應用政策處理。
+## 3. 常見執行期注意事項
+
+- 與其他引擎一致：`QueryRow` 必須 `Scan`、多列 `Rows` 必須 `Close()` 並檢查 `rows.Err()`、同一 UOW 不可平行執行 SQL。
+- 多租戶資格驗證與 Permission 檢查仍由入口與應用政策負責，不會因為換用 SQLite 而放寬。
+
+## 下一步
+
+- 準備了解如何防護重複扣款與 `UOW_COMMIT_UNKNOWN`？前往 **[Command 冪等與結果對帳](idempotency.md)**。

@@ -1,6 +1,7 @@
 module.exports = {manual: [
   'intro',
   {type: 'category', label: '開始使用', collapsed: false, items: ['getting-started/installation', 'getting-started/quickstart']},
+  'concepts/architecture',
   {type: 'category', label: '循序教學', collapsed: false, items: ['tutorials/greeting-application', 'tutorials/bookstore', 'tutorials/transactions', 'tutorials/generated-bookstore']},
   'samples/index',
   {type: 'category', label: '基礎功能', items: ['fundamentals/modules', 'fundamentals/dependency-injection', 'fundamentals/configuration', 'fundamentals/application-startup']},
@@ -9,6 +10,5 @@ module.exports = {manual: [
   {type: 'category', label: '事件', items: ['events/integration-events', 'events/reliable-delivery', 'platform/realtime']},
   {type: 'category', label: '設定、功能與快取', items: ['platform/settings', 'platform/features', 'platform/cache']},
   {type: 'category', label: '背景工作與維運', items: ['platform/jobs', 'platform/observability', 'platform/operations', 'platform/backup-restore']},
-  'concepts/architecture',
   {type: 'category', label: '參考與疑難排解', items: ['reference/cli', 'reference/configuration', 'reference/bookstore-api', 'reference/compatibility', 'reference/upgrading', 'reference/troubleshooting']},
 ]};

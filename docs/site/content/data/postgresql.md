@@ -1,47 +1,88 @@
 ---
 title: PostgreSQL Adapter 組裝
-description: 在組裝端選擇 PostgreSQL，應用與 Repository 使用中立資料存取契約。
+description: 在組裝層接上 pgxpool 與 PostgreSQL Adapter，並理解 RLS、最小權限 DB 角色與原生 pgx 擴充邊界。
 ---
 
-先依[中立資料存取](database.md)建立 Repository 與 NewDatabaseService。本頁只處理 PostgreSQL 連線、RLS 與引擎原生功能；應用服務的建構函式及一般資料操作不使用資料庫名稱或 pgx 型別。
+> **你在架構中的位置**：`Composition Root (composition/database.go)` **`[ 建立 pgxpool → 封裝為 &postgres.Resource{} ]`** `→ 傳給 uow.NewManager`
+>
+> **前置建議**：先完成[中立資料存取與資料庫選擇](database.md)的 `books/repository.go` 與 `NewDatabaseService`。
 
-## 在組裝端建立 Resource
+PostgreSQL 是 panGOlin 功能最完整的首選資料庫（完整支援引擎級 RLS、唯讀交易，以及框架內建的組織治理、Audit、Outbox／Inbox 與 Jobs Adapter）。本頁說明如何把 PostgreSQL 乾淨地接在組裝層，而不讓 `pgx` 型別滲透進 Application。
 
-以下完整檔案可放在應用的 composition/database.go。連線池的建立者負責在停止接入、Drain 與 UOW 清理後呼叫回傳的 cleanup。
+---
+
+## 1. 在組裝端建立 `database.Resource`
+
+以下完整檔案可放在應用的 `composition/database.go`。連線池建立者負責在應用停機（停止接入、Drain 與 UOW 清理完成）後呼叫回傳的 `cleanup` 函式：
 
 ```go
 package composition
 
 import (
-    "context"
-    "github.com/cymondez/pangolin-framework/persistence/database"
-    "github.com/cymondez/pangolin-framework/persistence/postgres"
-    "github.com/jackc/pgx/v5/pgxpool"
+	"context"
+
+	"github.com/cymondez/pangolin-framework/persistence/database"
+	"github.com/cymondez/pangolin-framework/persistence/postgres"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// OpenPostgresResource 在啟動組裝層建立 pgx 連線池並回傳中立的 database.Resource。
+// dsn 應由受信任的啟動設定或密鑰服務提供，絕不接受外部請求動態指定。
 func OpenPostgresResource(ctx context.Context, dsn string) (database.Resource, func(), error) {
-    pool, err := pgxpool.New(ctx, dsn)
-    if err != nil { return nil, nil, err }
-    if err = pool.Ping(ctx); err != nil {
-        pool.Close()
-        return nil, nil, err
-    }
-    return &postgres.Resource{Pool: pool}, pool.Close, nil
+	// 步驟 1：依啟動設定建立 pgxpool（連線數與逾時可於 DSN 或 pgxpool.ParseConfig 調整）。
+	pool, err := pgxpool.New(ctx, dsn)
+	if err != nil {
+		return nil, nil, err
+	}
+	// 步驟 2：在啟動階段立即 Ping 確認資料庫可達；失敗時立刻關閉連線池避免洩漏。
+	if err = pool.Ping(ctx); err != nil {
+		pool.Close()
+		return nil, nil, err
+	}
+	// 步驟 3：回傳實作 database.Resource 的 postgres.Resource 與關閉清理函式。
+	return &postgres.Resource{Pool: pool}, pool.Close, nil
 }
 ```
 
-將回傳的 database.Resource 交給前一頁的 NewDatabaseService。Repository 使用 database.Current(ctx)、可信 owner 與 Resource 的 Dialect，換引擎時保留相同 Application／Repository Port；引擎選擇與連線設定留在此組裝層。
+將回傳的 `database.Resource` 直接傳入上一章的 `books.NewDatabaseService(resource)`，整條呼叫鏈就完全接通。
 
-## 租戶與 owner 隔離
+---
 
-每筆交易設定 transaction-local Tenant／Scope。Repository 的完整 owner 等值條件與 Row-Level Security（RLS）共同隔離資料。應用帳號不能是 superuser、資料表擁有者或有 BYPASSRLS；受保護資料表需正確設定 FORCE RLS。
+## 2. 多租戶與 PostgreSQL RLS 雙重防線
 
-中立 Resource 的 Capabilities 宣告引擎能力，不能證明應用資料表已安裝正確 policy。先完成 migration，再以實際應用帳號驗證隔離；見[多租戶](../security/multi-tenancy.md)與[資源 Scope](../security/resource-scopes.md)。
+panGOlin 對 PostgreSQL 採「**應用 SQL 條件 + 資料庫 RLS**」雙重隔離，防止任何單一點失誤造成跨租戶資料洩漏：
 
-## 原生擴充與共用生命週期
+```text
+UOW 開啟交易時 ──▶ 自動執行 transaction-local SET LOCAL（寫入目前 Tenant / ScopeRef）
+                          │
+                          ├── 防線 1：Repository SQL 帶入完整 owner WHERE 條件
+                          └── 防線 2：PostgreSQL FORCE RLS Policy 比對同一組 session 變數
+```
 
-需要 pgx 特有功能的 Infrastructure Adapter 可以明示使用原生 postgres.Current；這不是 Application 或一般 Repository 的依賴。原生與中立 Executor 使用同一個 UOW session；同一工作單元內依序執行 SQL，不能藉兩個入口同時操作交易。
+### 正式部署必須守住的 3 個 DB 權限鐵律
 
-QueryRow 必須 Scan，Rows 必須 Close 並檢查 Err；不將 cursor 帶離 callback。沒有有效 UOW、唯讀寫入、錯誤 resource key、已結束視圖或重疊 SQL 都拒絕；Repository 不自行 Begin／Commit，也不退回 Pool 自動提交。
+1. **應用連線帳號（`app_role`）絕不可是 `SUPERUSER`、資料表擁有者（table owner）或具備 `BYPASSRLS`**：否則 PostgreSQL 會直接跳過 RLS Policy，讓第二道防線形同虛設！
+2. **所有租戶業務資料表一律啟用 `ENABLE ROW LEVEL SECURITY` 與 `FORCE ROW LEVEL SECURITY`**。
+3. **實測驗證隔離**：`resource.Capabilities()` 只代表「PostgreSQL 支援 RLS 機制」，不代表你的資料表已經正確安裝 Policy。部署完 [Migration](migrations.md) 後，務必用實際的 `app_role` 驗證跨租戶讀寫確實被擋下。
 
-完整 Bookstore、治理、Audit、可靠事件及 Jobs 的既有持久化 Adapter 仍使用各自的引擎專用 SQL／migration。採用中立 Port 不會自動移植這些功能；選擇 MySQL／SQLite 時先確認[相容性](../reference/compatibility.md)與組裝要求，不能放寬原 Profile 的隔離保證。
+> 完整角色拆權與跨租戶設計見[多租戶與資料隔離](../security/multi-tenancy.md)與[資源 Scope 與組織擴充](../security/resource-scopes.md)。
+
+---
+
+## 3. 何時需要原生 `postgres.Current`？
+
+- **一般業務 Repository**：統一使用中立的 `database.Current(ctx)` 即可。
+- **需要 PostgreSQL／pgx 專屬語法（例如 `pgx.Batch`、特定陣列型別或專屬指令）的 Infrastructure Adapter**：可明示呼叫 `postgres.Current(ctx, write)` 取得原生執行器（`write=true` 表示本次要寫入，唯讀 UOW 會直接拒絕）。
+- **共用同一個 UOW Session**：原生 `postgres.Current` 與中立 `database.Current` 背後操作的是同一筆交易與同一條連線，因此**同樣禁止在同一 UOW 內平行執行 SQL**，不可藉兩個入口同時下查詢。
+
+---
+
+## 4. 常見踩坑提醒
+
+- **❌ 查詢多列後忘記 `rows.Close()` 或漏查 `rows.Err()`**：會導致 UOW 判斷連線仍被占用（`ErrBusy`），進而無法 Commit；也絕不可把 `Rows` cursor 帶出 `Within` 回呼外。
+- **❌ 在 Repository 內自行 `pool.Begin()`**：繞過 UOW 將導致沒有設定 transaction-local RLS、無法參與 `Required` 回滾、也不會觸發 Outbox／Local Events。
+
+## 下一步
+
+- 需要同時支援其他資料庫？閱讀 **[MySQL Adapter](mysql.md)** 與 **[SQLite Adapter](sqlite.md)**。
+- 準備管理資料表結構？前往 **[部署資料庫遷移](migrations.md)**。

@@ -1,107 +1,149 @@
 ---
-title: 持久化背景工作
-description: 將工作和業務資料一起保存，以目前服務資格執行，管理重試、取消與重送。
+title: 持久化背景工作（Jobs）
+description: 學習如何將延後或耗時任務與業務資料同交易寫入 PostgreSQL 佇列，以獨立服務資格與租約 token 可靠執行，並安全管理重試、取消與重送。
 ---
 
-當回覆 API 後仍需寄收據、產生報表或呼叫外部服務時，可以保存一筆 Job，交給獨立 Worker 執行。Job 具有穩定 ID、完整 owner、actor、payload 版本、執行時間與期限；它採至少一次執行，Handler 必須能安全處理重複。
+> **你在架構中的位置**：`API 寫入交易內（store.Enqueue 與業務同交易 Commit）→` **`[ PostgreSQL Jobs Queue → 獨立 jobs.Worker（短租約認領 + 重驗服務權限 + 有界重試）]`**
+>
+> **前置建議**：先完成 [PostgreSQL 組裝](../data/postgresql.md)與[資源 Scope](../security/resource-scopes.md)。
 
-本頁適用已完成[PostgreSQL 組裝](../data/postgresql.md)及[身分與 Scope](../security/resource-scopes.md)的應用。只想先認識版本化資料，可從[事件範例](../events/integration-events.mdx)開始。
+## 為什麼不能直接 `go sendReceipt()` 就好？
+
+在 Go 裡開一條 goroutine 太容易了，導致很多新手把寄收據、產報表、打外部 Webhook 直接寫成 `go func() { ... }()`。這在生產環境有四個致命傷：
+1. **程序重啟即蒸發**：Pod 滾動更新或 OOM 重啟，記憶體裡的 goroutine 全部憑空消失，沒有任何紀錄。
+2. **背壓失控**：瞬間湧入 10 萬筆請求就開出 10 萬條 goroutine，直接把外部服務與自家 DB 打死。
+3. **重用已結束的 HTTP Context**：HTTP 回傳 200 的瞬間 `r.Context()` 就被取消了，背景 goroutine 一跑就失敗。
+4. **業務回滾卻照跑**：資料庫交易後來 Rollback 了，開出去的 goroutine 卻已經把收據寄給客戶！
+
+panGOlin 的 `platform/jobs` 用「**與業務同交易持久化接單 + 租約制 Worker + 獨立重授權**」根治這四個問題（採 **at-least-once 至少一次執行**，因此外部呼叫必須使用 `job.ID` 作為穩定冪等鍵）。
+
+---
 
 ## 1. 部署工作資料表
 
-部署程序將 `jobs/postgres.Migrations` 的 `migrations` 子目錄與 Tenant、Scope Catalog、Audit 來源合併，jobs 宣告依賴 scope。使用[資料庫遷移](../data/migrations.md)的單一 Goose Runner；應用啟動只檢查相容性。app／worker 連線不得是 table owner 或 superuser。
+部署程序將 `platform/jobs/postgres.Migrations` 的 `migrations` 子目錄與 Tenant、Scope Catalog、Audit 一起交給[資料庫遷移](../data/migrations.md)的單一 Goose Runner，並宣告 `jobs` 依賴 `scope`。API 與 Worker 連線帳號皆不可是 table owner 或 superuser。
 
-## 2. 組裝收據 Worker
+---
 
-在自己的 Go module 新增 `setup/jobs.go`，貼入以下完整檔案。你提供的 sendReceipt 必須使用傳入的 idempotencyKey，呼叫支援冪等的外部服務。
+## 2. 完整組裝範例：`setup/jobs.go`
+
+以下完整檔案可放進你自己專案的 `setup/jobs.go`（`go build ./...` 即可驗證）。傳入的 `sendReceipt` 必須把 `job.ID` 當成 `idempotencyKey` 傳給支援冪等的外部服務：
 
 ```go
 package setup
 
 import (
-    "bytes"
-    "context"
-    "encoding/json"
-    "github.com/cymondez/pangolin-framework/platform/jobs"
-    jobpg "github.com/cymondez/pangolin-framework/platform/jobs/postgres"
-    "github.com/jackc/pgx/v5/pgxpool"
+	"bytes"
+	"context"
+	"encoding/json"
+
+	"github.com/cymondez/pangolin-framework/platform/jobs"
+	jobpg "github.com/cymondez/pangolin-framework/platform/jobs/postgres"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// Receipt 是背景工作 payload 的版本化資料結構（只放業務參數，不放憑證或權限）。
 type Receipt struct {
-    ReceiptID string `json:"receipt_id"`
+	ReceiptID string `json:"receipt_id"`
 }
 
-func ReceiptWorker(queuePool *pgxpool.Pool, config jobs.Policy,
-    bind jobs.Bind, checkActor jobs.CheckActor,
-    authorize func(context.Context, string) error,
-    sendReceipt func(context.Context, string, string) error,
+// ReceiptWorker 組裝持久化 Job Store 與背景 Worker。
+// 注意：本函式只做組裝，不自行連線、不跑 Migration、也不啟動 Worker；
+// queuePool 由所屬資料庫模組擁有並於停機 Drain 後關閉。
+func ReceiptWorker(
+	queuePool *pgxpool.Pool,
+	config jobs.Policy,
+	bind jobs.Bind,
+	checkActor jobs.CheckActor,
+	authorize func(context.Context, string) error,
+	sendReceipt func(context.Context, string, string) error,
 ) (*jobpg.Store, *jobs.Worker, error) {
-    if sendReceipt == nil { return nil, nil, jobs.ErrInvalid }
-    decode := func(raw json.RawMessage) (Receipt, error) {
-        var receipt Receipt
-        decoder := json.NewDecoder(bytes.NewReader(raw))
-        decoder.DisallowUnknownFields()
-        if decoder.Decode(&receipt) != nil || receipt.ReceiptID == "" {
-            return receipt, jobs.ErrInvalid
-        }
-        return receipt, nil
-    }
-    registry, err := jobs.NewRegistry(64*1024, jobs.Definition{
-        Type: "receipt.send", Version: 1,
-        Validate: func(raw json.RawMessage) error { _, err := decode(raw); return err },
-        Handle: func(ctx context.Context, job jobs.Job) error {
-            receipt, err := decode(job.Payload)
-            if err != nil { return err }
-            return sendReceipt(ctx, receipt.ReceiptID, job.ID)
-        },
-    })
-    if err != nil { return nil, nil, err }
-    store, err := jobpg.NewStore(queuePool, registry, config, authorize)
-    if err != nil { return nil, nil, err }
-    worker, err := jobs.NewWorker(store, registry, config, "receipts", bind, checkActor, nil)
-    if err != nil { return nil, nil, err }
-    return store, worker, nil
+	if sendReceipt == nil {
+		return nil, nil, jobs.ErrInvalid
+	}
+
+	// 步驟 1：定義嚴格的 Payload 解碼器（拒絕未知欄位與空值），同時用於接單驗證與執行解碼。
+	decode := func(raw json.RawMessage) (Receipt, error) {
+		var receipt Receipt
+		decoder := json.NewDecoder(bytes.NewReader(raw))
+		decoder.DisallowUnknownFields()
+		if decoder.Decode(&receipt) != nil || receipt.ReceiptID == "" {
+			return receipt, jobs.ErrInvalid
+		}
+		return receipt, nil
+	}
+
+	// 步驟 2：建立版本化 Job Registry（設定單筆 payload 上限為 64 KiB）。
+	registry, err := jobs.NewRegistry(64*1024, jobs.Definition{
+		Type:     "receipt.send",
+		Version:  1,
+		Validate: func(raw json.RawMessage) error { _, err := decode(raw); return err },
+		Handle: func(ctx context.Context, job jobs.Job) error {
+			receipt, err := decode(job.Payload)
+			if err != nil {
+				return err
+			}
+			// 將穩定的 job.ID 作為外部冪等鍵，避免至少一次執行（at-least-once）造成重複寄信。
+			return sendReceipt(ctx, receipt.ReceiptID, job.ID)
+		},
+	})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// 步驟 3：建立 PostgreSQL Job Store 與 Worker。
+	store, err := jobpg.NewStore(queuePool, registry, config, authorize)
+	if err != nil {
+		return nil, nil, err
+	}
+	worker, err := jobs.NewWorker(store, registry, config, "receipts", bind, checkActor, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	return store, worker, nil
 }
 ```
 
-在自己的專案目錄執行 `go mod tidy`、`go build ./...`，預期沒有錯誤。這段組裝不會自行連線、執行遷移或啟動工作；pool 由你的資料庫 Module 建立及關閉。
+### 兩個必懂的安全回呼：`bind` 與 `authorize`
 
-bind 每次必須從可信服務憑證建立新 context，依目前 Tenant 資格與 Job.Owner 重新 Bind，再檢查 `jobs.execute` Permission。Worker 也會比對 binding 的完整 owner 與 service Principal。組織工作需要目前有效的組織服務 grant，沒有 Provider 或無法授權就進有界重試，不能退回 tenant scope。詳見[身分驗證](../security/authentication.md)與[授權](../security/authorization.mdx)。
+- **`bind`（執行端重授權）**：每次 Worker 認領一筆 Job 時，必須從**可信服務憑證**建立全新 context、依目前 Tenant／組織資格重新 `Bind(job.Owner)` 並檢查 `jobs.execute` 權限。若是組織層級 Job，必須有當前有效的組織服務 grant（不可退回 tenant scope）。
+- **`authorize` 與 `checkActor`**：`authorize` 檢查 `jobs.enqueue`、`jobs.cancel`、`jobs.replay`；若某筆 Job 代表使用者代理執行（`Delegated: true`），`checkActor` 會額外核對該使用者目前是否仍保有資格（防堵已離職使用者的排程繼續跑）。
 
-authorize 用來檢查 `jobs.enqueue`、`jobs.cancel`、`jobs.replay`。代理使用者的 Job 設 `Delegated: true`，checkActor 另驗該使用者目前資格；一般工作保存 Actor 作為歸屬記錄，執行授權來自目前服務身分。
+---
 
-## 3. 設定上限
+## 3. 設定有界上限（`jobs.Policy` 建議起始值）
 
-Policy 的 Lease、ExecutionTimeout、CleanupTimeout、PollInterval、RetryInitial、RetryMax、Retention、MaxAttempts、Concurrency、BatchSize、MaxPending 都需明示；JitterFraction 為 0–1。可從下表開始，再依自己的負載調整：
+panGOlin 拒絕無界佇列，所有參數都必須明示正值（`JitterFraction` 為 `0–1`）。可從以下起始值開始，再依實測負載調整：
 
-| 項目 | 起始值 |
-|---|---|
-| Lease／執行／清理期限 | 30s／20s／5s |
-| PollInterval | 100ms |
-| Concurrency／BatchSize | 4／32 |
-| MaxAttempts／退避／jitter | 8／250ms–30s／0.2 |
-| MaxPending／Retention | 100000／720h |
+| 參數類別 | 建議起始值 | 設計因果與限制 |
+|---|---|---|
+| `Lease`／`ExecutionTimeout`／`CleanupTimeout` | `30s`／`20s`／`5s` | **`Lease` 必須嚴格大於 `ExecutionTimeout + CleanupTimeout`**，否則 Handler 還沒做完清理租約就到期被別人接手！ |
+| `PollInterval` | `100ms` | 無工作時的輪詢間隔 |
+| `Concurrency`／`BatchSize` | `4`／`32` | 嚴格控制並行度，絕不一次把整張表載入記憶體 |
+| `MaxAttempts`／`RetryInitial`–`RetryMax`／`JitterFraction` | `8`／`250ms`–`30s`／`0.2` | 指數退避加隨機抖動，避免雪崩重試 |
+| `MaxPending`／`Retention` | `100000`／`720h` | `MaxPending` 包含保留中的全部紀錄；滿額直接回 `JOB_CAPACITY_EXCEEDED`（HTTP 429），保護資料庫 |
 
-Lease 必須大於執行加清理期限。首版一次認領一筆，永遠不超過 BatchSize；沒有先把整個佇列讀進記憶體。MaxPending 包含保留中的全部紀錄，滿額回 `JOB_CAPACITY_EXCEEDED`，HTTP 映射 429；呼叫端保留同一操作識別並退避。
+---
 
-## 4. 與業務一起接單
+## 4. 在業務交易中接單、啟動與安全收尾
 
-在已授權的可寫 UOW callback 內，建立 Job 並呼叫 `store.Enqueue(work, job)`。Job.Owner 和 Job.Actor 必須等於 `scope.Current(work)` 的 Ref／Principal；Payload 只能放業務參數，不能提供權限。DueAt 是最早執行時間，Deadline 必須晚於 DueAt。
+### 接單（與業務同交易）
+在已授權的可寫 UOW 回呼內呼叫 `store.Enqueue(work, job)`：
+- `job.Owner` 與 `job.Actor` 必須等於 `scope.Current(work)` 的 `Ref` 與 `Principal`；`DueAt` 為最早執行時間，且 `Deadline` 必須晚於 `DueAt`。
+- 業務寫入與 Job 寫入**同交易 Commit／Rollback**；若交易失敗，絕不會留下幽靈 Job。
+- 想把 API 請求與背景執行連成同一條分散式追蹤？接單時順手把 `observability.OperationID(work)` 與 `observability.TraceParent(work)` 填入 `job.OperationID`／`job.TraceParent`（僅供追蹤關聯，不作為授權依據）。
 
-工作與業務資料共用 Commit／Rollback；提交前崩潰不會留下可執行工作。Job ID 在首次接單前產生，重試／人工重送保持不變。需要防止客戶端重複接單時，使用[Command 冪等鍵](../data/idempotency.md)。
+### 啟動與優雅停機
+- 在 Worker 程序的 `Module.Start` 呼叫 `worker.Start()`，並把 `worker` 註冊為 Runtime 的停機 Participant。
+- 若 Handler 內部需要讀寫資料庫，請在 Handler 裡明確開啟新的 `application.Command`／`Query`（Job 狀態與業務交易分離，不宣稱跨程序原子提交）。
+- 停機順序：撤回 Ready → 停止認領 → Drain 等待活躍 Handler 完成 → 逾時取消並等有界清理結束 → 以有效 lease token 交還未完成租約 → 最後關閉 DB。
 
-需要追蹤時，在接單處將 `observability.OperationID(work)` 與 `observability.TraceParent(work)` 分別存入 Job.OperationID／TraceParent；這些值只用於關聯，不作授權。
+### 取消、死信重送與清理
+- 在目前 owner 的授權可寫 UOW 內呼叫 `store.Cancel(ctx, id, trace)` 或 `store.Replay(ctx, id, trace)`，必要 Audit 與狀態更新同交易提交。
+- `Replay` **只接受仍在 `Deadline` 內的 `dead` 工作**（保留原 ID／owner／schema）；若 Deadline 已過，請先對帳再另建新操作，不可偷偷延長舊期限。
+- `Purge` 只清理超過 `Retention` 的成功／取消終態，`dead` 紀錄一律保留供人工排查與稽核。
 
-## 5. 啟動與停止
+## 下一步
 
-在 Worker 程序的 Module.Start 呼叫 `worker.Start()`，並把 worker 傳入 `runtime.New(..., worker)` 的 Participant 清單。API、排程接單與 Worker 可以是不同程序，共用持久化 queue。Handler 的資料庫工作使用明示 Command／Query UOW，工作完成狀態與業務交易分開，不宣稱跨程序原子提交。
-
-停機先撤回 Ready、停止新接單和認領，再 Drain。逾時取消 Handler，等它退出並完成有界清理後，才用有效 token 交還 lease，最後關閉 DB。不要用已結束的 HTTP context 啟動 Worker。
-
-## 6. 取消、失敗與重送
-
-在目前 owner 的授權可寫 UOW 呼叫 `store.Cancel(ctx, id, trace)` 或 `store.Replay(ctx, id, trace)`；必要 Audit 與狀態更新同交易提交。Replay 只接受仍在 Deadline 內的 dead 工作，保留原 ID／owner／schema。期限已過時先對帳，再建立新操作，不能偷偷延長舊期限。
-
-只有成功／取消終態超過 Retention 才可由 `Purge` 清除；dead 保留供修復與稽核。若外部服務成功後程序崩潰，Handler 可能再次被呼叫，外部服務應以同一 Job ID 回傳原結果。
-
-下一步：[觀測與健康檢查](observability.mdx)，查看失敗與積壓；[容量與恢復](operations.md)說明滿額和 Broker 離線時的處置。
+- 前往 **[觀測與健康檢查](observability.mdx)**，學會追蹤背景工作與 API 之間的完整 Trace，並監控佇列積壓告警。
+- 面對滿額 429 或 Broker 斷線怎麼應急？見 **[容量、停機與恢復](operations.md)**。
