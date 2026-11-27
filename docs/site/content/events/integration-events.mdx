@@ -1,0 +1,91 @@
+---
+title: 使用 Integration Event（版本化事件契約）
+description: 透過免外部服務的範例認識標準 Event Envelope 結構，並理解為什麼跨程序事件必須走「同交易 Outbox → Broker → Inbox 去重」兩階段模式。
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import source from '../_snippets/event-envelope.go';
+
+> **你在架構中的位置**：`Application 寫入交易內 →` **`[ 建立版本化 distributed.Envelope → 寫入 Outbox ]`** `→ Worker 派送 NATS JetStream → Consumer Inbox 去重處理`
+>
+> **前置建議**：先了解[工作單元](../data/unit-of-work.md)的交易邊界。本頁基礎範例**不需要安裝 NATS 或資料庫**。
+
+## 為什麼不直接在 Service 裡呼叫 `nats.Publish(...)`？
+
+當「建立一本書」成功後，你可能還想通知搜尋索引更新、寄通知信或通知另一個微服務。很多新手會直接在 `CreateBook` 寫完 DB 後接著呼叫 `nats.Publish(...)`——這在真實線上環境會立刻引發「**雙寫不一致（Dual-Write Problem）**」：
+
+- **情況 A（先發訊息再 Commit）**：NATS 訊息已經發出去了，下一毫秒 DB Commit 失敗回滾 → 下游服務收到一筆「從來不存在的書籍」幽靈事件！
+- **情況 B（先 Commit 再發訊息）**：DB 已經成功寫入，但正要呼叫 `nats.Publish` 時網路瞬斷或 Pod 重啟 → 資料落盤了，但通知永遠人間蒸發！
+
+panGOlin 用 **標準化 Event Envelope + Outbox / Inbox 模式** 徹底解決雙寫問題：
+
+```text
+[同一筆業務資料庫交易]                           [獨立背景配送程序]                  [下游消費者]
+  1. INSERT INTO books ...                     3. Outbox Worker 短交易認領         5. Inbox Receiver 驗簽並
+  2. INSERT INTO outbox (Envelope)  ──Commit─▶ 4. 交易外送往 NATS JetStream  ───▶     持久化去重後才 ACK
+     （同生共死，絕不分裂！）                       （確認持久化 ACK 才標 sent）    6. Inbox Worker 同交易處理業務
+```
+
+---
+
+## 1. 先動手建立並編解碼一份標準事件（不需 NATS）
+
+切到範例倉庫的 **`pangolin/examples/basics`**，執行：
+
+<Tabs groupId="os">
+<TabItem value="powershell" label="Windows PowerShell">
+
+```powershell
+go run ./event-envelope
+```
+
+</TabItem>
+<TabItem value="bash" label="Linux / macOS (Bash)">
+
+```bash
+go run ./event-envelope
+```
+
+</TabItem>
+</Tabs>
+
+預期輸出：
+
+```text
+event-1 / bookstore.book_created / schema 1
+{"id":"book-1","title":"Go in Action"}
+```
+
+完整程式如下（只示範 Envelope 建立與編解碼）：
+
+<CodeBlock language="go" title="examples/basics/event-envelope/main.go">{source}</CodeBlock>
+
+---
+
+## 2. `distributed.Envelope` 每個欄位的因果意義
+
+| 欄位 | 用途與填寫規範 | 為什麼不能省略？ |
+|---|---|---|
+| `ID` | 此事件的全局穩定唯一識別 | 重送時必須**保留原 ID**，供下游 Inbox 依 `(consumer_group, event_id)` 去重。 |
+| `Type`、`SchemaVersion` | 事件語意名稱與 Payload 版本（例如 `bookstore.book_created` + `1`） | 讓系統能長期演化而**不破壞舊版消費者**；已發布的版本結構不原地修改。 |
+| `TenantID`、`ScopeKind`、`ScopeID` | 此次操作的可信資源擁有者 | 必須由驗證後的 [Scope context](../security/multi-tenancy.md) 填入（**事件欄位本身不會授予權限**，消費端執行時仍須重新授權）。 |
+| `OccurredAt` | 事件實際發生的 UTC 時間 | 協助排序、除錯與稽核對帳。 |
+| `CorrelationID`、`CausationID` | 串起整條請求鏈（Correlation）與直接觸發原因（Causation） | 跨服務非同步除錯時追蹤「這筆事件到底是哪一支請求引起的」。 |
+| `Producer`、`Payload` | 發布模組名稱與版本化 JSON 內容 | 接收端會由 Broker 可信連線／ACL 驗證生產者身分（不單憑欄位自報）。 |
+
+---
+
+## 3. 實務運作與 NATS JetStream Adapter 要點
+
+1. **Registry 嚴格驗證 Schema**：使用通用 Outbox／Inbox 時，需在 `distributed.Registry` 明示註冊每個 `distributed.Schema{Type, Version, Required, Validate}`；未註冊或格式不符的事件在寫入或接收時就會被拒絕。
+2. **Broker ACK ≠ 業務完成**：`events/nats` 透過 `Connect` 建立連線、`Provision` 建立 `FileStorage` 串流、`Send` 等待 JetStream 持久化確認。請記住：**publish ACK 只代表 Broker 已安全收下訊息，不代表下游消費者已經把業務處理完**。
+3. **兩階段消費保障**：`Subscribe`／`Next` 收到訊息後，通用 Inbox Receiver 會先驗證完整 Envelope 並落盤至 Inbox 表後才向 NATS 送出 ACK，再由獨立 Inbox Worker 在同一業務交易內完成業務與 `processed` 標記。
+4. **連線歸屬與恢復**：`stream`／`subject`／`durable consumer` 設定必須一致，且連線由單一擁有者模組於停機 Drain 後關閉；目前版本若 Broker 連線中斷，由程序重啟恢復，框架不會在背景自動重跑業務 callback。
+
+> 想親手體驗完整的 API + NATS + Worker 端到端事件流動？請執行 **[Bookstore 教學](../tutorials/bookstore.md)**（該範例會自動準備專屬 `BOOKSTORE_DEMO` 串流）。
+
+## 下一步
+
+前往 **[組裝可靠事件配送](reliable-delivery.md)**，取得可直接放進專案的完整 `setup/events.go` 組裝程式碼，深入了解 Local Event、Outbox Worker、Inbox Worker 與容量背壓設定。

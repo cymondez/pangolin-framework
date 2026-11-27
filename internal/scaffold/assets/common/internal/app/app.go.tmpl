@@ -1,0 +1,318 @@
+package app
+
+import (
+	"context"
+	"crypto/rand"
+	"database/sql"
+	"errors"
+	"io/fs"
+	"net"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"time"
+
+	pangolinapp "github.com/pangolin-framework/pangolin/application"
+	"github.com/pangolin-framework/pangolin/kernel/config"
+	"github.com/pangolin-framework/pangolin/kernel/di"
+	"github.com/pangolin-framework/pangolin/kernel/module"
+	"github.com/pangolin-framework/pangolin/kernel/runtime"
+	"github.com/pangolin-framework/pangolin/persistence/database"
+	"github.com/pangolin-framework/pangolin/persistence/idempotency"
+	"github.com/pangolin-framework/pangolin/persistence/migration"
+	"github.com/pangolin-framework/pangolin/persistence/uow"
+	"github.com/pangolin-framework/pangolin/platform/audit"
+	"github.com/pangolin-framework/pangolin/security/authn"
+	"github.com/pangolin-framework/pangolin/security/scope"
+	"github.com/pangolin-framework/pangolin/tenancy"
+	transport "github.com/pangolin-framework/pangolin/transport/http"
+	"{{MODULE}}/foundation"
+	"{{MODULE}}/internal/application"
+	"{{MODULE}}/internal/domain"
+	"{{MODULE}}/internal/infrastructure"
+	"{{MODULE}}/modules"
+)
+
+// bookToken is the composition identity of the bookstore service this app
+// owns; every framework resource it consumes comes from the foundation module
+// contracts through typed resolution, never from low-level composition here.
+var bookToken = di.NewKey[application.Books]("app.books")
+
+// rootApplication is the HTTP/drain assembly of this generated app. The
+// module owns no platform resource: pools, unit-of-work manager, scope
+// registry and event resources are owned by the foundation module, and the
+// profile module realizes profile-specific implementations under foundation
+// contracts. Ordinary user modules (generated modules.UserRoot) depend on the
+// foundation Type and inject framework services by type; only this root —
+// which the aggregate already pulls in — touches HTTP and drain wiring, so
+// business packages never import the app root.
+type rootApplication struct {
+	realtime realtimeState
+	bridge   *transport.ServerParticipant
+	serveErr chan error
+	listen   string
+}
+
+func (ra *rootApplication) ModuleMetadata() module.Metadata {
+	return module.Metadata{Name: "app", Version: "0.1.0", RequiredScopeKinds: foundation.ScopeKinds()}
+}
+
+// DependsOn composes the root closure: foundation resources and contracts
+// first, the profile contribution second, then the typed user module
+// aggregate. The loader plans shared dependency Types exactly once.
+func (ra *rootApplication) DependsOn() []module.Ref {
+	return append([]module.Ref{module.Of[foundation.Module](), module.Of[foundation.Profile](), module.Of[modules.UserRoot]()}, ra.realtime.refs()...)
+}
+
+func (ra *rootApplication) Configure(b module.RootBuilder) error {
+	return b.Provide(di.Provider{Key: bookToken, Lifetime: di.Singleton, DependsOn: []di.Token{foundation.UnitOfWork, foundation.Scopes, foundation.Effects, foundation.Idempotency}, Factory: ra.newBooks})
+}
+
+func (ra *rootApplication) newBooks(ctx context.Context, resolve di.Resolver) (any, di.Cleanup, error) {
+	units, err := module.Resolve[uow.UnitOfWorkManager](ctx, resolve)
+	if err != nil {
+		return nil, nil, err
+	}
+	scopes, err := module.Resolve[foundation.ScopeAccess](ctx, resolve)
+	if err != nil {
+		return nil, nil, err
+	}
+	effects, err := module.Resolve[infrastructure.Effects](ctx, resolve)
+	if err != nil {
+		return nil, nil, err
+	}
+	idem, err := module.Resolve[*idempotency.Store](ctx, resolve)
+	if err != nil {
+		return nil, nil, err
+	}
+	runner, err := pangolinapp.NewRunner(units, scopes, idem)
+	if err != nil {
+		return nil, nil, err
+	}
+	return application.Books{Repository: infrastructure.Repository{}, Runner: runner, Effects: effects}, nil, nil
+}
+
+func mapBookError(err error) error {
+	switch {
+	case database.IsConflict(err):
+		return transport.NewProblemError(http.StatusConflict, "CONFLICT", err)
+	case database.IsNotFound(err):
+		return transport.NewProblemError(http.StatusNotFound, "NOT_FOUND", err)
+	default:
+		return err
+	}
+}
+
+func (ra *rootApplication) Start(ctx context.Context, rt module.Runtime) error {
+	// The deployment compatibility check resolves every platform service
+	// first: an incompatible profile or schema refuses Ready and the failure
+	// path reclaims every acquired resource through the container.
+	if err := ra.checkAndResolve(ctx, rt); err != nil {
+		return err
+	}
+	manager, err := module.Resolve[uow.UnitOfWorkManager](ctx, rt.Services())
+	if err != nil {
+		return err
+	}
+	tenants, err := module.Resolve[*tenancy.Resolver](ctx, rt.Services())
+	if err != nil {
+		return err
+	}
+	validator, err := module.Resolve[*authn.Validator](ctx, rt.Services())
+	if err != nil {
+		return err
+	}
+	scopes, err := module.Resolve[foundation.ScopeAccess](ctx, rt.Services())
+	if err != nil {
+		return err
+	}
+	books, err := di.ResolveKey(ctx, rt.Services(), bookToken)
+	if err != nil {
+		return err
+	}
+	db, err := module.Resolve[foundation.DB](ctx, rt.Services())
+	if err != nil {
+		return err
+	}
+	log, _ := audit.NewSecurityLog(os.Stderr, tenancy.Identity)
+	mux := http.NewServeMux()
+	if err := ra.realtime.mount(ctx, rt, mux, ra.bridge); err != nil {
+		return err
+	}
+	mux.HandleFunc("GET /livez", func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(204) })
+	mux.HandleFunc("GET /readyz", func(w http.ResponseWriter, r *http.Request) {
+		c, cancel := context.WithTimeout(r.Context(), time.Second)
+		defer cancel()
+		if db.Pool.Ping(c) != nil {
+			w.WriteHeader(503)
+			return
+		}
+		w.WriteHeader(204)
+	})
+	endpoints, err := transport.NewEndpoints(transport.EndpointConfig{
+		Timeout:                5 * time.Second,
+		MaxBodyBytes:           1 << 20,
+		Manager:                manager,
+		AuthenticateCredential: validator.AuthenticateCredential,
+		Credentials:            transport.BearerCredentials(),
+		ResolveTenant: func(c context.Context, r *http.Request) (context.Context, error) {
+			return tenants.Resolve(c, "", r.Header.Get("X-Tenant-ID"))
+		},
+		ResolveScope: func(c context.Context, r *http.Request) (context.Context, error) {
+			_, tenant, _ := tenancy.Identity(c)
+			kind, id := r.Header.Get("X-Scope-Kind"), r.Header.Get("X-Scope-ID")
+			if kind == "" && id == "" {
+				kind, id = "tenant", tenant
+			}
+			if kind == "" || id == "" {
+				return nil, scope.ErrRequired
+			}
+			return scopes.Bind(c, scope.ScopeRef{TenantID: tenant, Kind: kind, ID: id})
+		},
+		Authorize: scopes.Authorize,
+		Rejected: func(c context.Context, _ error) {
+			_ = log.Write(c, audit.Record{Action: "request.rejected", Resource: "bookstore", Result: "denied", Trace: rand.Text()})
+		},
+	})
+	if err != nil {
+		return err
+	}
+	createBook, err := transport.CommandEndpoint(endpoints, func(c context.Context, in transport.Input[domain.Book]) (domain.Book, error) {
+		created, createErr := books.Create(c, in.Body, in.IdempotencyKey)
+		return created, mapBookError(createErr)
+	}, transport.WithPermission("books.write"), transport.WithIdempotencyHeader("Idempotency-Key", true))
+	if err != nil {
+		return err
+	}
+	getBook, err := transport.QueryEndpoint(endpoints, func(c context.Context, in transport.QueryInput) (domain.Book, error) {
+		book, getErr := books.Get(c, in.Request.PathValue("id"))
+		return book, mapBookError(getErr)
+	}, transport.WithPermission("books.read"))
+	if err != nil {
+		return err
+	}
+	mux.Handle("POST /books", createBook)
+	mux.Handle("GET /books/{id}", getBook)
+
+	optionalHandler, err := di.ResolveKey(ctx, rt.Services(), foundation.OptionalHandler)
+	if err != nil {
+		return err
+	}
+	// Unmounted is the foundation stand-in for "no profile handler"; any
+	// other value is the profile control-plane surface.
+	if _, unmounted := optionalHandler.(foundation.Unmounted); !unmounted && optionalHandler != nil {
+		mux.Handle("/", optionalHandler)
+	}
+	listen := ra.listen
+	if listen == "" {
+		listen = "127.0.0.1:18081"
+	}
+	server := &http.Server{Addr: listen, ReadHeaderTimeout: 3 * time.Second, ReadTimeout: 6 * time.Second, WriteTimeout: 6 * time.Second, IdleTimeout: 30 * time.Second, Handler: ra.bridge.Wrap(mux)}
+	ra.bridge.Attach(server)
+	if ra.serveErr != nil {
+		listener, listenErr := net.Listen("tcp", listen)
+		if listenErr != nil {
+			return listenErr
+		}
+		go func() { ra.serveErr <- server.Serve(listener) }()
+	}
+	return nil
+}
+
+// checkAndResolve runs the deployment migration/profile compatibility check
+// before serving and resolves the platform composition through the module
+// resolver, so every foundation factory has succeeded when the check reads
+// the database.
+func (ra *rootApplication) checkAndResolve(ctx context.Context, rt module.Runtime) error {
+	for _, token := range []di.Token{foundation.UnitOfWork, foundation.Publisher, foundation.Idempotency, foundation.Effects, foundation.Scopes, foundation.Tenants, foundation.Validator, foundation.ApplicationRegistry(), foundation.OptionalHandler} {
+		if _, err := rt.Services().Resolve(ctx, token); err != nil {
+			return err
+		}
+	}
+	check, err := openMigrationSQL(os.Getenv("PANGOLIN_DSN"))
+	if err != nil {
+		return err
+	}
+	defer check.Close()
+	version, err := maxUserMigrationPrefix()
+	if err != nil {
+		return err
+	}
+	runner, err := migration.NewPostgres(check, migration.Filesystem("."), version, version)
+	if err != nil {
+		return err
+	}
+	if err = runner.CheckCompatibility(ctx); err != nil {
+		return err
+	}
+	var installedProfile string
+	if err = check.QueryRowContext(ctx, "SELECT name FROM bookstore.profile").Scan(&installedProfile); err != nil {
+		return errors.Join(scope.ErrMigrationRequired, err)
+	}
+	if installedProfile != foundation.ProfileName {
+		return scope.ErrMigrationRequired
+	}
+	return nil
+}
+
+func openMigrationSQL(dsn string) (*sql.DB, error) {
+	if dsn == "" {
+		return nil, errors.New("database DSN required in environment")
+	}
+	return sql.Open("pgx", dsn)
+}
+
+// maxUserMigrationPrefix is the highest user migration prefix for the
+// compatibility check; deployment ordering keeps module migration files
+// globally unique.
+func maxUserMigrationPrefix() (int64, error) {
+	var maximum int64 = 5000000
+	err := filepath.WalkDir("modules", func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() || filepath.Ext(path) != ".sql" {
+			return nil
+		}
+		prefix, _, ok := strings.Cut(d.Name(), "_")
+		n, parseErr := strconv.ParseInt(prefix, 10, 64)
+		if !ok || parseErr != nil || n <= 0 {
+			return errors.New("invalid module migration filename")
+		}
+		if n > maximum {
+			maximum = n
+		}
+		return nil
+	})
+	return maximum, err
+}
+
+func (ra *rootApplication) Stop(context.Context, module.Runtime) error { return nil }
+
+// Run hands the root module to StartRoot only; every pool, broker and
+// profile resource is created later by the foundation factories, and the
+// loader rejects invalid graphs before any of them runs.
+func Run(ctx context.Context) error {
+	serveErr := make(chan error, 1)
+	root := &rootApplication{serveErr: serveErr, bridge: transport.NewServerParticipant(runtime.NewWorkGroup()), listen: os.Getenv("PANGOLIN_LISTEN")}
+	defaults := []config.Source{{Name: "defaults", Values: map[string]string{"uow.default_timeout": "5s", "uow.cleanup_timeout": "2s", "uow.hook_timeout": "1s", "uow.max_requires_new_depth": "4"}}}
+	host, err := runtime.New(runtime.Options{DrainTimeout: 15 * time.Second, CleanupTimeout: 5 * time.Second}, defaults, root.bridge)
+	if err != nil {
+		return err
+	}
+	if err = runtime.StartRoot(ctx, host, append([]any{root}, root.realtime.roots()...)...); err != nil {
+		return err
+	}
+	defer host.Stop(context.Background())
+	select {
+	case <-ctx.Done():
+		return host.Stop(context.Background())
+	case err = <-serveErr:
+		if errors.Is(err, http.ErrServerClosed) {
+			return nil
+		}
+		return err
+	}
+}

@@ -1,0 +1,56 @@
+package application
+
+import (
+	"context"
+	"encoding/json"
+
+	pangolinapp "github.com/pangolin-framework/pangolin/application"
+	"{{MODULE}}/internal/domain"
+)
+
+type Repository interface {
+	Insert(context.Context, domain.Book) error
+	Get(context.Context, string) (domain.Book, error)
+}
+
+type Effects interface {
+	Created(context.Context, domain.Book) error
+}
+
+type Books struct {
+	Repository Repository
+	Runner     *pangolinapp.Runner
+	Effects    Effects
+}
+
+func (s Books) Create(ctx context.Context, b domain.Book, key string) (domain.Book, error) {
+	if err := b.Validate(); err != nil {
+		return domain.Book{}, err
+	}
+	fingerprint, err := json.Marshal(b)
+	if err != nil {
+		return domain.Book{}, err
+	}
+	return pangolinapp.RunCommand(ctx, s.Runner, pangolinapp.CommandSpec{
+		Permission:     "books.write",
+		IdempotencyOp:  "books.write",
+		IdempotencyKey: key,
+		Fingerprint:    fingerprint,
+	}, func(c context.Context) (domain.Book, error) {
+		if err := s.Repository.Insert(c, b); err != nil {
+			return domain.Book{}, err
+		}
+		if err := s.Effects.Created(c, b); err != nil {
+			return domain.Book{}, err
+		}
+		return b, nil
+	})
+}
+
+func (s Books) Get(ctx context.Context, id string) (domain.Book, error) {
+	return pangolinapp.RunQuery(ctx, s.Runner, pangolinapp.QuerySpec{
+		Permission: "books.read",
+	}, func(c context.Context) (domain.Book, error) {
+		return s.Repository.Get(c, id)
+	})
+}

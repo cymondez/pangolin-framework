@@ -1,0 +1,132 @@
+---
+title: 應用啟動與停止（生命週期與優雅停機）
+description: 透過真實範例理解多模組依相依順序啟動、啟動前檢查，以及收到停止訊號時如何先 Quiesce、Drain 再反序停止所有資源。
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import source from '../_snippets/root-lifecycle.go';
+
+> **你在架構中的位置**：`啟動前驗證（Seal + StartupChecks）→` **`[ 依序 Start → Ready → Quiesce/Drain → 反序 Stop → Cleanup ]`**
+>
+> **前置建議**：先閱讀[功能模組](modules.md)與[依賴注入](dependency-injection.mdx)。
+
+## 為什麼需要受控的啟停順序與 Drain？
+
+許多 Go 線上服務的資料損毀或 502 錯誤，往往不是發生在正常運行時，而是發生在**部署滾動更新（Rolling Update）重啟的那幾秒鐘**：
+
+- **啟動時序錯亂**：HTTP Server 已經開始對外收請求，但資料庫 Schema 相容性還沒檢查完，或某個背景快取尚未暖機，第一批流量全部噴 500。
+- **停機時野蠻斷線**：Pod 收到 `SIGTERM` 後主程式直接退出，或把 DB 連線池先關掉了，但此時還有 20 個進行中的 HTTP 寫入與 Outbox Worker 正寫到一半，結果交易中斷、連線報錯。
+
+panGOlin 把整個應用的啟動與停機標準化為一條不可顛倒的狀態機：
+
+```text
+[啟動流程]
+  1. 規劃模組 DAG（拒絕循環／重名／缺相依）
+  2. 全體 PreConfigure → 全體 Configure → 全體 PostConfigure
+  3. 合併驗證設定 + 封存 DI 容器（Seal）
+  4. 執行 StartupChecks（例如檢查 DB Migration 版本相容性、Scope Inventory）
+  5. 依相依順序（底層資源先）逐模組 Start
+  6. 全部成功 ──▶ Ready（此時才對外宣告就緒）
+
+[優雅停機流程（當 ctx 取消 / 收到 SIGTERM）]
+  1. Quiesce：通知所有 Participant 停止接收新請求、停止認領新 Job / Outbox
+  2. Drain：  在 DrainTimeout 期限內，等待已進入的 HTTP 請求與進行中工作自然完成
+  3. Cancel： 若逾時仍有殘留工作，發出有界取消訊號
+  4. Stop：   依相依「反序」（業務模組先，DB／Broker 最後）呼叫各模組 Stop
+  5. Cleanup：在 CleanupTimeout 內反序執行 DI Cleanup 關閉所有資源
+```
+
+---
+
+## 1. 執行多模組啟停範例
+
+從框架原始碼的 `examples/basics` 執行：
+
+<Tabs groupId="os">
+<TabItem value="powershell" label="Windows PowerShell">
+
+```powershell
+go run ./root-lifecycle
+```
+
+</TabItem>
+<TabItem value="bash" label="Linux / macOS (Bash)">
+
+```bash
+go run ./root-lifecycle
+```
+
+</TabItem>
+</Tabs>
+
+預期輸出（清楚看到「底層 `storage` 先起、最後停；上層 `books` 後起、先停」）：
+
+```text
+start storage
+start books
+stop books
+stop storage
+```
+
+完整程式如下（`storage` 在此僅作為示範模組名稱，不需資料庫）：
+
+<CodeBlock language="go" title="examples/basics/root-lifecycle/main.go">{source}</CodeBlock>
+
+### 逐段導讀
+
+1. **只需把根模組交給 `app.Run`**：程式第 58 行只傳了 `&booksModule{}`，並沒有手動把 `storageModule` 放進陣列。Loader 沿著 `booksModule.DependsOn()` 自動發現 `storageModule` 並排在前面。
+2. **啟動失敗自動回收**：假設 `storage.Start` 成功但 `books.Start` 回傳錯誤，Runtime 不會讓 `storage` 孤零零掛著，而是會立即反序呼叫 `storage.Stop` 與 DI Cleanup 完整回收資源後才回傳啟動錯誤。
+3. **正式長駐服務的 `ctx` 寫法**：範例用 `context.WithTimeout(..., time.Second)` 方便命令列示範結束；正式 API 或 Worker 應改用標準函式庫訊號監聽：
+
+```go title="正式長駐服務監聽 Ctrl+C 與 SIGTERM ✅"
+ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+defer stop()
+
+if err := app.Run(ctx, rootModule,
+	app.Sources(envSource),
+	app.StartupChecks(checkSchemaCompatibility),
+	app.Participants(httpParticipant),
+); err != nil {
+	log.Fatal(err)
+}
+```
+
+---
+
+## 2. 啟動前防線：`StartupChecks`
+
+資料庫應用不應等到第一個請求打進來才發現「DB 忘了跑 Migration」或「缺少組織 Scope Provider」。
+
+透過 `app.StartupChecks(...)`（或 `runtime.Options.StartupChecks`）註冊的檢查函式，會在 **DI 容器 Seal 之後、任何 `Module.Start` 執行之前** 統一執行：
+- 只要任一檢查回傳錯誤，應用就不會進入 `Start` 與 `Ready` 狀態。
+- 常見用途包括：驗證資料庫 Schema 版本相容性（`runner.CheckCompatibility`，見[部署資料庫遷移](../data/migrations.md)）與檢查完整 Scope Inventory（見[資源 Scope](../security/resource-scopes.md)）。
+
+---
+
+## 3. 服務還在處理請求時怎麼安全停機？（Participant 與 WorkGroup）
+
+要做到真正的零中斷停機，你的 HTTP 伺服器與背景 Worker 必須接入 Runtime 的 **Quiesce / Drain** 流程：
+
+1. **追蹤進行中的工作**：使用 `wg := runtime.NewWorkGroup()`。每當一個請求或任務進來時呼叫 `done, ok := wg.Enter()`；如果 `ok == false` 表示服務正在停機（Quiesce），直接拒絕新工作（例如回 `503 Service Unavailable`）。**務必等到交易 Commit 且連線歸還後**，才呼叫 `done()`。
+2. **註冊 Participant**：透過 `app.Participants(...)` 把 HTTP／Worker 接進停機排程。收到停機訊號時，Runtime 會先要求所有 Participant 停止接新案（Quiesce），接著在 `DrainTimeout` 內等 `WorkGroup` 歸零，確認沒有半筆資料正在寫入後，才依反序呼叫模組 `Stop` 與關閉資料庫連線池。
+3. **HTTP Server 的 Shutdown**：HTTP listener 本身的 `http.Server.Shutdown(ctx)` 仍由你的應用在 Participant 或專屬模組中接入，確保不再接受新 TCP 連線並釋放 Port。
+
+> **需要自訂 `DrainTimeout`／`CleanupTimeout` 預算或查詢 `host.Ready()`？**
+> 可以先用 `runtime.New(runtime.Options{DrainTimeout: ..., CleanupTimeout: ...}, sources)` 建立自訂主機，再呼叫 `runtime.StartRoot(ctx, host, rootModule)` 啟動同一個根模組；只有全部模組完成啟動後 `host.Ready()` 才會為 `true`，可直接接到 `/readyz` 探針。CLI 生成的專案就是採用這種組裝方式，詳見[用 CLI 建立自己的 Bookstore](../tutorials/generated-bookstore.md) 與 [Bookstore 實戰](../tutorials/bookstore.md)。
+
+---
+
+## 常見反例提醒
+
+- **❌ 反例：在 `Module.Stop` 裡又手動關閉已註冊 `Cleanup` 的連線池**
+  每個資源只能有一個關閉責任者。連線池若由建構子回傳 `Cleanup` 關閉，就交給容器在停機最後階段統一關閉；若由專屬模組的 `Stop` 關閉，就不要重複註冊 `Cleanup`。
+- **❌ 反例：停機清理沿用已被取消的主 `ctx`**
+  當主 `ctx` 因收到 `SIGTERM` 取消時，若直接拿它去執行資料庫收尾會立刻 `context.Canceled`。panGOlin 內部在 `Stop` 與 `Cleanup` 皆使用獨立且有界的清理 context，你自己寫的清理邏輯也應尊重傳入的 cleanup `ctx` 期限。
+
+---
+
+## 下一步
+
+你已經掌握了 panGOlin 的四大基石（模組、DI、組態、生命週期）！接下來進入框架最核心的資料層：閱讀 **[使用交易與工作單元（UOW）](../data/unit-of-work.md)**，學會如何用 `application.CommandResult`／`Within` 安全管理每一筆資料庫交易。

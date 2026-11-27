@@ -1,0 +1,166 @@
+name: Release v0.1.0+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing SemVer tag on main to release (e.g. v0.1.0)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    env:
+      TAG_NAME: ${{ inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+          fetch-depth: 0
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
+        with:
+          go-version: '1.27.4'
+          cache: false
+
+      - name: Verify tag is on main, matches VERSION, and passes static release contracts
+        run: |
+          git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main
+          git merge-base --is-ancestor HEAD origin/main || {
+            echo "Release tag ${TAG_NAME} must point to a commit on main." >&2
+            exit 1
+          }
+          if ! printf '%s' "${TAG_NAME}" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$'; then
+            echo "Invalid SemVer tag: ${TAG_NAME}" >&2
+            exit 1
+          fi
+          BASE_TAG="${TAG_NAME%%-*}"
+          VERSION="$(tr -d ' \r\n' < VERSION)"
+          if [ "${BASE_TAG}" != "v${VERSION}" ]; then
+            echo "Tag ${TAG_NAME} (base ${BASE_TAG}) does not match VERSION (v${VERSION})" >&2
+            exit 1
+          fi
+          mkdir -p .cache/go-mod .cache/go-tmp
+          GOMODCACHE="${GITHUB_WORKSPACE}/.cache/go-mod" GOTMPDIR="${GITHUB_WORKSPACE}/.cache/go-tmp" go mod download all
+          GOMODCACHE="${GITHUB_WORKSPACE}/.cache/go-mod" GOTMPDIR="${GITHUB_WORKSPACE}/.cache/go-tmp" go run ./tools/check
+          python3 scripts/contracts.py check
+          python3 scripts/release_manifest.py --check
+          python3 scripts/template_bundle.py --check
+
+      - name: Run unit tests
+        env:
+          GOMODCACHE: ${{ github.workspace }}/.cache/go-mod
+          GOTMPDIR: ${{ github.workspace }}/.cache/go-tmp
+        run: |
+          go vet ./...
+          go test ./kernel/... ./application/... ./transport/... ./persistence/... ./security/... ./tenancy/... ./events/... ./platform/... ./observability/... ./modules/... ./cmd/... ./internal/scaffold/... ./tests/rootmodules/...
+
+      - name: Build pangolin CLI release archives
+        env:
+          GOMODCACHE: ${{ github.workspace }}/.cache/go-mod
+          GOTMPDIR: ${{ github.workspace }}/.cache/go-tmp
+        run: |
+          mkdir -p dist
+          build_target() {
+            GOOS="$1"
+            GOARCH="$2"
+            EXT="$3"
+            OUT="pangolin_${TAG_NAME}_${GOOS}_${GOARCH}"
+            STAGE="$(mktemp -d)"
+            CGO_ENABLED=0 GOOS="${GOOS}" GOARCH="${GOARCH}" \
+              go build -trimpath -o "${STAGE}/pangolin${EXT}" ./cmd/pangolin
+            cp LICENSE NOTICE "${STAGE}/"
+            if [ "${GOOS}" = "windows" ]; then
+              (cd "${STAGE}" && zip -q -r "${GITHUB_WORKSPACE}/dist/${OUT}.zip" .)
+            else
+              tar -C "${STAGE}" -czf "dist/${OUT}.tar.gz" .
+            fi
+            rm -rf "${STAGE}"
+          }
+          build_target linux amd64 ""
+          build_target linux arm64 ""
+          build_target darwin amd64 ""
+          build_target darwin arm64 ""
+          build_target windows amd64 ".exe"
+          (cd dist && sha256sum * > SHA256SUMS.txt)
+          cat dist/SHA256SUMS.txt
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${TAG_NAME#v}"
+          BASE_VERSION="${VERSION%%-*}"
+          NOTES_FILE="docs/release-notes/${VERSION}.md"
+          if [ ! -f "${NOTES_FILE}" ]; then
+            NOTES_FILE="docs/release-notes/${BASE_VERSION}.md"
+          fi
+          ARGS=("${TAG_NAME}" dist/* --title "panGOlin Framework ${TAG_NAME}" --verify-tag)
+          if [ "${TAG_NAME}" != "${TAG_NAME%%-*}" ]; then
+            ARGS+=(--prerelease)
+          fi
+          if [ -f "${NOTES_FILE}" ]; then
+            ARGS+=(--notes-file "${NOTES_FILE}")
+          else
+            ARGS+=(--generate-notes)
+          fi
+          if gh release view "${TAG_NAME}" >/dev/null 2>&1; then
+            gh release delete "${TAG_NAME}" --yes
+          fi
+          gh release create "${ARGS[@]}"
+
+  build-pages:
+    needs: [release]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: docs/site/package-lock.json
+      - id: pages
+        uses: actions/configure-pages@v5
+      - name: Test and build Docusaurus for GitHub Pages
+        working-directory: docs/site
+        env:
+          PAGES_ORIGIN: ${{ steps.pages.outputs.origin }}
+          PAGES_BASE_PATH: ${{ steps.pages.outputs.base_path }}
+        run: |
+          npm ci --no-audit --no-fund
+          npm test
+          BASE_URL="${PAGES_BASE_PATH%/}/"
+          DOCS_URL="${PAGES_ORIGIN:-https://pangolin-framework.github.io}" \
+          DOCS_BASE_URL="${BASE_URL}" \
+          npm run build
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/site/build
+
+  deploy-pages:
+    needs: [build-pages]
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

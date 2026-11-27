@@ -1,0 +1,63 @@
+package infrastructure
+
+import (
+	"context"
+	"crypto/sha256"
+	"encoding/json"
+	"fmt"
+
+	"github.com/pangolin-framework/pangolin/events/outbox"
+	"github.com/pangolin-framework/pangolin/persistence/postgres"
+	"github.com/pangolin-framework/pangolin/persistence/uow"
+	"github.com/pangolin-framework/pangolin/platform/audit"
+	"{{MODULE}}/internal/domain"
+)
+
+type Repository struct{}
+
+func (Repository) Insert(ctx context.Context, b domain.Book) error {
+	e, owner, err := postgres.CurrentWithScope(ctx, true)
+	if err != nil {
+		return err
+	}
+	_, err = e.Exec(ctx, insertSQL, owner.TenantID, owner.Kind, owner.ID, b.ID, b.Title)
+	return postgres.MapError(err)
+}
+
+func (Repository) Get(ctx context.Context, id string) (domain.Book, error) {
+	e, owner, err := postgres.CurrentWithScope(ctx, false)
+	if err != nil {
+		return domain.Book{}, err
+	}
+	var b domain.Book
+	err = e.QueryRow(ctx, getSQL, owner.TenantID, owner.Kind, owner.ID, id).Scan(&b.ID, &b.Title)
+	return b, postgres.MapError(err)
+}
+
+type Effects struct {
+	Publisher *outbox.Publisher
+	Manager   uow.UnitOfWorkManager
+}
+
+func (e Effects) Operation(ctx context.Context) (string, error) {
+	s, ok := uow.Current(ctx)
+	if !ok {
+		return "", uow.ErrRequired
+	}
+	return s.ID(), nil
+}
+
+func (e Effects) Event(ctx context.Context, eventType string, payload json.RawMessage) error {
+	return e.Publisher.ForProducer("bookstore").PublishJSON(ctx, eventType, 1, payload)
+}
+
+func (e Effects) Created(ctx context.Context, b domain.Book) error {
+	operation, err := e.Operation(ctx)
+	if err != nil {
+		return err
+	}
+	if err := (audit.Recorder{}).Record(ctx, audit.Record{Action: "books.created", Resource: fmt.Sprintf("book:%x", sha256.Sum256([]byte(b.ID))), Result: "success", Trace: operation}); err != nil {
+		return err
+	}
+	return e.Publisher.ForProducer("bookstore").PublishJSON(ctx, "bookstore.book.created", 1, b)
+}

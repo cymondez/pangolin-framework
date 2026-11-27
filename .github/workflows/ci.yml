@@ -1,0 +1,92 @@
+name: Cumulative verification gates
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cumulative-gates:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
+        with:
+          go-version: '1.27.4'
+          cache: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Inventory the disposable runner
+        run: |
+          docker ps -a
+          docker compose ls -a
+          docker volume ls
+          docker stats --no-stream
+          ss -lnt
+          docker info
+      - name: Prepare pinned tools and identity fixture
+        env:
+          GOBIN: ${{ github.workspace }}/.cache/bin
+          GOMODCACHE: ${{ github.workspace }}/.cache/go-mod
+          GOTMPDIR: ${{ github.workspace }}/.cache/go-tmp
+        run: |
+          mkdir -p artifacts .cache/bin .cache/go-mod .cache/go-tmp
+          go mod download all
+          go install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.31.1
+          CGO_ENABLED=0 go build -o artifacts/test-idp ./internal/testkit/cmd/idp
+      - name: Start this job's isolated services
+        env:
+          PANGOLIN_SOURCE_COMMIT: ${{ github.sha }}
+        run: |
+          docker compose -p pangolin-m6-ci -f deploy/compose/m1.yaml -f deploy/compose/m5-databases.yaml config --quiet
+          docker compose -p pangolin-m6-ci -f deploy/compose/m1.yaml -f deploy/compose/m5-databases.yaml up -d --build --wait --wait-timeout 120
+      - name: Cumulative cases, real integration/E2E, coverage, race, drills and release manifest
+        env:
+          PANGOLIN_PROJECT: pangolin-m6-ci
+          PANGOLIN_SCOPE: realtime
+          PANGOLIN_M5_COMPOSE: 1
+          PANGOLIN_M7_DEMO_KEY: local-ci-realtime-demo-key
+          PANGOLIN_M1_ADMIN_DSN: postgres://pangolin_bootstrap:local-bootstrap-only@127.0.0.1:15542/pangolin_m0?sslmode=disable
+          PANGOLIN_M1_APP_DSN: postgres://pangolin_app:local-app-only@127.0.0.1:15542/pangolin_m0?sslmode=disable
+          PANGOLIN_M1_WORKER_DSN: postgres://pangolin_worker:local-worker-only@127.0.0.1:15542/pangolin_m0?sslmode=disable
+          PANGOLIN_M1_NATS_URL: nats://127.0.0.1:14322
+          PANGOLIN_M1_ISSUER: http://127.0.0.1:18180
+        run: sh scripts/check.sh
+      - name: Capture this project's logs
+        if: always()
+        run: docker compose -p pangolin-m6-ci -f deploy/compose/m1.yaml -f deploy/compose/m5-databases.yaml logs --no-color > artifacts/compose.log
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: release-linux-amd64
+          path: artifacts/
+          if-no-files-found: error
+      - name: Stop only this job's disposable environment
+        if: always()
+        run: docker compose -p pangolin-m6-ci -f deploy/compose/m1.yaml -f deploy/compose/m5-databases.yaml down --volumes --rmi local
+  windows-portability:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
+        with:
+          go-version: '1.27.4'
+          cache: false
+      - name: Native Windows build, vet and unit cases
+        shell: pwsh
+        run: |
+          go build ./...
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          go vet ./...
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          $liveSkip = '^(TestDurableDeliveryAcknowledge|TestLiveFanOutAckRejectAndClose|TestLiveAckWaitRedeliverySameConsumer|TestReceiverFanOutLifecycle|TestReceiverDrainDeadline|TestReceiverNoClientAckAndRedelivery|TestRealtimePublish|TestCleanupStreamLive)'
+          go test -json -skip $liveSkip ./... | Set-Content -Encoding utf8 windows-tests.json
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          python -c "import sys; sys.path.insert(0,'scripts'); import test_runner; test_runner.validate_tests(open('windows-tests.json',encoding='utf-8-sig').read())"
+      # Full Windows integration/E2E/coverage is collected on a Windows + Docker
+      # runner with scripts/verify.py verify and is mandatory for the cross-platform gate.

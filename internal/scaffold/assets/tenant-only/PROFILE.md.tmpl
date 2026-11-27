@@ -1,0 +1,5 @@
+# Tenant-only
+
+This default build imports no organization implementation. It installs no organization schema or control-plane routes. Books belong exactly to tenant/TenantID. Unknown org hints are rejected without fallback. `alice` is an explicitly seeded demo member of tenant-a and tenant-b; matching book IDs remain isolated.
+
+The neutral Scope Catalog, required Audit, Outbox and idempotency migrations are included. Enabling organization on an existing project requires the framework's forward migration and provider/lifecycle checks; changing pangolin.json alone is unsupported. Generate a separate organization-enabled project to learn the complete assembly.

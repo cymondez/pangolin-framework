@@ -1,0 +1,284 @@
+// Package foundation is the platform module of this generated application:
+// it owns every database and event resource, publishes the public framework
+// contracts ordinary modules inject exactly by type, and hands every cleanup
+// to the DI container, which releases them once after the root graph
+// validated and every factory succeeded. User modules depend on Module by
+// Type; the profile module swaps profile implementations only under
+// contracts owned by this module, so the contract owner never changes.
+package foundation
+
+import (
+	"context"
+	"errors"
+	"net/http"
+	"os"
+	"time"
+
+	"github.com/pangolin-framework/pangolin/events/distributed"
+	"github.com/pangolin-framework/pangolin/events/outbox"
+	eventpg "github.com/pangolin-framework/pangolin/events/postgres"
+	"github.com/pangolin-framework/pangolin/kernel/di"
+	"github.com/pangolin-framework/pangolin/kernel/module"
+	"github.com/pangolin-framework/pangolin/persistence/idempotency"
+	"github.com/pangolin-framework/pangolin/persistence/postgres"
+	"github.com/pangolin-framework/pangolin/persistence/uow"
+	"github.com/pangolin-framework/pangolin/security/authn"
+	"github.com/pangolin-framework/pangolin/security/identity"
+	"github.com/pangolin-framework/pangolin/security/scope"
+	"github.com/pangolin-framework/pangolin/tenancy"
+	tenantpg "github.com/pangolin-framework/pangolin/tenancy/postgres"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"{{MODULE}}/internal/infrastructure"
+)
+
+// Module acquires every platform resource. Its Type is the single direct
+// dependency of the profile composition and of user modules that inject
+// framework services; nothing here can fail or acquire a resource before the
+// whole root graph validated, because factories only run during seal.
+type Module struct{}
+
+func (m *Module) ModuleMetadata() module.Metadata {
+	return module.Metadata{Name: "foundation", Version: "0.1.0"}
+}
+
+// Public framework contracts. Ordinary modules inject them exactly by type
+// in their constructors; pools are only reachable through the typed handles
+// below and stay platform-internal to profile composition, not to business
+// modules, which read and write exclusively through the unit-of-work
+// contract.
+var (
+	// UnitOfWork is the transaction contract: operations open, complete and
+	// scope every database access.
+	UnitOfWork = module.Contract[uow.UnitOfWorkManager]()
+	// Scopes binds and authorizes the tenant/owner context of an operation.
+	Scopes = module.Contract[ScopeAccess]()
+	// Effects publishes outbound events under the active operation.
+	Effects = module.Service[infrastructure.Effects]()
+	// Publisher is the reliable outbox publisher.
+	Publisher = module.Service[*outbox.Publisher]()
+	// Idempotency stores command idempotency keys next to the results.
+	Idempotency = module.Service[*idempotency.Store]()
+	// Tenants resolves tenant principals.
+	Tenants = module.Service[*tenancy.Resolver]()
+	// Validator authenticates bearer credentials.
+	Validator = module.Service[*authn.Validator]()
+)
+
+// DB is the typed handle of the application database pool.
+type DB struct{ Pool *pgxpool.Pool }
+
+// AuthorityDB is the typed handle of the security/event database pool. Both
+// handles exist because two pools share one Go type; typed injection must
+// name a specific database. Direct SQL through them is platform composition;
+// ordinary modules read and write exclusively through UnitOfWork.
+type AuthorityDB struct{ Pool *pgxpool.Pool }
+
+var (
+	ApplicationDatabase = module.Service[DB]()
+	AuthorityDatabase   = module.Service[AuthorityDB]()
+)
+
+// OptionalHandler carries the optional profile control-plane surface; the
+// tenant-only profile keeps the Unmounted stand-in, the organization-enabled
+// profile replaces it under this same exported identity.
+var OptionalHandler = di.NewKey[http.Handler]("app.optional-handler")
+
+// Unmounted is the stand-in value proving no profile handler is mounted: the
+// DI container rejects nil service values, so the HTTP assembly compares the
+// resolved control-plane handler against this concrete type instead.
+type Unmounted struct{}
+
+func (Unmounted) ServeHTTP(http.ResponseWriter, *http.Request) {}
+
+// ScopeAccess is the scope capability user modules inject: binding,
+// authorization and inspection of the current operation context. The
+// framework registry realizes it; profiles may replace the implementation
+// through this contract but never change its owner.
+type ScopeAccess interface {
+	Bind(context.Context, scope.ScopeRef) (context.Context, error)
+	Authorize(context.Context, string) error
+	Current(context.Context) (scope.ScopeBinding, bool)
+	Admit(context.Context, scope.ScopeBinding) (scope.ScopeBinding, error)
+}
+
+// ApplicationRegistry is the canonical concrete identity of the realized
+// scope registry: user modules inject it exactly by type, and the contract
+// interface and this service keep pointing at the same instance.
+func ApplicationRegistry() di.Token { return module.Service[*scope.Registry]() }
+
+// Profile is the profile composition module: its Type is declared by the app
+// root, and Configure runs the per-profile swap inside the graph. Profile
+// implementations replace contributions only under contracts owned by
+// Module, so replacing implementations re-points the dependency without
+// changing the contract owner; the per-profile file defines composeProfile.
+type Profile struct{}
+
+func (Profile) ModuleMetadata() module.Metadata {
+	return module.Metadata{Name: "foundation-profile", Version: "0.1.0"}
+}
+
+func (Profile) DependsOn() []module.Ref { return []module.Ref{module.Of[Module]()} }
+
+func (Profile) Configure(b module.RootBuilder) error {
+	// The startup scope-kind check resolves this stable framework token from
+	// the raw container; it always serves the realized registry instance.
+	// The alias provider lives on the profile module: a foundation-owned
+	// *scope.Registry entry would be counted as a second owner-local
+	// implementation of the Scopes contract at seal.
+	if err := b.Provide(di.Provider{Key: scope.RegistryKey, Lifetime: di.Singleton, DependsOn: []di.Token{ApplicationRegistry()}, Factory: func(ctx context.Context, resolve di.Resolver) (any, di.Cleanup, error) {
+		registry, err := module.Resolve[*scope.Registry](ctx, resolve)
+		if err != nil {
+			return nil, nil, err
+		}
+		return registry, nil, nil
+	}}); err != nil {
+		return err
+	}
+	return composeProfile(b)
+}
+
+// WorkUnits adapts the composed unit-of-work manager to the public contract.
+// The manager concrete type is not exported by persistence/uow, so the
+// typed constructor contribution requires this contributor value; users still
+// inject the uow.UnitOfWorkManager contract parameter, not this type.
+type WorkUnits struct{ uow.UnitOfWorkManager }
+
+func (m *Module) Configure(b module.RootBuilder) error {
+	if err := module.Register(b.Services()).
+		Singleton(newApplicationDatabase).
+		Singleton(newAuthorityDatabase).
+		Singleton(newTenants).
+		Singleton(newValidator).
+		Singleton(newEventPublisher).
+		Singleton(newWorkUnits, module.As(UnitOfWork)).
+		Singleton(newIdempotency).
+		Singleton(newEffects).
+		Singleton(newScopes, module.As(Scopes)).
+		Err(); err != nil {
+		return err
+	}
+	// The optional control-plane surface starts as the Unmounted stand-in;
+	// profiles replace this provider under the same exported identity.
+	if err := b.Provide(di.Provider{Key: OptionalHandler, Lifetime: di.Singleton, Factory: func(context.Context, di.Resolver) (any, di.Cleanup, error) {
+		return Unmounted{}, nil, nil
+	}}); err != nil {
+		return err
+	}
+	return module.Register(b.Services()).
+		Export(ApplicationDatabase, AuthorityDatabase, Tenants, Validator, Publisher, UnitOfWork, Idempotency, Effects, Scopes, ApplicationRegistry(), OptionalHandler).
+		Err()
+}
+
+func envRequired(key string) (string, error) {
+	if value := os.Getenv(key); value != "" {
+		return value, nil
+	}
+	return "", errors.New(key + " required in environment")
+}
+
+func newApplicationDatabase(ctx context.Context) (DB, func(context.Context) error, error) {
+	dsn, err := envRequired("PANGOLIN_DSN")
+	if err != nil {
+		return DB{}, nil, err
+	}
+	pool, poolErr := pgxpool.New(ctx, dsn)
+	if poolErr != nil {
+		return DB{}, nil, errors.New("invalid application database")
+	}
+	return DB{Pool: pool}, func(context.Context) error { pool.Close(); return nil }, nil
+}
+
+func newAuthorityDatabase(ctx context.Context) (AuthorityDB, func(context.Context) error, error) {
+	dsn, err := envRequired("PANGOLIN_AUTHORITY_DSN")
+	if err != nil {
+		return AuthorityDB{}, nil, err
+	}
+	pool, poolErr := pgxpool.New(ctx, dsn)
+	if poolErr != nil {
+		return AuthorityDB{}, nil, errors.New("invalid authority database")
+	}
+	return AuthorityDB{Pool: pool}, func(context.Context) error { pool.Close(); return nil }, nil
+}
+
+func newTenants(db AuthorityDB) (*tenancy.Resolver, error) {
+	return tenancy.NewResolver(identity.Identity, tenantpg.Authority{Pool: db.Pool})
+}
+
+func newValidator() *authn.Validator {
+	return authn.NewValidator(os.Getenv("PANGOLIN_ISSUER"), "pangolin-bookstore", os.Getenv("PANGOLIN_JWKS_URL"), &http.Client{Timeout: 2 * time.Second})
+}
+
+// newEventPublisher owns the bounded event store and the schema registry:
+// both are event resources, so the publisher is their single composition
+// point. The schema set is the app baseline plus the profile additions.
+func newEventPublisher(db AuthorityDB) (*outbox.Publisher, error) {
+	eventStore, err := eventpg.NewBoundedStore(db.Pool, outbox.Policy{Lease: 30 * time.Second, SendTimeout: 5 * time.Second, RetryInitial: 250 * time.Millisecond, RetryMax: 30 * time.Second, MaxAttempts: 8}, eventpg.Capacity{Outbox: 100000, Inbox: 100000})
+	if err != nil {
+		return nil, err
+	}
+	serializer, err := distributed.NewRegistry(append(profileSchemas(), optionalEventSchemas()...)...)
+	if err != nil {
+		return nil, err
+	}
+	return outbox.NewPublisher(serializer, eventStore)
+}
+
+// newWorkUnits composes the unit-of-work manager over the APPLICATION
+// database handle: business tables are granted to the application role, so
+// business UOWs read and write through DB; the authority pool stays limited
+// to tenant/event/scope metadata. Keep the handle typed (DB, not AuthorityDB)
+// so a swap cannot silently route business SQL through the worker role.
+func newWorkUnits(db DB, publisher *outbox.Publisher) (WorkUnits, error) {
+	manager, err := uow.NewManager(&eventpg.Resource{Base: &postgres.Resource{Pool: db.Pool}, Publisher: publisher}, uow.DefaultOptions{DefaultTimeout: 5 * time.Second, CleanupTimeout: 2 * time.Second, HookTimeout: time.Second, MaxRequiresNewDepth: 4})
+	if err != nil {
+		return WorkUnits{}, err
+	}
+	return WorkUnits{UnitOfWorkManager: manager}, nil
+}
+
+// newIdempotencyStore builds the command idempotency store with the shared
+// bounded configuration; the injected callback authorizes every pending and
+// replayed operation and fails closed.
+func newIdempotencyStore(authorize func(context.Context, string) error) (*idempotency.Store, error) {
+	copyBytes := func(b []byte) ([]byte, error) { return append([]byte(nil), b...), nil }
+	return idempotency.New(idempotency.Config{MaxKeyBytes: 128, MaxBodyBytes: 1 << 20, RetryWindow: 24 * time.Hour, Retention: 168 * time.Hour, Protect: copyBytes, Unprotect: copyBytes}, authorize)
+}
+
+// newIdempotency authorizes pending commands and replays through the
+// realized scope registry: the Scopes contract resolves the exact registry
+// instance the HTTP entry surface and the business stores use, so replay
+// revocation is honored without a second authorization surface.
+func newIdempotency(scopes ScopeAccess) (*idempotency.Store, error) {
+	return newIdempotencyStore(scopes.Authorize)
+}
+
+func newEffects(publisher *outbox.Publisher, units uow.UnitOfWorkManager) (infrastructure.Effects, error) {
+	return infrastructure.Effects{Publisher: publisher, Manager: units}, nil
+}
+
+// permission is the baseline deny-by-default application policy; profiles
+// realize their scope registry with it and may layer organization policy on
+// top inside their own implementation.
+func permission(_ context.Context, b scope.ScopeBinding, action string) error {
+	if b.Principal.ID != "alice" {
+		return scope.ErrDenied
+	}
+	switch action {
+	case "books.read", "books.write", "tenant.enterprise.create", "tenant.organization.create", "organization.create", "organization.directory", "tenant.scope.recover":
+		return nil
+	}
+	return scope.ErrDenied
+}
+
+// newScopes is the default scope registry: tenant owner binding and the
+// baseline permission policy. Profile implementations replace this
+// contribution through the Scopes contract while the owner stays this module.
+func newScopes(db AuthorityDB) (*scope.Registry, error) {
+	return scope.NewRegistry(tenancy.Identity, tenancy.Provider{Authority: tenantpg.Authority{Pool: db.Pool}, Permission: permission})
+}
+
+// baseSchemas is the bookstore wire schema baseline; the per-profile file
+// defines profileSchemas with this baseline plus its own event types.
+func baseSchemas() []distributed.Schema {
+	return []distributed.Schema{{Type: "bookstore.book.created", Version: 1, Required: []string{"id", "title"}}}
+}

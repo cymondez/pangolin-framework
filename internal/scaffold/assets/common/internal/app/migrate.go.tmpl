@@ -1,0 +1,141 @@
+package app
+
+import (
+	"context"
+	"database/sql"
+	"embed"
+	"encoding/json"
+	"errors"
+	"io/fs"
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
+
+	eventpg "github.com/pangolin-framework/pangolin/events/postgres"
+	"github.com/pangolin-framework/pangolin/persistence/idempotency"
+	"github.com/pangolin-framework/pangolin/persistence/migration"
+	"github.com/pangolin-framework/pangolin/platform/audit"
+	tenantpg "github.com/pangolin-framework/pangolin/tenancy/postgres"
+	_ "github.com/jackc/pgx/v5/stdlib"
+	"{{MODULE}}/foundation"
+)
+
+//go:embed migrations/*.sql
+var bookMigrations embed.FS
+
+func sub(f fs.FS) fs.FS {
+	s, err := fs.Sub(f, "migrations")
+	if err != nil {
+		panic(err)
+	}
+	return s
+}
+func openSQL(dsn string) (*sql.DB, error) {
+	if dsn == "" {
+		return nil, errors.New("database DSN required in environment")
+	}
+	return sql.Open("pgx", dsn)
+}
+
+func expectedVersion() (int64, error) {
+	var maximum int64 = 5000000
+	err := filepath.WalkDir("modules", func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() || filepath.Ext(path) != ".sql" {
+			return nil
+		}
+		prefix, _, ok := strings.Cut(d.Name(), "_")
+		n, err := strconv.ParseInt(prefix, 10, 64)
+		if !ok || err != nil || n <= 0 {
+			return errors.New("invalid module migration filename")
+		}
+		if n > maximum {
+			maximum = n
+		}
+		return nil
+	})
+	return maximum, err
+}
+func Migrate(ctx context.Context, seed bool) error {
+	db, err := openSQL(os.Getenv("PANGOLIN_MIGRATION_DSN"))
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+	sources := map[string]fs.FS{"tenant": sub(tenantpg.Migrations), "audit": sub(audit.Migrations), "scope": sub(migration.ScopeMigrations), "events": sub(eventpg.Migrations), "idempotency": sub(idempotency.Migrations), "bookstore": sub(bookMigrations)}
+	modules := []migration.ModuleMigrations{{Module: "tenant", Directory: "tenant"}, {Module: "audit", Directory: "audit"}, {Module: "scope", Directory: "scope"}, {Module: "events", Directory: "events"}, {Module: "idempotency", Directory: "idempotency"}, {Module: "bookstore", Directory: "bookstore", DependsOn: []string{"scope", "events", "idempotency"}}}
+	capacity, err := fs.Sub(eventpg.CapacityMigrations, "capacity_migrations")
+	if err != nil {
+		return err
+	}
+	sources["capacity"] = capacity
+	modules = append(modules, migration.ModuleMigrations{Module: "capacity", Directory: "capacity", DependsOn: []string{"events"}})
+	profileSources, profileModules := foundation.Migrations()
+	for k, v := range profileSources {
+		sources[k] = v
+	}
+	modules = append(modules, profileModules...)
+	var project struct {
+		Modules map[string][]string `json:"modules"`
+	}
+	raw, err := os.ReadFile("pangolin.json")
+	if err != nil {
+		return err
+	}
+	if err = json.Unmarshal(raw, &project); err != nil {
+		return err
+	}
+	user := map[string]bool{}
+	for name := range project.Modules {
+		if entries, e := os.ReadDir(filepath.Join("modules", name, "migrations")); e == nil {
+			for _, entry := range entries {
+				if filepath.Ext(entry.Name()) == ".sql" {
+					user[name] = true
+				}
+			}
+		}
+	}
+	sources["user"] = os.DirFS("modules")
+	for name := range user {
+		deps := []string{"bookstore"}
+		for _, dep := range project.Modules[name] {
+			if user[dep] {
+				deps = append(deps, dep)
+			}
+		}
+		modules = append(modules, migration.ModuleMigrations{Module: "user-" + name, Directory: "user/" + name + "/migrations", DependsOn: prefixUser(deps)})
+	}
+	runner, err := migration.NewPostgres(db, migration.JoinFS(sources), 5000000, 99999999999999)
+	if err != nil {
+		return err
+	}
+	if err = runner.Apply(ctx, modules); err != nil {
+		return err
+	}
+	// Deployment-only permit provisioning keeps the bounded queues' configured
+	// capacities authoritative; rerunning is an idempotent no-op.
+	if err = eventpg.ProvisionQueues(ctx, db, 100000, 100000, "resize"); err != nil {
+		return err
+	}
+	if seed {
+		if _, err = db.ExecContext(ctx, `INSERT INTO pangolin_security.tenant_memberships VALUES('tenant-a','user','alice','active',1),('tenant-b','user','alice','active',1) ON CONFLICT DO NOTHING;INSERT INTO pangolin.resource_scopes(tenant_id,scope_kind,scope_id) VALUES('tenant-a','tenant','tenant-a'),('tenant-b','tenant','tenant-b') ON CONFLICT DO NOTHING`); err != nil {
+			return err
+		}
+		return foundation.Seed(ctx, db)
+	}
+	return nil
+}
+func prefixUser(deps []string) []string {
+	result := []string{}
+	for _, d := range deps {
+		if d == "bookstore" {
+			result = append(result, d)
+		} else {
+			result = append(result, "user-"+d)
+		}
+	}
+	return result
+}

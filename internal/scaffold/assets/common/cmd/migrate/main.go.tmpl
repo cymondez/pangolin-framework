@@ -1,0 +1,19 @@
+package main
+
+import (
+	"context"
+	"flag"
+	"log"
+	"{{MODULE}}/internal/app"
+)
+
+func main() {
+	seed := flag.Bool("seed", false, "seed disposable local demo data")
+	flag.Parse()
+	if flag.NArg() != 0 {
+		log.Fatal("unexpected arguments")
+	}
+	if err := app.Migrate(context.Background(), *seed); err != nil {
+		log.Fatal(err)
+	}
+}

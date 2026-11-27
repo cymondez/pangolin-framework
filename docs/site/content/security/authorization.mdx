@@ -1,0 +1,119 @@
+---
+title: 權限與資源政策（Authorization）
+description: 執行完整授權範例，掌握 panGOlin「預設拒絕、User 明確 Deny 優先、Feature 不授予權限」三大安全鐵律，以及敏感 Use Case 的雙層檢查做法。
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import source from '../_snippets/authorization.go';
+
+> **你在架構中的位置**：`已綁定 Tenant / Scope →` **`[ Entry Policy（動作權限檢查）→ UOW → Resource Policy（特定資料規則檢查）]`**
+>
+> **前置建議**：先閱讀[可擴充登入](authentication.md)與[多租戶與資料隔離](multi-tenancy.md)。
+
+**登入（Authentication）回答「你是誰」，多租戶回答「你屬於哪個邊界」，而授權（Authorization）回答「你現在能不能對這個 Scope／這筆資料做這件事」。**
+
+---
+
+## 1. 動手執行完整授權範例（不需資料庫）
+
+切到範例倉庫的 **`pangolin/examples/basics`**，執行：
+
+<Tabs groupId="os">
+<TabItem value="powershell" label="Windows PowerShell">
+
+```powershell
+go run ./authorization
+```
+
+</TabItem>
+<TabItem value="bash" label="Linux / macOS (Bash)">
+
+```bash
+go run ./authorization
+```
+
+</TabItem>
+</Tabs>
+
+預期輸出（三行結果直接驗證 panGOlin 三大授權鐵律）：
+
+```text
+read allowed
+write denied
+feature enabled: write denied
+```
+
+完整程式如下（附步驟式註解）：
+
+<CodeBlock language="go" title="examples/basics/authorization/main.go">{source}</CodeBlock>
+
+> **教學 Fixture 說明**：範例開頭的 `demoIdentity` 與 `demoAuthority` 只是為了讓你在沒有資料庫與 IdP 的環境練習 Permission 邏輯；正式應用請改用已驗證的 JWT／Session 身分與 `tenancy/postgres.Authority`。
+
+---
+
+## 2. 授權判斷規則：三條絕不妥協的安全鐵律
+
+### 鐵律 1：預設拒絕（Deny by Default），User 明確 Deny 永遠勝出
+
+`policy.Allowed(rules)` 的評估邏輯非常單純且不可逆：
+
+```text
+1. 先檢查 User 層是否為 policy.Deny ──▶ 若是，立即回傳 false（就算 Role / Tenant / System 全部 Allow 也沒用！）
+2. 再依序尋找 User、Roles、Tenant、System 是否有任何一個 policy.Allow ──▶ 找到回傳 true
+3. 否則 ──▶ 預設回傳 false（拒絕）
+```
+
+所有 `policy.Rules` 必須來自**受信任的當前權威來源**，絕不可相信請求 Header 或 DTO 傳來的角色清單。
+
+### 鐵律 2：Feature Flag 與 Settings **永遠不會** 授予權限
+
+很多系統會不小心寫出 `if featureEnabled || hasPermission { allow }` 的致命 Bug。在 panGOlin 中：
+- **Permission** 決定「你有沒有權限做」（安全性問題）。
+- **Feature／Settings** 決定「這個客戶方案有沒有開啟此功能／配額夠不夠」（產品與商業規則）。
+- 兩者是 **AND（且）** 關係：即使客戶付費開了某個 Feature，沒有 `books.write` 權限的使用者依然被拒絕（正是上方第 3 行輸出 `feature enabled: write denied` 所驗證的規則）。
+
+### 鐵律 3：上層治理權不自動等於下層內容權
+
+若專案啟用組織模組，Enterprise 的治理管理員角色**不會**自動取得旗下 Organization 的業務內容權限；完整 owner 邊界請見[資源 Scope 與組織擴充](resource-scopes.md)。
+
+---
+
+## 3. 在自己的 Use Case 裡怎麼做權限檢查？
+
+### 方式 A：一般與資源級檢查（`policy.Require`）
+
+```go title="在 Use Case 裡檢查動作權限與特定資源規則 ✅"
+// 1. 僅檢查動作權限（不依賴特定資料列時，第四參數傳 nil）
+if err := policy.Require(ctx, registry, "books.write", nil); err != nil {
+	return err
+}
+
+// 2. 需依特定資料列決定時（例如「只有草稿作者本人可以編輯」）：
+// 在 UOW 裡載入資料後，傳入 ResourcePolicy 函式一起檢查
+if err := policy.Require(workCtx, registry, "books.edit", func(ctx context.Context, b scope.ScopeBinding) error {
+	if draft.AuthorID != b.Principal.ID {
+		return scope.ErrDenied
+	}
+	return nil
+}); err != nil {
+	return err
+}
+```
+
+### 方式 B：敏感寫入用 `application.AuthorizedCommand`（防繞過入口）
+
+對於刪除、轉帳、變更權限等高敏感寫入，光在 HTTP Handler 檢查還不夠——萬一未來某個背景 Job 或另一支內部服務直接呼叫 Application Service 就可能漏驗。
+
+使用 **`application.AuthorizedCommand`** 把「入口檢查 + 開啟新根 UOW 後重驗 + Resource Policy + 業務執行」鎖在同一個標準流程裡：
+- 進入前先驗一次權限；
+- 開啟新根 UOW 並完成權威 revision 重驗後**再驗一次**；
+- 確認全部完成且資料庫 Commit 成功才回傳 `nil`。
+
+> **短 UOW 快照語意提醒**：每個新頂層 UOW 在取得 DB 資源前都會重新核對當前資格 revision，防堵「Bind 後立刻被撤權」的空窗；已通過准入的短 UOW 則按當下快照完成，`Required` 與 `RequiresNew` 均保留父 binding 與期限，不會藉此延長授權。
+
+## 下一步
+
+- 如果你的專案是單純多租戶（一客戶一資料邊界），直接前往 **[HTTP 入口與稽核](http-and-audit.md)** 把認證、授權、交易與安全日誌串起來。
+- 如果需要在同一個 Tenant 下再切出不同部門／子公司（Enterprise／Organization）各自隔離，請先閱讀 **[資源 Scope 與組織擴充](resource-scopes.md)**。

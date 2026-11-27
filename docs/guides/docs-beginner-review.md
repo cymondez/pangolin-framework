@@ -1,0 +1,110 @@
+# 官方網站的初學者走查
+
+## 備份、還原與升級增量（2026-11-24）
+
+Runtime 來源 `1d7ef1cf0dfdb7ee7b0211d04ad3380329883cb1` 通過同版 Windows／Linux 全量發布 Gate（Linux 含完整 integration race）後，才整合網站修改。新增「備份、還原與升級檢查」，並由維運、資料遷移、版本升級及側欄導向新指南；公開導覽維持使用者操作內容。
+
+主代理實際執行正式指南的前三段 PowerShell 命令，使用 PostgreSQL 18.7 的 pg_dump、pg_restore、createdb，從隔離種子資料建立 custom archive、TOC 與 SHA-256，再於同一管理端點建立 GUID 命名的空資料庫並還原。獨立連線核對 17 張表的列數、row JSON checksum、table owner、RLS flags 及 policy 集合均相符；app 角色讀到自身 tenant 的 25 筆資料，跨 tenant／organization 均為零筆。自建的兩個資料庫與容器暫存 archive 已移除。結果與逐命令紀錄保留於 `artifacts/docs/m6-backup-184444e432ad458c84523b87e26d67ed/`。停寫種子資料的成功演練不構成生產 RPO／RTO 承諾。
+
+`python scripts/docs_examples.py --database` 以全新 consumer module 執行十份完整程式，含真實 PostgreSQL 交易、設定覆寫、非法設定及手冊 Go 片段，全部通過；結果見 `artifacts/docs/beginner-examples.json`。Windows 的 `npm.cmd test` 及 production build 通過，Docker Linux 重建亦通過靜態檢查：45 頁、2375 個站內連結／錨點與一份本機搜尋索引。Windows 首次 build 遇 sandbox EPERM，以取得所需權限的同一命令重跑通過。
+
+瀏覽器實際從首頁進入安裝頁，在收合導覽的「背景工作與維運」找到新指南。確認前置條件、備份程式、還原命令與下一步可讀；長程式僅在程式區塊內水平捲動，897px viewport 的整頁 scrollWidth 與 clientWidth 相同。搜尋「備份」以新指南為第一個結果，點擊後正確導向指南。未另做完整裝置矩陣或變更配色。
+
+既有 `pangolin-docs` 已更新且健康，持續提供 `http://localhost:18088/`。M6 專用測試容器、network、volumes 及無使用的專用 runner image 已清除，驗收 logs 保留於 `artifacts/`；清理紀錄見 `artifacts/m6-cleanup.json`。版本仍為 0.1.0 預覽，未建立正式版本快照或發行 tag。
+
+## CLI 與設定／功能／快取增量（2026-11-24）
+
+Runtime 來源 `88f32eb6f2aa02c601dbc930f3f5a7b76911e185` 通過同版 Windows／Linux（含 race）Gate 後，才整合 Copilot CLI 使用 `litellm-zenlinkos/glm-5.3:cloud` 準備的網站與範例修改。主代理另行審查差異與驗收，沒有修改實作規範。
+
+新增生成 Bookstore 循序教學、CLI 參考、Settings／Features／Cache 指南；說明 checkout 舊範例與生成 API 的回應差異、完整組織 Profile、同版 Runtime bundle 及升級限制。各教學交代前置條件、操作目錄、完整程式、預期結果及下一步；公開導覽不加入里程碑或 Gate 文件。
+
+`python scripts/docs_examples.py --database` 在全新 consumer module 執行十份程式，包含真實 PostgreSQL 交易。新 platform-services 範例實際印出七行，驗證 Tenant cache 隔離、JSON 陣列設定、quota 上限、Permission 優先與通知失敗後版本收斂。結果保存於 `artifacts/docs/beginner-examples.json`。
+
+Windows 與 Docker Linux 的站點測試及 production build 都通過：41 頁、2127 個站內連結／錨點、一份本機搜尋索引。Windows 首次靜態輸出遇到 sandbox EPERM，以相同命令取得所需權限後通過，沒有變更 ACL。
+
+瀏覽器實際由生成 Bookstore 教學進入 Settings，確認七行預期輸出及完整程式可讀；搜尋 Channels 出現新增 JSON 設定段落與範例。收合導覽能找到「設定、功能與快取」三頁及 CLI 參考，並實際開啟 CLI 命令表。當前約 897px viewport 的標題、程式與表格顯示正常。本次沒有額外重做配色或完整裝置矩陣。
+
+既有 `pangolin-docs` 已重建且健康，持續提供 `http://localhost:18088/`。版本仍為 0.1.0 預覽；沒有建立正式版本快照或發行 tag。
+
+## 背景工作與觀測增量（2026-11-23）
+
+Runtime 來源 `43dcd79e24f5ed74a544a760301f4fec95dc2ca2` 通過同版 Windows／Linux（含 race）驗收後，更新公開網站。新增「背景工作與維運」導覽及持久化 Jobs、完整 OpenTelemetry／Health 程式、容量／恢復指南；補上 Migration、容量錯誤、升級與功能相容性。公開導覽未加入內部里程碑或驗收連結。
+
+`python scripts/docs_examples.py --database` 在全新獨立 consumer module 執行全部九份完整程式，包含真實 PostgreSQL 交易與新的觀測範例；網站內 ReceiptWorker、事件容量組裝及其他完整 Go 檔案全部編譯通過。新觀測範例印出 Trace correlated: true、/livez: 204、/readyz: 204、JSON log recorded: true。程式及操作紀錄保留於 `artifacts/docs/beginner-examples.json`。
+
+Windows 與 Docker Linux 的 Docusaurus production build／站點測試均通過，36 頁、1767 個站內連結／錨點及本機搜尋索引有效。既有 `pangolin-docs` 服務已更新並保持運行於 `http://localhost:18088/`。
+
+從初次使用者角度實際經 Jobs 的下一步進入觀測、再到恢復指南；頁面有前置條件、操作目錄、完整程式、預期結果與下一步。瀏覽器中三頁主體、程式碼與表格正常，當前 897px viewport 的 scrollWidth 等於 clientWidth，沒有整頁水平溢出。中文搜尋「背景工作」以新 Jobs 頁為第一個結果，能導向該頁；收合導覽可展開「背景工作與維運」並找到三個新頁。相容性頁的全部功能維持同一張 15 列表格。
+
+本增量沒有調整配色、建立正式版本快照或發行 tag。部署／還原的 RPO 與正式容量 SLA 仍須由實際環境量測，未用本機 fixture 的成功替代。
+
+日期：2026-11-22。讀者假設：能寫基本 Go，第一次接觸 panGOlin；沒有讀過本倉庫 spec、里程碑或維護 README。這份走查是維護紀錄，不放進公開網站。
+
+## 章節設計與參考
+
+參照 [ABP 官方文件](https://abp.io/docs/latest/) 的 Get Started、Tutorials、Framework Fundamentals／Infrastructure 與參考分類，改為開始使用、循序教學、套件使用範例、基礎功能、資料存取、身份／多租戶、事件、應用架構與參考。
+
+不照搬 ABP 的功能範圍或 .NET API。公開內容只教使用者目前可以呼叫的 panGOlin 功能；沒有正式 tag 的預覽安裝採普通 Go module＋本機 replace，避免虛構已發布的 go get 命令。
+
+## 從零操作檢查
+
+| 使用者問題 | 修正與實際檢查 |
+|---|---|
+| 我需要哪些工具？ | 核心起步僅 Go／Git；Docker／PowerShell 到 Bookstore 才需要 |
+| 這是在改 Framework，還是在建立我的應用？ | 安裝頁建立獨立 hello-pangolin，說明與套件來源並排的目錄 |
+| 我要在哪裡執行命令？ | 每個段落明示 working directory，Bookstore 明示三個終端與變數範圍 |
+| 程式需要自己補 import 或未定義變數嗎？ | 六個完整 main.go 從實際來源同步顯示；資料層完整檔案另做編譯檢查 |
+| 執行完應該看到什麼？ | 每個入門程式附預期輸出，環境覆寫與非法設定也實際執行 |
+| 我必須先理解規格／Gate 嗎？ | 公開導覽、首頁與版本頁已移除 spec／驗收／內部里程碑與討論內容 |
+| 怎麼跑有資料的範例？ | 提供 demo.ps1，明確初始化自己的 DB／Broker，不要求使用者呼叫內部測試 harness |
+| 怎麼繼續與怎麼關閉？ | 第一個應用→問候服務→Bookstore；各頁有下一步，服務有明確停止命令 |
+
+## 已執行的使用者操作
+
+`python scripts/docs_examples.py` 建立獨立 consumer module，使用公開套件執行 hello、greeting-app、configuration、dependency-injection、lifecycle、event-envelope。六份程式、APP_NAME 覆寫、空設定失敗，以及手冊中的 Service／Repository 完整 Go 檔案均通過；記錄位於 `artifacts/docs/beginner-examples.json`，保留 `.cache/docs-beginner-*` 供重看。
+
+依 Bookstore 教學實際執行隔離 demo up、API 與獨立 Worker，取得簽章 Token：建立 201、讀回 200、跨租戶 403、未登入 401，Worker 已將同一筆書籍投影為一筆資料。操作記錄位於 `artifacts/docs/bookstore-user-flow.json`，未保存 Token。環境以自己的 project／network／volumes 與 loopback ports 啟動。
+
+網站 production build 已通過 25 個靜態頁面、1097 個本機連結／錨點與本機搜尋檢查。Docker 以非 root Nginx、唯讀 filesystem 與 64 MiB 資源上限健康啟動；子路徑首頁／深層文件回應 200，無效路徑與前綴外路徑回應 404。
+
+瀏覽器實際從首頁進入安裝、第一個應用，確認完整 main.go、執行結果與下一步；中文搜尋「依賴注入」能導向相應完整程式。1280px 桌面與 390px 手機皆無頁面水平溢出，手機導覽能找到開始使用／循序教學／使用範例。畫面保存為 `artifacts/docs/getting-started.jpg` 與 `mobile-navigation.jpg`。
+
+隔離副本的原生快照建置通過 46 頁、2155 個站內連結與兩份版本搜尋索引。實際切換 0.1.0／Next 保留同一 UOW 教學；自動檢查另修改 current 的介紹與 Go 程式，確認已封存的文件、程式碼與搜尋均不被改寫，導覽／頁尾也不跳離所選版本。正式 checkout 仍只有 0.1.0 預覽，未建立發行 tag 或假歷史版本。
+
+上述為本機文件／使用範例驗證，遠端 CI 僅新增設定、未宣稱已執行。後續依使用者要求清理已確認歸屬本專案的一次性環境：移除 8 個已停止容器、14 個測試 volumes、2 個測試 network 與 7 個無使用的專用測試 IdP 映像；紀錄保存於 `.cache/pangolin-test-cleanup-result.json`。其他專案維持原狀。
+
+供使用者瀏覽的正式 `pangolin-docs` 本機服務保留於 `http://localhost:18088/`。已套用「晨光藍砂」配色，重新檢視桌面／手機首頁、文件、中文搜尋、手機導覽與手動明暗切換；首頁示意卡保持水平。建置仍通過 25 頁與 1097 個站內連結，畫面與檢查摘要保存於 `artifacts/docs/home-dawn.jpg`、`reading-dawn.jpg` 與 `dawn-qa.json`。這次配色調整沿用同一個 docs 服務，未建立一次性測試環境。
+
+## 交易與 Scope 文件增量走查（2026-11-22）
+
+在 M2 Runtime 同版 Gate 通過後更新公開文件，新增交易傳播循序教學與資源 Scope 擴充指南，並同步 UOW／PostgreSQL／相容性／升級／錯誤回應。導覽維持套件使用者視角，沒有新增內部里程碑或驗收入口。
+
+`python scripts/docs_examples.py --database` 在新的獨立 consumer module 執行七份完整程式；交易範例使用真實 PostgreSQL，五項輸出皆為 true，證明 Required 共根、RequiresNew 新根、父回滾、子提交及舊 Scope 結束。手冊 Service／Repository／Organization 組裝完整檔案也編譯通過；預設驗證不需要 DB，資料庫操作必須明示 --database，不假報執行。
+
+Native production build 與 Docker build 都通過 27 頁、1233 個站內連結及一份搜尋索引。原生版本快照／對應頁切換／current 與封存程式碼及搜尋隔離／子路徑檢查通過 50 頁、2431 個連結及兩份索引，正式 checkout 沒有建立發行快照。Windows 沙箱建立 security 輸出目錄曾遭 EPERM；以相同命令取得必要執行權限後已完整通過，沒有變更 ACL。
+
+瀏覽器實際讀取新交易教學的前置條件、命令、輸出與完整程式；搜尋 RequiresNew 出現新教學與疑難排解，透過側邊欄到達資源 Scope 指南，確認完整治理尚未提供的邊界說明。兩頁在預設桌面 viewport 無頁面水平溢出；未因本次文字更新重做手機／配色測試。截圖為 artifacts/docs/m2-transactions.jpg 與 m2-scopes.jpg，摘要為 artifacts/docs/m2-qa.json。
+
+既有 pangolin-docs 服務已重建為更新後內容，維持 `http://localhost:18088/`。
+
+## 授權、治理與可靠事件增量走查（2026-11-23）
+
+在 M3 Runtime 來源 `7f17ecc76a84e65ec4d64fb39b0900fb6bb50ba7` 通過乾淨同版雙平台 Gate 後，新增授權、組織治理、HTTP／稽核、可靠配送、Command 冪等與部署遷移六篇使用指南；同步 Tenant／Scope、相容性、升級、啟動與範例索引。公開導覽仍以套件使用者為讀者，不加入內部里程碑或驗收入口。
+
+`python scripts/docs_examples.py --database` 在新的獨立 consumer module 實際執行八份完整程式，含 authorization 的三行拒絕／允許輸出與真實 PostgreSQL 交易五項結果。原手冊的 Service／Repository／Organization 組裝，以及新增冪等 Service、事件 Resource 與部署 Runner 完整檔案均編譯通過。結果保存在 `artifacts/docs/beginner-examples.json`。
+
+Native／Docker production build 都通過 33 頁、1559 個站內連結／錨點及一份搜尋索引。原生版本快照、對應頁切換、current／封存內容與程式碼／搜尋隔離、子路徑回歸通過 62 頁、3095 個連結及兩份索引；正式 checkout 沒有建立發行快照。Native 建置首次遇到輸出目錄 EPERM，以相同命令取得必要執行權限後完整通過，沒有修改 ACL。
+
+瀏覽器從首頁的使用範例進入新授權指南，確認操作目錄、完整 main.go、預期輸出、教學身分的邊界與下一步。搜尋 ownerless 能找到組織治理並跳到相關章節，實際讀取 ownerless／Recover 與替換 Provider 的說明，再進入可靠配送指南確認前置條件及完整組裝檔。桌面 viewport 1280px、documentWidth 1265px，沒有頁面水平溢出；本次未重做手機與配色測試。摘要保存於 `artifacts/docs/m3-qa.json`。
+
+本次專用 PostgreSQL／NATS／IdP、network、兩個測試 volumes、Linux runner cache volume 及專用 IdP 映像已核對歸屬後清除，其他專案未受影響。既有 docs 服務已更新且健康，持續提供 `http://localhost:18088/`。
+
+## M5 分層、資料存取與登入擴充走查（2026-11-24）
+
+Runtime 修正來源 0d811a21f8b599196f0bad2dd2ee9033d1aa184b 通過同版 Windows／Linux 完整 Gate 後，更新公開手冊。新增中立資料存取、MySQL／SQLite Adapter 指南，改寫 JWT 為 Adapter 的登入教學，並同步 Settings 五至七層、Feature 受 Permission 限制、相容性與升級說明；未加入內部 Gate／spec 導覽。
+
+python scripts/docs_examples.py --database 實際執行十份獨立 consumer 範例、環境覆寫、非法組態及真實交易，全部通過。另將 Service／中立 Repository、三個引擎組裝與 Session Verifier 的六份完整 Go 程式放在獨立 consumer 編譯，與發布頁面的程式區塊逐一比對，結果見 artifacts/docs/m5-additional-snippets.json。
+
+npm test、原生 production build 與 Docker build 全部通過：44 頁、2310 個站內連結／錨點、一份本機搜尋索引、Framework 0.1.0。瀏覽走查確認「使用指南 → 資料庫選擇 → SQLite」可到達完整組裝與隔離說明，搜尋 Session 能進入可擴充登入頁並閱讀 CSRF／Challenge／Pending 邊界。未把尚未提供的完整 MFA／OIDC／Device Login 協定寫成已交付。
+
+依使用者後續偏好，剩餘 Web 驗證改用 CLI／HTTP：六條實際 URL 返回 200，並核對首頁中立文案、三引擎頁面、登入與 Settings 內容；結果見 artifacts/docs/m5-http-checks.json。網站持續由原 pangolin-docs 服務提供於 http://localhost:18088/。自有測試 containers／network／volumes／IdP 映像與 Linux cache 已按歸屬清除，清理紀錄留在 artifacts/docs/m5-cleanup-result.json，其他專案未動。

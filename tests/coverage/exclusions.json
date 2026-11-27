@@ -1,0 +1,13 @@
+{
+  "github.com/pangolin-framework/pangolin/internal/testkit/cmd/template-db/main.go": "test fixture",
+  "github.com/pangolin-framework/pangolin/internal/testkit/idp/idp.go": "test fixture",
+  "github.com/pangolin-framework/pangolin/internal/testkit/cmd/idp/main.go": "test fixture",
+  "github.com/pangolin-framework/pangolin/examples/bookstore/internal/testkit/cmd/crash-worker/main.go": "test fixture",
+  "github.com/pangolin-framework/pangolin/examples/bookstore/internal/testkit/cmd/m1-query/main.go": "test fixture",
+  "github.com/pangolin-framework/pangolin/examples/bookstore/infrastructure/internal/bookdb/db.go": "generated: sqlc v1.31.1",
+  "github.com/pangolin-framework/pangolin/examples/bookstore/infrastructure/internal/bookdb/models.go": "generated: sqlc v1.31.1",
+  "github.com/pangolin-framework/pangolin/examples/bookstore/infrastructure/internal/bookdb/queries.sql.go": "generated: sqlc v1.31.1",
+  "github.com/pangolin-framework/pangolin/examples/bookstore/infrastructure/internal/scopeddb/db.go": "generated: sqlc v1.31.1",
+  "github.com/pangolin-framework/pangolin/examples/bookstore/infrastructure/internal/scopeddb/models.go": "generated: sqlc v1.31.1",
+  "github.com/pangolin-framework/pangolin/examples/bookstore/infrastructure/internal/scopeddb/scoped-queries.sql.go": "generated: sqlc v1.31.1"
+}

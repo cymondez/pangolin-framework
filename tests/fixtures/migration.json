@@ -1,0 +1,11 @@
+{
+  "tool":"github.com/pressly/goose/v3",
+  "version":"v3.30.0",
+  "lock_key_hex":"70616e676f6c696e",
+  "version_table":"pangolin.goose_db_version",
+  "order":["core","organization","bookstore"],
+  "owners":{"schema":"pangolin_owner","deployment":"pangolin_migrator","business":"pangolin_app","queue":"pangolin_worker"},
+  "profile_upgrade":{"from":"tenant-only","to":"organization-enabled","backfill_kind":"tenant","backfill_id":"tenant_id","policy_switch":"single transaction; remove old permissive policies"},
+  "replacement":{"drain_first":true,"preserve_owner_ids":true,"preserve_revision":true,"reconcile_pending_work":true},
+  "fault_points":["owner-backfill","foreign-key-install","rls-policy-switch","provider-import-before-activation"]
+}

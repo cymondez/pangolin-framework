@@ -1,0 +1,32 @@
+-- +goose Up
+CREATE SCHEMA bookstore;
+CREATE TABLE bookstore.profile(name text PRIMARY KEY CHECK(name='organization-enabled'));
+INSERT INTO bookstore.profile VALUES('organization-enabled');
+GRANT SELECT ON bookstore.profile TO pangolin_app;
+CREATE TABLE bookstore.books(
+ tenant_id text NOT NULL,scope_kind text NOT NULL,scope_id text NOT NULL,
+ id text NOT NULL,title text NOT NULL,PRIMARY KEY(tenant_id,scope_kind,scope_id,id),
+ FOREIGN KEY(tenant_id,scope_kind,scope_id) REFERENCES pangolin.resource_scopes(tenant_id,scope_kind,scope_id)
+);
+ALTER TABLE bookstore.books ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bookstore.books FORCE ROW LEVEL SECURITY;
+CREATE POLICY exact_owner ON bookstore.books TO pangolin_app
+ USING(tenant_id=current_setting('app.tenant_id',true) AND scope_kind=current_setting('app.scope_kind',true) AND scope_id=current_setting('app.scope_id',true))
+ WITH CHECK(tenant_id=current_setting('app.tenant_id',true) AND scope_kind=current_setting('app.scope_kind',true) AND scope_id=current_setting('app.scope_id',true));
+GRANT USAGE ON SCHEMA bookstore TO pangolin_app;
+GRANT SELECT,INSERT ON bookstore.books TO pangolin_app;
+-- An independent metadata-only function answers lifecycle inventory without
+-- granting business SELECT or accepting an arbitrary SQL query.
+-- +goose StatementBegin
+CREATE FUNCTION bookstore.scope_in_use(t text,k text,s text) RETURNS boolean
+LANGUAGE sql SECURITY DEFINER SET search_path=pg_catalog AS $$
+ SELECT EXISTS(SELECT 1 FROM bookstore.books WHERE tenant_id=t AND scope_kind=k AND scope_id=s)
+ OR EXISTS(SELECT 1 FROM pangolin_events.outbox WHERE tenant_id=t AND scope_kind=k AND scope_id=s AND state<>'sent')
+ OR EXISTS(SELECT 1 FROM pangolin_events.inbox WHERE tenant_id=t AND scope_kind=k AND scope_id=s AND state='pending')
+$$;
+-- +goose StatementEnd
+REVOKE ALL ON FUNCTION bookstore.scope_in_use(text,text,text) FROM PUBLIC;
+GRANT USAGE ON SCHEMA bookstore TO pangolin_worker;
+GRANT EXECUTE ON FUNCTION bookstore.scope_in_use(text,text,text) TO pangolin_worker;
+-- +goose Down
+SELECT 1;

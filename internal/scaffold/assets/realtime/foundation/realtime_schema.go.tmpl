@@ -1,0 +1,8 @@
+package foundation
+
+import (
+	"github.com/pangolin-framework/pangolin/events/distributed"
+	"github.com/pangolin-framework/pangolin/modules/realtime"
+)
+
+func optionalEventSchemas() []distributed.Schema { return []distributed.Schema{realtime.Schema()} }

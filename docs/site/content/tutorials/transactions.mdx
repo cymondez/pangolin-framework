@@ -1,0 +1,105 @@
+---
+title: 交易傳播：共用或獨立提交
+description: 用真實 PostgreSQL 動手實測 Required 共用交易、RequiresNew 獨立提交與父交易回滾，以及離開 Scope 後舊 context 自動失效。
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import source from '../_snippets/transactions.go';
+
+> **你在架構中的位置**：`Application 巢狀呼叫 →` **`[ Required（共用根交易） vs RequiresNew（獨立根 UOW、新連線獨立提交，且不鎖定父視圖）]`**
+>
+> **前置條件**：先完成 [Bookstore 教學的第 1 步（準備示範服務）](bookstore.md)啟動本機 PostgreSQL（只需要資料庫，API 與 Worker 可以停止）。
+
+閱讀[工作單元](../data/unit-of-work.md)的理論後，最好的吸收方式是直接對真實 PostgreSQL 跑一次實驗。這個範例會在單一執行內同時驗證 5 個關鍵交易不變條件：
+
+1. `Required` 子範圍是否真的共用同一根交易（相同 Scope ID）？
+2. `RequiresNew` 子範圍是否真的開啟全新根交易（不同 Scope ID）？
+3. 外層父交易刻意失敗後，父交易寫入的資料是否確實全部回滾？
+4. 內層 `RequiresNew` 先提交的資料，是否確實保留、不隨父交易回滾？
+5. 離開 `Within` 後，保留下來的舊 `parent` context 是否已確實失效、無法再拿來操作交易？
+
+---
+
+## 1. 準備資料庫並執行實驗
+
+確認 Bookstore 的示範 PostgreSQL 正在運行後，切到範例倉庫的 **`pangolin/examples/basics`**：
+
+<Tabs groupId="os">
+<TabItem value="powershell" label="Windows PowerShell">
+
+```powershell
+$env:PANGOLIN_DSN = 'postgres://pangolin_app:local-app-only@127.0.0.1:15542/pangolin_m0?sslmode=disable'
+go run ./transactions
+Remove-Item Env:PANGOLIN_DSN
+```
+
+</TabItem>
+<TabItem value="bash" label="Linux / macOS (Bash)">
+
+```bash
+PANGOLIN_DSN='postgres://pangolin_app:local-app-only@127.0.0.1:15542/pangolin_m0?sslmode=disable' \
+  go run ./transactions
+```
+
+</TabItem>
+</Tabs>
+
+預期輸出（5 行皆為 `true`）：
+
+```text
+Required shares root: true
+RequiresNew has new root: true
+Parent rolled back: true
+Child committed: true
+Scope closed: true
+```
+
+---
+
+## 2. 完整範例程式（含步驟註解）
+
+<CodeBlock language="go" title="examples/basics/transactions/main.go">{source}</CodeBlock>
+
+> **安全邊界提醒**：範例第 42 行的固定 `local-demo` 身分只用於這個本機命令列實驗。真實 HTTP 應用中，`IdentityReader` 必須來自已驗證的 Authn Adapter，絕不可信任請求 body 自報的 Tenant 或角色。
+
+---
+
+## 3. 實驗執行時序圖解
+
+對照上面的程式碼，整個實驗在 PostgreSQL 上實際發生了以下事件序列：
+
+```text
+時間 ─────────────────────────────────────────────────────────────────────────────▶
+
+連線 #1（父交易）:  BEGIN ──▶ INSERT(parentID) ──▶ [Required ReadOnly 共用連線#1] ─────────────────────────────▶ ROLLBACK ❌
+                                                                                      │
+連線 #2（子交易）:                                                                    └─▶ BEGIN ──▶ INSERT(childID) ──▶ COMMIT ✅
+
+連線 #1（新查證）:  BEGIN READ ONLY ──▶ SELECT count(*) ──▶ 結果：parentCount=0, childCount=1
+```
+
+### 為什麼 5 個驗證結果如此重要？
+
+1. **Required 共根 + 唯讀子視圖**：在可寫父交易內包一層 `Mode: uow.ReadOnly` 的子服務時，不但共用同一筆交易（不額外占連線），子服務還被強制鎖定唯讀、無法偷偷修改資料。
+2. **RequiresNew 不等於 Savepoint**：子交易提交後就立刻落盤；即使父交易下一行回傳錯誤，子交易寫入的 `childID` 依然安全留存在資料庫中。
+3. **Scope 結束即失效**：把 `ended = parent` 存下來，離開 `Within` 後再拿去查 `manager.Current(ended)` 會回傳 `false`，徹底防止背景 goroutine 誤用已經關閉的交易視圖。
+
+> **資料清理說明**：每次執行都會在 `tenant-a` 留下一筆新的示範書籍（使用隨機 ID）；完成教學後執行 Bookstore 的 `demo.ps1 down` 或清除示範環境即可。
+
+---
+
+## 4. 實務決策表：我該選 `Required` 還是 `RequiresNew`？
+
+| 你的業務需求 | 選擇 | 關鍵注意事項 |
+|---|---|---|
+| 多個服務共同完成同一次原子業務（如「建訂單 + 扣庫存 + 寫 Outbox」） | **`uow.Required`**（預設） | 任一子服務失敗都會把根交易標為 rollback-only，外層捕捉錯誤也不能恢復提交。 |
+| 即使主業務最終失敗，仍必須獨立保留某筆紀錄（如審計紀錄、外部回呼收件） | **`uow.RequiresNew`** | 1. 子交易**看不到**父交易未提交的資料；<br/>2. 連線池至少要有第二條空閒連線；<br/>3. 若去更新父交易正鎖住的同一筆資料列會等到逾時。 |
+
+兩種傳播模式都**嚴格保留父操作的 Tenant、Principal、Scope Binding 與剩餘 Deadline**——不能用 `RequiresNew` 來延長操作期限或偷換租戶。
+
+## 下一步
+
+- 回到 **[使用交易與工作單元](../data/unit-of-work.md)** 複習高階 `application.CommandResult` 與 5 大踩坑反例。
+- 接著閱讀 **[中立資料存取與資料庫選擇](../data/database.md)**，學會把上面的 `writeBook` 改寫成跨 PostgreSQL／MySQL／SQLite 共用的中立 Repository。

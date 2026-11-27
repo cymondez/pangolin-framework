@@ -1,0 +1,22 @@
+version: "2"
+sql:
+  - engine: postgresql
+    schema:
+      - examples/bookstore/infrastructure/sql/namespace.sql
+      - examples/bookstore/infrastructure/sql/schema.sql
+    queries: examples/bookstore/infrastructure/sql/queries.sql
+    gen:
+      go:
+        package: bookdb
+        out: examples/bookstore/infrastructure/internal/bookdb
+        sql_package: pgx/v5
+  - engine: postgresql
+    schema:
+      - examples/bookstore/infrastructure/sql/namespace.sql
+      - examples/bookstore/infrastructure/sql/scoped-schema.sql
+    queries: examples/bookstore/infrastructure/sql/scoped-queries.sql
+    gen:
+      go:
+        package: scopeddb
+        out: examples/bookstore/infrastructure/internal/scopeddb
+        sql_package: pgx/v5

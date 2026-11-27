@@ -1,0 +1,575 @@
+{
+  "baseline": "v1.3",
+  "cases": [
+    {
+      "id": "A01",
+      "requirement": "MOD-001",
+      "milestone": "M1",
+      "status": "planned"
+    },
+    {
+      "id": "A02",
+      "requirement": "MOD-002",
+      "milestone": "M1",
+      "status": "planned"
+    },
+    {
+      "id": "A03",
+      "requirement": "UOW-006",
+      "milestone": "M2",
+      "status": "planned"
+    },
+    {
+      "id": "A04",
+      "requirement": "UOW-018",
+      "milestone": "M3",
+      "status": "planned"
+    },
+    {
+      "id": "A05",
+      "requirement": "UOW-020",
+      "milestone": "M2",
+      "status": "planned"
+    },
+    {
+      "id": "A06",
+      "requirement": "EVT-006",
+      "milestone": "M3",
+      "status": "planned"
+    },
+    {
+      "id": "A07",
+      "requirement": "IDEM-001",
+      "milestone": "M3",
+      "status": "planned"
+    },
+    {
+      "id": "A08",
+      "requirement": "TEN-001",
+      "milestone": "M3",
+      "status": "planned"
+    },
+    {
+      "id": "A09",
+      "requirement": "UOW-004",
+      "milestone": "M3",
+      "status": "planned"
+    },
+    {
+      "id": "A10",
+      "requirement": "DATA-001",
+      "milestone": "M2",
+      "status": "planned"
+    },
+    {
+      "id": "A11",
+      "requirement": "EVT-003",
+      "milestone": "M3",
+      "status": "planned"
+    },
+    {
+      "id": "A12",
+      "requirement": "SEC-001",
+      "milestone": "M3",
+      "status": "planned"
+    },
+    {
+      "id": "A13",
+      "requirement": "SEC-002",
+      "milestone": "M3",
+      "status": "planned"
+    },
+    {
+      "id": "A14",
+      "requirement": "API-001",
+      "milestone": "M2",
+      "status": "planned"
+    },
+    {
+      "id": "A15",
+      "requirement": "OPS-001",
+      "milestone": "M1",
+      "status": "planned"
+    },
+    {
+      "id": "A16",
+      "requirement": "EVT-009",
+      "milestone": "M3",
+      "status": "planned"
+    },
+    {
+      "id": "A17",
+      "requirement": "UOW-001",
+      "milestone": "M2",
+      "status": "planned"
+    },
+    {
+      "id": "A18",
+      "requirement": "UOW-002",
+      "milestone": "M2",
+      "status": "planned"
+    },
+    {
+      "id": "A19",
+      "requirement": "UOW-003",
+      "milestone": "M2",
+      "status": "planned"
+    },
+    {
+      "id": "A20",
+      "requirement": "UOW-005",
+      "milestone": "M2",
+      "status": "planned"
+    },
+    {
+      "id": "A21",
+      "requirement": "UOW-007",
+      "milestone": "M2",
+      "status": "planned"
+    },
+    {
+      "id": "A22",
+      "requirement": "UOW-008",
+      "milestone": "M2",
+      "status": "planned"
+    },
+    {
+      "id": "A23",
+      "requirement": "UOW-009",
+      "milestone": "M2",
+      "status": "planned"
+    },
+    {
+      "id": "A24",
+      "requirement": "UOW-010",
+      "milestone": "M2",
+      "status": "planned"
+    },
+    {
+      "id": "A25",
+      "requirement": "UOW-011",
+      "milestone": "M2",
+      "status": "planned"
+    },
+    {
+      "id": "A26",
+      "requirement": "UOW-012",
+      "milestone": "M2",
+      "status": "planned"
+    },
+    {
+      "id": "A27",
+      "requirement": "UOW-013",
+      "milestone": "M2",
+      "status": "planned"
+    },
+    {
+      "id": "A28",
+      "requirement": "UOW-014",
+      "milestone": "M2",
+      "status": "planned"
+    },
+    {
+      "id": "A29",
+      "requirement": "UOW-015",
+      "milestone": "M2",
+      "status": "planned"
+    },
+    {
+      "id": "A30",
+      "requirement": "UOW-016",
+      "milestone": "M2",
+      "status": "planned"
+    },
+    {
+      "id": "A31",
+      "requirement": "UOW-017",
+      "milestone": "M2",
+      "status": "planned"
+    },
+    {
+      "id": "A32",
+      "requirement": "UOW-019",
+      "milestone": "M2",
+      "status": "planned"
+    },
+    {
+      "id": "A33",
+      "requirement": "UOW-021",
+      "milestone": "M2",
+      "status": "planned"
+    },
+    {
+      "id": "A34",
+      "requirement": "UOW-022",
+      "milestone": "M2",
+      "status": "planned"
+    },
+    {
+      "id": "A35",
+      "requirement": "UOW-023",
+      "milestone": "M2",
+      "status": "planned"
+    },
+    {
+      "id": "A36",
+      "requirement": "UOW-024",
+      "milestone": "M2",
+      "status": "planned"
+    },
+    {
+      "id": "A37",
+      "requirement": "UOW-025",
+      "milestone": "M2",
+      "status": "planned"
+    },
+    {
+      "id": "A38",
+      "requirement": "UOW-026",
+      "milestone": "M2",
+      "status": "planned"
+    },
+    {
+      "id": "A39",
+      "requirement": "UOW-027",
+      "milestone": "M2",
+      "status": "planned"
+    },
+    {
+      "id": "A40",
+      "requirement": "UOW-028",
+      "milestone": "M2",
+      "status": "planned"
+    },
+    {
+      "id": "A41",
+      "requirement": "UOW-029",
+      "milestone": "M2",
+      "status": "planned"
+    },
+    {
+      "id": "A42",
+      "requirement": "UOW-030",
+      "milestone": "M2",
+      "status": "planned"
+    },
+    {
+      "id": "A43",
+      "requirement": "UOW-031",
+      "milestone": "M2",
+      "status": "planned"
+    },
+    {
+      "id": "A44",
+      "requirement": "UOW-032",
+      "milestone": "M3",
+      "status": "planned"
+    },
+    {
+      "id": "A45",
+      "requirement": "ARC-001",
+      "milestone": "M1",
+      "status": "planned"
+    },
+    {
+      "id": "A46",
+      "requirement": "MOD-003",
+      "milestone": "M1",
+      "status": "planned"
+    },
+    {
+      "id": "A47",
+      "requirement": "CFG-001",
+      "milestone": "M1",
+      "status": "planned"
+    },
+    {
+      "id": "A48",
+      "requirement": "API-002",
+      "milestone": "M3",
+      "status": "planned"
+    },
+    {
+      "id": "A49",
+      "requirement": "API-003",
+      "milestone": "M2",
+      "status": "planned"
+    },
+    {
+      "id": "A50",
+      "requirement": "EVT-001",
+      "milestone": "M3",
+      "status": "planned"
+    },
+    {
+      "id": "A51",
+      "requirement": "EVT-002",
+      "milestone": "M3",
+      "status": "planned"
+    },
+    {
+      "id": "A52",
+      "requirement": "EVT-004",
+      "milestone": "M3",
+      "status": "planned"
+    },
+    {
+      "id": "A53",
+      "requirement": "EVT-005",
+      "milestone": "M3",
+      "status": "planned"
+    },
+    {
+      "id": "A54",
+      "requirement": "EVT-007",
+      "milestone": "M3",
+      "status": "planned"
+    },
+    {
+      "id": "A55",
+      "requirement": "EVT-008",
+      "milestone": "M3",
+      "status": "planned"
+    },
+    {
+      "id": "A56",
+      "requirement": "TEN-002",
+      "milestone": "M3",
+      "status": "planned"
+    },
+    {
+      "id": "A57",
+      "requirement": "TEN-003",
+      "milestone": "M3",
+      "status": "planned"
+    },
+    {
+      "id": "A58",
+      "requirement": "SEC-003",
+      "milestone": "M3",
+      "status": "planned"
+    },
+    {
+      "id": "A59",
+      "requirement": "DATA-002",
+      "milestone": "M3",
+      "status": "planned"
+    },
+    {
+      "id": "A60",
+      "requirement": "IDEM-002",
+      "milestone": "M3",
+      "status": "planned"
+    },
+    {
+      "id": "A61",
+      "requirement": "IDEM-003",
+      "milestone": "M3",
+      "status": "planned"
+    },
+    {
+      "id": "A62",
+      "requirement": "AUD-001",
+      "milestone": "M3",
+      "status": "planned"
+    },
+    {
+      "id": "A63",
+      "requirement": "OPS-002",
+      "milestone": "M4",
+      "status": "planned"
+    },
+    {
+      "id": "A64",
+      "requirement": "JOB-001",
+      "milestone": "M4",
+      "status": "planned"
+    },
+    {
+      "id": "A65",
+      "requirement": "PLAT-001",
+      "milestone": "M5",
+      "status": "planned"
+    },
+    {
+      "id": "A66",
+      "requirement": "OBS-001",
+      "milestone": "M4",
+      "status": "planned"
+    },
+    {
+      "id": "A67",
+      "requirement": "CLI-001",
+      "milestone": "M5",
+      "status": "planned"
+    },
+    {
+      "id": "A68",
+      "requirement": "REL-001",
+      "milestone": "M1",
+      "status": "planned"
+    },
+    {
+      "id": "A69",
+      "requirement": "REL-002",
+      "milestone": "M1",
+      "status": "planned"
+    },
+    {
+      "id": "A70",
+      "requirement": "REL-003",
+      "milestone": "M6",
+      "status": "planned"
+    },
+    {
+      "id": "A71",
+      "requirement": "REL-004",
+      "milestone": "M1",
+      "status": "planned"
+    },
+    {
+      "id": "A72",
+      "requirement": "REL-005",
+      "milestone": "M6",
+      "status": "planned"
+    },
+    {
+      "id": "A73",
+      "requirement": "SCP-001",
+      "milestone": "M2",
+      "status": "planned"
+    },
+    {
+      "id": "A74",
+      "requirement": "SCP-002",
+      "milestone": "M2",
+      "status": "planned"
+    },
+    {
+      "id": "A75",
+      "requirement": "SCP-003",
+      "milestone": "M3",
+      "status": "planned"
+    },
+    {
+      "id": "A76",
+      "requirement": "SCP-004",
+      "milestone": "M2",
+      "status": "planned"
+    },
+    {
+      "id": "A77",
+      "requirement": "SCP-005",
+      "milestone": "M3",
+      "status": "planned"
+    },
+    {
+      "id": "A78",
+      "requirement": "SCP-006",
+      "milestone": "M3",
+      "status": "planned"
+    },
+    {
+      "id": "A79",
+      "requirement": "SCP-007",
+      "milestone": "M3",
+      "status": "planned"
+    },
+    {
+      "id": "A80",
+      "requirement": "SCP-008",
+      "milestone": "M5",
+      "status": "planned"
+    },
+    {
+      "id": "A81",
+      "requirement": "SCP-009",
+      "milestone": "M3",
+      "status": "planned"
+    },
+    {
+      "id": "A82",
+      "requirement": "ORG-001",
+      "milestone": "M2",
+      "status": "planned"
+    },
+    {
+      "id": "A83",
+      "requirement": "ORG-002",
+      "milestone": "M3",
+      "status": "planned"
+    },
+    {
+      "id": "A84",
+      "requirement": "ORG-003",
+      "milestone": "M3",
+      "status": "planned"
+    },
+    {
+      "id": "A85",
+      "requirement": "ORG-004",
+      "milestone": "M3",
+      "status": "planned"
+    },
+    {
+      "id": "A86",
+      "requirement": "ORG-005",
+      "milestone": "M3",
+      "status": "planned"
+    },
+    {
+      "id": "A87",
+      "requirement": "ORG-006",
+      "milestone": "M3",
+      "status": "planned"
+    },
+    {
+      "id": "A88",
+      "requirement": "ORG-007",
+      "milestone": "M3",
+      "status": "planned"
+    },
+    {
+      "id": "A89",
+      "requirement": "ORG-008",
+      "milestone": "M3",
+      "status": "planned"
+    },
+    {
+      "id": "A90",
+      "requirement": "ORG-009",
+      "milestone": "M3",
+      "status": "planned"
+    },
+    {
+      "id": "A91",
+      "requirement": "ORG-010",
+      "milestone": "M3",
+      "status": "planned"
+    },
+    {
+      "id": "A92",
+      "requirement": "ORG-011",
+      "milestone": "M3",
+      "status": "planned"
+    },
+    {
+      "id": "A93",
+      "requirement": "ORG-012",
+      "milestone": "M3",
+      "status": "planned"
+    },
+    {
+      "id": "A94",
+      "requirement": "ORG-013",
+      "milestone": "M5",
+      "status": "planned"
+    },
+    {
+      "id": "A95",
+      "requirement": "ORG-014",
+      "milestone": "M6",
+      "status": "planned"
+    }
+  ]
+}

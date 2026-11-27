@@ -1,0 +1,7 @@
+{
+  "baseline": "v1.3",
+  "seed": "pangolin-m0-20261121",
+  "purpose": "M0 fixture inputs and expected observations; not runtime acceptance results",
+  "files": ["tests/fixtures/modules.json", "tests/fixtures/scopes.json", "tests/fixtures/envelope.json", "tests/fixtures/migration.json"],
+  "fault_controls": {"postgres": "Toxiproxy postgres proxy; transaction fault timing uses barriers in M2", "nats": "Toxiproxy nats proxy; same-project-only fault and restoration", "idp": "POST /rotate; old/current JWKS keys"}
+}

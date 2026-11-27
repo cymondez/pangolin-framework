@@ -1,0 +1,109 @@
+---
+title: 分層設定與 Features（Settings）
+description: 執行完整無外部依賴範例，掌握 panGOlin 五至七層設定繼承解析、JSON 陣列設定鍵、更新與快取版本收斂機制。
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import source from '../_snippets/platform-services.go';
+
+> **你在架構中的位置**：`執行期平台服務` **`[ platform/settings（5–7 層動態偏好與產品設定）+ platform/cache（版本核對快取）]`**
+>
+> **前置建議**：先分清「啟動組態（[kernel/config](../fundamentals/configuration.mdx)）」負責「程序怎麼開機」，而本頁的 **`platform/settings`** 負責「系統跑起來之後，各租戶／組織／使用者的動態偏好與產品規則」。
+
+## 為什麼多租戶產品需要「分層設定」？
+
+SaaS 系統常遇到這種需求：全站預設主題是淺色、公司 A（Tenant）想改成深藍、底下某個部門（Organization）有自己的設定，而員工 Alice 又想覆寫成個人偏好——如果把這些規則散落在各個 Service 裡寫 `if/else` 查表，不但難以維護，還會因為快取忘記區分租戶而串資料。
+
+panGOlin 把分層解析、版本核對與租戶隔離全部收攏在 `platform/settings`。
+
+---
+
+## 1. 動手執行完整平台服務範例（不需 Docker 或 DB）
+
+切到範例倉庫的 **`pangolin/examples/basics`**，執行：
+
+<Tabs groupId="os">
+<TabItem value="powershell" label="Windows PowerShell">
+
+```powershell
+go run ./platform-services
+```
+
+</TabItem>
+<TabItem value="bash" label="Linux / macOS (Bash)">
+
+```bash
+go run ./platform-services
+```
+
+</TabItem>
+</Tabs>
+
+這份程式一次驗證 **Scoped Cache、Settings 5 層解析、JSON 陣列鍵、Feature Quota 上限、Permission 優先，以及快取通知失敗後的版本收斂**，預期看到 8 行輸出：
+
+```text
+Tenant cache isolated: true
+Tenant setting: "blue"
+JSON array setting: "mail"
+Setting layers: [user tenant global config default]
+Effective quota: 10
+Feature cannot grant permission: true
+Stored update despite notification failure: true
+Version converged: true
+```
+
+完整程式如下（附步驟式註解，也可直接貼進自己專案的 `main.go` 執行）：
+
+<CodeBlock language="go" title="examples/basics/platform-services/main.go">{source}</CodeBlock>
+
+> **安全邊界提醒**：範例的 `demoContext` 只用於本機命令列教學；真實 HTTP／Job／Consumer 必須走可信入口完成身分、Tenant 與 Scope 驗證，絕不從 Request Body 建立授權。
+
+---
+
+## 2. 設定按什麼順序解析？（5 層至 7 層優先序）
+
+找不到值時由高往低逐層回退（Fallback）；注意 **`Config`**（來自唯讀啟動設定檔／JSON）與 **`Global`**（可於執行期更新的全域儲存值）是兩個獨立層級：
+
+```text
+[ Tenant-only 模式（基本 5 層）]
+  高 ──▶ User-in-Tenant ──▶ Tenant ──▶ Global ──▶ Config ──▶ Default ◀── 低
+
+[ Organization-enabled 模式（完整最多 7 層）]
+  高 ──▶ User-in-Scope ──▶ Organization ──▶ 所屬 Enterprise（若有）──▶ Tenant ──▶ Global ──▶ Config ──▶ Default ◀── 低
+```
+
+| 目前 Scope | 由高至低的完整解析順序 |
+|---|---|
+| `tenant` | User-in-Tenant → Tenant → Global → Config → Default |
+| `org.enterprise` | User-in-Scope → Enterprise → Tenant → Global → Config → Default |
+| `org.organization` | User-in-Scope → Organization → 目前 Enterprise（獨立 Org 則無）→ Tenant → Global → Config → Default |
+
+### 關鍵規則
+1. **繼承必須明示開啟**：只有在 `settings.Definition` 設 `Inherit: true` 才會往上層尋找；未開啟繼承的 key 只看目前 User／Scope 與 Default。使用者在 Org A 的設定絕不會套用到 Org B。
+2. **中立 Ancestry 注入**：Settings 不綁死組織模組；若專案啟用組織，把組裝好的 `organization.Store` 傳入 `settings.New` 的 `ancestry` 參數即可查詢當前父層；`tenant-only` 專案直接傳 `nil`。
+3. **輸入驗證與錯誤處理**：`Definition.Validate` 驗證值格式；遇到未知 key、非法值、無可信 Scope 或權威來源故障皆明確回錯。`Resolve` 回傳最終 `Value`、`Version` 與按優先序排列的 `Candidates`（供 Features 上限計算使用）。
+
+---
+
+## 3. 更新設定與「快取通知失敗」怎麼處理？
+
+- **管理 Port vs 使用者更新**：`MemoryProvider.Put` 是給組裝／管理端使用的底層寫入（切勿把未驗證的 HTTP Layer DTO 直接交給它）；一般使用者更新一律呼叫 `Service.Update`，它會先檢查 `settings.write` 權限且只允許修改目前精確 Scope。
+- **通知失敗不等於寫入失敗**：`Update` 會先保存新值與遞增版本號，再去通知快取失效。即使通知失敗，來源資料其實已經寫入成功——此時 `Update` 會回傳**非零版本號與錯誤**，讓呼叫端知道應重新核對最新狀態。
+- **版本核對防止舊快取殘留**：`Resolve` 即使命中 Scoped Cache，仍會核對來源原子 Snapshot 的版本與解析層級（來源故障時絕不拿未核對的舊值充數），因此就像範例最後兩行所示：就算快取失效通知出錯，下一次 `Resolve` 依然會收斂成最新值 `"cream"`！
+- **持久化提醒**：`MemoryProvider` 僅存在單一程序記憶體中；跨程序持久化須另實作自訂 `Provider`（確保 `Read` 回傳的候選值與版本來自同一原子 Snapshot）。
+
+---
+
+## 4. JSON 啟動設定鍵的攤平規則（Config 層）
+
+JSON 設定透過 `config.ParseJSON` 解析進入 Config 層，例如 `{"Settings":{"Channels":[{"Name":"mail"}]}}` 會攤平為 `Settings:Channels:0:Name`，對應 Setting 名稱為 `Channels:0:Name`：
+- 陣列索引從 `0` 起算，多層陣列一律以冒號 `:` 分隔；`Settings` 只查詢 `Settings:` 加完整名稱，不會把 `App.Mailing.Smtp.Host` 裡的點號拆開（點號是字面值，與巢狀物件的冒號路徑不同）。
+- JSON Key 比對不區分大小寫，重複或攤平衝突直接拒絕。
+- 型別遵循 .NET 10 慣例：`null` 與空物件不產出字串值、空陣列為空字串、`bool` 為 `True`/`False`、數值保留原字面字串；Configuration Provider 預設回傳 JSON string，不猜測型別。
+
+## 下一步
+
+- 接著閱讀 **[Features 與配額](features.md)**，學會如何在 Permission 允許後用 `Ceiling: true` 實作不可被下層突破的配額上限。
+- 再看 **[Scoped Memory Cache](cache.md)**，了解如何把同樣的多租戶隔離快取用在自己的業務資料上。

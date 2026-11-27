@@ -1,0 +1,14 @@
+package domain
+
+import "testing"
+
+func TestBook(t *testing.T) {
+	for _, b := range []Book{{}, {ID: "id"}, {Title: "title"}} {
+		if b.Validate() == nil {
+			t.Fatal("invalid book accepted")
+		}
+	}
+	if (Book{ID: "id", Title: "title"}).Validate() != nil {
+		t.Fatal("valid book rejected")
+	}
+}

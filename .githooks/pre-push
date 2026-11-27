@@ -1,0 +1,18 @@
+#!/bin/sh
+# Enforce local CI verification before pushing commits or release tags.
+# Enable once per clone with: git config core.hooksPath .githooks
+set -eu
+
+PY=""
+for candidate in python3 python py; do
+  if command -v "$candidate" >/dev/null 2>&1 && "$candidate" --version >/dev/null 2>&1; then
+    PY="$candidate"
+    break
+  fi
+done
+if [ -z "$PY" ]; then
+  echo "[BLOCKED] Neither python3, python, nor py is available to verify the local CI pre-push stamp." >&2
+  exit 1
+fi
+
+exec "$PY" scripts/local_ci.py --check-prepush

@@ -1,0 +1,9 @@
+# Organization-enabled
+
+Enterprise and Organization are one optional module, including its complete Management Port, migrations, authority, owner qualification, revision handling, required Audit and versioned governance facts. No half-enterprise option exists.
+
+Use X-Scope-Kind=org.organization and X-Scope-ID=00000000-0000-4000-8000-000000000002 to select demo-org-a. demo-org-b is standalone with ID ending in 003; the Enterprise ID ends in 001. alice is an explicit owner in the disposable seed. Each scope can store the same book ID independently. Enterprise governance never grants access to another Org's content.
+
+The control plane exposes /enterprises, /organizations, memberships, roles, transfers and /scopes/{kind}/{id}/{suspend,resume,archive,recover} through the framework's organization HTTP adapter. Write commands require Idempotency-Key and explicit expected_version where applicable. GET /organizations?limit=10 lists the current user's memberships. Governance commands retain their application authorization and UOW checks.
+
+Deployment migration and API are separate. Use a new database for this generated profile; upgrading an existing tenant-only application needs a reviewed forward migration, retaining prior books as tenant-owned. Never drop module tables or turn off the provider while resources/pending work remain. The bundled runtime contains the same replacement-provider contracts used by the framework.

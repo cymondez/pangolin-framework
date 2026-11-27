@@ -1,0 +1,530 @@
+{
+  "baseline": "v1.3",
+  "product_version": "0.1.0",
+  "version_scope": "v0.1.0",
+  "requirements": 95,
+  "subtests": 532,
+  "profiles": [
+    {
+      "profile": "tenant-only",
+      "applicability_source": "tests/contract/profiles/tenant-only.json"
+    },
+    {
+      "profile": "organization-enabled",
+      "applicability_source": "tests/contract/profiles/organization-enabled.json"
+    },
+    {
+      "profile": "replacement-contract",
+      "applicability_source": "tests/contract/profiles/replacement-contract.json"
+    }
+  ],
+  "deliveries": {
+    "API-001": {
+      "milestone": "M2",
+      "case": "A14"
+    },
+    "API-002": {
+      "milestone": "M3",
+      "case": "A48"
+    },
+    "API-003": {
+      "milestone": "M2",
+      "case": "A49"
+    },
+    "ARC-001": {
+      "milestone": "M1",
+      "case": "A45"
+    },
+    "AUD-001": {
+      "milestone": "M3",
+      "case": "A62"
+    },
+    "CFG-001": {
+      "milestone": "M1",
+      "case": "A47"
+    },
+    "CLI-001": {
+      "milestone": "M5",
+      "case": "A67"
+    },
+    "DATA-001": {
+      "milestone": "M2",
+      "case": "A10"
+    },
+    "DATA-002": {
+      "milestone": "M3",
+      "case": "A59"
+    },
+    "EVT-001": {
+      "milestone": "M3",
+      "case": "A50"
+    },
+    "EVT-002": {
+      "milestone": "M3",
+      "case": "A51"
+    },
+    "EVT-003": {
+      "milestone": "M3",
+      "case": "A11"
+    },
+    "EVT-004": {
+      "milestone": "M3",
+      "case": "A52"
+    },
+    "EVT-005": {
+      "milestone": "M3",
+      "case": "A53"
+    },
+    "EVT-006": {
+      "milestone": "M3",
+      "case": "A06"
+    },
+    "EVT-007": {
+      "milestone": "M3",
+      "case": "A54"
+    },
+    "EVT-008": {
+      "milestone": "M3",
+      "case": "A55"
+    },
+    "EVT-009": {
+      "milestone": "M3",
+      "case": "A16"
+    },
+    "IDEM-001": {
+      "milestone": "M3",
+      "case": "A07"
+    },
+    "IDEM-002": {
+      "milestone": "M3",
+      "case": "A60"
+    },
+    "IDEM-003": {
+      "milestone": "M3",
+      "case": "A61"
+    },
+    "JOB-001": {
+      "milestone": "M4",
+      "case": "A64"
+    },
+    "MOD-001": {
+      "milestone": "M1",
+      "case": "A01"
+    },
+    "MOD-002": {
+      "milestone": "M1",
+      "case": "A02"
+    },
+    "MOD-003": {
+      "milestone": "M1",
+      "case": "A46"
+    },
+    "OBS-001": {
+      "milestone": "M4",
+      "case": "A66"
+    },
+    "OPS-001": {
+      "milestone": "M1",
+      "case": "A15"
+    },
+    "OPS-002": {
+      "milestone": "M4",
+      "case": "A63"
+    },
+    "ORG-001": {
+      "milestone": "M2",
+      "case": "A82"
+    },
+    "ORG-002": {
+      "milestone": "M3",
+      "case": "A83"
+    },
+    "ORG-003": {
+      "milestone": "M3",
+      "case": "A84"
+    },
+    "ORG-004": {
+      "milestone": "M3",
+      "case": "A85"
+    },
+    "ORG-005": {
+      "milestone": "M3",
+      "case": "A86"
+    },
+    "ORG-006": {
+      "milestone": "M3",
+      "case": "A87"
+    },
+    "ORG-007": {
+      "milestone": "M3",
+      "case": "A88"
+    },
+    "ORG-008": {
+      "milestone": "M3",
+      "case": "A89"
+    },
+    "ORG-009": {
+      "milestone": "M3",
+      "case": "A90"
+    },
+    "ORG-010": {
+      "milestone": "M3",
+      "case": "A91"
+    },
+    "ORG-011": {
+      "milestone": "M3",
+      "case": "A92"
+    },
+    "ORG-012": {
+      "milestone": "M3",
+      "case": "A93"
+    },
+    "ORG-013": {
+      "milestone": "M5",
+      "case": "A94"
+    },
+    "ORG-014": {
+      "milestone": "M6",
+      "case": "A95"
+    },
+    "PLAT-001": {
+      "milestone": "M5",
+      "case": "A65"
+    },
+    "REL-001": {
+      "milestone": "M1",
+      "case": "A68"
+    },
+    "REL-002": {
+      "milestone": "M1",
+      "case": "A69"
+    },
+    "REL-003": {
+      "milestone": "M6",
+      "case": "A70"
+    },
+    "REL-004": {
+      "milestone": "M1",
+      "case": "A71"
+    },
+    "REL-005": {
+      "milestone": "M6",
+      "case": "A72"
+    },
+    "SCP-001": {
+      "milestone": "M2",
+      "case": "A73"
+    },
+    "SCP-002": {
+      "milestone": "M2",
+      "case": "A74"
+    },
+    "SCP-003": {
+      "milestone": "M3",
+      "case": "A75"
+    },
+    "SCP-004": {
+      "milestone": "M2",
+      "case": "A76"
+    },
+    "SCP-005": {
+      "milestone": "M3",
+      "case": "A77"
+    },
+    "SCP-006": {
+      "milestone": "M3",
+      "case": "A78"
+    },
+    "SCP-007": {
+      "milestone": "M3",
+      "case": "A79"
+    },
+    "SCP-008": {
+      "milestone": "M5",
+      "case": "A80"
+    },
+    "SCP-009": {
+      "milestone": "M3",
+      "case": "A81"
+    },
+    "SEC-001": {
+      "milestone": "M3",
+      "case": "A12"
+    },
+    "SEC-002": {
+      "milestone": "M3",
+      "case": "A13"
+    },
+    "SEC-003": {
+      "milestone": "M3",
+      "case": "A58"
+    },
+    "TEN-001": {
+      "milestone": "M3",
+      "case": "A08"
+    },
+    "TEN-002": {
+      "milestone": "M3",
+      "case": "A56"
+    },
+    "TEN-003": {
+      "milestone": "M3",
+      "case": "A57"
+    },
+    "UOW-001": {
+      "milestone": "M2",
+      "case": "A17"
+    },
+    "UOW-002": {
+      "milestone": "M2",
+      "case": "A18"
+    },
+    "UOW-003": {
+      "milestone": "M2",
+      "case": "A19"
+    },
+    "UOW-004": {
+      "milestone": "M3",
+      "case": "A09"
+    },
+    "UOW-005": {
+      "milestone": "M2",
+      "case": "A20"
+    },
+    "UOW-006": {
+      "milestone": "M2",
+      "case": "A03"
+    },
+    "UOW-007": {
+      "milestone": "M2",
+      "case": "A21"
+    },
+    "UOW-008": {
+      "milestone": "M2",
+      "case": "A22"
+    },
+    "UOW-009": {
+      "milestone": "M2",
+      "case": "A23"
+    },
+    "UOW-010": {
+      "milestone": "M2",
+      "case": "A24"
+    },
+    "UOW-011": {
+      "milestone": "M2",
+      "case": "A25"
+    },
+    "UOW-012": {
+      "milestone": "M2",
+      "case": "A26"
+    },
+    "UOW-013": {
+      "milestone": "M2",
+      "case": "A27"
+    },
+    "UOW-014": {
+      "milestone": "M2",
+      "case": "A28"
+    },
+    "UOW-015": {
+      "milestone": "M2",
+      "case": "A29"
+    },
+    "UOW-016": {
+      "milestone": "M2",
+      "case": "A30"
+    },
+    "UOW-017": {
+      "milestone": "M2",
+      "case": "A31"
+    },
+    "UOW-018": {
+      "milestone": "M3",
+      "case": "A04"
+    },
+    "UOW-019": {
+      "milestone": "M2",
+      "case": "A32"
+    },
+    "UOW-020": {
+      "milestone": "M2",
+      "case": "A05"
+    },
+    "UOW-021": {
+      "milestone": "M2",
+      "case": "A33"
+    },
+    "UOW-022": {
+      "milestone": "M2",
+      "case": "A34"
+    },
+    "UOW-023": {
+      "milestone": "M2",
+      "case": "A35"
+    },
+    "UOW-024": {
+      "milestone": "M2",
+      "case": "A36"
+    },
+    "UOW-025": {
+      "milestone": "M2",
+      "case": "A37"
+    },
+    "UOW-026": {
+      "milestone": "M2",
+      "case": "A38"
+    },
+    "UOW-027": {
+      "milestone": "M2",
+      "case": "A39"
+    },
+    "UOW-028": {
+      "milestone": "M2",
+      "case": "A40"
+    },
+    "UOW-029": {
+      "milestone": "M2",
+      "case": "A41"
+    },
+    "UOW-030": {
+      "milestone": "M2",
+      "case": "A42"
+    },
+    "UOW-031": {
+      "milestone": "M2",
+      "case": "A43"
+    },
+    "UOW-032": {
+      "milestone": "M3",
+      "case": "A44"
+    }
+  },
+  "version_bindings": {
+    "runtime": {
+      "version": "0.1.0",
+      "file": "VERSION"
+    },
+    "cli": {
+      "version": "0.1.0",
+      "file": "internal/scaffold/cli.go"
+    },
+    "template": {
+      "version": "0.1.0",
+      "source": "internal/scaffold/assets",
+      "runtime_require": "v0.1.0"
+    }
+  },
+  "event_schemas": {
+    "policy": "Published wire schemas carry their own versioned contracts; wire schema numbers are independent of the product version and only require a registered versioned registry entry.",
+    "entries": [
+      {
+        "type": "bookstore.book_created",
+        "schema_version": 1,
+        "producer": "bookstore",
+        "source": "examples/bookstore/application/books.go"
+      },
+      {
+        "type": "enterprise.created",
+        "schema_version": 1,
+        "producer": "organization",
+        "source": "modules/organization/management.go"
+      },
+      {
+        "type": "organization.created",
+        "schema_version": 1,
+        "producer": "organization",
+        "source": "modules/organization/management.go"
+      },
+      {
+        "type": "organization.membership.changed",
+        "schema_version": 1,
+        "producer": "organization",
+        "source": "modules/organization/management.go"
+      },
+      {
+        "type": "organization.membership.removed",
+        "schema_version": 1,
+        "producer": "organization",
+        "source": "modules/organization/management.go"
+      },
+      {
+        "type": "enterprise.role.changed",
+        "schema_version": 1,
+        "producer": "organization",
+        "source": "modules/organization/management.go"
+      },
+      {
+        "type": "organization.transferred",
+        "schema_version": 1,
+        "producer": "organization",
+        "source": "modules/organization/management.go"
+      },
+      {
+        "type": "organization.provider.imported",
+        "schema_version": 1,
+        "producer": "organization",
+        "source": "modules/organization/transfer.go"
+      },
+      {
+        "type": "scope.suspended",
+        "schema_version": 1,
+        "producer": "organization",
+        "source": "modules/organization/transport/http/handler.go"
+      },
+      {
+        "type": "scope.active",
+        "schema_version": 1,
+        "producer": "organization",
+        "source": "modules/organization/transport/http/handler.go"
+      },
+      {
+        "type": "scope.archived",
+        "schema_version": 1,
+        "producer": "organization",
+        "source": "modules/organization/transport/http/handler.go"
+      }
+    ]
+  },
+  "critical_packages": [
+    "kernel",
+    "persistence/uow",
+    "persistence/postgres",
+    "persistence/database",
+    "persistence/mysql",
+    "persistence/sqlite",
+    "security",
+    "tenancy",
+    "events",
+    "platform/audit",
+    "modules/organization",
+    "modules/realtime"
+  ],
+  "assets": [
+    "deploy/dependencies.json",
+    "deploy/toolchain.json",
+    "deploy/profiles/local.json",
+    "deploy/compose/compose.yaml",
+    "deploy/compose/m1.yaml",
+    "deploy/compose/m5-databases.yaml",
+    "tests/coverage/exclusions.json",
+    "docs/runbooks/operations.md",
+    "docs/runbooks/release.md",
+    "docs/security/release-review.md",
+    "docs/release-notes/0.1.0.md",
+    "deploy/docker/Dockerfile.m6-runner",
+    "deploy/docker/README.md",
+    "docs/guides/m6-development.md"
+  ],
+  "drills": [
+    "clean-rebuild",
+    "forward-upgrade",
+    "backup-restore",
+    "load-baseline",
+    "security-review"
+  ],
+  "gates": [
+    "windows-amd64",
+    "linux-amd64"
+  ]
+}

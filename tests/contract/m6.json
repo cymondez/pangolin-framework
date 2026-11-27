@@ -1,0 +1,43 @@
+{
+  "milestone": "M6",
+  "baseline": "v1.3",
+  "unit_tests": {},
+  "integration_tests": {},
+  "python_tests": {
+    "A70/missing-release-item": "test_gate.ReleaseGates.test_A70_missing_release_item",
+    "A70/unknown-requirement": "test_gate.ReleaseGates.test_A70_unknown_requirement",
+    "A70/duplicate-delivery": "test_gate.ReleaseGates.test_A70_duplicate_delivery",
+    "A70/template-runtime-version": "test_gate.ReleaseGates.test_A70_template_runtime_version",
+    "A95/organization-contract-fails": "test_gate.ReleaseGates.test_A95_organization_contract_fails",
+    "A95/applicable-case-skipped": "test_gate.ReleaseGates.test_A95_applicable_case_skipped",
+    "A95/critical-package-below-threshold": "test_gate.ReleaseGates.test_A95_critical_package_below_threshold",
+    "A95/tenant-only-build-independent": "test_gate.ReleaseGates.test_A95_tenant_only_build_independent"
+  },
+  "drills": {
+    "A72/clean-rebuild": "clean-rebuild",
+    "A72/forward-upgrade": "forward-upgrade",
+    "A72/backup-restore": "backup-restore",
+    "A72/load-baseline": "load-baseline",
+    "A72/security-review": "security-review"
+  },
+  "pending": [],
+  "thin_slices": [
+    "S2",
+    "S3",
+    "S4",
+    "S5",
+    "S6",
+    "S7",
+    "S8",
+    "S9",
+    "S10",
+    "S11",
+    "S12"
+  ],
+  "module_docs": [
+    "tests/m6/README.md",
+    "deploy/release/README.md"
+  ],
+  "regression_tests": [],
+  "regression_integration_tests": []
+}

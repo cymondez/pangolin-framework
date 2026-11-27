@@ -1,0 +1,76 @@
+{
+  "profile": "local-ci-baseline",
+  "status": "selected-not-capacity-verified",
+  "uow": {
+    "default_timeout": "5s",
+    "cleanup_timeout": "2s",
+    "hook_timeout": "1s",
+    "max_requires_new_depth": 4
+  },
+  "events": {
+    "max_events_per_uow": 256,
+    "max_dispatch_depth": 16,
+    "max_payload_bytes": 1048576,
+    "broker_retention": "168h",
+    "manual_replay_window": "336h",
+    "inbox_retention": "720h",
+    "outbox_sent_retention": "720h"
+  },
+  "worker": {
+    "batch_size": 32,
+    "concurrency": 4,
+    "lease": "30s",
+    "send_timeout": "5s",
+    "max_attempts": 8,
+    "retry_initial": "250ms",
+    "retry_max": "30s",
+    "jitter_fraction": 0.2,
+    "max_pending": 100000
+  },
+  "idempotency": {
+    "max_key_bytes": 128,
+    "max_body_bytes": 1048576,
+    "retry_window": "24h",
+    "result_retention": "168h"
+  },
+  "operations": {
+    "drain_timeout": "15s",
+    "cleanup_budget": "5s",
+    "audit_retention": "2160h",
+    "alert_oldest_pending": "30s",
+    "alert_pending_count": 1000
+  },
+  "capacity_fixture": {
+    "concurrency": 64,
+    "records": 10000,
+    "metrics": [
+      "p95",
+      "p99",
+      "pool_saturation",
+      "outbox_lag"
+    ],
+    "results": "not-measured"
+  },
+  "jobs": {
+    "max_payload_bytes": 1048576,
+    "execution_timeout": "20s",
+    "cleanup_timeout": "5s",
+    "poll_interval": "100ms",
+    "retention": "720h",
+    "lease": "30s",
+    "max_attempts": 8,
+    "retry_initial": "250ms",
+    "retry_max": "30s",
+    "jitter_fraction": 0.2,
+    "concurrency": 4,
+    "batch_size": 32,
+    "max_pending": 100000
+  },
+  "observability": {
+    "sample_ratio": 0.1,
+    "trace_retention": "168h",
+    "log_retention": "720h",
+    "health_timeout": "2s",
+    "metrics_interval": "5s"
+  }
+}

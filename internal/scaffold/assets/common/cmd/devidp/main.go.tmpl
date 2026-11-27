@@ -1,0 +1,18 @@
+// Local, unauthenticated development fixture. Bind only to loopback through Compose.
+package main
+
+import (
+	"log"
+	"net/http"
+	"os"
+	"time"
+	"{{MODULE}}/internal/devidp"
+)
+
+func main() {
+	s, err := idp.New(os.Getenv("PANGOLIN_ISSUER"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Fatal((&http.Server{Addr: ":8080", Handler: s.Handler(), ReadHeaderTimeout: 5 * time.Second}).ListenAndServe())
+}

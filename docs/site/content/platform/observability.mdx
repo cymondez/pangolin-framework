@@ -1,0 +1,100 @@
+---
+title: 觀測與健康檢查（Observability & Health）
+description: 透過明確注入的 OpenTelemetry Tracer／Meter、結構化 JSON 日誌與 /livez、/readyz 探針，完整追查跨請求與非同步背景操作。
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+import source from '../_snippets/observability.go';
+
+> **你在架構中的位置**：`橫切觀測層` **`[ observability（Trace + Metrics + JSON Log + /livez /readyz）]`** `貫穿 HTTP → UOW → PostgreSQL → Outbox/Inbox → Jobs`
+>
+> **前置建議**：已完成[安裝頁](../getting-started/installation.md)。本頁範例**不需要 Docker 或資料庫**。
+
+## 為什麼 panGOlin 要求「明確注入 Telemetry」且禁止無界 Labels？
+
+實務上線後，團隊最常在觀測系統踩到兩個大坑：
+1. **全域單例汙染測試**：如果框架偷偷把 TracerProvider 塞進全域變數，多個整合測試平行跑時 Span 會互相干擾，也無法在停機時控制有界 Shutdown。
+2. **高基數（High Cardinality）打爆監控系統**：把 `tenant_id`、`organization_id`、`user_id` 或 `event_id` 放進 Prometheus／OTel Metric Label，只要上線幾千個客戶，時間序列就會直接爆炸！
+
+panGOlin 的觀測設計堅持三項紀律：**明確注入 Provider**、**Metrics 只用固定低基數詞彙（細節放 Trace／Log）**、**嚴格遮罩憑證與原始 SQL**。
+
+---
+
+## 1. 動手執行免資料庫的完整觀測範例
+
+從框架原始碼的 `examples/basics` 執行（或直接貼入你自己專案的 `main.go` 依序執行 `go mod tidy` 與 `go run .`）：
+
+<Tabs groupId="os">
+<TabItem value="powershell" label="Windows PowerShell">
+
+```powershell
+go run ./observability
+```
+
+</TabItem>
+<TabItem value="bash" label="Linux / macOS (Bash)">
+
+```bash
+go run ./observability
+```
+
+</TabItem>
+</Tabs>
+
+<CodeBlock language="go" title="examples/basics/observability/main.go">{source}</CodeBlock>
+
+預期輸出：
+
+```text
+Trace correlated: true
+/livez: 204
+/readyz: 204
+JSON log recorded: true
+```
+
+> **安全提醒**：`observability.Restore` 還原 `traceparent` 後只會延續分散式追蹤的 TraceID，**絕不會**攜帶身分憑證、租戶權限或任意 baggage。
+
+---
+
+## 2. 如何把同一份 Telemetry 接到整個應用？
+
+在應用啟動層建立好 OpenTelemetry SDK（掛上你部署環境的 OTLP Exporter、設定取樣率與有界 Shutdown）後，交給 `observability.New(tracerProvider, meterProvider, writer, module)`，並依下表接入各層：
+
+| 層級／元件 | 接線方式 | 自動獲得的觀測能力 |
+|---|---|---|
+| **HTTP 入口** | 用 `telemetry.HTTP(handler)` 包住 Router | 自動建立 OperationID、解析 W3C `traceparent`、記錄請求結果與延遲 |
+| **Application Use Case** | 在帶有 `telemetry.Context(ctx)` 的 context 下呼叫 `application.CommandResult`／`QueryResult`（或自訂 `observability.Start`） | 自動產生 `use_case` Span 並標記成功／失敗 |
+| **UOW 交易** | `manager.Within` 自動讀取 context 中的 Telemetry | 自動記錄交易生命週期與已確認的 Commit Outcome |
+| **PostgreSQL Pool** | 建立 `pgxpool` 前將 `poolConfig.ConnConfig.Tracer` 設為 `telemetry` | 記錄連線／查詢耗時，且**自動遮罩原始 SQL 與參數**（防機密外洩） |
+| **Outbox／Inbox** | 啟動 Worker 時傳入 `telemetry.Context(workerCtx)` | 透過 Envelope 保存的 `traceparent` 把非同步消費者連回原始 HTTP 請求 |
+| **Jobs Worker** | 在 `bind` 完成服務授權後回傳 `telemetry.Context(bound)` | 完整關聯 JobID、OperationID 與原始 `traceparent` |
+
+> **Audit 與 Trace 不可混為一談**：Trace 在生產環境通常只做部分取樣（Sampling）；**必要安全稽核（[platform/audit](../security/http-and-audit.md)）必須獨立同交易寫入資料庫**，絕不可因 Trace 沒抽樣就遺漏稽核。
+
+---
+
+## 3. 佇列積壓告警與 Pool Metrics
+
+定期從 Outbox／Inbox／Jobs Store 讀取 `Stats`（pending、processing、dead、oldest），回報給框架：
+- **`telemetry.Queue(ctx, name, pending, dead, oldest, countLimit, ageLimit)`**：`name` 僅接受 `outbox`、`inbox`、`jobs`；當積壓數、最老等待時間達閾值或出現 `dead` 紀錄時，自動寫出 `QUEUE_PRESSURE` 告警。
+- **`telemetry.Pool(ctx, stat.AcquiredConns(), stat.MaxConns())`**：追蹤連線池水位。
+- **嚴禁把敏感資料寫進觀測**：Token、請求 Payload、SQL 參數、原始密碼與個人隱私資料均不可放入 Trace 屬性或 Log。
+
+---
+
+## 4. `/livez`（存活）與 `/readyz`（就緒）的正確分工
+
+透過 `observability.Health{Ready: host.Ready, Required: checks, Timeout: 2*time.Second}` 掛載健康檢查端點：
+
+| 端點 | 回答的問題 | 應該檢查什麼？ | 常見錯誤 ❌ |
+|---|---|---|---|
+| **`/livez`** | 程序本身還活著嗎？（失敗會被 K8s 重啟 Pod） | **完全不查外部服務**，只要程序沒死鎖即回 `204` | ❌ 把 DB Ping 塞進 `/livez`，導致 DB 抖動 3 秒就把全部 API Pod 重啟成一片雪崩！ |
+| **`/readyz`** | 現在可以接外部流量嗎？（失敗會暫時移出 Load Balancer） | 同時確認 `host.Ready()` 為 true 且 `Required` 必要相依（如業務 DB Ping）在逾時內健康，否則回 `503` | ❌ 把非核心的可選 Broker 塞進純 API 的 `/readyz`，導致 NATS 瞬斷時所有 API 無法寫入 Outbox。 |
+
+停機啟動時，Runtime 會**優先把 `/readyz` 切為未就緒（503）**，等 Load Balancer 切走流量並完成 Drain 後，才真正停止模組與關閉資源。
+
+## 下一步
+
+當監控發出 `QUEUE_PRESSURE` 或系統遇到滿額 429／Broker 斷線時該怎麼處置？接著閱讀 **[容量、停機與恢復](operations.md)**。

@@ -1,0 +1,128 @@
+{
+  "tenant_a": "00000000-0000-0000-0000-000000000001",
+  "tenant_b": "00000000-0000-0000-0000-000000000002",
+  "catalog": [
+    {
+      "tenant": "00000000-0000-0000-0000-000000000001",
+      "kind": "tenant",
+      "id": "00000000-0000-0000-0000-000000000001",
+      "state": "active",
+      "revision": "1"
+    },
+    {
+      "tenant": "00000000-0000-0000-0000-000000000002",
+      "kind": "tenant",
+      "id": "00000000-0000-0000-0000-000000000002",
+      "state": "active",
+      "revision": "1"
+    },
+    {
+      "tenant": "00000000-0000-0000-0000-000000000001",
+      "kind": "org.enterprise",
+      "id": "00000000-0000-0000-0000-000000000010",
+      "state": "active",
+      "revision": "1"
+    },
+    {
+      "tenant": "00000000-0000-0000-0000-000000000001",
+      "kind": "org.organization",
+      "id": "00000000-0000-0000-0000-000000000011",
+      "state": "active",
+      "revision": "1"
+    },
+    {
+      "tenant": "00000000-0000-0000-0000-000000000001",
+      "kind": "org.organization",
+      "id": "00000000-0000-0000-0000-000000000012",
+      "state": "active",
+      "revision": "1"
+    },
+    {
+      "tenant": "00000000-0000-0000-0000-000000000002",
+      "kind": "org.organization",
+      "id": "00000000-0000-0000-0000-000000000011",
+      "state": "active",
+      "revision": "1"
+    }
+  ],
+  "memberships": [
+    {
+      "principal": "alice",
+      "scope": "00000000-0000-0000-0000-000000000011",
+      "role": "owner",
+      "tenant": "00000000-0000-0000-0000-000000000001",
+      "kind": "org.organization"
+    },
+    {
+      "principal": "alice",
+      "scope": "00000000-0000-0000-0000-000000000012",
+      "role": "member",
+      "tenant": "00000000-0000-0000-0000-000000000001",
+      "kind": "org.organization"
+    }
+  ],
+  "enterprise_roles": [
+    {
+      "principal": "enterprise-admin",
+      "scope": "00000000-0000-0000-0000-000000000010",
+      "role": "owner",
+      "tenant": "00000000-0000-0000-0000-000000000001",
+      "kind": "org.enterprise"
+    }
+  ],
+  "service_grants": [
+    {
+      "principal": "projection-worker",
+      "scope": "00000000-0000-0000-0000-000000000011",
+      "permission": "projection.consume",
+      "tenant": "00000000-0000-0000-0000-000000000001",
+      "kind": "org.organization"
+    }
+  ],
+  "assemblies": {
+    "tenant-only": {
+      "kinds": [
+        "tenant"
+      ],
+      "implementation": "tenant-fixture"
+    },
+    "organization-enabled": {
+      "kinds": [
+        "tenant",
+        "org.enterprise",
+        "org.organization"
+      ],
+      "implementation": "builtin-fixture"
+    },
+    "replacement-contract": {
+      "kinds": [
+        "tenant",
+        "org.enterprise",
+        "org.organization"
+      ],
+      "implementation": "alternate-map-fixture",
+      "preserves": [
+        "catalog",
+        "memberships",
+        "enterprise_roles",
+        "service_grants"
+      ]
+    }
+  },
+  "admission_barrier": [
+    "bind revision 1",
+    "commit membership revocation revision 2",
+    "new top-level admission rejects old allow",
+    "already admitted short operation keeps snapshot",
+    "RequiresNew cannot extend parent's deadline"
+  ],
+  "negative_controls": [
+    "enterprise-owner-without-org-membership",
+    "cross-tenant",
+    "cross-owner",
+    "unsupported-kind",
+    "unavailable-authority",
+    "provider-changing-requested-scope",
+    "illegal-provider-removal"
+  ]
+}

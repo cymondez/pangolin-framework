@@ -1,0 +1,7 @@
+{
+  "name": "pangolin-realtime-example",
+  "private": true,
+  "type": "module",
+  "scripts": {"test": "node --test integration.test.mjs"},
+  "dependencies": {"@microsoft/signalr": "10.0.0"}
+}

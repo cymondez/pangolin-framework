@@ -1,0 +1,207 @@
+{
+  "milestone": "M1",
+  "status": "verified",
+  "source_commit": "9eb10df6cd848b87fda964f0b6b61d60dc12b0a6",
+  "source_sha256": "0dbb5b4b2165317f9057dd1cffe194ffcf2d411d30b7be47d96ba1d3f7c869d0",
+  "baseline": "v1.3",
+  "reports": {
+    "windows-amd64": "df190b1a5c2de6e15c0c1e3db2f526c9185146f9d560b60f457300b8d29fcb67",
+    "linux-amd64": "fcbecb43e39227faca71043d6500305764d11c1cc71179b290d904f2f730278e"
+  },
+  "gate_sha256": "6f8885bc09230195272eebdce4ca017c606b6578e8b1d7325517bf3f6cfd1a91",
+  "archive": {
+    "path": "artifacts/9eb10df6-m1-evidence.zip",
+    "sha256": "956942da3e539ce5e05c51cb760dcf6aae60b2bd344546b47df644a590999fda",
+    "bytes": 69728558
+  },
+  "coverage": {
+    "windows-amd64": {
+      "overall": {
+        "covered_statements": 1341,
+        "total_statements": 1430
+      },
+      "packages": {
+        "github.com/cymondez/pangolin-framework/cmd/bookstore-api": {
+          "covered_statements": 3,
+          "total_statements": 5
+        },
+        "github.com/cymondez/pangolin-framework/cmd/bookstore-worker": {
+          "covered_statements": 3,
+          "total_statements": 5
+        },
+        "github.com/cymondez/pangolin-framework/events/distributed": {
+          "covered_statements": 16,
+          "total_statements": 16
+        },
+        "github.com/cymondez/pangolin-framework/events/nats": {
+          "covered_statements": 34,
+          "total_statements": 37
+        },
+        "github.com/cymondez/pangolin-framework/examples/bookstore/application": {
+          "covered_statements": 18,
+          "total_statements": 24
+        },
+        "github.com/cymondez/pangolin-framework/examples/bookstore/bootstrap": {
+          "covered_statements": 125,
+          "total_statements": 145
+        },
+        "github.com/cymondez/pangolin-framework/examples/bookstore/domain": {
+          "covered_statements": 3,
+          "total_statements": 4
+        },
+        "github.com/cymondez/pangolin-framework/examples/bookstore/infrastructure": {
+          "covered_statements": 82,
+          "total_statements": 107
+        },
+        "github.com/cymondez/pangolin-framework/internal/quality": {
+          "covered_statements": 132,
+          "total_statements": 132
+        },
+        "github.com/cymondez/pangolin-framework/kernel/config": {
+          "covered_statements": 45,
+          "total_statements": 45
+        },
+        "github.com/cymondez/pangolin-framework/kernel/di": {
+          "covered_statements": 179,
+          "total_statements": 182
+        },
+        "github.com/cymondez/pangolin-framework/kernel/module": {
+          "covered_statements": 152,
+          "total_statements": 159
+        },
+        "github.com/cymondez/pangolin-framework/kernel/runtime": {
+          "covered_statements": 157,
+          "total_statements": 160
+        },
+        "github.com/cymondez/pangolin-framework/persistence/postgres": {
+          "covered_statements": 42,
+          "total_statements": 46
+        },
+        "github.com/cymondez/pangolin-framework/persistence/uow": {
+          "covered_statements": 160,
+          "total_statements": 164
+        },
+        "github.com/cymondez/pangolin-framework/security/authn": {
+          "covered_statements": 62,
+          "total_statements": 63
+        },
+        "github.com/cymondez/pangolin-framework/security/scope": {
+          "covered_statements": 13,
+          "total_statements": 13
+        },
+        "github.com/cymondez/pangolin-framework/tools/check": {
+          "covered_statements": 48,
+          "total_statements": 51
+        },
+        "github.com/cymondez/pangolin-framework/transport/http": {
+          "covered_statements": 67,
+          "total_statements": 72
+        }
+      }
+    },
+    "linux-amd64": {
+      "overall": {
+        "covered_statements": 1340,
+        "total_statements": 1430
+      },
+      "packages": {
+        "github.com/cymondez/pangolin-framework/cmd/bookstore-api": {
+          "covered_statements": 3,
+          "total_statements": 5
+        },
+        "github.com/cymondez/pangolin-framework/cmd/bookstore-worker": {
+          "covered_statements": 3,
+          "total_statements": 5
+        },
+        "github.com/cymondez/pangolin-framework/events/distributed": {
+          "covered_statements": 16,
+          "total_statements": 16
+        },
+        "github.com/cymondez/pangolin-framework/events/nats": {
+          "covered_statements": 34,
+          "total_statements": 37
+        },
+        "github.com/cymondez/pangolin-framework/examples/bookstore/application": {
+          "covered_statements": 18,
+          "total_statements": 24
+        },
+        "github.com/cymondez/pangolin-framework/examples/bookstore/bootstrap": {
+          "covered_statements": 124,
+          "total_statements": 145
+        },
+        "github.com/cymondez/pangolin-framework/examples/bookstore/domain": {
+          "covered_statements": 3,
+          "total_statements": 4
+        },
+        "github.com/cymondez/pangolin-framework/examples/bookstore/infrastructure": {
+          "covered_statements": 82,
+          "total_statements": 107
+        },
+        "github.com/cymondez/pangolin-framework/internal/quality": {
+          "covered_statements": 132,
+          "total_statements": 132
+        },
+        "github.com/cymondez/pangolin-framework/kernel/config": {
+          "covered_statements": 45,
+          "total_statements": 45
+        },
+        "github.com/cymondez/pangolin-framework/kernel/di": {
+          "covered_statements": 179,
+          "total_statements": 182
+        },
+        "github.com/cymondez/pangolin-framework/kernel/module": {
+          "covered_statements": 152,
+          "total_statements": 159
+        },
+        "github.com/cymondez/pangolin-framework/kernel/runtime": {
+          "covered_statements": 157,
+          "total_statements": 160
+        },
+        "github.com/cymondez/pangolin-framework/persistence/postgres": {
+          "covered_statements": 42,
+          "total_statements": 46
+        },
+        "github.com/cymondez/pangolin-framework/persistence/uow": {
+          "covered_statements": 160,
+          "total_statements": 164
+        },
+        "github.com/cymondez/pangolin-framework/security/authn": {
+          "covered_statements": 62,
+          "total_statements": 63
+        },
+        "github.com/cymondez/pangolin-framework/security/scope": {
+          "covered_statements": 13,
+          "total_statements": 13
+        },
+        "github.com/cymondez/pangolin-framework/tools/check": {
+          "covered_statements": 48,
+          "total_statements": 51
+        },
+        "github.com/cymondez/pangolin-framework/transport/http": {
+          "covered_statements": 67,
+          "total_statements": 72
+        }
+      }
+    }
+  },
+  "environment": {
+    "environment\\compose.log": "77e895e249e4b72128b26eea76364a9f2364f6d098ddd9a4ae18404844e8dc68",
+    "environment\\containers.json": "bdb31d5c86e00712d1f90681292b9f5da653d5316669e73be71dc1d9bb3952de",
+    "environment\\idp-build.txt": "38ea3f0804fd2bb4b766b600574f004f118e9b6bc8cd39b326a60d97fc7bbdcf",
+    "environment\\volumes.json": "9580661c44a14dbafa2679ee004a6f263145681f1b3218f51eab2804d9698e3a"
+  },
+  "requirements": [
+    "ARC-001",
+    "MOD-001",
+    "MOD-002",
+    "MOD-003",
+    "CFG-001",
+    "OPS-001",
+    "REL-001",
+    "REL-002",
+    "REL-004"
+  ],
+  "named_subtests": 47,
+  "module_readmes": 20,
+  "remote_ci": "not-run"
+}

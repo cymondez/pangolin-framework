@@ -1,0 +1,9 @@
+# Bookstore SignalR
+
+This project includes the optional realtime module. The API exposes `/hub` and `/hub/negotiate`. An official SignalR JSON client can invoke `CurrentScope` and subscribe to channel `books` with its complete authorized owner. Register a `BookNotification` callback to receive notifications.
+
+Provision a JetStream limits-retention file stream and dedicated literal subject. Set `PANGOLIN_REALTIME_NATS_URL`, `PANGOLIN_REALTIME_STREAM` and `PANGOLIN_REALTIME_SUBJECT`. Provide `PANGOLIN_REALTIME_INTROSPECTION_URL` over HTTPS, with client credentials supplied through `PANGOLIN_REALTIME_INTROSPECTION_ID` and `PANGOLIN_REALTIME_INTROSPECTION_SECRET`. Configure the deployment's current credential authority. Set `PANGOLIN_REALTIME_ORIGINS` to a comma-delimited list for cross-origin browser deployments.
+
+`pangolin module add notices --depends realtime` gives the module a direct Root dependency. Inject `realtime.Publisher` in the service constructor and stage a notification from its authorized writable Command. Configure the existing Outbox worker with `jetstream.Route` to dispatch the notification event type to this stream. The API starts a node receiver. The generated API does not operate an Outbox worker.
+
+Use the framework's `examples/realtime` for a local runnable publisher/consumer example with disposable credentials and independent nodes.
