@@ -5,10 +5,11 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
-	"github.com/cymondez/pangolin-framework/observability"
 	"log/slog"
 	"sync"
 
+	"github.com/cymondez/pangolin-framework/kernel/ambient"
+	"github.com/cymondez/pangolin-framework/observability"
 	"github.com/cymondez/pangolin-framework/security/scope"
 )
 
@@ -29,23 +30,79 @@ type manager struct {
 	key      string
 	rls      bool
 }
-type scopeKey struct{}
-type completingKey struct{}
+
+var (
+	scopeVar      = ambient.New[*view]()
+	completingVar = ambient.New[*operation]()
+	slotsVar      = ambient.New[[]ambient.Slot]()
+)
+
 type operation struct {
-	mu                            sync.Mutex
-	id                            string
-	options                       EffectiveOptions
-	binding                       scope.ScopeBinding
-	active, completing, suspended bool
-	depth                         int
-	rollback                      error
-	flush                         func(context.Context) error
-	hooks                         [3][]func(context.Context, Completion) error
+	mu                 sync.Mutex
+	id                 string
+	options            EffectiveOptions
+	binding            scope.ScopeBinding
+	active, completing bool
+	depth              int
+	rollback           error
+	flush              func(context.Context) error
+	hooks              [3][]func(context.Context, Completion) error
 }
 type view struct {
 	root    *operation
 	options EffectiveOptions
 	active  bool
+}
+
+// AttachSlot registers a UOW-scoped ambient variable (such as a database
+// executor or transaction-bound event queue) on ctx so Detach and RequiresNew
+// clear it automatically without mutating any enclosing context.
+func AttachSlot(ctx context.Context, slot ambient.Slot) context.Context {
+	if ctx == nil || slot == nil {
+		return ctx
+	}
+	prev, _ := slotsVar.Current(ctx)
+	for _, existing := range prev {
+		if existing == slot {
+			return ctx
+		}
+	}
+	next := make([]ambient.Slot, len(prev)+1)
+	copy(next, prev)
+	next[len(prev)] = slot
+	return slotsVar.With(ctx, next)
+}
+
+func clearSlots(ctx context.Context) context.Context {
+	if slots, ok := slotsVar.Current(ctx); ok {
+		for _, slot := range slots {
+			ctx = slot.Clear(ctx)
+		}
+		ctx = slotsVar.Clear(ctx)
+	}
+	return ctx
+}
+
+// Detach returns a derived context with the current unit-of-work view,
+// completion marker, and all UOW-scoped resource slots (database/postgres
+// executors, local/outbox event queues) cleared via ambient.Var.Clear.
+// Verified identity, tenant, ScopeBinding, observability metadata, and
+// deadlines are preserved so a goroutine can safely start a fresh top-level
+// Within operation (which re-runs scope.Admit) without leaking parent UOW
+// state.
+func Detach(ctx context.Context) context.Context {
+	if ctx == nil {
+		return nil
+	}
+	ctx = clearSlots(ctx)
+	ctx = completingVar.Clear(ctx)
+	ctx = scopeVar.Clear(ctx)
+	return ctx
+}
+
+func isCompleting(ctx context.Context, r *operation) bool {
+	cur, ok := completingVar.Current(ctx)
+	return ok && cur == r
 }
 
 // NewManager validates mandatory limits before any operation can start.
@@ -66,10 +123,7 @@ func NewManager(resource Resource, defaults DefaultOptions) (UnitOfWorkManager, 
 	return m, nil
 }
 func currentView(ctx context.Context) *view {
-	if ctx == nil {
-		return nil
-	}
-	v, _ := ctx.Value(scopeKey{}).(*view)
+	v, _ := scopeVar.Current(ctx)
 	return v
 }
 func (m *manager) Current(ctx context.Context) (Scope, bool) {
@@ -79,7 +133,7 @@ func (m *manager) Current(ctx context.Context) (Scope, bool) {
 	}
 	v.root.mu.Lock()
 	defer v.root.mu.Unlock()
-	if !v.active || !v.root.active || v.root.suspended || v.root.completing && ctx.Value(completingKey{}) != v.root {
+	if !v.active || !v.root.active || (v.root.completing && !isCompleting(ctx, v.root)) {
 		return nil, false
 	}
 	return v, true
@@ -115,10 +169,7 @@ func Check(ctx context.Context, write bool) error {
 	if !v.active || !r.active {
 		return reject(ErrClosed, nil, false)
 	}
-	if r.suspended {
-		return reject(ErrSuspended, nil, false)
-	}
-	if r.completing && ctx.Value(completingKey{}) != r {
+	if r.completing && !isCompleting(ctx, r) {
 		return reject(ErrBusy, nil, true)
 	}
 	b, ok := scope.Current(ctx)
@@ -150,7 +201,7 @@ func (m *manager) Within(ctx context.Context, o Options, callback func(context.C
 	}
 	p := currentView(ctx)
 	completionJoin := false
-	if p != nil && ctx.Value(completingKey{}) == p.root {
+	if p != nil && isCompleting(ctx, p.root) {
 		// A Resource completion hook (Local Event drain/flush) may call the
 		// normal Application Command/Query boundary. This marker is private
 		// to Manager and is only installed on its controlled completion path.
@@ -176,14 +227,10 @@ func (m *manager) Within(ctx context.Context, o Options, callback func(context.C
 	if p != nil {
 		p.root.mu.Lock()
 		active := p.active && p.root.active
-		suspended := p.root.suspended
 		completing := p.root.completing
 		p.root.mu.Unlock()
 		if !active {
 			return reject(ErrClosed, nil)
-		}
-		if suspended {
-			return reject(ErrSuspended, nil)
 		}
 		if completing && !(completionJoin && o.Propagation == Required) {
 			return reject(ErrBusy, nil)
@@ -230,14 +277,6 @@ func (m *manager) Within(ctx context.Context, o Options, callback func(context.C
 		var stop context.CancelFunc
 		work, stop = context.WithDeadline(work, p.options.Deadline)
 		defer stop()
-		p.root.mu.Lock()
-		if p.root.suspended || p.root.completing || !p.root.active || !p.active {
-			p.root.mu.Unlock()
-			return reject(ErrSuspended, nil)
-		}
-		p.root.suspended = true
-		p.root.mu.Unlock()
-		defer func() { p.root.mu.Lock(); p.root.suspended = false; p.root.mu.Unlock() }()
 	}
 	if e := work.Err(); e != nil {
 		return reject(e, e)
@@ -250,7 +289,12 @@ func (m *manager) Within(ctx context.Context, o Options, callback func(context.C
 		r.depth = p.root.depth + 1
 	}
 	v := &view{r, effective, true}
-	work = context.WithValue(work, scopeKey{}, v)
+	// Isolate the new root from any parent resource slots (executors, event
+	// queues) and completion markers before Begin installs its own slots.
+	// Parent contexts are immutable and remain completely unaffected.
+	work = clearSlots(work)
+	work = completingVar.Clear(work)
+	work = scopeVar.With(work, v)
 	work, tx, beginErr := m.resource.Begin(work, effective)
 	if beginErr != nil {
 		r.active = false
@@ -344,7 +388,7 @@ func (m *manager) Within(ctx context.Context, o Options, callback func(context.C
 		return fail(ErrRollbackOnly, id, NotStarted, rollback)
 	}
 	// Only this private completion context can use the executor while completing.
-	completionContext := context.WithValue(work, completingKey{}, r)
+	completionContext := completingVar.With(work, r)
 	if r.flush != nil {
 		if err = r.flush(completionContext); err != nil {
 			return err
@@ -394,7 +438,7 @@ func markRollback(v *view, cause error) {
 	}
 	r := v.root
 	r.mu.Lock()
-	if v.active && r.active && !r.suspended {
+	if v.active && r.active {
 		r.rollback = errors.Join(r.rollback, cause)
 	}
 	r.mu.Unlock()
@@ -427,7 +471,7 @@ func (m *manager) join(ctx context.Context, p *view, o Options, callback func(co
 	v := &view{root: p.root, options: p.options, active: true}
 	v.options.Mode = mode
 	v.options.Deadline, _ = child.Deadline()
-	child = context.WithValue(child, scopeKey{}, v)
+	child = scopeVar.With(child, v)
 	defer func() {
 		pv := recover()
 		p.root.mu.Lock()
@@ -488,9 +532,6 @@ func (v *view) SetRollbackOnly(cause error) error {
 	if !v.active || !r.active {
 		return fail(ErrClosed, r.id, NotStarted, nil)
 	}
-	if r.suspended {
-		return fail(ErrSuspended, r.id, NotStarted, nil)
-	}
 	if r.completing {
 		return fail(ErrBusy, r.id, NotStarted, nil)
 	}
@@ -509,9 +550,6 @@ func (v *view) addHook(i int, f func(context.Context, Completion) error) error {
 	}
 	if !v.active || !r.active {
 		return fail(ErrClosed, r.id, NotStarted, nil)
-	}
-	if r.suspended {
-		return fail(ErrSuspended, r.id, NotStarted, nil)
 	}
 	if r.completing {
 		return fail(ErrBusy, r.id, NotStarted, nil)

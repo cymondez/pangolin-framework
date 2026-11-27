@@ -62,7 +62,7 @@ func OpenSQLiteResource(ctx context.Context, path string) (database.Resource, fu
 
 ## 3. 常見執行期注意事項
 
-- 與其他引擎一致：`QueryRow` 必須 `Scan`、多列 `Rows` 必須 `Close()` 並檢查 `rows.Err()`、同一 UOW 不可平行執行 SQL。
+- 與其他引擎一致：`QueryRow` 必須 `Scan`、多列 `Rows` 必須 `Close()` 並檢查 `rows.Err()`；同一筆 UOW（單一連線）不可平行執行 SQL（平行讀取可透過各 goroutine 開立獨立 `RequiresNew` 或 `uow.Detach` UOW 共用同一個無狀態 Repository；平行寫入仍受 SQLite 單一 writer 限制）。
 - 多租戶資格驗證與 Permission 檢查仍由入口與應用政策負責，不會因為換用 SQLite 而放寬。
 
 ## 下一步

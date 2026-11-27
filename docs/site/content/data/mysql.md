@@ -64,7 +64,7 @@ func OpenMySQLResource(ctx context.Context, dsn string) (database.Resource, func
 
 ## 3. 常見執行期注意事項
 
-- 與 PostgreSQL 相同：同一 UOW 內禁止平行下 SQL；`QueryRow` 必須 `Scan`；多列 `Rows` 必須 `Close()` 並檢查 `rows.Err()`。
+- 與 PostgreSQL 相同：單一 UOW 綁定單一連線，**同一筆 UOW 內**不可平行下 SQL（若需多執行緒平行操作，請各 goroutine 透過 `RequiresNew` 或 `uow.Detach` 開立獨立 UOW）；`QueryRow` 必須 `Scan`；多列 `Rows` 必須 `Close()` 並檢查 `rows.Err()`。
 - 收到 `uow.ErrCommitUnknown` 時，切勿無條件重跑寫入，請透過操作識別或[冪等機制](idempotency.md)對帳。
 
 ## 下一步

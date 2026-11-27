@@ -20,7 +20,7 @@ panGOlin 的 **工作單元（Unit of Work，簡稱 UOW）** 用一個受控的�
 
 - **Application 層只宣告「這是一筆寫入或唯讀操作」**，不碰具體連線或 `Tx` 型別。
 - **交易與資源歸 Manager 獨占管理**：進入回呼前開好交易、設定好租戶 RLS，回呼順利結束後統一處理本機事件、Outbox 與 `Commit`；任何失敗（包含 panic）都由框架在有界時間內自動 `Rollback` 與釋放資源。
-- **交易透過受控 `context.Context` 往下傳遞**：Repository 只需從傳入的 `work` context 取得當前執行器，不需要在每個方法簽名上多傳一個 `tx` 參數。
+- **交易透過 [`kernel/ambient`](../fundamentals/ambient-scope.md) 的不可變 `context.Context` 巢狀鏈往下傳遞**：Repository 只需從傳入的 `work` context 取得當前執行器，不需要在每個方法簽名上多傳一個 `tx` 參數，同時保有跨 goroutine 的 Copy-on-Write 隔離能力。
 
 ---
 
@@ -149,7 +149,7 @@ func (s *Service) GetTitle(ctx context.Context, id string) (string, error) {
 func (s *Service) CreateIsolatedAudit(ctx context.Context, title string) error {
 	return s.transactions.Within(ctx, uow.Options{
 		Mode:        uow.ReadWrite,
-		Propagation: uow.RequiresNew, // 暫停父交易、另取獨立連線與交易並立刻獨立提交
+		Propagation: uow.RequiresNew, // 開立獨立根 UOW、新連線與交易並立刻獨立提交（不修改父視圖）
 	}, func(work context.Context) error {
 		return s.books.Insert(work, "[audit] "+strings.TrimSpace(title))
 	})
@@ -193,20 +193,37 @@ Service A: Command (ReadWrite) ─────────[ 根交易 #1 開始 
 - **唯讀子視圖權限縮限**：可寫根交易內呼叫 `Query`（唯讀 Required）是允許的，但該唯讀子視圖內**禁止寫入**，且子回呼結束後，子 `work` context 立即失效（父 `work` 仍可繼續使用）。
 - **不可升級為可寫**：外層是 `ReadOnly` 時，內層如果要求 `ReadWrite` + `Required`，會因為選項衝突直接失敗（`ErrOptionsConflict`）。
 
-### 2. `uow.RequiresNew`：暫停父交易，另開獨立交易先提交
+### 2. `uow.RequiresNew`：開立獨立交易與連線（支援平行多執行緒）
 
 ```text
-Service A: Command (ReadWrite) ──[ 根交易 #1 ]── 暫停 ────────────── 恢復 ──▶ 若父失敗：Rollback #1
-                                                  │                    ▲
-                                                  ▼                    │
-Service B: Within (RequiresNew) ───────────[ 獨立交易 #2 (新連線) ]──▶ 獨立 Commit #2（不會隨父回滾）
+Service A: Command (ReadWrite) ──[ 根交易 #1 (連線 #1) ]───────────────────────▶ 若父失敗：Rollback #1
+                                          │
+                                          ├── goroutine 1: RequiresNew ──[ 獨立交易 #2 (連線 #2) ]──▶ 獨立 Commit #2
+                                          └── goroutine 2: RequiresNew ──[ 獨立交易 #3 (連線 #3) ]──▶ 獨立 Commit #3
 ```
 
-- 適合「**即使主流程最後失敗，這筆紀錄仍要保留**」的場景（例如獨立安全事件、扣點失敗紀錄、外部回呼收件紀錄）。
+- 適合「**即使主流程最後失敗，這筆紀錄仍要保留**」的場景（例如獨立安全事件、扣點失敗紀錄、外部回呼收件紀錄），以及「**在一個已驗證的父操作內，安全地以多條 goroutine 平行執行獨立資料庫工作**」。
+- **對齊 .NET ABP 的不可變 Ambient UOW 模型**：`RequiresNew` 透過 [`kernel/ambient`](../fundamentals/ambient-scope.md) 的 Copy-on-Write 鏈建立全新的獨立根 UOW 與獨立連線，**不會回寫或暫停父節點狀態**。因此多個 goroutine 可以對同一個有效的父 `work` context **同時併發呼叫 `Within(..., RequiresNew)`**，共用同一個無狀態 Repository 實例、各自持有獨立交易與連線，互不鎖死、互不汙染。
 - **三個務必牢記的限制**：
   1. **它不是 Savepoint**：子交易已經 Commit 的資料，不會因為父交易稍後回滾而撤銷；同時子交易也**看不到**父交易尚未 Commit 的資料。
-  2. **需要第二條連線且小心死鎖**：`RequiresNew` 會向連線池多借一條連線。如果連線池太小，或子交易試圖更新父交易已經鎖住的同一筆資料列，會卡住直到逾時（`Timeout`），不會退回共用父交易。
-  3. **不可藉此偷渡權限或延長時限**：`RequiresNew` 會沿用父操作的 Tenant、Principal、Scope Binding 與剩餘 Deadline，不能在裡面切換租戶或把逾時拉長。
+  2. **需要額外連線且小心鎖衝突**：每個同時進行的 `RequiresNew` 都會向連線池借用一條獨立連線。請確保連線池容量足以負荷併發度；若子交易試圖更新父交易已經鎖住的同一筆資料列（或 SQLite 單一 writer 寫鎖），會依 `Timeout` 失敗，不會退回共用父交易。
+  3. **不可藉此偷渡權限或延長時限**：`RequiresNew` 會沿用父操作的 Tenant、Principal、Scope Binding 與剩餘 Deadline，深度受 `MaxRequiresNewDepth` 限制；且若父 UOW 已進入完成階段或已關閉，將 fail-closed 拒絕（`ErrBusy`／`ErrClosed`）。若在父 UOW 內啟動平行 `RequiresNew` goroutine，務必以 `sync.WaitGroup` 在父回呼返回前等待它們完成。
+
+### 3. `uow.Detach(ctx)`：脫離目前 UOW，啟動獨立頂層操作
+
+如果你需要在平行 goroutine 中啟動一筆**完全獨立的頂層 UOW**（不受父 UOW 生命週期與 `MaxRequiresNewDepth` 限制，並且希望在進入前重新執行 `scope.Admit` 核對當前最新權威 revision），請呼叫 `uow.Detach(ctx)`：
+
+```go
+// Detach 會透過 ambient.Var.Clear 清除目前 UOW 視圖、完成標記與所有已掛載的資源槽位
+// （包含 database／postgres Executor 與 Local／Outbox 佇列），絕不漏用父交易連線；
+// 同時完整保留已驗證的 Identity、Tenant、ScopeBinding、Telemetry 與 Deadline。
+detached := uow.Detach(work)
+
+// 可將 detached 安全交給平行 goroutine 各自啟動獨立頂層 UOW（各自重新執行 scope.Admit）。
+err := application.Query(detached, s.transactions, func(topWork context.Context) error {
+	return s.books.CheckSomething(topWork)
+})
+```
 
 > **動手驗證**：想親眼看到「父回滾、子提交、舊 Scope 失效」在真實 PostgreSQL 上的行為，請執行[交易傳播教學](../tutorials/transactions.mdx)。
 
@@ -216,12 +233,13 @@ Service B: Within (RequiresNew) ───────────[ 獨立交易 
 
 以下是從傳統 Go 專案轉入 panGOlin 時最常踩的 5 個地雷：
 
-### 地雷 1：把 `work` context 丟進背景 goroutine 或平行執行多條 SQL
+### 地雷 1：在「同一筆 UOW」直接平行下 SQL，或讓背景 goroutine 繼續使用已結束的 `work`
 
-```go title="反例：切勿在同一 UOW 內開 goroutine 平行查 DB ❌"
+```go title="反例：切勿不開新 UOW 就共用同一條連線平行查 DB ❌"
 application.Command(ctx, s.transactions, func(work context.Context) error {
-	// ❌ 錯誤 1：同一 UOW Executor 綁定單一連線，禁止平行執行 SQL，會觸發 ErrBusy！
-	// ❌ 錯誤 2：回呼一結束 UOW 就提交並關閉連線，背景 goroutine 會拿到已關閉的 Scope (ErrClosed)！
+	// ❌ 錯誤 1：同一筆 UOW 綁定單一資料庫連線（如同 ABP 中單一 DbContext 不可並發查詢），
+	//    在同一個 work 上直接開 goroutine 平行呼叫 Repository 會觸發 ErrBusy 並使交易回滾！
+	// ❌ 錯誤 2：沒有等 goroutine 結束就讓回呼返回，連線關閉後背景 goroutine 會拿到 ErrClosed！
 	go func() {
 		_ = s.books.Insert(work, "async-book")
 	}()
@@ -229,7 +247,9 @@ application.Command(ctx, s.transactions, func(work context.Context) error {
 })
 ```
 
-**✅ 正確做法**：同一 UOW 內的 SQL 循序執行；需要背景非同步處理的工作，在同交易內寫入 [Outbox](../events/reliable-delivery.md) 或[持久化背景工作](../platform/jobs.md)，由獨立 Worker 另開新 UOW 執行。
+**✅ 正確做法（依需求二選一）**：
+1. **需要平行資料庫操作（同一請求內併發查詢／獨立寫入）**：共用同一個無狀態 Repository，在每個 goroutine 內透過 **`Propagation: uow.RequiresNew`**（需等待 `wg.Wait()` 再結束父回呼）或 **`uow.Detach(work)` + 新頂層 `Within`** 取得各自獨立的 UOW 與資料庫連線！
+2. **需要跨越請求生命週期的可靠背景工作**：在同交易內寫入 [Outbox](../events/reliable-delivery.md) 或[持久化背景工作](../platform/jobs.md)，由獨立 Worker 另開新 UOW 執行。
 
 ### 地雷 2：內層失敗後吞掉錯誤，以為外層還能成功提交
 
@@ -322,7 +342,7 @@ if err != nil {
 
 - [ ] Application Service 只依賴 `uow.UnitOfWorkManager` 與自己的 Repository 介面，沒有 import `pgx` 或 `database/sql`。
 - [ ] 日常寫入統一用 `application.Command`／`CommandResult`，查詢統一用 `application.Query`／`QueryResult`。
-- [ ] 回呼內全部使用傳入的 `work` context，沒有混用外層 `ctx`，也沒有開啟背景 goroutine 共用 `work`。
+- [ ] 回呼內全部使用傳入的 `work` context，沒有混用外層 `ctx`；若需多執行緒平行操作 DB，已為每個 goroutine 開立獨立的 `RequiresNew` 或 `uow.Detach` 頂層 UOW（沒有在同一筆 UOW 內共用單一連線平行下 SQL）。
 - [ ] 沒有在 `OnCompleted` 執行需要可靠保證的寫入或外部通知。
 - [ ] 針對付款、建單等關鍵寫入，規劃好 [Command 冪等](idempotency.md) 與 `UOW_COMMIT_UNKNOWN` 的對帳處理。
 

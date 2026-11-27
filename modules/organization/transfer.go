@@ -244,7 +244,7 @@ func (s *Store) Import(ctx context.Context, bundle Bundle) error {
 	if err = validateBundle(bundle, b.Ref.TenantID); err != nil {
 		return err
 	}
-	ctx = context.WithValue(ctx, privateSchemaKey{}, s.options.PrivateSchema)
+	ctx = privateSchemaVar.With(ctx, s.options.PrivateSchema)
 	return s.options.Manager.Within(ctx, uow.Options{Mode: uow.ReadWrite, Transaction: uow.Transactional}, func(work context.Context) error {
 		b, err := s.actorFromContext(work)
 		if err != nil {

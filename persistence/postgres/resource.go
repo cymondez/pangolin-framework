@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/cymondez/pangolin-framework/kernel/ambient"
 	"github.com/cymondez/pangolin-framework/persistence/database"
 	"github.com/cymondez/pangolin-framework/persistence/uow"
 	"github.com/cymondez/pangolin-framework/security/scope"
@@ -15,7 +16,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-type executorKey struct{}
+var executorVar = ambient.New[*transaction]()
 
 // Resource is a single database resource. Key defaults to the pool's identity.
 // Transaction-local RLS requires transactions for reads as well as writes.
@@ -124,7 +125,9 @@ func (r *Resource) Begin(ctx context.Context, o uow.EffectiveOptions) (context.C
 	// transaction; wrappers (events/postgres.Resource) delegating to this
 	// Begin expose the neutral Port automatically.
 	ctx = database.WithExecutor(ctx, &neutralBinder{key: r.DatabaseKey()})
-	return context.WithValue(ctx, executorKey{}, t), t, nil
+	ctx = executorVar.With(ctx, t)
+	ctx = uow.AttachSlot(ctx, executorVar)
+	return ctx, t, nil
 }
 
 // Executor never exposes Begin, Commit, Rollback or the underlying connection.
@@ -139,8 +142,8 @@ func Current(ctx context.Context, write bool) (*Executor, error) {
 	if err := uow.Check(ctx, write); err != nil {
 		return nil, err
 	}
-	tx, ok := ctx.Value(executorKey{}).(*transaction)
-	if !ok {
+	tx, ok := executorVar.Current(ctx)
+	if !ok || tx == nil {
 		return nil, uow.Fail(ctx, uow.ErrResourceMismatch)
 	}
 	if err := uow.CheckResource(ctx, tx.key, write); err != nil {

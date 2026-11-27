@@ -63,3 +63,5 @@ M5 的 Cache／Settings／Features 在 platform 下；CLI main 在 cmd/pangolin�
 後續資料存取修正以 persistence/database 定義中立 Resource／Executor／Dialect；各引擎 Adapter 在 persistence/{postgres,mysql,sqlite}，跨引擎契約在 tests/database。業務 Application 使用自己的 Repository Port，Repository 使用中立 Executor；連線池與 Driver 型別只在組裝／Adapter。引擎專用 schema／migration 仍由實際擁有者維護，不因新增中立 Port 就宣稱全數跨引擎可用。
 
 Root 裝配／建構子 DI 增補落在 kernel/module（root_types.go、root_loader.go、services.go）、kernel/runtime/root.go 與 kernel/app，新增 tests/rootmodules 與 examples/moduleapp；完整入口與現況見 [Root DI 指南](root-module-di.md)。
+
+顯式不可變 Ambient Scope 原語位於 `kernel/ambient`（零框架內部依賴，僅依賴標準庫 `context`），供 `persistence/{uow,database,postgres}`、`security/{identity,scope}`、`tenancy`、`events/{local,outbox}`、`observability` 與 `modules/organization` 統一以 package-private `ambient.Var[T]` 管理環境狀態，並支撐 `persistence/uow` 的 Copy-on-Write 平行 `RequiresNew` 與 `uow.Detach`。

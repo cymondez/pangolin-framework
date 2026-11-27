@@ -1106,9 +1106,9 @@
       "milestone": "M2",
       "status": "planned",
       "setup": "外層交易，Pool 可提供第二條連線",
-      "stimulus": "建立 RequiresNew；在子 Scope 內嘗試使用捕獲的父 Executor",
-      "expected": "父子 Scope／交易 ID 不同；父 Executor 回傳 UOW_SUSPENDED；子結束後父 Scope 可繼續",
-      "source_sha256": "3b7f83aef696af55e0a54c0e59c8d64aaa6c33ff7804b90ff06e18f07a7972f0",
+      "stimulus": "建立 RequiresNew；驗證父子各自持有獨立交易與連線，且父 Scope 不受子修改並可繼續運作",
+      "expected": "父子 Scope／交易 ID 不同；子期間父視圖在自身 context 下仍有效且不受子汙染；子結束後父 Scope 維持原交易可繼續",
+      "source_sha256": "33d1fa3f06a1d1ec3bb69e8c425d897ffad57b186f27c2c9b85b33f4e77cd776",
       "fixture": "tests/fixtures/manifest.json",
       "subtests": [
         {

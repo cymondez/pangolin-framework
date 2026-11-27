@@ -86,7 +86,7 @@ func (r *Registry) Bind(ctx context.Context, ref ScopeRef) (context.Context, err
 	if b.Ref != ref || b.Principal != p || b.AuthorityRevision == "" {
 		return nil, ErrDenied
 	}
-	return context.WithValue(context.WithValue(ctx, admitterKey{}, r), bindingKey{}, b), nil
+	return bindingVar.With(admitterVar.With(ctx, r), b), nil
 }
 func (r *Registry) Current(ctx context.Context) (ScopeBinding, bool) { return Current(ctx) }
 func (r *Registry) Authorize(ctx context.Context, permission string) error {

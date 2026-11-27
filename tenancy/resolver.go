@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/cymondez/pangolin-framework/kernel/ambient"
 	"github.com/cymondez/pangolin-framework/persistence/uow"
 	"github.com/cymondez/pangolin-framework/security/scope"
 )
@@ -20,7 +21,9 @@ type identity struct {
 	principal        scope.PrincipalRef
 	tenant, revision string
 }
-type identityKey struct{}
+
+var identityVar = ambient.New[identity]()
+
 type Resolver struct {
 	identity  scope.IdentityReader
 	authority Authority
@@ -33,10 +36,7 @@ func NewResolver(identity scope.IdentityReader, authority Authority) (*Resolver,
 	return &Resolver{identity, authority}, nil
 }
 func Identity(ctx context.Context) (scope.PrincipalRef, string, bool) {
-	if ctx == nil {
-		return scope.PrincipalRef{}, "", false
-	}
-	v, ok := ctx.Value(identityKey{}).(identity)
+	v, ok := identityVar.Current(ctx)
 	return v.principal, v.tenant, ok
 }
 
@@ -64,7 +64,7 @@ func (r *Resolver) Resolve(ctx context.Context, route, header string) (context.C
 	if rev == "" {
 		return nil, scope.ErrAuthorityUnavailable
 	}
-	return context.WithValue(ctx, identityKey{}, identity{p, tenant, rev}), nil
+	return identityVar.With(ctx, identity{p, tenant, rev}), nil
 }
 
 // Provider revalidates tenant membership at binding and at root admission.

@@ -8,6 +8,7 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/cymondez/pangolin-framework/kernel/ambient"
 	"github.com/cymondez/pangolin-framework/persistence/uow"
 )
 
@@ -24,6 +25,7 @@ type Handler struct {
 type Bus struct {
 	limits   Limits
 	handlers []Handler
+	queue    *ambient.Var[*Queue]
 }
 
 // NewBus seals registrations. Event specifies an example value's exact Go type.
@@ -31,7 +33,7 @@ func NewBus(limits Limits, handlers ...Handler) (*Bus, error) {
 	if limits.MaxEventsPerUOW <= 0 || limits.MaxDispatchDepth <= 0 {
 		return nil, fmt.Errorf("positive local event limits required")
 	}
-	b := &Bus{limits: limits, handlers: append([]Handler(nil), handlers...)}
+	b := &Bus{limits: limits, handlers: append([]Handler(nil), handlers...), queue: ambient.New[*Queue]()}
 	for _, h := range b.handlers {
 		if h.Event == nil || h.Handle == nil {
 			return nil, fmt.Errorf("invalid local handler")
@@ -41,8 +43,8 @@ func NewBus(limits Limits, handlers ...Handler) (*Bus, error) {
 	return b, nil
 }
 
-type key struct{ bus *Bus }
-type depthKey struct{}
+var depthVar = ambient.New[int]()
+
 type entry struct {
 	event any
 	depth int
@@ -59,18 +61,27 @@ type Queue struct {
 // Attach is for a Resource.Begin adapter. Each root owns a separate queue.
 func (b *Bus) Attach(ctx context.Context) (context.Context, *Queue) {
 	q := &Queue{bus: b}
-	return context.WithValue(ctx, key{b}, q), q
+	if b == nil || b.queue == nil {
+		return ctx, q
+	}
+	ctx = b.queue.With(ctx, q)
+	ctx = uow.AttachSlot(ctx, b.queue)
+	ctx = uow.AttachSlot(ctx, depthVar)
+	return ctx, q
 }
 func (b *Bus) Enqueue(ctx context.Context, event any) error {
 	if err := uow.Check(ctx, true); err != nil {
 		return err
 	}
-	q, _ := ctx.Value(key{b}).(*Queue)
+	if b == nil || b.queue == nil {
+		return uow.Fail(ctx, ErrQueueRequired)
+	}
+	q, _ := b.queue.Current(ctx)
 	if q == nil || event == nil {
 		return uow.Fail(ctx, ErrQueueRequired)
 	}
 	depth := 0
-	if n, ok := ctx.Value(depthKey{}).(int); ok {
+	if n, ok := depthVar.Current(ctx); ok {
 		depth = n + 1
 	}
 	q.mu.Lock()
@@ -111,7 +122,7 @@ func (q *Queue) Drain(ctx context.Context, flush func(context.Context) error) er
 		next := q.events[0]
 		q.events = q.events[1:]
 		q.mu.Unlock()
-		handlerContext := context.WithValue(ctx, depthKey{}, next.depth)
+		handlerContext := depthVar.With(ctx, next.depth)
 		for _, h := range q.bus.handlers {
 			if reflect.TypeOf(h.Event) == reflect.TypeOf(next.event) {
 				if err := h.Handle(handlerContext, next.event); err != nil {

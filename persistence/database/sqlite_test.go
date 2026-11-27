@@ -4,7 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -456,12 +458,15 @@ func TestSQLiteRequiresNewSemantics(t *testing.T) {
 	ctx := trustedContext(t, "tenant-a")
 	store := fixtureStore{dialect: QuestionDialect, table: "scoped_records"}
 
-	// The parent's executor view is suspended while the child runs.
+	// RequiresNew opens an independent connection/transaction without mutating
+	// or suspending the parent view. Each view remains usable with its own
+	// context and connection.
 	err := m.Within(ctx, uow.Options{Mode: uow.ReadWrite}, func(c context.Context) error {
 		parentEx, _ := Current(c)
 		err := m.Within(c, uow.Options{Mode: uow.ReadWrite, Propagation: uow.RequiresNew}, func(child context.Context) error {
-			if err := parentEx.QueryRow(c, "SELECT 1").Scan(new(int)); !errors.Is(err, uow.ErrSuspended) {
-				t.Fatalf("suspended view usable: %v", err)
+			var parentProbe int
+			if err := parentEx.QueryRow(c, "SELECT 1").Scan(&parentProbe); err != nil || parentProbe != 1 {
+				t.Fatalf("parent view unusable during RequiresNew: %d %v", parentProbe, err)
 			}
 			childEx, err := Current(child)
 			if err != nil {
@@ -472,7 +477,7 @@ func TestSQLiteRequiresNewSemantics(t *testing.T) {
 		if err != nil {
 			return err
 		}
-		// The parent view resumes after the child completes and sees the
+		// The parent view continues after the child completes and sees the
 		// child's committed row (a new statement starts a new snapshot).
 		var seen int
 		if err := parentEx.QueryRow(c, "SELECT count(*) FROM scoped_records").Scan(&seen); err != nil {
@@ -485,6 +490,21 @@ func TestSQLiteRequiresNewSemantics(t *testing.T) {
 	})
 	if err != nil {
 		t.Fatal(err)
+	}
+	// Mixing a child context into a parent executor view fails closed with
+	// ErrScopeMismatch and poisons the parent root, while the child commits
+	// independently.
+	mixErr := m.Within(ctx, uow.Options{Mode: uow.ReadWrite}, func(c context.Context) error {
+		parentEx, _ := Current(c)
+		return m.Within(c, uow.Options{Mode: uow.ReadWrite, Propagation: uow.RequiresNew}, func(child context.Context) error {
+			if err := parentEx.QueryRow(child, "SELECT 1").Scan(new(int)); !errors.Is(err, uow.ErrScopeMismatch) {
+				t.Fatalf("parent view accepted child context: %v", err)
+			}
+			return nil
+		})
+	})
+	if !errors.Is(mixErr, uow.ErrRollbackOnly) {
+		t.Fatalf("mixed view context did not poison parent: %v", mixErr)
 	}
 	err = m.Within(ctx, uow.Options{}, func(c context.Context) error {
 		ex, _ := Current(c)
@@ -1070,5 +1090,151 @@ func TestSQLitePooledReads(t *testing.T) {
 	})
 	if err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestSQLiteConcurrentRequiresNewAndDetach(t *testing.T) {
+	r := openSQLite(t, "concurrent-requiresnew")
+	r.Pool().SetMaxOpenConns(8)
+	setupFixture(t, r)
+	m := newManager(t, r)
+	ctx := trustedContext(t, "tenant-a")
+	store := fixtureStore{dialect: QuestionDialect, table: "scoped_records"}
+
+	// Seed rows inside a committed write UOW.
+	if err := m.Within(ctx, uow.Options{Mode: uow.ReadWrite}, func(c context.Context) error {
+		ex, err := Current(c)
+		if err != nil {
+			return err
+		}
+		for i := range 6 {
+			if err := store.Insert(c, ex, fmt.Sprintf("rec-%d", i), int64(i+10)); err != nil {
+				return err
+			}
+		}
+		return nil
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	// 1. Multiple goroutines concurrently execute RequiresNew under a single
+	// active parent UOW sharing the same stateless repository (store), while
+	// the parent also uses its own connection.
+	const workers = 6
+	err := m.Within(ctx, uow.Options{Mode: uow.ReadOnly, Transaction: uow.Transactional}, func(parent context.Context) error {
+		parentEx, err := Current(parent)
+		if err != nil {
+			return err
+		}
+		ready := make(chan struct{}, workers)
+		release := make(chan struct{})
+		errs := make(chan error, workers)
+		var wg sync.WaitGroup
+		for i := range workers {
+			wg.Add(1)
+			go func(idx int) {
+				defer wg.Done()
+				e := m.Within(parent, uow.Options{Mode: uow.ReadOnly, Transaction: uow.Transactional, Propagation: uow.RequiresNew}, func(child context.Context) error {
+					childEx, err := Current(child)
+					if err != nil {
+						return err
+					}
+					ready <- struct{}{}
+					<-release
+					got, err := store.Get(child, childEx, fmt.Sprintf("rec-%d", idx))
+					if err != nil {
+						return err
+					}
+					if got != int64(idx+10) {
+						return fmt.Errorf("worker %d got %d, want %d", idx, got, idx+10)
+					}
+					return nil
+				})
+				if e != nil {
+					errs <- e
+				}
+			}(i)
+		}
+		for range workers {
+			<-ready
+		}
+		// Parent remains usable on its own connection while children hold theirs.
+		n, err := store.Count(parent, parentEx)
+		if err != nil || n != workers {
+			close(release)
+			return fmt.Errorf("parent count = (%d, %v)", n, err)
+		}
+		close(release)
+		wg.Wait()
+		close(errs)
+		for e := range errs {
+			return e
+		}
+
+		// 2. uow.Detach clears both UOW scope and database.executorVar while
+		// preserving ScopeBinding so parallel goroutines can start fresh
+		// top-level UOWs cleanly.
+		detached := uow.Detach(parent)
+		if _, ok := executorVar.Current(detached); ok {
+			return errors.New("Detach did not clear database executorVar")
+		}
+		if _, err := Current(detached); !errors.Is(err, uow.ErrRequired) {
+			return fmt.Errorf("Current(detached) = %v, want ErrRequired", err)
+		}
+		detachErrs := make(chan error, workers)
+		for i := range workers {
+			wg.Add(1)
+			go func(idx int) {
+				defer wg.Done()
+				e := m.Within(detached, uow.Options{Mode: uow.ReadOnly, Transaction: uow.Transactional}, func(top context.Context) error {
+					topEx, err := Current(top)
+					if err != nil {
+						return err
+					}
+					got, err := store.Get(top, topEx, fmt.Sprintf("rec-%d", idx))
+					if err != nil || got != int64(idx+10) {
+						return fmt.Errorf("detached worker %d = (%d, %v)", idx, got, err)
+					}
+					return nil
+				})
+				if e != nil {
+					detachErrs <- e
+				}
+			}(i)
+		}
+		wg.Wait()
+		close(detachErrs)
+		for e := range detachErrs {
+			return e
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// 3. Single-connection overlap protection stays enforced when sharing the
+	// SAME UOW without RequiresNew/Detach.
+	busyErr := m.Within(ctx, uow.Options{Mode: uow.ReadOnly, Transaction: uow.Transactional}, func(c context.Context) error {
+		ex, err := Current(c)
+		if err != nil {
+			return err
+		}
+		rows, err := ex.Query(c, "SELECT id FROM scoped_records")
+		if err != nil {
+			return err
+		}
+		defer rows.Close()
+		other := make(chan error, 1)
+		go func() {
+			other <- ex.QueryRow(c, "SELECT 1").Scan(new(int))
+		}()
+		if e := <-other; !errors.Is(e, uow.ErrBusy) {
+			return fmt.Errorf("same-UOW concurrent SQL = %v, want ErrBusy", e)
+		}
+		return nil
+	})
+	if !errors.Is(busyErr, uow.ErrRollbackOnly) {
+		t.Fatalf("same-UOW busy did not poison root: %v", busyErr)
 	}
 }

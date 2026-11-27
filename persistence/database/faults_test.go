@@ -118,7 +118,8 @@ func TestSessionPooledCompletionGuards(t *testing.T) {
 	ctx := trustedContext(t, "tenant-a")
 	var s *session
 	err := m.Within(ctx, uow.Options{Mode: uow.ReadOnly, Transaction: uow.NonTransactional}, func(c context.Context) error {
-		s = c.Value(executorKey{}).(*session)
+		b, _ := executorVar.Current(c)
+		s = b.(*session)
 		if !s.pooled {
 			t.Fatal("read-only non-transactional op is not pooled")
 		}
@@ -151,7 +152,8 @@ func TestSessionCommitAndRollbackRefuseWhileBusy(t *testing.T) {
 	m, _ := uow.NewManager(r, faultDefaults())
 	ctx := trustedContext(t, "tenant-a")
 	err := m.Within(ctx, uow.Options{Mode: uow.ReadWrite}, func(c context.Context) error {
-		s := c.Value(executorKey{}).(*session)
+		b, _ := executorVar.Current(c)
+		s := b.(*session)
 		s.mu.Lock()
 		defer s.mu.Unlock()
 		if err := s.Commit(context.Background()); !errors.Is(err, uow.ErrBusy) {
@@ -186,7 +188,8 @@ func TestCommitFailureOutcomeClassification(t *testing.T) {
 	ctx := trustedContext(t, "tenant-a")
 	var s *session
 	_ = m.Within(ctx, uow.Options{Mode: uow.ReadWrite}, func(c context.Context) error {
-		s = c.Value(executorKey{}).(*session)
+		b, _ := executorVar.Current(c)
+		s = b.(*session)
 		return nil
 	})
 	if got := s.CommitFailureOutcome(sql.ErrTxDone); got != uow.RolledBack {
@@ -310,11 +313,15 @@ func TestCurrentGuards(t *testing.T) {
 		if _, err := Current(c); err != nil {
 			return err
 		}
-		// A foreign executor value is a resource mismatch and poisons the
-		// root: the callback reports it and the manager surfaces it.
-		foreign := context.WithValue(c, executorKey{}, "not a binder")
-		if _, err := Current(foreign); !errors.Is(err, uow.ErrResourceMismatch) {
-			return errors.New("foreign binder accepted")
+		// A missing or nil executor binder is a resource mismatch and poisons
+		// the root: the callback reports it and the manager surfaces it.
+		missing := executorVar.Clear(c)
+		if _, err := Current(missing); !errors.Is(err, uow.ErrResourceMismatch) {
+			return errors.New("missing binder accepted")
+		}
+		nilBinder := executorVar.With(c, nil)
+		if _, err := Current(nilBinder); !errors.Is(err, uow.ErrResourceMismatch) {
+			return errors.New("nil binder accepted")
 		}
 		return nil
 	})

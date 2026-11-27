@@ -76,7 +76,7 @@ M1 後續目錄整理已在來源 `b3bf59c03f4b66ff7389d44d8434356258a85d9a` 通
 
 依據：[實作規範 §3](design/panGOlin-framework_實作規範書.md#s-3)、[§5.1](design/panGOlin-framework_實作規範書.md#s-5.1)、[§7.10](design/panGOlin-framework_實作規範書.md#s-7.10)。
 
-- Principal、Tenant、Scope binding、Trace、UOW 經 `context.Context` 的受控存取與私有型別鍵傳遞；不建立全域 Current、goroutine-local、動態代理或反射攔截器。
+- Principal、Tenant、Scope binding、Trace、UOW、Executor 與事件佇列經 `kernel/ambient`（`ambient.Var[T]` 不可變 Copy-on-Write 巢狀鏈）與 `context.Context` 受控傳遞，各套件將 `Var[T]` 宣告為 package-private 防偽造；不建立全域 Current、goroutine-local、動態代理或反射攔截器。
 - Tenant／Scope Hint 都是候選值。先驗證身分與授權，再由 Resolver 安裝不可變 binding；自行建立 struct 或在 DTO 填 owner 不會取得授權。
 - 每個 HTTP、Job、Consumer 入口各自建立可信情境。Job／Event 保存 ScopeRef，執行時以目前服務身分重新授權，不重用已結束的 HTTP context；使用者代理型 Job 另驗該使用者目前資格。
 - Repository 只使用 `Within` callback 傳入的 context；不保存舊 context、Tx 或 cursor 供範圍結束後使用。
@@ -95,10 +95,10 @@ M1 後續目錄整理已在來源 `b3bf59c03f4b66ff7389d44d8434356258a85d9a` 通
 - Command 明示 ReadWrite；Query 明示 ReadOnly；直接呼叫未指定 Mode 預設 ReadOnly。ReadWrite 必須開交易；使用 transaction-local RLS 的讀取也必須開唯讀交易。
 - `Required` 加入同一根 Scope，共用交易、連線、事件與完成責任；子範圍結束不提交。子失敗或選項不相容將根標成 rollback-only，外層捕捉錯誤也不能清除。
 - 唯讀 Required 子視圖即使加入可寫根交易也不能寫入；其 context 在子 callback 結束即失效，根資源仍由外層管理。
-- `RequiresNew` 暫停父 Scope、取得獨立資源，完成與清理後恢復父 Scope。子已提交不隨父回滾；它不是 Savepoint，也看不到父未提交資料。
+- `RequiresNew` 以 `kernel/ambient` 不可變 Copy-on-Write 鏈建立獨立根 Scope 與獨立資源，不修改也不暫停父 Scope；多個 goroutine 可在有效父 Scope 下平行執行 `RequiresNew` 共用無狀態 Repository，並自動清除父掛載的資源槽位避免漏用父 Executor。需要啟動重新執行 `scope.Admit` 的獨立頂層操作時使用 `uow.Detach(ctx)`。子已提交不隨父回滾；它不是 Savepoint，也看不到父未提交資料。
 - Required／RequiresNew 都不能切換 Tenant、Principal 或 ScopeRef。跨租戶／跨資源 Scope 工作另建重新授權的頂層操作；同根只允許一個 DB resource key，不承諾跨 DB 原子性。
 - 沒有有效 Scope 時，業務 Repository 連讀取都拒絕。沒有可寫交易時拒絕寫入，不退回 Pool 自動提交；健康檢查與佇列候選枚舉使用專用 Infrastructure Port。
-- 同一 UOW Executor 不允許平行 SQL；未關閉的 Rows／BatchResults 也算占用。Repository 負責關閉及檢查延遲錯誤，完成階段不能漏掉未釋放資源。
+- 單一 UOW Executor（單一連線）不允許平行 SQL（`UOW_BUSY`）；未關閉的 Rows／BatchResults 也算占用。多執行緒平行操作 DB 應由各 goroutine 開立獨立 `RequiresNew` 或 `uow.Detach` 頂層 UOW。Repository 負責關閉及檢查延遲錯誤，完成階段不能漏掉未釋放資源。
 - `SaveChanges` 只 flush，不 Commit、不排空 Local Events、不觸發完成回呼。
 - 正常完成：flush → 迭代排空 Local Events／flush → 同交易保存 Outbox、必要 Audit、啟用冪等時的成功結果 → 檢查資源／取消／rollback-only → 一次 Commit → 記錄 Outcome／釋放資源 → 回呼。
 - Commit 結果無法確認時保存 `Unknown`，回傳可識別的 `UOW_COMMIT_UNKNOWN`；補做 Rollback 不能把它變成「確定未提交」。已確認 Committed 不因後續取消、回呼或傳輸失敗改寫。
@@ -144,6 +144,7 @@ M2 已於來源 `23651f654389af99d8c427b11909c07bc70f58cc` 通過同版 Windows�
 
 | 工作／需求 | 設計位置 | 細則入口 |
 |---|---|---|
+| 顯式不可變 Ambient Scope 原語 | `kernel/ambient` | 實作規範 §3.4；零內部依賴，不可變 Copy-on-Write 巢狀鏈與 package-private `ambient.Var[T]` |
 | 模組 DAG、DI、組態、啟停 | `kernel/module`、`kernel/di`、`kernel/config`、`kernel/runtime` | 實作規範 §2、§14.3 |
 | Use Case、Domain、HTTP 與錯誤 | `application`、`domain`、`transport/http`、`kernel/errors` | §1、§3、§4、§5.6 |
 | 工作單元、Repository、SQL、遷移 | `persistence/uow`、中立 `persistence/database`、各引擎 Adapter `persistence/{postgres,mysql,sqlite}`、`persistence/migration` | §5、§8；跨引擎補正見 ADR14 |

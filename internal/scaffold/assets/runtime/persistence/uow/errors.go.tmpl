@@ -16,11 +16,14 @@ var (
 	ErrScopeMismatch       = errors.New("UOW_SCOPE_MISMATCH")
 	ErrResourceMismatch    = errors.New("UOW_RESOURCE_MISMATCH")
 	ErrClosed              = errors.New("UOW_CLOSED")
-	ErrSuspended           = errors.New("UOW_SUSPENDED")
-	ErrBusy                = errors.New("UOW_BUSY")
-	ErrDepthExceeded       = errors.New("UOW_DEPTH_EXCEEDED")
-	ErrRollbackOnly        = errors.New("UOW_ROLLBACK_ONLY")
-	ErrCommitUnknown       = errors.New("UOW_COMMIT_UNKNOWN")
+	// ErrSuspended is retained for source and error-code compatibility. Under
+	// the immutable Copy-on-Write ambient UOW model, RequiresNew no longer
+	// suspends or mutates the parent scope, so Manager does not emit this code.
+	ErrSuspended     = errors.New("UOW_SUSPENDED")
+	ErrBusy          = errors.New("UOW_BUSY")
+	ErrDepthExceeded = errors.New("UOW_DEPTH_EXCEEDED")
+	ErrRollbackOnly  = errors.New("UOW_ROLLBACK_ONLY")
+	ErrCommitUnknown = errors.New("UOW_COMMIT_UNKNOWN")
 )
 
 type failure struct {
@@ -73,7 +76,7 @@ func Fail(ctx context.Context, cause error) error {
 	}
 	v.root.mu.Lock()
 	defer v.root.mu.Unlock()
-	if v.active && v.root.active && !v.root.suspended {
+	if v.active && v.root.active {
 		v.root.rollback = errors.Join(v.root.rollback, cause)
 	}
 	return cause

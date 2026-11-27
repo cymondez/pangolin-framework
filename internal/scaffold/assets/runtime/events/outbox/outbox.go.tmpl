@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/cymondez/pangolin-framework/events/distributed"
+	"github.com/cymondez/pangolin-framework/kernel/ambient"
 	"github.com/cymondez/pangolin-framework/observability"
 	"github.com/cymondez/pangolin-framework/persistence/uow"
 	"github.com/cymondez/pangolin-framework/security/scope"
@@ -65,16 +66,16 @@ type Store interface {
 type Publisher struct {
 	registry *distributed.Registry
 	store    Store
+	queue    *ambient.Var[*Queue]
 }
 
 func NewPublisher(registry *distributed.Registry, store Store) (*Publisher, error) {
 	if registry == nil || store == nil {
 		return nil, ErrUnavailable
 	}
-	return &Publisher{registry, store}, nil
+	return &Publisher{registry: registry, store: store, queue: ambient.New[*Queue]()}, nil
 }
 
-type queueKey struct{ publisher *Publisher }
 type queued struct {
 	envelope distributed.Envelope
 	raw      []byte
@@ -88,16 +89,21 @@ type Queue struct {
 
 func (p *Publisher) Attach(ctx context.Context) (context.Context, *Queue) {
 	q := &Queue{publisher: p}
-	return context.WithValue(ctx, queueKey{p}, q), q
+	if p == nil || p.queue == nil {
+		return ctx, q
+	}
+	ctx = p.queue.With(ctx, q)
+	ctx = uow.AttachSlot(ctx, p.queue)
+	return ctx, q
 }
 func (p *Publisher) Publish(ctx context.Context, event any) error {
 	if err := uow.Check(ctx, true); err != nil {
 		return err
 	}
-	if p == nil {
+	if p == nil || p.queue == nil {
 		return uow.Fail(ctx, ErrUnavailable)
 	}
-	q, _ := ctx.Value(queueKey{p}).(*Queue)
+	q, _ := p.queue.Current(ctx)
 	if q == nil {
 		return uow.Fail(ctx, ErrUnavailable)
 	}

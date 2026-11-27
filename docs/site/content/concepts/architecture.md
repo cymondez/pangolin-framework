@@ -19,7 +19,7 @@ description: 建立 panGOlin 的核心心智模型：理解四層架構責任、
 
 panGOlin 的核心解法可以濃縮成三句話：
 - **先按「功能模組（擁有者）」切塊，再在模組內按「分層」切責任**。
-- **所有依賴由建構子明確傳入，所有請求狀態由 `context.Context` 受控傳遞**（沒有全域 Current、沒有魔法反射攔截器）。
+- **所有依賴由建構子明確傳入，所有請求狀態透過 [`kernel/ambient`](../fundamentals/ambient-scope.md) 建構在不可變 `context.Context` 鏈上受控傳遞**（沒有全域 Current、沒有 GLS、沒有魔法反射攔截器）。
 - **跨模組只能走公開介面契約（Contracts）或版本化事件**，禁止直接讀寫別人的私有表或內部套件。
 
 ---
@@ -157,4 +157,4 @@ app.Run(ctx, rootModule, opts...)
 ## 下一步
 
 - 剛跑完第一個程式？接著實作 **[建立可設定的問候服務](../tutorials/greeting-application.mdx)**，親手體驗模組、DI 與組態。
-- 想直接深入核心機制？依序閱讀 **[功能模組](../fundamentals/modules.md)** → **[依賴注入](../fundamentals/dependency-injection.mdx)** → **[使用交易與工作單元](../data/unit-of-work.md)**。
+- 想直接深入核心機制？依序閱讀 **[功能模組](../fundamentals/modules.md)** → **[依賴注入](../fundamentals/dependency-injection.mdx)** → **[Ambient Scope](../fundamentals/ambient-scope.md)** → **[使用交易與工作單元](../data/unit-of-work.md)**。

@@ -25,7 +25,7 @@ func (s *Store) run(ctx context.Context, tenant, action, key string, input any, 
 		return nil, err
 	}
 	var raw []byte
-	ctx = context.WithValue(ctx, privateSchemaKey{}, s.options.PrivateSchema)
+	ctx = privateSchemaVar.With(ctx, s.options.PrivateSchema)
 	err = s.options.Manager.Within(ctx, uow.Options{Mode: uow.ReadWrite, Transaction: uow.Transactional}, func(work context.Context) error {
 		b, err := s.actor(work, tenant)
 		if err != nil {

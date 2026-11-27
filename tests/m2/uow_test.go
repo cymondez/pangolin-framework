@@ -144,8 +144,9 @@ func TestM2Transactions(t *testing.T) {
 				return e
 			}
 			e = m.Within(p, uow.Options{Mode: uow.ReadWrite, Propagation: uow.RequiresNew}, func(c context.Context) error {
-				if e := pe.QueryRow(p, "SELECT 1").Scan(new(int)); !errors.Is(e, uow.ErrSuspended) {
-					t.Fatal(e)
+				var during uint64
+				if e := pe.QueryRow(p, "SELECT txid_current()").Scan(&during); e != nil || during != pID {
+					t.Fatalf("parent unusable during RequiresNew: tx=%d want=%d err=%v", during, pID, e)
 				}
 				ce, e := postgres.Current(c, false)
 				if e != nil {

@@ -6,7 +6,7 @@ description: 用真實 PostgreSQL 動手實測 Required 共用交易、RequiresN
 import CodeBlock from '@theme/CodeBlock';
 import source from '../_snippets/transactions.go';
 
-> **你在架構中的位置**：`Application 巢狀呼叫 →` **`[ Required（共用根交易） vs RequiresNew（暫停父交易、開立新連線獨立提交）]`**
+> **你在架構中的位置**：`Application 巢狀呼叫 →` **`[ Required（共用根交易） vs RequiresNew（獨立根 UOW、新連線獨立提交，且不鎖定父視圖）]`**
 >
 > **前置條件**：先完成 [Bookstore 教學的第 1 步（準備示範服務）](bookstore.md)啟動本機 PostgreSQL（只需要資料庫，API 與 Worker 可以停止）。
 
@@ -64,8 +64,8 @@ Scope closed: true
 ```text
 時間 ─────────────────────────────────────────────────────────────────────────────▶
 
-連線 #1（父交易）:  BEGIN ──▶ INSERT(parentID) ──▶ [Required ReadOnly 共用連線#1] ──▶ (暫停) ───────────────▶ 恢復 ──▶ ROLLBACK ❌
-                                                                                      │                      ▲
+連線 #1（父交易）:  BEGIN ──▶ INSERT(parentID) ──▶ [Required ReadOnly 共用連線#1] ─────────────────────────────▶ ROLLBACK ❌
+                                                                                      │
 連線 #2（子交易）:                                                                    └─▶ BEGIN ──▶ INSERT(childID) ──▶ COMMIT ✅
 
 連線 #1（新查證）:  BEGIN READ ONLY ──▶ SELECT count(*) ──▶ 結果：parentCount=0, childCount=1

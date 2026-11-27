@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/cymondez/pangolin-framework/kernel/ambient"
 	"github.com/cymondez/pangolin-framework/persistence/uow"
 )
 
@@ -204,12 +205,13 @@ type Binder interface {
 	Bind(context.Context) (Executor, error)
 }
 
-type executorKey struct{}
+var executorVar = ambient.New[Binder]()
 
 // WithExecutor installs the session-owned binder of the active resource in
 // the operation context. Only Resource implementations call it.
 func WithExecutor(ctx context.Context, b Binder) context.Context {
-	return context.WithValue(ctx, executorKey{}, b)
+	ctx = executorVar.With(ctx, b)
+	return uow.AttachSlot(ctx, executorVar)
 }
 
 // Current returns a guarded executor view of the current unit of work,
@@ -219,8 +221,8 @@ func Current(ctx context.Context) (Executor, error) {
 	if err := uow.Check(ctx, false); err != nil {
 		return nil, err
 	}
-	b, ok := ctx.Value(executorKey{}).(Binder)
-	if !ok {
+	b, ok := executorVar.Current(ctx)
+	if !ok || b == nil {
 		return nil, uow.Fail(ctx, uow.ErrResourceMismatch)
 	}
 	if err := uow.CheckResource(ctx, b.DatabaseKey(), false); err != nil {

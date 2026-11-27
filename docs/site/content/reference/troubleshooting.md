@@ -48,12 +48,12 @@ description: 依「環境與安裝 → 模組與 DI → 交易與 UOW → 安全
 - **修復**：**絕不可換新 key 直接重送寫入！** 請保留原本的冪等 key／操作識別，改開新的已授權唯讀 UOW 依[Command 冪等與結果對帳](../data/idempotency.md)查詢結果（注意：查無結果仍不等於確定未提交）。
 
 ### `RequiresNew` 逾時、卡住或查不到父交易剛寫入的資料
-- **原因**：`RequiresNew` 另取第二條連線與獨立交易——它**不是 Savepoint**，因此本來就看不到父交易未提交的資料；如果連線池容量不足（`MaxOpen < 2`）或與父交易搶同一列鎖，就會等待到逾時。另外在暫停期間不可繼續使用父 Executor（會回 `UOW_SUSPENDED`）。
-- **修復**：確認連線池有足夠餘量、避免父子更新同一筆鎖定資料列，並設定合理短 Timeout。
+- **原因**：`RequiresNew` 另取獨立連線與獨立交易（透過 `kernel/ambient` Copy-on-Write 鏈建立，不鎖定也不修改父視圖）——它**不是 Savepoint**，因此本來就看不到父交易未提交的資料；如果連線池容量不足（例如 `MaxOpen < 2` 或平行 `RequiresNew` 超過池容量）或與父交易搶同一列鎖，就會等待到逾時。另外不可把子 `child` context 混傳給父 Executor 物件（會回 `UOW_SCOPE_MISMATCH`）。
+- **修復**：確認連線池有足夠餘量、避免父子更新同一筆鎖定資料列、每個執行流一律使用自己的 `work` context，並設定合理短 Timeout。
 
 ### 收到 `UOW_BUSY`、`UOW_CLOSED` 或 `UOW_RESOURCE_MISMATCH`
-- **`UOW_BUSY`**：在同一 UOW 內開 goroutine 平行下 SQL，或前一次 `Query` 忘了 `rows.Close()`／`QueryRow` 忘了 `Scan`。→ 改為循序執行並確實關閉所有 cursor。
-- **`UOW_CLOSED`**：把回呼的 `work` context 帶出 `Within` 外（例如丟進背景 goroutine）繼續使用。→ 改以新操作或 Outbox／Jobs 執行。
+- **`UOW_BUSY`**：在**同一筆 UOW（同一條連線）**內未開新 Scope 就用多個 goroutine 平行下 SQL，或前一次 `Query` 忘了 `rows.Close()`／`QueryRow` 忘了 `Scan`。→ 同一筆 UOW 內循序執行並確實關閉所有 cursor；若需要多執行緒平行操作 DB，請在各 goroutine 內透過 `RequiresNew`（需等完成再結束父回呼）或 `uow.Detach(work)` 開啟各自獨立的 UOW 與連線。
+- **`UOW_CLOSED`**：把回呼的 `work` context 帶出 `Within` 外（例如背景 goroutine 在父回呼已結束後繼續使用）繼續操作。→ 若為請求內平行工作請以 `WaitGroup` 等候完成；若需跨請求背景執行請改用 `uow.Detach` 搭配獨立流程，或寫入 Outbox／Jobs 執行。
 - **`UOW_RESOURCE_MISMATCH`**：同一筆根交易混用了兩個不同資料庫 resource key。→ panGOlin 不承諾跨 DB 原子提交，請拆分為獨立操作或以 Outbox 協調。
 
 ---

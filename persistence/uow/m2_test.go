@@ -162,11 +162,14 @@ func TestM2RequiresNew(t *testing.T) {
 					if ps.ID() == cs.ID() {
 						t.Fatal("same root")
 					}
-					if _, ok := m.Current(parent); ok {
-						t.Fatal("suspended current")
+					if cur, ok := m.Current(parent); !ok || cur.ID() != ps.ID() {
+						t.Fatal("parent should remain active under Copy-on-Write ambient UOW")
 					}
-					if !errors.Is(Check(parent, false), ErrSuspended) {
-						t.Fatal(Check(parent, false))
+					if err := Check(parent, false); err != nil {
+						t.Fatalf("parent check failed during RequiresNew: %v", err)
+					}
+					if outer, ok := scopeVar.Outer(child); !ok || outer.root.id != ps.ID() {
+						t.Fatal("child ambient chain missing enclosing parent view")
 					}
 					if mode == "depth" {
 						if e := m.Within(child, Options{Propagation: RequiresNew}, func(context.Context) error { t.Fatal("depth callback"); return nil }); !errors.Is(e, ErrDepthExceeded) {

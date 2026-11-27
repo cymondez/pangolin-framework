@@ -73,7 +73,7 @@ UOW 開啟交易時 ──▶ 自動執行 transaction-local SET LOCAL（寫入�
 
 - **一般業務 Repository**：統一使用中立的 `database.Current(ctx)` 即可。
 - **需要 PostgreSQL／pgx 專屬語法（例如 `pgx.Batch`、特定陣列型別或專屬指令）的 Infrastructure Adapter**：可明示呼叫 `postgres.Current(ctx, write)` 取得原生執行器（`write=true` 表示本次要寫入，唯讀 UOW 會直接拒絕）。
-- **共用同一個 UOW Session**：原生 `postgres.Current` 與中立 `database.Current` 背後操作的是同一筆交易與同一條連線，因此**同樣禁止在同一 UOW 內平行執行 SQL**，不可藉兩個入口同時下查詢。
+- **共用同一個 UOW Session**：原生 `postgres.Current` 與中立 `database.Current` 背後操作的是同一筆交易與同一條連線，因此**同一筆 UOW 內不可平行執行 SQL**（不可藉兩個入口同時下查詢）；若需多執行緒平行操作資料庫，請在各 goroutine 中以 `RequiresNew` 或 `uow.Detach` 開啟各自獨立的 UOW 與連線。
 
 ---
 
