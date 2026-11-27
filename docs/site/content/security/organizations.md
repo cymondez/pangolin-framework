@@ -1,54 +1,90 @@
 ---
-title: 管理 Enterprise 與 Organization
-description: 選用組織治理、明示權限與 owner 狀態，並安全替換持久化 Provider。
+title: 管理 Enterprise 與 Organization（組織治理）
+description: 深入了解可選 modules/organization 模組的組裝相依、成員與生命週期規則、Ownerless 復原流程、HTTP 管理路由，以及如何無痛替換持久化 Provider。
 ---
 
-需要同一 Tenant 下的多個團隊時，先閱讀[資源 Scope](resource-scopes.md)。只有 Tenant 的應用不必安裝這個模組。以下是組裝指南，需要你自己的 PostgreSQL、身分驗證、Permission 與 Use Case；Bookstore 的預設入口仍使用 tenant-only。
+> **你在架構中的位置**：`可選業務基礎模組` **`[ modules/organization：Authority + contracts.Management + 管理 HTTP Handler ]`**
+>
+> **前置建議**：先閱讀[資源 Scope 與組織擴充](resource-scopes.md)。若你的專案只需要單純多租戶（`tenant-only`），**完全不需要安裝本模組**。
 
-## 建立 Store 與 Module
+## 為什麼組織治理有這麼多嚴格狀態規則？
 
-`organization.NewStore(StoreOptions)` 同時實作 Authority 與公開 `contracts.Management`。將 Store 傳給資源 Scope 頁的 `OrganizationModule` 函式即可註冊兩種 Kind。相依由你的啟動程式明示提供：
+在多團隊企業應用中，組織管理最常釀成災難的往往是「邊界狀態」：
+- 管理員誤刪一個組織的最後一位 Owner，從此沒人管得了該組織（或被誰隨便補位接管）。
+- 封存（Archive）一個還有未結帳訂單、未送出事件或旗下子組織的團隊，造成孤兒資料與背景 Worker 無窮報錯。
+- 未來想把組織資料從本地 PostgreSQL 換成公司既有的人事／組織系統，卻發現業務資料表全綁死了舊的組織表外鍵。
 
-| 選項 | 使用方式 |
+`modules/organization` 把這些治理不變條件全部收攏在單一可選模組裡，並透過 `modules/organization/contracts` 暴露穩定管理介面。
+
+---
+
+## 1. 組裝 `organization.Store` 與 `OrganizationModule`
+
+`organization.NewStore(StoreOptions)` 同時實作 `organization.Authority` 與公開契約 `contracts.Management`。建立完成後直接傳入上一章的 `OrganizationModule(store)` 即可註冊 `org.enterprise` 與 `org.organization` 兩種 Kind。
+
+啟動組裝時須明確注入以下 7 項相依（部署前須先透過[部署遷移](../data/migrations.md)安裝 Tenant projection、中立 catalog、Audit、Organization、Events 與 Idempotency）：
+
+| `StoreOptions` 欄位 | 責任與安全邊界 |
 |---|---|
-| AuthorityPool | 專用 metadata 讀取 Pool；具有 pangolin_scope_authority 角色能力，沒有一般業務表 bypass |
-| Manager | PostgreSQL UOW，透過 events/postgres.Resource 接入 Outbox |
-| Identity／Tenants | 可信身分及目前 Tenant 資格；可用 tenancy.Identity 與 tenancy/postgres.Authority |
-| Permissions | 依可信 Snapshot 的 role／revision、上層限制判斷 action；預設拒絕 |
-| Effects | 在傳入的同一 UOW 保存必要 Audit 與治理 Outbox；錯誤必須回傳 |
-| UseChecker | 檢查業務資料／未完成事件與 Job，無法確認就拒絕封存 |
-| Idempotency | 已設定結果保護與期限的冪等 Store |
+| `AuthorityPool` | 專用 metadata 讀取 Pool，具備 `pangolin_scope_authority` 能力，**不具備一般業務表的 RLS bypass** |
+| `Manager` | PostgreSQL UOW Manager，須透過 `events/postgres.Resource` 接上 Outbox |
+| `Identity`／`Tenants` | 可信身分與當前 Tenant 資格（例如 `tenancy.Identity` 與 `tenancy/postgres.Authority`） |
+| `Permissions` | 依可信 Snapshot 的 role／revision 與上層限制評估動作（預設拒絕） |
+| `Effects` | 在傳入的同一筆 UOW 中保存必要 Audit 與治理 Outbox（記錄失敗必須回傳錯誤使交易回滾） |
+| `UseChecker` | 檢查目標 Scope 是否仍有業務資料、未完成事件或未完成 Job（無法確認即拒絕封存） |
+| `Idempotency` | 已配置結果保護與保留期限的 `idempotency.Store` |
 
-先透過[部署遷移](../data/migrations.md)安裝 Tenant projection、中立 catalog、Audit、Organization、Events 與 Idempotency。連線與 Server 由注入它們的 Module 擁有並關閉。`PrivateSchema` 只能由可信部署設定，不接受 HTTP DTO 指定。
+> **安全設定**：連線池與 HTTP Server 一律由注入它們的模組擁有並關閉；`PrivateSchema` 僅能來自受信任的啟動設定，絕不接受外部請求 DTO 指定。
 
-## 常用操作
+---
 
-Management 提供建立 Enterprise、獨立或附屬 Organization、分頁目錄、組織 membership、Enterprise role、移轉及 suspend／resume／archive。更新傳入完整 Target、`ExpectedVersion > 0` 與非空 `IdempotencyKey`；列表 Limit 為 1–100，使用回傳 cursor 繼續下一頁。
+## 2. 關鍵業務規則與生命週期狀態機
 
-User 可加入多個 Org，各自角色獨立。Enterprise owner 的 metadata 治理權不會讓他讀取 Org 內容；`JoinAsOwner` 才是明示且有必要稽核的加入流程。移轉要求 Org transfer、來源 detach 與目標 attach 權限，Org ID 與業務 owner 保持不變。
+```text
+建立 (Active) ◀──▶ Suspend（暫停） ──▶ Archive（封存墓碑，不可逆！）
+      │
+      └── 若最後一位有效 Owner 在 Tenant 層被撤權 ──▶ Ownerless（持久停用）
+                                                       └─ 僅能由具 tenant.scope.recover 權限者執行 Recover 恢復！
+```
 
-一般管理不能移除最後有效 owner。Tenant 撤權仍可執行；最後 owner 失效後，scope 持久停用為 ownerless。Tenant 復權、Resume 或 JoinAsOwner 不會自動恢復；只有具 `tenant.scope.recover` Permission 的 `Recover` 可重新建立有效 owner。Archived 墓碑不能恢復。
+### 新手必知的 5 條治理規則
 
-有子 Org、業務資料或未完成工作的 scope 不能封存，不會 cascade delete。版本衝突、最後 owner 與非空衝突回 409；不存在或跨 Tenant lookup 統一 404。冪等重播仍重新驗證當前 action／target 權限。
+1. **樂觀鎖與冪等防重**：所有修改操作都必須傳入完整 `Target`、`ExpectedVersion > 0` 與非空 `IdempotencyKey`；分頁查詢 `Limit` 為 `1–100` 並透過回傳的 `cursor` 翻頁。
+2. **多組織與權限隔離**：單一 User 可同時加入多個 Organization，在各組織的角色各自獨立。Enterprise Owner 的治理權**不自動包含**旗下 Organization 的內容存取權；若要成為內容成員，必須執行明示且留有 Audit 的 `JoinAsOwner`。
+3. **移轉（Transfer）不改變業務 Owner**：將 Organization 從一個 Enterprise 移轉到另一個（或轉獨立）時，須同時具備轉出、來源 detach 與目標 attach 權限；移轉後 Organization ID 與其擁有的業務資料 owner 保持不變。
+4. **Ownerless 防護與恢復**：一般管理 API 禁止移除最後一位有效 Owner。但若該 Owner 在更外層的 Tenant 被撤權，該組織會自動轉為持久停用的 **Ownerless** 狀態；此時單靠 Tenant 復權、`Resume` 或 `JoinAsOwner` 都**不會**自動解鎖，必須由具備 `tenant.scope.recover` 權限的管理者執行 `Recover` 指定新 Owner。已 `Archived` 的組織則是永久墓碑，不可恢復。
+5. **拒絕級聯刪除與明確 HTTP 狀態碼**：仍有子 Organization、業務資料或未完成事件／Job 的 Scope **禁止封存**（不提供 `CASCADE DELETE`）。版本衝突、最後 Owner 保護與非空封存統一回 **409**；不存在或跨租戶查詢統一回 **404**（不洩漏他租戶 ID 是否存在）。
 
-## 接上 HTTP
+---
 
-`modules/organization/transport/http.NewHandler(Options)` 需要 Store、Manager、Timeout、MaxBodyBytes、Authenticate、ResolveTenant、ResolveScope、Authorize，可加 Rejected。只在 organization-enabled 應用註冊。
+## 3. 掛載內建管理 HTTP Handler
 
-| 目的 | 路由 |
+只在 `organization-enabled` 應用中註冊 `modules/organization/transport/http.NewHandler(Options)`（傳入 `Store`、`Manager`、`Timeout`、`MaxBodyBytes`、`Authenticate`、`ResolveTenant`、`ResolveScope`、`Authorize` 與可選 `Rejected`）：
+
+| 功能類別 | HTTP 路由 |
 |---|---|
-| 建立 | `POST /enterprises`、`POST /organizations` |
-| 分頁目錄 | `GET /organizations?limit=20`、`GET /enterprises/{id}/organizations?limit=20` |
-| Membership／role | `PUT` 或 `DELETE /organizations/{id}/memberships`、`PUT /enterprises/{id}/roles` |
-| 移轉／明示加入 | `PUT /organizations/{id}/enterprise`、`POST /organizations/{id}/join-as-owner` |
-| 生命週期 | `POST /scopes/{kind}/{id}/{suspend,resume,archive,recover}` |
+| 建立組織／企業 | `POST /enterprises`、`POST /organizations` |
+| 分頁目錄查詢 | `GET /organizations?limit=20`、`GET /enterprises/{id}/organizations?limit=20` |
+| 成員與角色管理 | `PUT` / `DELETE /organizations/{id}/memberships`、`PUT /enterprises/{id}/roles` |
+| 移轉與明示加入 | `PUT /organizations/{id}/enterprise`、`POST /organizations/{id}/join-as-owner` |
+| 生命週期控制 | `POST /scopes/{kind}/{id}/{suspend,resume,archive,recover}` |
 
-寫入 Header 需 `Idempotency-Key`。更新 JSON 帶 `expected_version`；建立使用 `slug` 與可選 `enterprise_id`。Membership／recovery 的 principal 是 `{ "id": "alice", "kind": "user" }`，role 由相應操作提供。Tenant 與 target 從可信 binding／路由決定，DTO 不接受 owner 或額外欄位。
+- 所有寫入請求 Header 必須帶 `Idempotency-Key`；更新 JSON 須帶 `expected_version`。
+- 成員與恢復操作的 Principal 格式為 `{"id": "alice", "kind": "user"}`。
+- Tenant 與目標一律從可信 Binding／路由決定，DTO 拒絕額外未知欄位或自報 owner。
 
-## 替換 Provider
+---
 
-先停止接入／認領並 Drain，以 `Export` 取得一致快照，使用 Bundle v1 保存 ID、父層、membership、role、state、revision、grant、restriction、owners 與 catalog。替代 Store 的 `Import` 需要空私有資料區及 `tenant.organization.import`；`Reconcile` 核對完整資料，Export 需要 `tenant.organization.export`。
+## 4. 安全替換組織持久化 Provider（零業務改動）
 
-資料與必要 Effects 原子匯入；既有中立 catalog 必須完全相符。替代 schema 也須安裝 Tenant qualification hook，保留 ownerless／revision 契約。事件與 Job 保留完整 owner，並以新 Provider 的當前 grant 執行。已有非 Tenant 資料或未完成工作時不能直接改成 tenant-only；啟動需檢查完整 inventory。
+未來若需要替換底層組織儲存實作（同時保留既有 Scope ID、成員、狀態與公開契約），依以下標準演練執行：
 
-下一步：[可靠事件](../events/reliable-delivery.md)，讓治理變更與通知同交易保存。
+1. 停止 API 接入與 Worker 認領並完成 Drain。
+2. 以具 `tenant.organization.export` 權限的入口呼叫 `Export` 取得一致的 **Bundle v1** 快照（包含 ID、父層、membership、role、state、revision、grant、restriction、owners 與 catalog）。
+3. 準備空私有資料區的替代 Store，以 `tenant.organization.import` 權限執行 `Import`（原子匯入資料與必要 Effects，並核對既有的中立 `resource_scopes` catalog 完全相符），再以 `Reconcile` 全量對帳。
+4. 替代 Schema 須保留 Tenant qualification hook 與 ownerless／revision 契約；既有事件與 Job 會保留完整 owner 並依新 Provider 當前授權執行。
+5. **不可直接降級**：只要資料庫仍有非 Tenant 業務資料或未完成工作，就不能直接移除組織模組降回 `tenant-only`——啟動期的完整 Inventory 檢查會直接擋下。
+
+## 下一步
+
+前往 **[HTTP 入口與稽核](http-and-audit.md)**，學習如何把整套安全檢查標準化地接進每支 HTTP API 並記錄不可抵賴的稽核日誌。

@@ -26,7 +26,7 @@ func TestA75Selectors(t *testing.T) {
 		})
 	}
 	t.Run("dto-owner-tamper", func(t *testing.T) {
-		ctx := context.WithValue(context.Background(), bindingKey{}, ScopeBinding{Ref: ref})
+		ctx := bindingVar.With(context.Background(), ScopeBinding{Ref: ref})
 		if MatchOwner(ctx, ScopeRef{"a", "org.organization", "org-b"}) != ErrDenied {
 			t.Fatal("DTO changed owner")
 		}

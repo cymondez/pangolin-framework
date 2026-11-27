@@ -8,6 +8,7 @@ import (
 	"errors"
 	"time"
 
+	frameworkapplication "github.com/cymondez/pangolin-framework/application"
 	"github.com/cymondez/pangolin-framework/events/distributed"
 	"github.com/cymondez/pangolin-framework/examples/bookstore/domain"
 	"github.com/cymondez/pangolin-framework/persistence/uow"
@@ -43,22 +44,25 @@ func (s *Books) Create(ctx context.Context, id, title string) (domain.Book, erro
 	if e != nil {
 		return book, e
 	}
-	err := s.manager.Within(ctx, uow.Options{Mode: uow.ReadWrite, Propagation: uow.Required}, func(work context.Context) error {
+	return frameworkapplication.CommandResult(ctx, s.manager, func(work context.Context) (domain.Book, error) {
 		if e := s.repository.Insert(work, book); e != nil {
-			return e
+			return domain.Book{}, e
 		}
 		payload, e := json.Marshal(book)
 		if e != nil {
-			return e
+			return domain.Book{}, e
 		}
-		return s.publisher.Publish(work, distributed.Envelope{ID: rand.Text(), Type: "bookstore.book_created", SchemaVersion: 1, OccurredAt: time.Now().UTC(), TenantID: binding.Ref.TenantID, ScopeKind: binding.Ref.Kind, ScopeID: binding.Ref.ID, CorrelationID: id, CausationID: id, Producer: "bookstore", Payload: payload})
+		if e := s.publisher.Publish(work, distributed.Envelope{ID: rand.Text(), Type: "bookstore.book_created", SchemaVersion: 1, OccurredAt: time.Now().UTC(), TenantID: binding.Ref.TenantID, ScopeKind: binding.Ref.Kind, ScopeID: binding.Ref.ID, CorrelationID: id, CausationID: id, Producer: "bookstore", Payload: payload}); e != nil {
+			return domain.Book{}, e
+		}
+		return book, nil
 	})
-	return book, err
 }
-func (s *Books) Get(ctx context.Context, id string) (book domain.Book, err error) {
+func (s *Books) Get(ctx context.Context, id string) (domain.Book, error) {
 	if binding, ok := scope.Current(ctx); !ok || !s.scopeAware && binding.Ref.Kind != "tenant" {
-		return book, ErrDenied
+		return domain.Book{}, ErrDenied
 	}
-	err = s.manager.Within(ctx, uow.Options{Mode: uow.ReadOnly}, func(work context.Context) error { var e error; book, e = s.repository.Get(work, id); return e })
-	return
+	return frameworkapplication.QueryResult(ctx, s.manager, func(work context.Context) (domain.Book, error) {
+		return s.repository.Get(work, id)
+	})
 }

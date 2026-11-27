@@ -8,7 +8,6 @@ package foundation
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"io/fs"
 	"net/http"
 	"time"
@@ -89,19 +88,13 @@ func composeProfile(b module.RootBuilder) error {
 	// resources — never on the Scopes or Idempotency contracts — so the
 	// constructor graph stays acyclic while the business store, every
 	// idempotency replay and the control plane resolve the same instances.
-	if err := b.Services().Add(newOrganizationRuntime, module.Singleton()); err != nil {
-		return err
-	}
-	if err := b.Services().Add(newOrganizationStoreProjection, module.Singleton()); err != nil {
-		return err
-	}
-	if err := b.Services().Export(module.Service[*organization.Store]()); err != nil {
-		return err
-	}
-	if err := b.Services().ReplaceContract(Scopes, newOrganizationScopesProjection, "organization-enabled profile: scope-aware registry with organization provider composed by the private runtime bundle", module.Singleton()); err != nil {
-		return err
-	}
-	if err := b.Services().Replace(newOrganizationIdempotencyProjection, "organization-enabled profile: idempotency operation authorization delegates to the realized organization registry of the runtime bundle", module.Singleton()); err != nil {
+	if err := module.Register(b.Services()).
+		Singleton(newOrganizationRuntime).
+		Singleton(newOrganizationStoreProjection).
+		Export(module.Service[*organization.Store]()).
+		ReplaceContract(Scopes, newOrganizationScopesProjection, "organization-enabled profile: scope-aware registry with organization provider composed by the private runtime bundle", module.Singleton()).
+		Replace(newOrganizationIdempotencyProjection, "organization-enabled profile: idempotency operation authorization delegates to the realized organization registry of the runtime bundle", module.Singleton()).
+		Err(); err != nil {
 		return err
 	}
 	// The handler swap is a low-level provider replacement: the RootBuilder
@@ -204,45 +197,25 @@ func newOrganizationStore(db AuthorityDB, units uow.UnitOfWorkManager, idem *ide
 // newOrganizationHandler builds the control-plane handler under the foundation
 // contracts: same authenticated pipeline, same tenant/scope headers.
 func newOrganizationHandler(ctx context.Context, resolve di.Resolver) (http.Handler, error) {
-	storeValue, err := resolve.Resolve(ctx, module.Service[*organization.Store]())
+	store, err := module.Resolve[*organization.Store](ctx, resolve)
 	if err != nil {
 		return nil, err
 	}
-	store, ok := storeValue.(*organization.Store)
-	if !ok {
-		return nil, errors.New("organization store is not the framework store")
-	}
-	managerValue, err := resolve.Resolve(ctx, module.Contract[uow.UnitOfWorkManager]())
+	manager, err := module.Resolve[uow.UnitOfWorkManager](ctx, resolve)
 	if err != nil {
 		return nil, err
 	}
-	manager, ok := managerValue.(uow.UnitOfWorkManager)
-	if !ok {
-		return nil, errors.New("unit-of-work contract is not the framework manager")
-	}
-	tenantsValue, err := resolve.Resolve(ctx, Tenants)
+	tenants, err := module.Resolve[*tenancy.Resolver](ctx, resolve)
 	if err != nil {
 		return nil, err
 	}
-	tenants, ok := tenantsValue.(*tenancy.Resolver)
-	if !ok {
-		return nil, errors.New("tenant resolver is not the framework resolver")
-	}
-	validatorValue, err := resolve.Resolve(ctx, Validator)
+	validator, err := module.Resolve[*authn.Validator](ctx, resolve)
 	if err != nil {
 		return nil, err
 	}
-	validator, ok := validatorValue.(*authn.Validator)
-	if !ok {
-		return nil, errors.New("credential validator is not the framework validator")
-	}
-	scopesValue, err := resolve.Resolve(ctx, Scopes)
+	scopes, err := module.Resolve[ScopeAccess](ctx, resolve)
 	if err != nil {
 		return nil, err
-	}
-	registry, ok := scopesValue.(*scope.Registry)
-	if !ok {
-		return nil, errors.New("scope contract is not the framework registry")
 	}
 	return orghttp.NewHandler(orghttp.Options{Management: store, Manager: manager, Timeout: 5 * time.Second, MaxBodyBytes: 1 << 20, AuthenticateCredential: validator.AuthenticateCredential, Credentials: transport.BearerCredentials(), ResolveTenant: func(c context.Context, r *http.Request) (context.Context, error) {
 		return tenants.Resolve(c, "", r.Header.Get("X-Tenant-ID"))
@@ -255,6 +228,6 @@ func newOrganizationHandler(ctx context.Context, resolve di.Resolver) (http.Hand
 		if kind == "" || id == "" {
 			return nil, scope.ErrRequired
 		}
-		return registry.Bind(c, scope.ScopeRef{TenantID: tenant, Kind: kind, ID: id})
-	}, Authorize: registry.Authorize})
+		return scopes.Bind(c, scope.ScopeRef{TenantID: tenant, Kind: kind, ID: id})
+	}, Authorize: scopes.Authorize})
 }

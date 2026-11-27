@@ -152,11 +152,11 @@ a:focus-visible, button:focus-visible {outline: 3px solid var(--ifm-color-primar
 .button--secondary:hover {background: var(--pg-surface-muted); border-color: var(--pg-flow-border); color: var(--pg-text);}
 
 .pg-hero {background: var(--pg-hero-background); border-bottom: 1px solid var(--pg-border); padding: 5.5rem 0 4.5rem;}
-.pg-hero-grid {display: grid; grid-template-columns: 1.15fr 1fr; gap: 5rem; align-items: center;}
+.pg-hero-grid {display: grid; grid-template-columns: 1.3fr 1fr; gap: 3.5rem; align-items: center;}
 .pg-eyebrow {font-size: .77rem; font-weight: 700; letter-spacing: .15em; color: var(--pg-text); margin-bottom: 1rem;}
-.pg-hero h1 {font-size: clamp(2.75rem, 4.4vw, 4.25rem); line-height: 1.23; letter-spacing: -.04em; color: var(--pg-hero-text); margin: 0 0 1.5rem; font-weight: 750;}
+.pg-hero h1 {font-size: clamp(1.85rem, 2.65vw, 2.55rem); line-height: 1.32; letter-spacing: -.02em; color: var(--pg-hero-text); margin: 0 0 1.4rem; font-weight: 750; text-wrap: balance;}
 .pg-hero h1 em {color: var(--pg-accent); font-style: normal;}
-.pg-lead {font-size: 1.12rem; line-height: 1.9; max-width: 36rem; color: var(--pg-hero-text);}
+.pg-lead {font-size: 1.08rem; line-height: 1.85; max-width: 38rem; color: var(--pg-hero-text);}
 .pg-actions {display: flex; gap: .8rem; flex-wrap: wrap; margin: 1.8rem 0 1.5rem;}
 .pg-version {display: flex; align-items: center; flex-wrap: wrap; gap: .7rem; color: var(--pg-hero-text); font-size: .85rem;}
 .pg-pill {display: inline-block; font-size: .8rem; font-weight: 650; border-radius: 2rem; padding: .15rem .7rem; background: var(--pg-output-background); color: var(--pg-output-text); white-space: nowrap;}
@@ -219,7 +219,7 @@ a:focus-visible, button:focus-visible {outline: 3px solid var(--ifm-color-primar
 
 @media(max-width: 700px) {
   .pg-hero-grid {grid-template-columns: 1fr; gap: 2.5rem;}
-  .pg-hero h1 {font-size: 3rem;}
+  .pg-hero h1 {font-size: clamp(1.65rem, 6vw, 2.2rem);}
   .pg-hero {padding: 2.5rem 0;}
   .pg-hero-grid>.pg-flow {max-width: 480px; width: 100%; margin: auto;}
   .pg-topics {grid-template-columns: 1fr;}

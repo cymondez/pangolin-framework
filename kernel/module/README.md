@@ -40,6 +40,12 @@ plan, err := module.LoadRoot(&AuthModule{}) // 根模組以 instance pointer 提
 
 驗證：`go test ./kernel/module`（含 `TestRootLoader*` 家族）。
 
+## Generic façade 與註冊 façade
+
+日常解析優先使用 `module.Resolve[T](ctx, resolver)`：它使用既有 `module.Contract[T]()` 建立 canonical token，呼查既有 Resolver，並在型別不符時回傳包含期待／實際型別的錯誤。`module.MustResolve[T]` 是 panic-on-error 的 convenience，只適合組態或測試 fixture；production lifecycle hook 應處理 `Resolve` 的 error。
+
+註冊仍走既有 `Services.Add`：`module.AddSingleton(services, constructor, opts...)`、`module.AddTransient(...)` 與 `module.AddOperation(...)` 是 lifetime façade，可與 `module.As(contract)` 等 `AddOption` 組合；多個 lifetime option 相互衝突仍由既有 registration validation 在 `Add` 時拒絕。若模組同時註冊實作並公開介面契約，可用 `module.AddAndExportSingleton[Contract]`、`AddAndExportTransient[Contract]`、`AddAndExportOperation[Contract]` 一步完成 `Add(..., As(Contract[Contract]()))` 與 `Export(Contract[Contract]())`。多項註冊時可用錯誤累積式流暢註冊器 `module.Register(b.Services()).Singleton(...).Transient(...).Operation(...).Export(...).Bind(...).Replace(...).ReplaceContract(...).ReplaceBinding(...).Err()`，首個錯誤後短路記錄。可逐步採用，不會改變 `Services` 或低階 provider 介面。
+
 ## Root 建構子組合引擎（services.go）
 
 `services.go` 實作 Root 模式的 constructor DI 引擎，輸入是 `LoadRoot` 的 `RootPlan`；ROOT runtime 的整合接線見 `.workflow/root-module-di/packets/core-api.md`。
@@ -77,16 +83,16 @@ resolver, err := comp.LifecycleResolver("auth")            // Start/Stop 的逐�
 
 ## Root 模式的 Operation Scope（root_scope.go）
 
-受限 lifecycle resolver 故意不開關任何暫時性 scope；因此 `Operation()` 生命週期的服務在 Start／Stop 內透過 `Runtime.Services()` 完全取不到（Resolve 一律錯誤），而 Root 入口不會把 sealed container 交給模組。`OpenScope` 是補上這一步的加法入口，實作見 [root_scope.go](root_scope.go)：
+受限 lifecycle resolver 故意不開關任何暫時性 scope；因此 `Operation()` 生命週期的服務在 Start／Stop 內透過 `Runtime.Services()` 完全取不到（Resolve 一律錯誤），而 Root 入口不會把 sealed container 交給模組。`Runtime.OpenScope(ctx)` 是推薦入口；`module.OpenScope(ctx, rt.Services())` 保留為 package-level 過渡 API，實作見 [root_scope.go](root_scope.go)：
 
 ```go
 func (m *ReportModule) Start(ctx context.Context, rt module.Runtime) error {
-    scope, err := module.OpenScope(ctx, rt.Services()) // rt.Services() 必須是 Root 模式受限 lifecycle resolver
+    scope, err := rt.OpenScope(ctx)
     if err != nil {
         return err
     }
     defer scope.Close(ctx) // Close 擁有底下 scope 的全部清理（有界、冪等）
-    session, err := scope.Resolve(ctx, module.Service[*ReportSession]()) // Operation() 服務在此可解析
+    session, err := module.Resolve[*ReportSession](ctx, scope) // Operation() 服務在此可解析
     ...
 }
 ```

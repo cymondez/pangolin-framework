@@ -14,7 +14,7 @@ err = manager.Within(trustedContext, uow.Options{Mode: uow.ReadWrite},
 
 頂層需要由可信 ScopeResolver 安裝的 binding；自行填 ScopeBinding struct 不會建立權限。未指定 Mode 為 ReadOnly；TransactionAuto 在 ReadWrite 或 RLS 下使用交易；不依賴 RLS 的唯讀 Resource 可明示非交易。Required 子視圖共用根交易；子失敗／取消／不相容選項使根 rollback-only，即使外層捕捉錯誤也不會提交。唯讀子視圖拒絕寫入，callback 結束後 context 失效。
 
-Manager 表達 Required／RequiresNew 與 ReadCommitted／RepeatableRead／Serializable；各 Adapter 只接受自己能保證的隔離級別。RequiresNew 暫停父根，使用獨立資源並保留父 binding／期限。父子分別提交，不保證整條呼叫鏈原子性；連線不足或引擎寫鎖衝突可令獨立子操作失敗。SQL 已直接送入交易，尚無 change tracker；SaveChanges 呼叫可選 Flush，只 flush、不提交或排空事件。Local Event／Audit／冪等完成流程由明示組裝的 Resource 接入，核心 Manager 不自動建立這些持久化 Adapter。
+Manager 表達 Required／RequiresNew 與 ReadCommitted／RepeatableRead／Serializable；各 Adapter 只接受自己能保證的隔離級別。Manager 以 `kernel/ambient` 的不可變 Copy-on-Write 巢狀鏈管理 Scope 視圖，RequiresNew 建立獨立根 Scope、獨立連線與交易並保留父 binding／期限，**不修改也不暫停父 Scope**——因此多個 goroutine 可在同一個有效父 UOW 下安全平行呼叫 RequiresNew 共用同一個無狀態 Repository（單一 UOW 內的單一連線仍以 `UOW_BUSY` 防重疊保護）。`uow.Detach(ctx)` 透過 `ambient.Var.Clear` 清除當前 UOW 視圖、完成標記與透過 `uow.AttachSlot` 掛載的資源槽位（`database`／`postgres` Executor、Local／Outbox 佇列），同時保留已驗證的身分／Tenant／ScopeBinding／Deadline，讓平行 goroutine 可啟動重新執行 `scope.Admit` 的獨立頂層 UOW。`ErrSuspended`（`UOW_SUSPENDED`）僅保留作向後相容 sentinel，Manager 不再發出此錯誤。父子分別提交，不保證整條呼叫鏈原子性；連線不足或引擎寫鎖衝突可令獨立子操作失敗。SQL 已直接送入交易，尚無 change tracker；SaveChanges 呼叫可選 Flush，只 flush、不提交或排空事件。Local Event／Audit／冪等完成流程由明示組裝的 Resource 接入，核心 Manager 不自動建立這些持久化 Adapter。
 
 `DefaultOptions.DefaultIsolation` 控制未指定隔離級別的交易；零值維持既有 ReadCommitted。SQLite 組裝需明示 Serializable；也可為三種引擎統一選擇 Serializable。呼叫端明示的 Options.Isolation 優先，後端無法支援時拒絕，不靜默改成別的隔離級別。
 

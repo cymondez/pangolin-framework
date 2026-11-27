@@ -21,6 +21,6 @@ MemoryProvider 是本機組態來源；Put 是僅供已授權管理組裝呼叫�
 
 組裝擁有 Cache／Provider；沒有背景資源需關閉。`go test ./platform/settings` 驗證覆寫、完整 Scope、失效失敗與版本收斂。
 
-`WithConfiguration(baseProvider, reader, converters)` 依 ABP 使用 `reader.Lookup("Settings:" + settingName)`；不拆分、重寫或自動補 index，點號仍是名稱本身。Config 位於 Global 與 Default 之間；現有 Scope／User／Global 儲存值優先，Inherit=false 不讀此上層。預設將 Configuration 的字串編碼成 JSON string，即使內容像數字或 JSON 也不猜型別；typed Feature 必須明示 converter。既有 JSON RawMessage 管理 API 保留，與 ABP string API 的差異在此邊界明確轉換。null／空物件繼續 fallback，空陣列的空字串是有效覆寫。Source revision 參與快取核對；Update 保持完整原名與原 owner，轉交原儲存 Provider。
+`WithConfiguration(baseProvider, reader, converters)` 使用精確前綴 `reader.Lookup("Settings:" + settingName)` 查詢組態值；不拆分、重寫或自動補 index，點號仍是名稱本身。Config 位於 Global 與 Default 之間；現有 Scope／User／Global 儲存值優先，Inherit=false 不讀此上層。預設將 Configuration 的字串編碼成 JSON string，即使內容像數字或 JSON 也不猜型別；typed Feature 必須明示 converter。既有 JSON RawMessage 管理 API 保留，字串組態在此邊界明確轉換。null／空物件繼續 fallback，空陣列的空字串是有效覆寫。Source revision 參與快取核對；Update 保持完整原名與原 owner，轉交原儲存 Provider。
 
-對照來源：[ABP SettingProvider](https://github.com/abpframework/abp/blob/dev/framework/src/Volo.Abp.Settings/Volo/Abp/Settings/SettingProvider.cs) 以反向 Provider 順序取第一個非 null 值；[ConfigurationSettingValueProvider](https://github.com/abpframework/abp/blob/dev/framework/src/Volo.Abp.Settings/Volo/Abp/Settings/ConfigurationSettingValueProvider.cs) 原樣使用 `Settings:` 前綴。本專案的 Inherit 與完整 Scope 隔離按自己的明示契約控制。
+解析規則固定以高至低層級取第一個非空候選值，Inherit 與完整 Scope 隔離一律按本專案的明示契約控制。

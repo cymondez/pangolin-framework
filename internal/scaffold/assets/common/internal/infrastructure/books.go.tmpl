@@ -2,61 +2,36 @@ package infrastructure
 
 import (
 	"context"
-	"crypto/rand"
 	"crypto/sha256"
 	"encoding/json"
-	"errors"
 	"fmt"
-	"github.com/cymondez/pangolin-framework/events/distributed"
+
 	"github.com/cymondez/pangolin-framework/events/outbox"
 	"github.com/cymondez/pangolin-framework/persistence/postgres"
 	"github.com/cymondez/pangolin-framework/persistence/uow"
 	"github.com/cymondez/pangolin-framework/platform/audit"
-	"github.com/cymondez/pangolin-framework/security/scope"
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
-	"time"
 	"{{MODULE}}/internal/domain"
 )
-
-type Failure struct {
-	status int
-	code   string
-	cause  error
-}
-
-func (e Failure) Error() string   { return e.code }
-func (e Failure) Unwrap() error   { return e.cause }
-func (e Failure) HTTPStatus() int { return e.status }
-func (e Failure) Code() string    { return e.code }
 
 type Repository struct{}
 
 func (Repository) Insert(ctx context.Context, b domain.Book) error {
-	e, err := postgres.Current(ctx, true)
+	e, owner, err := postgres.CurrentWithScope(ctx, true)
 	if err != nil {
 		return err
 	}
-	owner, _ := scope.Current(ctx)
-	_, err = e.Exec(ctx, insertSQL, owner.Ref.TenantID, owner.Ref.Kind, owner.Ref.ID, b.ID, b.Title)
-	var p *pgconn.PgError
-	if errors.As(err, &p) && p.Code == "23505" {
-		return Failure{409, "CONFLICT", err}
-	}
-	return err
+	_, err = e.Exec(ctx, insertSQL, owner.TenantID, owner.Kind, owner.ID, b.ID, b.Title)
+	return postgres.MapError(err)
 }
+
 func (Repository) Get(ctx context.Context, id string) (domain.Book, error) {
-	e, err := postgres.Current(ctx, false)
+	e, owner, err := postgres.CurrentWithScope(ctx, false)
 	if err != nil {
 		return domain.Book{}, err
 	}
-	owner, _ := scope.Current(ctx)
 	var b domain.Book
-	err = e.QueryRow(ctx, getSQL, owner.Ref.TenantID, owner.Ref.Kind, owner.Ref.ID, id).Scan(&b.ID, &b.Title)
-	if errors.Is(err, pgx.ErrNoRows) {
-		err = Failure{404, "NOT_FOUND", err}
-	}
-	return b, err
+	err = e.QueryRow(ctx, getSQL, owner.TenantID, owner.Kind, owner.ID, id).Scan(&b.ID, &b.Title)
+	return b, postgres.MapError(err)
 }
 
 type Effects struct {
@@ -65,10 +40,7 @@ type Effects struct {
 }
 
 func (e Effects) Operation(ctx context.Context) (string, error) {
-	if e.Manager == nil {
-		return "", uow.ErrRequired
-	}
-	s, ok := e.Manager.Current(ctx)
+	s, ok := uow.Current(ctx)
 	if !ok {
 		return "", uow.ErrRequired
 	}
@@ -76,15 +48,9 @@ func (e Effects) Operation(ctx context.Context) (string, error) {
 }
 
 func (e Effects) Event(ctx context.Context, eventType string, payload json.RawMessage) error {
-	b, _ := scope.Current(ctx)
-	id := rand.Text()
-	operation, err := e.Operation(ctx)
-	if err != nil {
-		return err
-	}
-	event := distributed.Envelope{ID: id, Type: eventType, SchemaVersion: 1, OccurredAt: time.Now().UTC(), TenantID: b.Ref.TenantID, ScopeKind: b.Ref.Kind, ScopeID: b.Ref.ID, CorrelationID: operation, CausationID: operation, Producer: "bookstore", Payload: payload}
-	return e.Publisher.Publish(ctx, event)
+	return e.Publisher.ForProducer("bookstore").PublishJSON(ctx, eventType, 1, payload)
 }
+
 func (e Effects) Created(ctx context.Context, b domain.Book) error {
 	operation, err := e.Operation(ctx)
 	if err != nil {
@@ -93,6 +59,5 @@ func (e Effects) Created(ctx context.Context, b domain.Book) error {
 	if err := (audit.Recorder{}).Record(ctx, audit.Record{Action: "books.created", Resource: fmt.Sprintf("book:%x", sha256.Sum256([]byte(b.ID))), Result: "success", Trace: operation}); err != nil {
 		return err
 	}
-	payload, _ := json.Marshal(b)
-	return e.Event(ctx, "bookstore.book.created", payload)
+	return e.Publisher.ForProducer("bookstore").PublishJSON(ctx, "bookstore.book.created", 1, b)
 }

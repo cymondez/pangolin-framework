@@ -50,7 +50,7 @@ func (m *Module) ModuleMetadata() module.Metadata {
 func (m *Module) Configure(b module.RootBuilder) error {
 	// Ordinary constructor registration with explicit Singleton opt-in; the
 	// exact concrete type *Store is the resolution key.
-	if err := b.Services().Add(NewStore, module.Singleton()); err != nil {
+	if err := module.AddSingleton(b.Services(), NewStore); err != nil {
 		return err
 	}
 	// The public concrete service is visible across modules only through the
@@ -59,14 +59,10 @@ func (m *Module) Configure(b module.RootBuilder) error {
 }
 
 func (m *Module) Start(ctx context.Context, rt module.Runtime) error {
-	// Own-concrete resolution uses the restricted per-module resolver.
-	value, err := rt.Services().Resolve(ctx, module.Contract[*Store]())
+	// Own-concrete resolution uses the typed façade and restricted per-module resolver.
+	s, err := module.Resolve[*Store](ctx, rt.Services())
 	if err != nil {
 		return err
-	}
-	s, ok := value.(*Store)
-	if !ok {
-		return fmt.Errorf("store: unexpected service type %T", value)
 	}
 	fmt.Printf("start store (shared instance %d)\n", s.Len())
 	return nil

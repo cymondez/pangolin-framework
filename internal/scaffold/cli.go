@@ -15,7 +15,6 @@ import (
 	"io"
 	"io/fs"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -46,9 +45,12 @@ type Project struct {
 	Modules  map[string][]string `json:"modules"`
 }
 type CLI struct {
-	Dir      string
-	Out, Err io.Writer
-	Command  func(context.Context, string, ...string) ([]byte, error)
+	Dir                 string
+	Out, Err            io.Writer
+	Command             func(context.Context, string, ...string) ([]byte, error)
+	HTTPClient          HTTPDoer
+	PingDatabase        func(context.Context, string) error
+	ReadMigrationLedger func(context.Context, string) ([]MigrationLedgerEntry, error)
 }
 
 var namePattern = regexp.MustCompile(`^[a-z][a-z0-9_]{0,47}$`)
@@ -86,7 +88,7 @@ func (c CLI) run(ctx context.Context, args []string) error {
 		return err
 	}
 	if len(args) == 0 || args[0] == "--help" || args[0] == "help" {
-		fmt.Fprintln(c.Out, "pangolin 0.1.0\nnew NAME --template modular-monolith [--with organization] [--realtime]\nmodule add NAME [--depends persistence,authorization]\nmigrate create NAME --module MODULE\nmigrate status\ndoctor\ngenerate openapi\nEach command accepts --help.")
+		fmt.Fprintln(c.Out, "pangolin 0.1.0\nnew NAME --template modular-monolith [--with organization] [--realtime]\nmodule add NAME [--depends persistence,authorization] [--preset service|crud]\nmigrate create NAME --module MODULE\nmigrate status\ndoctor [--live]\ngenerate openapi\nupgrade plan\nupgrade --dry-run\nupgrade runtime\nupgrade verify\nEach command accepts --help.")
 		return nil
 	}
 	if args[0] == "--version" && len(args) == 1 {
@@ -115,6 +117,12 @@ func (c CLI) run(ctx context.Context, args []string) error {
 		if len(args) > 1 && args[1] == "openapi" {
 			return c.openapi(args[2:])
 		}
+	case "upgrade":
+		if len(args) > 1 && args[1] == "--help" {
+			fmt.Fprintln(c.Out, "upgrade plan\nupgrade --dry-run\nupgrade runtime\nupgrade verify")
+			return nil
+		}
+		return c.upgrade(ctx, args[1:])
 	}
 	if len(args) == 2 && args[1] == "--help" {
 		fmt.Fprintln(c.Out, "Use pangolin --help for supported subcommands.")
@@ -255,47 +263,20 @@ func (c CLI) newProject(args []string) error {
 	if with == "organization" {
 		profile = "organization-enabled"
 	}
-	realtimeGroup := "no-realtime"
-	if realtime {
-		realtimeGroup = "realtime"
+	projectFiles, err := embeddedProjectFiles(name, profile, realtime)
+	if err != nil {
+		return err
 	}
-	err = fs.WalkDir(assets, "assets", func(path string, d fs.DirEntry, walkErr error) error {
-		if walkErr != nil {
-			return walkErr
-		}
-		if d.IsDir() {
-			return nil
-		}
-		relative := strings.TrimPrefix(path, "assets/")
-		if relative == "common/runtime-manifest.json.tmpl" {
-			return nil
-		}
-		parts := strings.SplitN(relative, "/", 2)
-		if len(parts) != 2 {
-			return nil
-		}
-		group, destination := parts[0], strings.TrimSuffix(parts[1], ".tmpl")
-		if group != "common" && group != "runtime" && group != profile && group != realtimeGroup {
-			return nil
-		}
-		if group == "runtime" {
-			if with == "" && strings.HasPrefix(destination, "modules/organization/") {
-				return nil
-			}
-			if !realtime && strings.HasPrefix(destination, "modules/realtime/") {
-				return nil
-			}
-			destination = "framework/" + destination
-		}
-		raw, err := fs.ReadFile(assets, path)
-		if err != nil {
+	orderedDestinations := make([]string, 0, len(projectFiles))
+	for destination := range projectFiles {
+		orderedDestinations = append(orderedDestinations, destination)
+	}
+	sort.Strings(orderedDestinations)
+	for _, destination := range orderedDestinations {
+		if err := writeFile(filepath.Join(stage, filepath.FromSlash(destination)), projectFiles[destination]); err != nil {
 			return err
 		}
-		if group != "runtime" {
-			raw = []byte(strings.ReplaceAll(string(raw), "{{MODULE}}", "example.com/"+name))
-		}
-		return writeFile(filepath.Join(stage, filepath.FromSlash(destination)), raw)
-	})
+	}
 	if err != nil {
 		return err
 	}
@@ -387,18 +368,30 @@ func (c CLI) addModule(args []string) error {
 	name, rest, err := splitName(args)
 	if err != nil {
 		if errors.Is(err, flag.ErrHelp) {
-			fmt.Fprintln(c.Out, "module add NAME [--depends persistence,authorization]")
+			fmt.Fprintln(c.Out, "module add NAME [--depends persistence,authorization] [--preset service|crud]")
 		}
 		return err
 	}
-	var deps string
-	f, err := c.flags("module add", rest, func(f *flag.FlagSet) { f.StringVar(&deps, "depends", "", "comma-separated registered dependencies") })
+	var deps, preset string
+	f, err := c.flags("module add", rest, func(f *flag.FlagSet) {
+		f.StringVar(&deps, "depends", "", "comma-separated registered dependencies")
+		f.StringVar(&preset, "preset", "", "module generation preset: service (crud is unsupported)")
+	})
 	if err != nil {
 		return err
 	}
 	if f.NArg() != 0 {
 		return errors.New("unexpected arguments")
 	}
+	preset = strings.TrimSpace(strings.ToLower(preset))
+	if preset != "" && preset != "service" {
+		return fmt.Errorf("unsupported preset %q: only %q is supported; no files changed", preset, "service")
+	}
+	unlock, err := acquireProjectModuleLock(c.Dir)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = unlock() }()
 	p, err := c.project()
 	if err != nil {
 		return err
@@ -420,12 +413,17 @@ func (c CLI) addModule(args []string) error {
 		return errors.New("module registry was edited; existing files preserved")
 	}
 	dependencies := []string{}
-	if deps != "" {
-		dependencies = strings.Split(deps, ",")
+	if strings.TrimSpace(deps) != "" {
+		for _, dependency := range strings.Split(deps, ",") {
+			dependencies = append(dependencies, strings.TrimSpace(dependency))
+		}
+	}
+	if err = validatePresetDependencies(p, name, dependencies); err != nil {
+		return err
 	}
 	p.Modules[name] = dependencies
 	if err = validateModules(p.Modules); err != nil {
-		return err
+		return fmt.Errorf("%w; valid candidates: %s", err, strings.Join(validModuleCandidates(p, name), ", "))
 	}
 	if err = c.safeDirectory("modules"); err != nil {
 		return err
@@ -434,72 +432,45 @@ func (c CLI) addModule(args []string) error {
 	if _, err = os.Lstat(target); !errors.Is(err, os.ErrNotExist) {
 		return errors.New("module directory already exists")
 	}
-	var body strings.Builder
-	importList := []string{"\"github.com/cymondez/pangolin-framework/kernel/module\""}
-	var refs strings.Builder
-	framework := false
-	for _, d := range dependencies {
-		if d == "realtime" && p.Realtime {
-			importList = append(importList, `"github.com/cymondez/pangolin-framework/modules/realtime"`)
-			refs.WriteString("module.Of[realtime.Module](),")
-			continue
-		}
-		switch d {
-		case "persistence", "authorization", "organization":
-			// Framework capability names translate into the foundation Type
-			// edge below; they are never silently omitted.
-			framework = true
-			continue
-		case "bookstore":
-			return errors.New("bookstore is the generated domain sample: user modules depend on foundation capabilities (persistence, authorization) or registered user modules")
-		}
-		if d == name || !namePattern.MatchString(d) {
-			continue
-		}
-		importList = append(importList, fmt.Sprintf("\"example.com/%s/modules/%s\"", p.Name, d))
-		refs.WriteString("module.Of[" + d + ".Module](),")
+
+	previousRegistry, err = os.ReadFile(registryPath)
+	if err != nil {
+		return errors.New("module registry changed; existing files preserved")
 	}
-	if framework {
-		importList = append(importList, fmt.Sprintf("%q", "example.com/"+p.Name+"/foundation"))
+	previousProject, err := os.ReadFile(filepath.Join(c.Dir, "pangolin.json"))
+	if err != nil {
+		return errors.New("pangolin.json changed; existing files preserved")
 	}
-	fmt.Fprintf(&body, "package %s\nimport (\n%s\n)\ntype Module struct{}\n", name, strings.Join(importList, "\n"))
-	fmt.Fprintf(&body, "func (m *Module) ModuleMetadata() module.Metadata { return module.Metadata{Name: %q, Version: %q} }\n", name, Version)
-	if framework || refs.Len() > 0 {
-		// Root-mode Type dependencies: direct user module edges plus the
-		// foundation module that owns every framework contract. Framework
-		// composition (HTTP, drain) stays in internal/app.
-		fmt.Fprintf(&body, "func (m *Module) DependsOn() []module.Ref { return []module.Ref{")
-		if framework {
-			body.WriteString("module.Of[foundation.Module](),")
-		}
-		body.WriteString(refs.String())
-		body.WriteString("} }\n")
-	}
-	body.WriteString("func (m *Module) PreConfigure(b module.RootBuilder) error { return b.SetDefault(\"" + name + ".installed\", \"true\") }\n")
-	body.WriteString("// Configure registers your constructors. Framework services are typed\n")
-	body.WriteString("// constructor dependencies owned by the foundation module, for example:\n")
-	body.WriteString("//\n")
-	body.WriteString("// func New" + strings.ToUpper(name[:1]) + name[1:] + "Service(units uow.UnitOfWorkManager, scopes foundation.Scopes) *New" + strings.ToUpper(name[:1]) + name[1:] + "Service {\n")
-	body.WriteString("//\treturn &New" + strings.ToUpper(name[:1]) + name[1:] + "Service{units: units, scopes: scopes}\n")
-	body.WriteString("// }\n")
-	body.WriteString("//\n")
-	body.WriteString("// return b.Services().Add(New" + strings.ToUpper(name[:1]) + name[1:] + "Service)\n")
-	body.WriteString("func (m *Module) Configure(b module.RootBuilder) error { return nil }\n")
-	body.WriteString("// Start and Stop are optional; Start resolves services via rt.Services().\n")
-	raw, err := format.Source([]byte(body.String()))
+
+	stage, err := os.MkdirTemp(c.Dir, ".pangolin-module-")
 	if err != nil {
 		return err
 	}
-	if err = writeFile(filepath.Join(target, "module.go"), raw); err != nil {
+	defer os.RemoveAll(stage)
+	if err = c.writePresetModule(stage, name, preset, p, dependencies); err != nil {
 		return err
 	}
-	if err = writeFile(filepath.Join(target, "README.md"), []byte("# "+name+"\n\nModule() declares root-mode module metadata and Type dependencies. Register constructors in Configure via b.Services().Add(...); resolve them in Start from rt.Services() with the exact concrete type. Framework services are typed constructor dependencies owned by the foundation module: declare --depends persistence/authorization (or organization) to add the foundation.Type edge and inject the published contracts (uow.UnitOfWorkManager, foundation.Scopes, foundation.Publisher, foundation.Idempotency). HTTP and drain composition stays in internal/app. Run go test ./... from the project root.\n")); err != nil {
+
+	temporaryRegistry, err := registryBytes(p)
+	if err != nil {
 		return err
 	}
-	if err = writeRegistry(c.Dir, p); err != nil {
+	if err = writeFile(filepath.Join(stage, "registry.go"), temporaryRegistry); err != nil {
 		return err
 	}
-	return writeFile(filepath.Join(c.Dir, "pangolin.json"), jsonBytes(p))
+	if err = writeFile(filepath.Join(stage, "pangolin.json"), jsonBytes(p)); err != nil {
+		return err
+	}
+	if err = c.commitStagedModule(target, stage, registryPath, filepath.Join(c.Dir, "pangolin.json"), previousRegistry, previousProject); err != nil {
+		return fmt.Errorf("module generation failed: %w", err)
+	}
+	fmt.Fprintln(c.Out, "Generated", name, "preset", func() string {
+		if preset == "" {
+			return "skeleton"
+		}
+		return preset
+	}())
+	return nil
 }
 func (c CLI) createMigration(args []string) error {
 	name, rest, err := splitName(args)
@@ -595,52 +566,29 @@ func (c CLI) status(ctx context.Context, args []string) error {
 	return rows.Err()
 }
 func (c CLI) doctor(ctx context.Context, args []string) error {
-	f, err := c.flags("doctor", args, func(*flag.FlagSet) {})
+	var live bool
+	f, err := c.flags("doctor", args, func(f *flag.FlagSet) {
+		f.BoolVar(&live, "live", false, "check Compose, database, migration ledger and API readiness")
+	})
 	if err != nil {
 		return err
 	}
 	if f.NArg() != 0 {
 		return errors.New("unexpected arguments")
 	}
-	p, err := c.project()
+	_, err = c.doctorStatic(ctx)
 	if err != nil {
 		return err
 	}
-	for _, cmd := range [][]string{{"go", "version"}, {"docker", "compose", "version"}} {
-		command := c.Command
-		if command == nil {
-			command = func(ctx context.Context, name string, args ...string) ([]byte, error) {
-				return exec.CommandContext(ctx, name, args...).Output()
-			}
+	if live {
+		if err = c.doctorLive(ctx); err != nil {
+			return errors.New("doctor --live completed with failures")
 		}
-		out, err := command(ctx, cmd[0], cmd[1:]...)
-		if err != nil {
-			return commandError{fmt.Sprintf("%s check failed", cmd[0]), err}
-		}
-		if cmd[0] == "go" && !strings.Contains(string(out), "go1.27.4 ") {
-			return errors.New("Go 1.27.4 required by this template")
-		}
-		fmt.Fprint(c.Out, string(out))
+		fmt.Fprintln(c.Out, "[PASS] doctor --live")
+		return nil
 	}
-	raw, err := os.ReadFile(filepath.Join(c.Dir, "framework", "go.mod"))
-	if err != nil || !strings.Contains(string(raw), "module github.com/cymondez/pangolin-framework") {
-		return errors.New("bundled runtime missing")
-	}
-	var manifest map[string]string
-	raw, err = os.ReadFile(filepath.Join(c.Dir, "runtime-manifest.json"))
-	if err != nil || json.Unmarshal(raw, &manifest) != nil || len(manifest) == 0 {
-		return errors.New("runtime manifest missing")
-	}
-	for path, expected := range manifest {
-		if !strings.HasPrefix(path, "framework/") || strings.Contains(path, "..") || filepath.IsAbs(path) {
-			return errors.New("invalid runtime manifest path")
-		}
-		raw, err = os.ReadFile(filepath.Join(c.Dir, filepath.FromSlash(path)))
-		if err != nil || fmt.Sprintf("%x", sha256.Sum256(raw)) != expected {
-			return errors.New("bundled runtime checksum mismatch")
-		}
-	}
-	fmt.Fprintln(c.Out, "project", p.Name, "profile", p.Profile, "runtime", p.Version)
+	fmt.Fprintln(c.Out, "[SKIP] database, requires --live")
+	fmt.Fprintln(c.Out, "[SKIP] migrations, requires --live")
 	return nil
 }
 func (c CLI) openapi(args []string) error {

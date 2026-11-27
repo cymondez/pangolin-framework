@@ -12,6 +12,7 @@ package identity
 import (
 	"context"
 
+	"github.com/cymondez/pangolin-framework/kernel/ambient"
 	"github.com/cymondez/pangolin-framework/security/scope"
 )
 
@@ -21,7 +22,8 @@ type identity struct {
 	method     string
 	assurances []string
 }
-type identityKey struct{}
+
+var identityVar = ambient.New[identity]()
 
 // Identity reads only verified identity installed by this package's trusted
 // pipeline. The tenant is a credential hint; authorization still happens in
@@ -46,11 +48,7 @@ func Method(ctx context.Context) (string, []string, bool) {
 }
 
 func value(ctx context.Context) (identity, bool) {
-	if ctx == nil {
-		return identity{}, false
-	}
-	v, ok := ctx.Value(identityKey{}).(identity)
-	return v, ok
+	return identityVar.Current(ctx)
 }
 
 // install stores a completed, validated result under the private context key.
@@ -59,7 +57,7 @@ func install(ctx context.Context, result Result) (context.Context, error) {
 	if ctx == nil {
 		return nil, ErrUnauthenticated
 	}
-	return context.WithValue(ctx, identityKey{}, identity{
+	return identityVar.With(ctx, identity{
 		principal:  result.Principal,
 		tenant:     result.Tenant,
 		method:     result.Method,

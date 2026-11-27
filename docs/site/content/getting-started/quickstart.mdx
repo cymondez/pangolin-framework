@@ -1,54 +1,110 @@
 ---
 title: 第一個應用
-description: 在自己的專案建立 main.go，用 Root 裝配啟動第一個 panGOlin 應用並看到執行結果。
+description: 在自己的專案建立 main.go，透過 Root 裝配與 app.Run 啟動第一個 panGOlin 模組並完成優雅停機。
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 import source from '../_snippets/hello.go';
 
-這一頁會建立一個能直接執行的 console 應用。它以 root 裝配啟動一個名為 `hello` 的功能模組、印出訊息，再正常停止。
+> **你在架構中的位置**：**`[ 應用入口 main.go + 最簡 Module 生命週期 ]`**（不需要資料庫、設定檔或網路服務）
+>
+> **前置條件**：已完成[安裝與建立專案](installation.md)。以下所有操作都在你自己的 **`hello-pangolin`** 資料夾進行。
 
-## 開始前
+這一頁會帶你寫出第一個真正由 panGOlin Runtime 驅動的 Go 應用：我們只定義一個最小的 `hello` 模組，交給 `app.Run` 啟動、印出訊息，並在 1 秒後自動優雅停機。
 
-先完成[安裝與建立專案](installation.md)。以下操作都在你自己的 **`hello-pangolin`** 資料夾進行。
+---
 
-## 1. 建立 main.go
+## 為什麼不直接在 `main()` 裡寫 `fmt.Println`？
 
-建立 `main.go`，貼上完整程式：
+如果程式真的只有一行 `fmt.Println`，當然不需要框架。但實務專案很快就會同時需要：
+- 多個功能模組按相依順序啟動（例如先連資料庫，再啟動業務服務，最後開啟 HTTP Port）。
+- 收到關閉訊號時，反序釋放所有資源而不丟失進行中的請求。
+- 在任何資源啟動前先統一驗證設定與服務依賴。
+
+panGOlin 把這整套骨架收斂成一個極簡入口：**定義 Module struct → 交給 `app.Run(ctx, root)`**。這個最小範例就是要讓你先看懂這個核心骨架，完全沒有多餘雜訊。
+
+---
+
+## 1. 建立 `main.go`
+
+在 **`hello-pangolin`** 資料夾建立 `main.go`，貼上以下完整程式（已附步驟式註解）：
 
 <CodeBlock language="go" title="hello-pangolin/main.go">{source}</CodeBlock>
 
-## 2. 執行應用
+### 逐段導讀：每一段程式碼的作用
+
+1. **`type helloModule struct { module.Base }`**（步驟 1）
+   - 在 panGOlin 中，**模組就是一個普通的 Go struct**，不需要繼承複雜的基底類別，也不需要靠魔法註解掃描。
+   - 嵌入 `module.Base` 可以直接幫你實作 `ModuleMetadata()`，提供模組的 `Name`（唯一識別名）與 `Version`（供其他模組宣告版本約束使用）。
+2. **`func (m *helloModule) Start(context.Context, module.Runtime) error`**（步驟 2）
+   - `Start` 是可選的生命週期方法（其他還有 `PreConfigure`、`Configure`、`PostConfigure`、`Stop`，用不到就不用寫）。
+   - 當 Runtime 驗證完所有模組與設定後，就會按相依順序呼叫每個模組的 `Start`。如果回傳非 `nil` 錯誤，應用會立即中止啟動並自動回收已建立的資源。
+3. **`ctx, stop := context.WithTimeout(...)`**（步驟 3）
+   - `app.Run` 是**阻塞式**的：所有模組啟動完成後，它會持續等待直到 `ctx` 被取消或逾時。
+   - 正式的 HTTP 伺服器或背景 Worker 會改用 `signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)`，讓程式常駐運行直到收到停止訊號；這裡為了讓命令列教學能自動結束，刻意用 1 秒逾時模擬收到停機訊號。
+4. **`app.Run(ctx, root)`**（步驟 4）
+   - 這是 panGOlin 推薦的 **Root 裝配入口**。你只需要把最頂層的根模組交給它，它就會自動完成：內建必要預設值（包含 UOW 預設逾時）→ 收集相依模組 → 組態與 DI 封存 → 啟動 → 等待 `ctx` 結束 → 反序停機。
+
+---
+
+## 2. 整理依賴並執行
+
+確認終端機位於 **`hello-pangolin`** 資料夾，執行：
+
+<Tabs groupId="os">
+<TabItem value="powershell" label="Windows PowerShell">
+
+```powershell
+go mod tidy
+go run .
+```
+
+</TabItem>
+<TabItem value="bash" label="Linux / macOS (Bash)">
 
 ```bash
 go mod tidy
 go run .
 ```
 
-你應該看到：
+</TabItem>
+</Tabs>
+
+你應該會在 1 秒內看到以下輸出，接著程式乾淨結束（exit code 0）：
 
 ```text
 Hello, panGOlin!
 ```
 
-程式在約一秒後正常結束。`app.Run` 會一直運行到 context 結束：真正的長駐應用會把 Ctrl+C 或關閉訊號的 context 交給它；這裡的 `context.WithTimeout` 用一秒期限代表一次示範執行。
+> **如果 `go mod tidy` 報錯找不到套件**：請回到 [安裝頁](installation.md) 檢查 `go.mod` 中的 `replace` 路徑是否正確指向並排的 `../pangolin-framework` 資料夾。
 
-## 3. 改成你的訊息
+---
 
-找到 `Start` 裡的 `fmt.Println`，改成：
+## 3. 動手驗證：修改輸出訊息
 
-```go
-fmt.Println("Hello, my application!")
+找到 `Start` 方法中的 `fmt.Println`，改成自己的訊息：
+
+```go title="修改 Start 方法"
+func (m *helloModule) Start(context.Context, module.Runtime) error {
+	fmt.Println("Hello, my application!")
+	return nil
+}
 ```
 
-再次執行 `go run .`，確認輸出已改變。
+再次執行 `go run .`，確認終端機印出 `Hello, my application!`。
 
-## 剛才用了什麼？
+---
 
-- **Module** 用普通 Go struct 型別宣告：`module.Base` 提供名稱與版本，`Start` 方法是它啟動時要執行的工作。
-- **`app.Run(ctx, root)`** 把根模組交給 kernel runtime：組合設定層、驗證模組相依，先完成所有模組的組態與服務組裝才依序 Start，context 結束時反序 Stop。uow 等必要的啟動預設已由 `app.Run` 內建，不需要額外設定。
-- **context** 攜帶取消與逾時；把期限傳給 `app.Run` 一起收尾（含 Stop）。
+## 常見疑問（新手 FAQ）
+
+- **為什麼程式印出訊息後停頓了約 1 秒才結束？**
+  因為 `Start` 完成後應用已經進入「運行中（Ready）」狀態，正在等待 `ctx` 結束；1 秒期限一到，`app.Run` 才觸發停機流程並正常返回。
+- **如果不小心把 `Name` 留空會發生什麼事？**
+  你可以試著把 `Name: "hello"` 改成 `Name: ""` 再執行一次——`app.Run` 會在任何 `Start` 執行前就直接拒絕並回報明確的模組驗證錯誤。這是 panGOlin「寧可在啟動第 0 秒失敗，也不讓錯誤帶進運行期」的核心原則。
 
 ## 下一步
 
-接著完成[可設定的問候服務](../tutorials/greeting-application.mdx)，註冊自己的服務與設定，並從環境變數讀取名字。
+1. 先花 5 分鐘閱讀 **[安排你的應用程式（架構總覽）](../concepts/architecture.md)**，把「模組、DI、交易、多租戶、事件」拼成一張完整地圖。
+2. 接著進入 **[建立可設定的問候服務](../tutorials/greeting-application.mdx)**，在同一個 `hello-pangolin` 專案裡加入你自己的服務（DI）與環境變數設定。

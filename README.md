@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/assets/pangolin-banner.jpg" alt="panGOlin — Go Modular Application Framework" width="100%"></p>
+
 # panGOlin-framework
 
 Go 模組化應用框架，採模組化單體、明確 DI、UOW、Tenant／Scope 隔離與可靠事件。產品目標 v0.1.0，規範基線 v1.3。
@@ -70,3 +72,11 @@ python scripts/smoke.py
 - [驗收底稿](tests/contract/README.md)
 
 GitHub Actions 已配置完整 Linux M6 Gate 與 Windows portability tests；完整跨平台發布 Gate 另要求 Windows 真實服務 report。本次驗收在本機雙平台完成，實際 push／執行後才有遠端 workflow 證據；正式 tag 發行流程尚未執行。
+
+## 設計靈感與致謝（Acknowledgments）
+
+panGOlin Framework 是一套以 Go 語言獨立設計並從零實作（clean-room implementation）的專案，未複製、移植或衍生自任何外部框架的原始碼。
+
+在模組化單體架構分層、工作單元（Unit of Work）、多租戶與資源 Scope 隔離、分層設定與功能旗標、以及文件導覽組織等高層架構概念上，本專案受到開源社群與 [ABP Framework](https://abp.io/) 等現代企業級應用框架之設計理念啟發，謹此致謝。
+
+> **獨立聲明**：panGOlin Framework 與 ABP Framework（VoloSoft）及上述開源專案之間無任何官方隸屬、合作、授權或背書關係；相關名稱僅作設計理念參考致謝之用，其商標與權利歸屬各自原權利人。

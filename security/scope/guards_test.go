@@ -14,7 +14,7 @@ func TestScopeAdmissionGuards(t *testing.T) {
 	if _, e := Admit(nil); !errors.Is(e, ErrDenied) {
 		t.Fatal(e)
 	}
-	ctx = context.WithValue(ctx, bindingKey{}, ScopeBinding{Ref: ScopeRef{"a", "tenant", "a"}, Principal: PrincipalRef{"alice", "user"}, AuthorityRevision: "1"})
+	ctx = bindingVar.With(ctx, ScopeBinding{Ref: ScopeRef{"a", "tenant", "a"}, Principal: PrincipalRef{"alice", "user"}, AuthorityRevision: "1"})
 	if _, e := Admit(ctx); !errors.Is(e, ErrAuthorityUnavailable) {
 		t.Fatal(e)
 	}

@@ -100,7 +100,7 @@ func (s erroringServices) ReplaceContract(di.Token, any, string, ...module.AddOp
 func (h *host) StartRoot(ctx context.Context, roots []any) (err error) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	if ctx == nil || h.attempted || h.stopped {
+	if contextIsNil(ctx) || h.attempted || h.stopped {
 		return fmt.Errorf("runtime cannot start")
 	}
 	h.attempted = true

@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/cymondez/pangolin-framework/kernel/ambient"
 	"github.com/cymondez/pangolin-framework/security/scope"
 	"github.com/jackc/pgx/v5"
 	"go.opentelemetry.io/otel/attribute"
@@ -23,10 +24,15 @@ import (
 var ErrConfig = errors.New("OBSERVABILITY_CONFIG_INVALID")
 var safeID = regexp.MustCompile(`^[a-zA-Z0-9_.:-]{1,160}$`)
 
-type contextKey struct{}
-type operationKey struct{}
-type messageKey struct{}
 type message struct{ kind, id string }
+
+var (
+	telemetryVar = ambient.New[*Telemetry]()
+	operationVar = ambient.New[string]()
+	messageVar   = ambient.New[message]()
+	queryVar     = ambient.New[func(error)]()
+)
+
 type Telemetry struct {
 	tracer   trace.Tracer
 	count    metric.Int64Counter
@@ -55,13 +61,13 @@ func New(tp trace.TracerProvider, mp metric.MeterProvider, writer io.Writer, mod
 }
 func WithMessage(ctx context.Context, kind, id string) context.Context {
 	if (kind == "event" || kind == "job") && safeID.MatchString(id) {
-		return context.WithValue(ctx, messageKey{}, message{kind, id})
+		return messageVar.With(ctx, message{kind, id})
 	}
 	return ctx
 }
 func Record(ctx context.Context, operation string) {
 	defer func() { _ = recover() }()
-	t, _ := ctx.Value(contextKey{}).(*Telemetry)
+	t, _ := telemetryVar.Current(ctx)
 	if t == nil {
 		return
 	}
@@ -77,14 +83,14 @@ func (t *Telemetry) Pool(ctx context.Context, acquired, maximum int32) {
 	t.gauge.Record(ctx, int64(maximum), metric.WithAttributes(attribute.String("queue", "database.pool"), attribute.String("state", "maximum")))
 }
 func (t *Telemetry) Context(ctx context.Context) context.Context {
-	return context.WithValue(ctx, contextKey{}, t)
+	return telemetryVar.With(ctx, t)
 }
-func OperationID(ctx context.Context) string { id, _ := ctx.Value(operationKey{}).(string); return id }
+func OperationID(ctx context.Context) string { id, _ := operationVar.Current(ctx); return id }
 func WithOperation(ctx context.Context, id string) context.Context {
 	if !safeID.MatchString(id) {
 		id = rand.Text()
 	}
-	return context.WithValue(ctx, operationKey{}, id)
+	return operationVar.With(ctx, id)
 }
 func TraceParent(ctx context.Context) string {
 	carrier := propagation.MapCarrier{}
@@ -97,7 +103,7 @@ func Restore(ctx context.Context, parent string) context.Context {
 
 // Start allows only a finite instrumentation vocabulary and never records error text.
 func Start(ctx context.Context, operation string) (context.Context, func(error)) {
-	t, _ := ctx.Value(contextKey{}).(*Telemetry)
+	t, _ := telemetryVar.Current(ctx)
 	if t == nil {
 		return ctx, func(error) {}
 	}
@@ -119,7 +125,7 @@ func Start(ctx context.Context, operation string) (context.Context, func(error))
 		t.count.Add(ctx, 1, metric.WithAttributes(attrs...))
 		t.latency.Record(ctx, time.Since(started).Seconds(), metric.WithAttributes(attrs...))
 		fields := []any{"module", t.module, "code", result, "operation", operation, "trace_id", span.SpanContext().TraceID().String(), "operation_id", OperationID(ctx)}
-		if msg, ok := ctx.Value(messageKey{}).(message); ok {
+		if msg, ok := messageVar.Current(ctx); ok {
 			fields = append(fields, msg.kind+"_id", msg.id)
 			span.SetAttributes(attribute.String(msg.kind+"_id", msg.id))
 		}
@@ -234,13 +240,11 @@ func (h Health) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 func (t *Telemetry) TraceQueryStart(ctx context.Context, _ *pgx.Conn, _ pgx.TraceQueryStartData) context.Context {
 	ctx, finish := Start(t.Context(ctx), "sql")
-	return context.WithValue(ctx, queryKey{}, finish)
+	return queryVar.With(ctx, finish)
 }
 
-type queryKey struct{}
-
 func (t *Telemetry) TraceQueryEnd(ctx context.Context, _ *pgx.Conn, data pgx.TraceQueryEndData) {
-	if finish, ok := ctx.Value(queryKey{}).(func(error)); ok {
+	if finish, ok := queryVar.Current(ctx); ok && finish != nil {
 		finish(data.Err)
 	}
 }

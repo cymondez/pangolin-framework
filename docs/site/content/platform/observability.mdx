@@ -1,25 +1,49 @@
 ---
-title: 觀測與健康檢查
-description: 用明確注入的 OpenTelemetry 追查操作，提供存活與必要相依的健康檢查。
+title: 觀測與健康檢查（Observability & Health）
+description: 透過明確注入的 OpenTelemetry Tracer／Meter、結構化 JSON 日誌與 /livez、/readyz 探針，完整追查跨請求與非同步背景操作。
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 import source from '../_snippets/observability.go';
 
-本頁先用不需要資料庫的完整程式，觀察 Trace Context、JSON log 與 Health。完成後再把同一組 Telemetry 接到 HTTP、Use Case、SQL 與可靠事件。
+> **你在架構中的位置**：`橫切觀測層` **`[ observability（Trace + Metrics + JSON Log + /livez /readyz）]`** `貫穿 HTTP → UOW → PostgreSQL → Outbox/Inbox → Jobs`
+>
+> **前置建議**：已完成[安裝頁](../getting-started/installation.md)。本頁範例**不需要 Docker 或資料庫**。
 
-## 執行範例
+## 為什麼 panGOlin 要求「明確注入 Telemetry」且禁止無界 Labels？
 
-前置需求是 Go 1.27.4，以及已依[安裝頁](../getting-started/installation.md)建立的獨立 Go 專案與本機 replace。請在自己的專案目錄，用以下完整程式取代 `main.go`：
+實務上線後，團隊最常在觀測系統踩到兩個大坑：
+1. **全域單例汙染測試**：如果框架偷偷把 TracerProvider 塞進全域變數，多個整合測試平行跑時 Span 會互相干擾，也無法在停機時控制有界 Shutdown。
+2. **高基數（High Cardinality）打爆監控系統**：把 `tenant_id`、`organization_id`、`user_id` 或 `event_id` 放進 Prometheus／OTel Metric Label，只要上線幾千個客戶，時間序列就會直接爆炸！
 
-<CodeBlock language="go" title="main.go">{source}</CodeBlock>
+panGOlin 的觀測設計堅持三項紀律：**明確注入 Provider**、**Metrics 只用固定低基數詞彙（細節放 Trace／Log）**、**嚴格遮罩憑證與原始 SQL**。
 
-執行：
+---
+
+## 1. 動手執行免資料庫的完整觀測範例
+
+從框架原始碼的 `examples/basics` 執行（或直接貼入你自己專案的 `main.go` 依序執行 `go mod tidy` 與 `go run .`）：
+
+<Tabs groupId="os">
+<TabItem value="powershell" label="Windows PowerShell">
 
 ```powershell
-go mod tidy
-go run .
+go run ./observability
 ```
+
+</TabItem>
+<TabItem value="bash" label="Linux / macOS (Bash)">
+
+```bash
+go run ./observability
+```
+
+</TabItem>
+</Tabs>
+
+<CodeBlock language="go" title="examples/basics/observability/main.go">{source}</CodeBlock>
 
 預期輸出：
 
@@ -30,33 +54,47 @@ Trace correlated: true
 JSON log recorded: true
 ```
 
-程式以記憶體 writer 檢查 JSON log，沒有開啟網路 listener；結束時自行關閉 SDK Provider。Trace Context 還原後保留同一 trace ID，但不包含身分、租戶權限或任意 baggage。
+> **安全提醒**：`observability.Restore` 還原 `traceparent` 後只會延續分散式追蹤的 TraceID，**絕不會**攜帶身分憑證、租戶權限或任意 baggage。
 
-## 接到自己的應用
+---
 
-`observability.New(tracerProvider, meterProvider, writer, module)` 使用你建立的 Provider。部署時替 SDK 加上適合的 exporter，明示 sampling、trace／log retention 與有界 shutdown；框架不偷偷建立全域 Provider。範例採 100% sampling 方便理解，正式環境依流量與保留成本調整。
+## 2. 如何把同一份 Telemetry 接到整個應用？
 
-| 位置 | 接線方式 |
-|---|---|
-| HTTP | `telemetry.HTTP(handler)` 建立 operation ID、讀取 W3C traceparent、記錄結果與延遲 |
-| Use Case | 在帶有 `telemetry.Context(ctx)` 的 context 呼叫 application.Command／Query；自訂邊界可用 Start |
-| UOW | Within 自動使用 context 中的 Telemetry，保留已確認 Commit outcome |
-| PostgreSQL | 建立 Pool 前將 `poolConfig.ConnConfig.Tracer` 設為 telemetry；SQL 和 args 不會被記錄 |
-| Outbox／Consumer | 驅動 Worker 時傳入 telemetry.Context(workerContext)，持久化 Envelope 的 traceparent 連回原操作 |
-| Jobs | Bind 完成目前服務授權後回傳 telemetry.Context(bound)，Worker 保留 Job ID、OperationID 與 TraceParent |
+在應用啟動層建立好 OpenTelemetry SDK（掛上你部署環境的 OTLP Exporter、設定取樣率與有界 Shutdown）後，交給 `observability.New(tracerProvider, meterProvider, writer, module)`，並依下表接入各層：
 
-同一操作的 Trace／log 以 operation ID 關聯；可靠事件另保留 Event ID，工作保留 Job ID。必要 Audit 使用獨立的稽核服務，不能因為取樣沒有收集 Trace 就省略。
+| 層級／元件 | 接線方式 | 自動獲得的觀測能力 |
+|---|---|---|
+| **HTTP 入口** | 用 `telemetry.HTTP(handler)` 包住 Router | 自動建立 OperationID、解析 W3C `traceparent`、記錄請求結果與延遲 |
+| **Application Use Case** | 在帶有 `telemetry.Context(ctx)` 的 context 下呼叫 `application.CommandResult`／`QueryResult`（或自訂 `observability.Start`） | 自動產生 `use_case` Span 並標記成功／失敗 |
+| **UOW 交易** | `manager.Within` 自動讀取 context 中的 Telemetry | 自動記錄交易生命週期與已確認的 Commit Outcome |
+| **PostgreSQL Pool** | 建立 `pgxpool` 前將 `poolConfig.ConnConfig.Tracer` 設為 `telemetry` | 記錄連線／查詢耗時，且**自動遮罩原始 SQL 與參數**（防機密外洩） |
+| **Outbox／Inbox** | 啟動 Worker 時傳入 `telemetry.Context(workerCtx)` | 透過 Envelope 保存的 `traceparent` 把非同步消費者連回原始 HTTP 請求 |
+| **Jobs Worker** | 在 `bind` 完成服務授權後回傳 `telemetry.Context(bound)` | 完整關聯 JobID、OperationID 與原始 `traceparent` |
 
-## Metrics 與告警
+> **Audit 與 Trace 不可混為一談**：Trace 在生產環境通常只做部分取樣（Sampling）；**必要安全稽核（[platform/audit](../security/http-and-audit.md)）必須獨立同交易寫入資料庫**，絕不可因 Trace 沒抽樣就遺漏稽核。
 
-框架記錄固定 vocabulary 的操作數、延遲和結果。從 queue Store 的 Stats 定期讀取 pending／processing／dead／oldest，再呼叫 `telemetry.Queue(ctx, name, pending, dead, oldest, countLimit, ageLimit)`。name 只接受 outbox、inbox、jobs。達到積壓數或最老時間閾值、或出現 dead 時，寫入 `QUEUE_PRESSURE` 告警。
+---
 
-`telemetry.Pool(ctx, stat.AcquiredConns(), stat.MaxConns())` 記錄全域 Pool 使用量。Metrics 不把每個 Tenant、Organization、Principal 或 Event ID 當 label；需要定位單一操作時使用帶安全 ID 的 log／Trace。不要把 token、payload、SQL、原始錯誤或私人資料塞入觀測內容。
+## 3. 佇列積壓告警與 Pool Metrics
 
-## 存活與 Readiness
+定期從 Outbox／Inbox／Jobs Store 讀取 `Stats`（pending、processing、dead、oldest），回報給框架：
+- **`telemetry.Queue(ctx, name, pending, dead, oldest, countLimit, ageLimit)`**：`name` 僅接受 `outbox`、`inbox`、`jobs`；當積壓數、最老等待時間達閾值或出現 `dead` 紀錄時，自動寫出 `QUEUE_PRESSURE` 告警。
+- **`telemetry.Pool(ctx, stat.AcquiredConns(), stat.MaxConns())`**：追蹤連線池水位。
+- **嚴禁把敏感資料寫進觀測**：Token、請求 Payload、SQL 參數、原始密碼與個人隱私資料均不可放入 Trace 屬性或 Log。
 
-`Health{Ready: host.Ready, Required: checks, Timeout: 2*time.Second}` 可掛到 `/livez` 與 `/readyz`。Required 只放該程序接單必須正常的相依，例如 DB Ping；check 必須遵守 context。
+---
 
-`/livez` 不查外部服務。`/readyz` 要同時滿足 Host Ready 與必要相依；任一失敗回 503。純 API 使用可選 Broker 時，Broker 短暫離線不必直接讓所有 API 不 Ready，應觀察 Outbox lag 與容量。Shutdown 先撤回 Ready，再停止認領並 Drain。
+## 4. `/livez`（存活）與 `/readyz`（就緒）的正確分工
 
-下一步：[容量、停機與恢復](operations.md)，為積壓與重試訂定處置方式。
+透過 `observability.Health{Ready: host.Ready, Required: checks, Timeout: 2*time.Second}` 掛載健康檢查端點：
+
+| 端點 | 回答的問題 | 應該檢查什麼？ | 常見錯誤 ❌ |
+|---|---|---|---|
+| **`/livez`** | 程序本身還活著嗎？（失敗會被 K8s 重啟 Pod） | **完全不查外部服務**，只要程序沒死鎖即回 `204` | ❌ 把 DB Ping 塞進 `/livez`，導致 DB 抖動 3 秒就把全部 API Pod 重啟成一片雪崩！ |
+| **`/readyz`** | 現在可以接外部流量嗎？（失敗會暫時移出 Load Balancer） | 同時確認 `host.Ready()` 為 true 且 `Required` 必要相依（如業務 DB Ping）在逾時內健康，否則回 `503` | ❌ 把非核心的可選 Broker 塞進純 API 的 `/readyz`，導致 NATS 瞬斷時所有 API 無法寫入 Outbox。 |
+
+停機啟動時，Runtime 會**優先把 `/readyz` 切為未就緒（503）**，等 Load Balancer 切走流量並完成 Drain 後，才真正停止模組與關閉資源。
+
+## 下一步
+
+當監控發出 `QUEUE_PRESSURE` 或系統遇到滿額 429／Broker 斷線時該怎麼處置？接著閱讀 **[容量、停機與恢復](operations.md)**。

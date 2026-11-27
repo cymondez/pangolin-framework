@@ -126,13 +126,9 @@ func (Profile) Configure(b module.RootBuilder) error {
 	// *scope.Registry entry would be counted as a second owner-local
 	// implementation of the Scopes contract at seal.
 	if err := b.Provide(di.Provider{Key: scope.RegistryKey, Lifetime: di.Singleton, DependsOn: []di.Token{ApplicationRegistry()}, Factory: func(ctx context.Context, resolve di.Resolver) (any, di.Cleanup, error) {
-		value, err := resolve.Resolve(ctx, ApplicationRegistry())
+		registry, err := module.Resolve[*scope.Registry](ctx, resolve)
 		if err != nil {
 			return nil, nil, err
-		}
-		registry, ok := value.(*scope.Registry)
-		if !ok {
-			return nil, nil, errors.New("scope registry is not the framework registry")
 		}
 		return registry, nil, nil
 	}}); err != nil {
@@ -148,20 +144,18 @@ func (Profile) Configure(b module.RootBuilder) error {
 type WorkUnits struct{ uow.UnitOfWorkManager }
 
 func (m *Module) Configure(b module.RootBuilder) error {
-	for _, registration := range []func() error{
-		func() error { return b.Services().Add(newApplicationDatabase, module.Singleton()) },
-		func() error { return b.Services().Add(newAuthorityDatabase, module.Singleton()) },
-		func() error { return b.Services().Add(newTenants, module.Singleton()) },
-		func() error { return b.Services().Add(newValidator, module.Singleton()) },
-		func() error { return b.Services().Add(newEventPublisher, module.Singleton()) },
-		func() error { return b.Services().Add(newWorkUnits, module.Singleton(), module.As(UnitOfWork)) },
-		func() error { return b.Services().Add(newIdempotency, module.Singleton()) },
-		func() error { return b.Services().Add(newEffects, module.Singleton()) },
-		func() error { return b.Services().Add(newScopes, module.Singleton(), module.As(Scopes)) },
-	} {
-		if err := registration(); err != nil {
-			return err
-		}
+	if err := module.Register(b.Services()).
+		Singleton(newApplicationDatabase).
+		Singleton(newAuthorityDatabase).
+		Singleton(newTenants).
+		Singleton(newValidator).
+		Singleton(newEventPublisher).
+		Singleton(newWorkUnits, module.As(UnitOfWork)).
+		Singleton(newIdempotency).
+		Singleton(newEffects).
+		Singleton(newScopes, module.As(Scopes)).
+		Err(); err != nil {
+		return err
 	}
 	// The optional control-plane surface starts as the Unmounted stand-in;
 	// profiles replace this provider under the same exported identity.
@@ -170,12 +164,9 @@ func (m *Module) Configure(b module.RootBuilder) error {
 	}}); err != nil {
 		return err
 	}
-	for _, token := range []di.Token{ApplicationDatabase, AuthorityDatabase, Tenants, Validator, Publisher, UnitOfWork, Idempotency, Effects, Scopes, ApplicationRegistry(), OptionalHandler} {
-		if err := b.Services().Export(token); err != nil {
-			return err
-		}
-	}
-	return nil
+	return module.Register(b.Services()).
+		Export(ApplicationDatabase, AuthorityDatabase, Tenants, Validator, Publisher, UnitOfWork, Idempotency, Effects, Scopes, ApplicationRegistry(), OptionalHandler).
+		Err()
 }
 
 func envRequired(key string) (string, error) {

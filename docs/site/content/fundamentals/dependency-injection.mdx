@@ -1,65 +1,164 @@
 ---
-title: 依賴注入
-description: 用建構子註冊服務，選擇存活期間，並跨模組公布介面契約。
+title: 依賴注入（Dependency Injection）
+description: 用建構子註冊服務、正確挑選 Singleton / Transient / Operation 存活期，並透過獨立 contracts 套件與 Export 建立跨模組介面邊界。
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 import source from '../_snippets/root-greeting.go';
-import legacySource from '../_snippets/dependency-injection.go';
+import containerSource from '../_snippets/dependency-injection.go';
 import contracts from '../_snippets/moduleapp-contracts.go';
 import catalog from '../_snippets/moduleapp-catalog.go';
 import appRoot from '../_snippets/moduleapp-app.go';
 
-依賴注入（DI）讓你的業務程式接收需要的服務，而不是到處自行建立服務。Root 裝配的預設做法：模組在 `Configure` 以建構子註冊服務，Start 之後透過受限 resolver 解析。
+> **你在架構中的位置**：`Module.Configure` **`[ 註冊建構子與 Export 契約 ]`** `→ Seal（靜態檢查相依圖與存活期）→ Module.Start / 操作期` **`[ module.Resolve[T] 解析服務 ]`**
+>
+> **前置建議**：先閱讀[功能模組](modules.md)理解模組相依圖（`DependsOn`）。
 
-## 執行範例
+## 為什麼需要受控的依賴注入？
 
-從套件來源的 `examples/basics` 執行：
+在一般 Go 專案裡，手動在 `main.go` 裡一層一層 `NewA(NewB(NewC(db)))` 起初很直覺，但跨過 5 個模組之後就會出現三個問題：
+
+1. **接線爆炸與資源洩漏**：誰建立連線池、誰負責 `Close()`、關閉順序跟建立順序是否相反，全靠人工記憶。
+2. **存活期誤用（Captive Dependency）**：不小心把「單次請求專用（帶有 Request 狀態）」的物件存進「全域共用（Singleton）」服務的欄位裡，造成併發競爭與跨請求資料汙染。
+3. **跨模組邊界失守**：A 模組直接去拿 B 模組的內部實作 struct，一旦 B 想重構內部實作，整個專案一起壞掉。
+
+panGOlin 的 DI 設計結合了 Go 的簡潔與嚴格邊界：
+- **一般 Go 建構子直接註冊**：你寫的 `NewService(s *store.Store) *Service` 不需要加任何框架 struct tag，引擎透過參數型別自動解析注入。
+- **啟動前一次封存（Seal）**：重複註冊、缺漏依賴、循環依賴、以及「Singleton 誤捕獲 Operation 服務」，全部在任何建構子執行前就靜態攔截。
+- **預設私有，顯式公開（Export）**：未呼叫 `Export` 的服務只有自己模組看得見，徹底守住模組封裝。
+
+---
+
+## 1. 單模組日常用法：註冊與解析
+
+從框架原始碼的 `examples/basics` 執行最小 DI 示範：
+
+<Tabs groupId="os">
+<TabItem value="powershell" label="Windows PowerShell">
+
+```powershell
+go run ./root-greeting
+```
+
+</TabItem>
+<TabItem value="bash" label="Linux / macOS (Bash)">
 
 ```bash
 go run ./root-greeting
 ```
 
-預期輸出 `Hello, World!`（設定 `APP_NAME=Reader` 後為 `Hello, Reader!`）。完整程式見[問候服務教學](../tutorials/greeting-application.mdx)：
+</TabItem>
+</Tabs>
+
+預期輸出 `Hello, World!`（設定 `APP_NAME=Reader` 後為 `Hello, Reader!`）。完整程式如下：
 
 <CodeBlock language="go" title="examples/basics/root-greeting/main.go">{source}</CodeBlock>
 
-## 如何使用
+### 註冊與解析的 4 個核心規則
 
-1. 在 `Configure` 用 `b.Services().Add(NewGreetingService, module.Singleton())` 註冊建構子；解析鍵就是建構子的精確回傳型別。
-2. 省略生命週期選項時預設為 Transient：每次解析建立新物件。
-3. `Start` 之後用 `rt.Services().Resolve(ctx, module.Contract[*GreetingService]())` 取得服務；`module.Contract[T]()` 由 T 的完整型別身分推導出鍵，介面與具象型別皆可用。
-4. 服務清理（Cleanup）由組合容器在應用收尾時執行；你只在自己的資源確實需要關閉時才回傳 Cleanup。
+1. **建構子就是一般函式**：支援三種簽名——`func(...) T`、`func(..., error)` 或 `func(...) (T, func(context.Context) error, error)`（第二回傳值為 `Cleanup` 函式）。建構子參數可選擇接收最多一個 `context.Context`，其餘參數皆自動從 DI 解析。
+2. **用高階輔助函式與流暢註冊器指定存活期**：
+   - `module.AddSingleton(b.Services(), NewSvc)`：全應用單例共用。
+   - `module.AddTransient(b.Services(), NewSvc)`：每次解析建立新實例（省略選項時的預設值）。
+   - `module.AddOperation(b.Services(), NewSvc)`：綁定單次操作 Scope，操作結束即清理。
+   - 若要一次完成「註冊實作貢獻給介面契約 + `Export` 該契約」，可用 `module.AddAndExportSingleton[MyContract](b.Services(), NewSvc)`（亦有 `AddAndExportTransient`／`AddAndExportOperation`）。
+   - 模組有多項註冊時，可用錯誤累積式流暢註冊器 `module.Register(b.Services()).Singleton(NewA).Singleton(NewB, module.As(Contract)).Export(Contract).Err()`，遇到首個錯誤自動短路並由 `.Err()` 回傳。
+3. **解析鍵 = 建構子的精確回傳型別**：建構子必須回傳具象型別（如 `*GreetingService`），不可直接回傳介面；這樣能明確區分「實作擁有權」與「契約公開權」。
+4. **用泛型安全解析，零 `any` 轉型**：
+   - 解析模組契約／服務使用 `module.Resolve[*GreetingService](ctx, rt.Services())`（或 `module.Resolve[contracts.Catalog](ctx, scope)`）。
+   - 解析具名低階鍵 `di.Key[T]` 使用 `di.ResolveKey(ctx, rt.Services(), myKey)`，自動檢查 `ctx`、`resolver` 與執行期型別。
 
-建構子參數會自動解析：`NewService(s *store.Store)` 的 `*store.Store` 若已由自己的模組或直接相依模組提供，直接寫在參數上即可。重複、缺漏或循環在任何建構子執行前就失敗，不會啟動出半套的應用。
+> **Cleanup 自動化**：若你的建構子回傳了 `Cleanup` 函式（例如關閉連線池或檔案），容器會在應用停機（或 Operation Scope `Close`）時依反序自動呼叫，不需要再於 `Module.Stop` 重複關閉。
 
-## 選擇存活期間
+---
 
-| 選項 | 何時使用 |
-|---|---|
-| 預設（Transient） | 每次取得都要建立新物件 |
-| `module.Singleton()` | 整個應用共用的服務，例如可安全並行使用的連線池 |
-| `module.Operation()` | 同一次操作共用，操作結束即清理 |
+## 2. 正確挑選存活期間（Lifetime）
 
-Operation 服務只能經明示操作範圍解析：在 Start／Stop 內呼叫 `module.OpenScope(ctx, rt.Services())` 取得屬於這個模組的 scope，透過 `scope.Resolve` 取得服務，最後由呼叫端 `scope.Close`（清理只做一次，重複呼叫無害）。Singleton 不能保留 Operation 服務，避免跨請求共用本來應該隔離的狀態。
+挑錯存活期是 DI 新手最容易埋下併發 Bug 的地方。請依下表判斷：
 
-## 跨模組介面契約
+| 存活期 | 建立時機與共用範圍 | 適用範例 | 嚴格限制與防呆 |
+|---|---|---|---|
+| **Singleton** (`AddSingleton`) | 封存後全應用共用同一份實例，停機時清理 | 無狀態 Application Service、執行緒安全的 DB Pool、設定讀取器 | **禁止依賴 Operation 服務**（包含間接透過 Transient 依賴），Seal 階段直接拒絕，防堵 Captive Dependency。 |
+| **Transient** (`AddTransient` / 預設) | 每次解析都建立全新物件 | 輕量無狀態計算器、一次性組裝工具 | 不可假設多次解析拿到同一指標。 |
+| **Operation** (`AddOperation`) | 每次呼叫 `rt.OpenScope(ctx)` 建立一份，在該 Scope 內共用，`scope.Close(ctx)` 時清理 | 單次請求／任務專用的工作緩衝、短生命週期資源 | **禁止直接從根 Resolver 解析**，必須透過明確開啟的 `scope` 取得並由呼叫端 `defer scope.Close(ctx)`（重複 Close 安全無害）。 |
 
-同一模組內以具象型別為鍵就夠了。要讓**其他模組**使用你的服務時，把介面放進可 import 的 contracts 套件，並由擁有契約的模組單一負責 `Export`；消費模組直接相依該擁有者模組，再從自己的受限 resolver 解析契約。以下是可執行的正式示範 `examples/moduleapp` 的完整原始檔：
+```go title="正確使用 Operation Scope 範例 ✅"
+func (m *Module) Start(ctx context.Context, rt module.Runtime) error {
+	// 1. 透過 rt.OpenScope 開啟綁定本模組身分的 Operation Scope
+	scope, err := rt.OpenScope(ctx)
+	if err != nil {
+		return err
+	}
+	// 2. 確保操作結束時釋放所有 Operation 服務（Cleanup 有界且冪等）
+	defer scope.Close(ctx)
+
+	// 3. 從 scope 解析 Operation 或公開契約服務
+	svc, err := module.Resolve[contracts.Catalog](ctx, scope)
+	if err != nil {
+		return err
+	}
+	_ = svc
+	return nil
+}
+```
+
+> **安全保證**：`rt.OpenScope(ctx)` 建立的 Scope 會鎖定建立當下的模組擁有者身分，絕不會洩漏底層封存容器（Sealed Container）或繞過模組可見性檢查。
+
+---
+
+## 3. 跨模組介面契約：如何安全地讓別人呼叫你？
+
+同模組內直接用 `*MyService` 具象型別註冊就夠了。當 **模組 A（`app`）** 需要呼叫 **模組 B（`catalog`）** 的能力時，panGOlin 有一套非常清楚的可見性規則：
+
+```text
+[ module: catalog ]                           [ module: app ]
+  ├─ 內部實作 *catalog.Service（預設私有）       ├─ DependsOn: [catalog, pricing]
+  ├─ Export(contracts.Catalog)  ──────────────▶ ├─ ✅ 可解析 contracts.Catalog
+  └─ 依賴 store.Module                          └─ ❌ 無法解析 *pricing.Prices（未 Export）
+```
+
+以下三份檔案直接取自框架內建可執行的正式示範 `examples/moduleapp`：
+
+### 步驟 A：將公開介面與純值 DTO 放在獨立的 `contracts` 套件
 
 <CodeBlock language="go" title="examples/moduleapp/catalog/contracts/contracts.go">{contracts}</CodeBlock>
 
+### 步驟 B：由「契約擁有者模組」註冊實作並呼叫 `Export`
+
 <CodeBlock language="go" title="examples/moduleapp/catalog/module.go（契約擁有者）">{catalog}</CodeBlock>
 
-<CodeBlock language="go" title="examples/moduleapp/app/module.go（消費模組的根）">{appRoot}</CodeBlock>
+### 步驟 C：消費模組宣告直接相依，並透過泛型 `Resolve` 取得契約
 
-在套件來源的 `pangolin-framework/examples/moduleapp` 執行：
+<CodeBlock language="go" title="examples/moduleapp/app/module.go（消費模組與應用根）">{appRoot}</CodeBlock>
 
-```bash
+### 實際執行 `examples/moduleapp`
+
+切到框架原始碼的 **`pangolin-framework/examples/moduleapp`** 執行：
+
+<Tabs groupId="os">
+<TabItem value="powershell" label="Windows PowerShell">
+
+```powershell
+# 非互動環境建議加上 2 秒期限自動停機
+$env:MODULEAPP_DEADLINE = '2s'
 go run .
+Remove-Item Env:MODULEAPP_DEADLINE
 ```
 
-預期輸出（按 Ctrl+C 結束，可看到同樣的反序停機；非互動環境先設定 `MODULEAPP_DEADLINE=2s`）：
+</TabItem>
+<TabItem value="bash" label="Linux / macOS (Bash)">
+
+```bash
+# 非互動環境建議加上 2 秒期限自動停機
+MODULEAPP_DEADLINE=2s go run .
+```
+
+</TabItem>
+</Tabs>
+
+預期輸出（完整呈現相依分層、各模組解析到的實作型別與反序停機）：
 
 ```text
 planned layers:
@@ -76,16 +175,37 @@ stop catalog
 stop store
 ```
 
-要點：
+### 跨模組契約的四條鐵律
 
-- 每個介面契約只有一個擁有者；Export 集中在擁有者模組的 `Configure`。
-- 其他模組提供替代實作時以 `module.As(contract)` 明示貢獻，且必須直接相依契約擁有者；結構上滿足介面本身不會自動跨模組公開。
-- 沒有 Export 的服務對其他模組不可見：此示範中 `*Prices` 只有 pricing 模組自己能解析。
+1. **單一擁有者原則**：每個介面契約在全應用中**只能有一個模組呼叫 `Export`**，避免多個模組互相搶奪契約定義權。
+2. **必須直接相依**：消費模組必須在 `DependsOn()` 明示直接相依契約擁有者，才看得到該契約；間接（傳遞）相依不會自動透傳可見性。
+3. **顯式貢獻才算候選**：如果另一個模組想為某契約提供替代實作，必須直接相依該契約擁有者，並在註冊時明示 `module.As(module.Contract[MyContract]())`；**單純在 Go 語法上實作了相同方法，不會自動變成跨模組公開實作**。
+4. **替換必須留紀錄**：使用 `Replace`／`ReplaceBinding`／`ReplaceContract` 抽換實作時必須提供非空 `reason` 字串，框架會保留完整替換來源紀錄，杜絕「不知哪裡默默把實作覆蓋掉」的除錯惡夢。
 
-## 進階相容路徑：獨立 DI 容器
+---
 
-不經 root 組合時，`kernel/di` 的 Registry／Container 仍然完整可用（明示清單組裝的舊式應用、非模組工具或測試）：
+## 常見反例對照
 
-<CodeBlock language="go" title="examples/basics/dependency-injection/main.go（進階相容版本）">{legacySource}</CodeBlock>
+- **❌ 反例：建構子直接回傳介面 `func NewService() contracts.Catalog`**
+  Seal 階段會直接拒絕。**✅ 正確做法**：建構子回傳具象型別 `*Service`，再由契約擁有者呼叫 `b.Services().Export(module.Contract[contracts.Catalog]())`。
+- **❌ 反例：在 Singleton 服務裡保存 Operation 服務，或用 `MustResolve` 寫在正式 `Start` 裡**
+  Singleton 捕獲 Operation 會被 Seal 直接拒絕；正式程式碼應使用回傳 `error` 的 `module.Resolve[T]`（`module.MustResolve[T]` 僅供測試 fixture 使用）。
 
-從 `examples/basics` 執行 `go run ./dependency-injection`，預期輸出 `Hello, Alice!`。這條路徑以 `di.NewKey` 定義鍵、`Provide` 註冊 factory、`Seal` 完成驗證並建立 Container，解析後手動 `Close` 清理。Factory 使用的所有鍵都要在 `Provider.DependsOn` 宣告；Cleanup 收到的 context 有清理期限，關閉動作也要遵守它。
+---
+
+<details>
+<summary>進階參考：在獨立工具或測試中直接使用低階 DI 容器（<code>kernel/di</code>）</summary>
+
+如果你在撰寫不經 Root 模組裝配的獨立命令列工具或測試輔助程式，可以直接使用底層 `kernel/di` 的 `Registry`／`Container`：
+
+<CodeBlock language="go" title="examples/basics/dependency-injection/main.go（獨立低階容器）">{containerSource}</CodeBlock>
+
+從 `examples/basics` 執行 `go run ./dependency-injection`，預期輸出 `Hello, Alice!`。使用低階容器時須手動在 `Provider.DependsOn` 宣告所有依賴鍵、手動 `Seal`，並在離開前以有界 context 呼叫 `container.Close`。
+
+</details>
+
+---
+
+## 下一步
+
+服務之間能乾淨地互相注入後，接著閱讀 **[應用設定（Configuration）](configuration.mdx)**，學會用必填規則與格式驗證把關所有啟動參數。

@@ -16,7 +16,7 @@ container, err := registry.Seal(ctx)
 // Seal 成功後由擁有者在結束時 container.Close(ctx)。
 ```
 
-Token 身分由 Name 與 Go Type 共同決定。Factory 必須在 DependsOn 宣告全部可解析的鍵；收到的 Resolver 只在 Factory 執行期間有效。重複、缺漏、循環與 Singleton 經 Transient 捕獲 Operation 的圖，在 Seal 前拒絕。`Replace(provider, reason)` 要求已存在的鍵與非空原因；Registry 保存替換原因，Seal 後禁止 Provide／Replace。
+Token 身分由 Name 與 Go Type 共同決定。解析具名鍵 `di.Key[T]` 時可使用泛型 `di.ResolveKey[T](ctx, resolver, key)`，自動驗證 `ctx`、`resolver`、鍵名與型別並保留底層錯誤 cause。Factory 必須在 DependsOn 宣告全部可解析的鍵；收到的 Resolver 只在 Factory 執行期間有效。重複、缺漏、循環與 Singleton 經 Transient 捕獲 Operation 的圖，在 Seal 前拒絕。`Replace(provider, reason)` 要求已存在的鍵與非空原因；Registry 保存替換原因，Seal 後禁止 Provide／Replace。
 
 - Singleton 在 Seal 時建立，可安全共用；Container 最後反序清理。
 - Transient 每次解析建立；從 Operation Scope 解析時由該 Scope 擁有 Cleanup，其餘由 Container 擁有。

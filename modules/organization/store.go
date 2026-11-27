@@ -14,6 +14,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/cymondez/pangolin-framework/kernel/ambient"
 	"github.com/cymondez/pangolin-framework/modules/organization/contracts"
 	"github.com/cymondez/pangolin-framework/persistence/idempotency"
 	"github.com/cymondez/pangolin-framework/persistence/postgres"
@@ -305,7 +306,7 @@ type db interface {
 	QueryRow(context.Context, string, ...any) pgx.Row
 }
 
-type privateSchemaKey struct{}
+var privateSchemaVar = ambient.New[string]()
 
 func (s *Store) sql(query string) string {
 	return strings.ReplaceAll(query, "pangolin_organization.", pgx.Identifier{s.options.PrivateSchema}.Sanitize()+".")
@@ -330,7 +331,7 @@ func executor(ctx context.Context, write bool) (db, error) {
 	if err != nil {
 		return nil, err
 	}
-	schema, _ := ctx.Value(privateSchemaKey{}).(string)
+	schema, _ := privateSchemaVar.Current(ctx)
 	if schema == "" {
 		schema = "pangolin_organization"
 	}

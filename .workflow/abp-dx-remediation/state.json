@@ -1,0 +1,30 @@
+{
+  "slug": "abp-dx-remediation",
+  "created": "2026-11-26",
+  "goal": "Implement all four remediation waves from the ABP-style DX code review",
+  "branch": "codex/abp-dx-remediation",
+  "model": "MAI Code 2 Flash (copilot)",
+  "modelNote": "Extra high effort is not exposed by the subagent API.",
+  "status": "completed",
+  "packets": [
+    {"id": "P0", "title": "盤點控制點與測試", "status": "completed", "owner": "explore-agents"},
+    {"id": "P1", "title": "Wave 1 correctness and result helpers", "status": "completed", "owner": "task-executor"},
+    {"id": "P2", "title": "Wave 2 typed facade and operation scope", "status": "completed", "owner": "task-executor"},
+    {"id": "P3", "title": "Wave 3 preset and doctor", "status": "completed", "owner": "task-executor"},
+    {"id": "P4", "title": "Wave 4 safe upgrade workflow", "status": "completed", "owner": "task-executor"},
+    {"id": "P5", "title": "Integration and final QA", "status": "completed", "owner": "main"}
+  ],
+  "verification": [
+    {"check": "go build ./...", "status": "pass"},
+    {"check": "go test all module packages excluding artifacts/design-review-2026-11-24", "status": "pass"},
+    {"check": "go vet ./...", "status": "pass"},
+    {"check": "go run ./tools/check", "status": "pass"},
+    {"check": "python scripts/m0.py check", "status": "pass", "actual": "104 groups, 593 named subtests, 3 profiles, 49 API packages"},
+    {"check": "python scripts/template_bundle.py --check", "status": "pass"},
+    {"check": "nested examples/moduleapp go test ./... and go vet ./...", "status": "pass"},
+    {"check": "docs/site npm run build", "status": "pass", "actual": "46 pages, 2445 internal links"},
+    {"check": "git diff --check", "status": "pass", "note": "CRLF-to-LF warnings only for generated API/runtime template files"}
+  ],
+  "approvals": [],
+  "notes": "Existing untracked docs/reviews is preserved. Unfiltered go test ./... still includes pre-existing artifacts/design-review-2026-11-24 reproduction failures; production/internal package test suite passes when that ignored reproduction tree is excluded. IntegrityReviewer final verdict: PASS."
+}

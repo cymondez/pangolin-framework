@@ -266,7 +266,8 @@ func TestCleanupEndsStatementRegisteredWhileBusy(t *testing.T) {
 	var wg sync.WaitGroup
 	var queryErr error
 	err := m.Within(ctx, uow.Options{Mode: uow.ReadWrite}, func(c context.Context) error {
-		s = c.Value(executorKey{}).(*session)
+		b, _ := executorVar.Current(c)
+		s = b.(*session)
 		ex, err := Current(c)
 		if err != nil {
 			return err
@@ -419,7 +420,8 @@ func TestCleanupWaitIsBoundedByDeadline(t *testing.T) {
 		// before the pool is checked.
 		expired, cancel := context.WithCancel(context.Background())
 		cancel()
-		s := c.Value(executorKey{}).(*session)
+		b, _ := executorVar.Current(c)
+		s := b.(*session)
 		start := time.Now()
 		if err := s.Rollback(expired); !errors.Is(err, uow.ErrBusy) {
 			t.Errorf("expired rollback not refused: %v", err)
@@ -475,7 +477,8 @@ func TestPooledBusyCursorCleanupReleasesSession(t *testing.T) {
 		case <-time.After(5 * time.Second):
 			queryErr = errors.New("barrier query never started")
 		}
-		s := c.Value(executorKey{}).(*session)
+		b, _ := executorVar.Current(c)
+		s := b.(*session)
 		// A pooled session has no transaction to complete; the busy
 		// cursor keeps the session locked and the Release path is the
 		// completion the manager calls. The session-level guards still

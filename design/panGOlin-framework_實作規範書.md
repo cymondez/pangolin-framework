@@ -345,6 +345,16 @@ flowchart TB
 
 API 使用 `application/problem+json`（RFC 9457 風格），包含 `type`、`title`、`status`、`detail`（經安全過濾）、`instance`、`traceId`、`code`。業務錯誤標準化：`MALFORMED_REQUEST=400、VALIDATION_FAILED=422`、`UNAUTHENTICATED=401`、`PERMISSION_DENIED=403`、`NOT_FOUND=404`、`CONFLICT=409`、`RATE_LIMITED=429`、`DEPENDENCY_UNAVAILABLE=503`、`INTERNAL=500`。公開訊息不可洩露租戶存在性、SQL 或堆疊資訊。
 
+<a id="s-3.4"></a>
+
+### 3.4 Ambient Scope（`kernel/ambient`）設計契約
+
+panGOlin-framework 跨層傳遞請求／操作情境狀態（Identity、Tenant、ScopeBinding、Unit of Work 視圖、受控資料庫 Executor、交易綁定事件佇列、Telemetry）統一建立在 `kernel/ambient` 套件的泛型原語 `ambient.Var[T]` 之上：
+
+- **零內部依賴與顯式 `context.Context` 傳遞**：`kernel/ambient` 僅依賴 Go 標準函式庫 `context`，避免任何循環 import。所有狀態一律隨 `context.Context` 顯式傳遞，禁止全域 `Current` 變數、goroutine-local storage（GLS）、執行期堆疊解析或反射攔截器。
+- **不可變 Copy-on-Write 巢狀鏈模型**：`ambient.Var[T]` 底層維護不可變單向鏈結（`frame[T]{value, present, outer, depth}`），**零共享可變狀態、零計數器**。呼叫 `With`／`Clear`／`Scope`／`ScopeResult` 只會衍生新的 `context.Context`，絕不回寫父節點，使多個 goroutine 可同時從同一個父 context 安全衍生各自獨立的子範圍（例如平行 `uow.RequiresNew`）。
+- **套件私有防偽造與封閉清除契約**：每次 `ambient.New[T]()` 配置獨立且非零大小的未匯出指標鍵，消除字串鍵碰撞；各擁有者套件將 `Var[T]` 宣告為 package-private，只透過受控公開 API 讀寫，確保外部程式碼與 DTO 無法偽造安全或生命週期狀態。封閉介面 `ambient.Slot`（僅由 `*Var[T]` 實作）供 `uow.Detach` 與 `RequiresNew` 清除交易綁定的資源槽位，而不接受任意 context 改寫回呼。
+
 <a id="s-4"></a>
 
 ## 4. DDD 業務模型與模組邊界
@@ -385,9 +395,9 @@ Aggregate 可保留尚未派送的事件（或由 Use Case 明確追加）；Rep
 
 UOW 是操作範圍，持有有效選項、已驗證 Tenant／Principal／ScopeRef、資源識別、事件佇列與完成回呼；DB Transaction 是其中可選的資料庫資源。根 Scope 是一次 `Within` 真正建立的範圍，加入它的 `Required` 不是第二個可提交的交易。`RequiresNew` 則建立另一個根 Scope；父子根 Scope 之間不具原子性。
 
-`context.Context` 傳遞目前 Scope，沒有全域 Current、goroutine-local、動態代理或反射攔截器。`Current(ctx)` 僅提供當下範圍的受控介面；Repository 接收 callback 給的 context，不能捕捉舊 context 逃出生命週期。範圍中的 Items 如需擴充，以 package 私有型別鍵實作，不能替換 Tenant、Principal、ScopeRef、Executor 或交易選項。
+`context.Context` 透過 `kernel/ambient`（`ambient.Var[T]` 不可變 Copy-on-Write 巢狀鏈）傳遞目前 Scope，沒有全域 Current、goroutine-local、動態代理或反射攔截器。`Current(ctx)` 僅提供當下範圍的受控介面；Repository 接收 callback 給的 context，不能捕捉舊 context 逃出生命週期。範圍中的 Items 如需擴充，以 package-private `ambient.Var[T]` 實作，不能替換 Tenant、Principal、ScopeRef、Executor 或交易選項。
 
-Required 的子 context 是加入根 Scope 的受限視圖；子 callback 結束即失效，但不關閉根資源。`Current` 對無 Scope、已結束或暫停的視圖返回 false；資料存取仍回傳對應生命週期錯誤，不因 Current=false 就自動另開交易。子視圖的 ID 指向共享根 Scope，Options 則保留該子視圖的唯讀／deadline 限制。
+Required 的子 context 是加入根 Scope 的受限視圖；子 callback 結束即失效，但不關閉根資源。`Current` 對無 Scope、已結束或未持受控完成標記的完成中視圖返回 false；資料存取仍回傳對應生命週期錯誤，不因 Current=false 就自動另開交易。子視圖的 ID 指向共享根 Scope，Options 則保留該子視圖的唯讀／deadline 限制。`uow.Detach(ctx)` 透過 `ambient.Var.Clear` 清除當前 UOW 視圖、完成標記與已掛載的資源槽位（資料庫 Executor、本機／Outbox 事件佇列），同時保留已驗證的身分、Tenant、ScopeBinding、Telemetry 與期限，供平行 goroutine 啟動重新執行 `scope.Admit` 的獨立頂層 UOW。
 
 第一版提供可寫交易、唯讀交易、非交易唯讀範圍、`Required`、`RequiresNew`。**不提供非交易業務寫入、Savepoint、Suppress、跨資料庫原子提交或隱式重試。**這些情境的結果是明確拒絕，不是默默降級。純健康檢查可不建立 UOW；它不取得業務 Repository 權限。業務 Repository 在沒有有效 Scope 時連讀取也拒絕，由 Application 入口建立 ReadOnly Scope；明示的健康檢查與佇列候選枚舉使用專用 Infrastructure Port。
 
@@ -514,15 +524,15 @@ type UnitOfWorkManager interface {
 | 交易／非交易 | Required + 明示不同交易模式 | 拒絕並 rollback-only；Auto 才是繼承 |
 | 任一交易 | Required + 明示不同 Isolation | 拒絕並 rollback-only；如需不同隔離級別，明確選擇另一根操作或 RequiresNew |
 | 任一 Scope | Required + 不同 Tenant／Principal／ScopeRef／DB key | 拒絕並 rollback-only |
-| 任一 Scope | RequiresNew + 相同可信身分 | 父 Scope 暫停；子取得獨立連線與事件／回呼集合；子完成及清理後恢復父 Scope |
+| 任一 Scope | RequiresNew + 相同可信身分 | 以不可變 Copy-on-Write 鏈建立獨立根 Scope、獨立連線與事件／回呼集合，**不修改也不暫停父 Scope**；多個 goroutine 可在有效父 Scope 底下平行呼叫 RequiresNew 共用同一無狀態 Repository；子完成及清理與父互不干擾 |
 | 任一 Scope | RequiresNew + 不同 Tenant／Principal／ScopeRef | 拒絕；跨租戶或跨資源 scope 操作只走重新授權的頂層入口 |
-| 已結束／暫停的 Scope context | Repository／事件／回呼註冊 | UOW_CLOSED／UOW_SUSPENDED；不得退回 Pool 或建立替代交易 |
+| 已結束的 Scope context／跨視圖混用 context | Repository／事件／回呼註冊 | UOW_CLOSED／UOW_SCOPE_MISMATCH；不得退回 Pool 或建立替代交易（`UOW_SUSPENDED` 僅保留作為向後相容 sentinel，不再由 Manager 觸發） |
 
 Required 失敗包含 callback error、Panic、取消、Repository DB 錯誤、顯式 rollback-only 與相容性拒絕。已標記的根交易不可恢復；外層捕捉錯誤僅能改變控制流程，不能重新授權提交。若要捕捉並隔離局部失敗，使用 RequiresNew，且接受其獨立提交結果。
 
-RequiresNew **不是 Savepoint**：子交易看不到父交易未提交資料，子提交也不等待父成功；父持有的列鎖可能使子交易等待。呼叫方不應讓子操作依賴父未提交寫入。Pool 耗盡／鎖等待依 deadline 失敗，不自動借用父連線。子錯誤被父捕捉時不自動污染父交易，但傳回父 callback、父本身被取消或父自己的 SQL 出錯仍使父失敗。
+RequiresNew **不是 Savepoint**：子交易看不到父交易未提交資料，子提交也不等待父成功；父持有的列鎖可能使子交易等待。呼叫方不應讓子操作依賴父未提交寫入。Pool 耗盡／鎖等待依 deadline 失敗，不自動借用父連線。子錯誤被父捕捉時不自動污染父交易，但傳回父 callback、父本身被取消或父自己的 SQL 出錯仍使父失敗。若父 Scope 已關閉或已進入 Completing 階段，RequiresNew 一律 fail-closed 拒絕（UOW_CLOSED／UOW_BUSY）。
 
-每個 Manager 實例由 DI 綁定一個 PostgreSQL resource key；新根 Scope 在執行 callback 前解析並保存該 key，非交易 Scope 也保存相同資源身分。相同 key 的 Repository 使用同一 Tx（非交易唯讀使用受限的 Pool Executor）；不同 key 拒絕。同一 context 呼叫另一個 resource key 的 Manager 時，Required 拒絕，RequiresNew 可建立另一個獨立根 Scope，但不產生跨 DB 原子保證。一個 UOW Executor 不支援平行 SQL；內部有重疊操作偵測，跨 goroutine 工作應各自建立頂層授權範圍。
+每個 Manager 實例由 DI 綁定一個資料庫 resource key；新根 Scope 在執行 callback 前解析並保存該 key，非交易 Scope 也保存相同資源身分。相同 key 的 Repository 使用同一 Tx（非交易唯讀使用受限的 Pool Executor）；不同 key 拒絕。同一 context 呼叫另一個 resource key 的 Manager 時，Required 拒絕，RequiresNew 可建立另一個獨立根 Scope（同時自動清除父 UOW 掛載的資源槽位，避免漏用父 Executor），但不產生跨 DB 原子保證。**單一 UOW Executor（單一連線）不支援平行 SQL**；內部有重疊操作偵測（`UOW_BUSY`）。跨 goroutine 平行資料庫工作應在各 goroutine 中透過 `RequiresNew`（同父 binding／期限、由呼叫方等完成再退出父回呼）或 `uow.Detach`（另起獨立頂層 UOW 並重新執行 `scope.Admit`）各自取得獨立 UOW 與連線，共用同一無狀態 Repository 實例安全執行。
 
 Executor 的 busy 期間包括尚未關閉的 Rows／BatchResults，不只包含發送 SQL 的函式呼叫。Repository 負責關閉並檢查延遲回報的 Rows.Err；不能把資料庫 cursor 返回至已完成的 Use Case／HTTP 串流。Manager 在完成階段檢查仍開啟的資源，無法正常關閉或讀取錯誤時中止提交。
 
@@ -588,7 +598,7 @@ Manager 不自動重跑 callback。對 PostgreSQL serialization failure／deadlo
 | UOW_REQUIRED / UOW_READ_ONLY / UOW_TRANSACTION_REQUIRED | 缺 Scope／唯讀寫入／非交易寫入 | 程式契約錯誤 500；不退回自動提交 |
 | UOW_TENANT_MISMATCH / UOW_IDENTITY_MISMATCH / UOW_SCOPE_MISMATCH | 與可信 Tenant／Principal／資源 Scope 不符 | 403；無新增業務副作用 |
 | UOW_RESOURCE_MISMATCH | 同根第二個獨立 DB | 500；根 rollback-only |
-| UOW_CLOSED / UOW_SUSPENDED / UOW_BUSY | 無效生命週期／平行使用 | 500；正在使用的根範圍按契約中止 |
+| UOW_CLOSED / UOW_BUSY（`UOW_SUSPENDED` 僅保留相容 sentinel） | 無效生命週期／單一連線重疊使用 | 500；正在使用的根範圍按契約中止 |
 | UOW_DEPTH_EXCEEDED | RequiresNew 超過配置深度 | 500；未建立子 Scope |
 | UOW_ROLLBACK_ONLY | callback 返回 nil 但根已標失敗 | 500；附原始 cause；不重試作掩蓋 |
 | UOW_COMMIT_UNKNOWN | Commit 已嘗試且結果不可判定／Unknown | 503，`outcome=unknown`、OperationID；不提供無條件 retryable=true |
@@ -617,7 +627,7 @@ Manager 不自動重跑 callback。對 PostgreSQL serialization failure／deadlo
 
 - UOW-008 — UOW Manager 服務 MUST 在 Required callback 回傳錯誤或其 Scope 被 SetRollbackOnly 時永久標記根 Scope 為 rollback-only。
 
-- UOW-009 — UOW Manager 服務 MUST 對 RequiresNew 建立獨立 Scope 與獨立交易資源，僅在子 callback 及子完成期間暫停父 Scope 的使用。
+- UOW-009 — UOW Manager 服務 MUST 對 RequiresNew 透過不可變 Copy-on-Write Ambient Scope 鏈建立獨立 Scope、獨立交易資源與隔離資源槽位，不修改或暫停父 Scope，使有效父 Scope 下的平行 RequiresNew 互不干擾且父 Scope 持續維持獨立生命週期。
 
 - UOW-010 — UOW Manager 服務 MUST 保留 RequiresNew 已提交的結果，即使外層其後回滾。
 
@@ -1450,7 +1460,7 @@ A01–A16 保留原 ID，其中 A05 限定「確定回滾」；結果未知另�
 | A20 | UOW-005 | 同一 Insert 方法與上述三類無寫入資格的 context | 分別呼叫 Insert；另在合法可寫 Scope 呼叫 | 非法情境回傳對應 UOW 錯誤且無資料變動；合法情境成功；不退回 Pool 自動提交 |
 | A21 | UOW-007 | 各種外層模式與內層明示選項的組合 | 逐格執行 Required，捕捉不相容錯誤後嘗試正常返回 | 相容格共用交易；不相容格 callback 不執行且根 Scope 無法提交 |
 | A22 | UOW-008 | 外層已有寫入、內層回傳錯誤 | 外層捕捉錯誤並回傳 nil；另測顯式 SetRollbackOnly | 外層返回 UOW_ROLLBACK_ONLY，所有同交易修改與 Outbox 都未提交 |
-| A23 | UOW-009 | 外層交易，Pool 可提供第二條連線 | 建立 RequiresNew；在子 Scope 內嘗試使用捕獲的父 Executor | 父子 Scope／交易 ID 不同；父 Executor 回傳 UOW_SUSPENDED；子結束後父 Scope 可繼續 |
+| A23 | UOW-009 | 外層交易，Pool 可提供第二條連線 | 建立 RequiresNew；驗證父子各自持有獨立交易與連線，且父 Scope 不受子修改並可繼續運作 | 父子 Scope／交易 ID 不同；子期間父視圖在自身 context 下仍有效且不受子汙染；子結束後父 Scope 維持原交易可繼續 |
 | A24 | UOW-010 | 父子交易寫入互不鎖定的資料列 | 子 RequiresNew 成功提交，外層回傳錯誤 | 子資料及子 Outbox 存在，父資料及父 Outbox 不存在；沒有宣稱整個呼叫鏈原子性 |
 | A25 | UOW-011 | 父 Scope 寫入 A，子 Scope 寫入 B 後失敗 | 父捕捉子錯誤後成功；另測父直接傳回子錯誤 | 捕捉情境 A 提交、B 回滾；傳回情境 A 與 B 均回滾 |
 | A26 | UOW-012 | 深度上限、Pool 僅一連線、父持鎖三組情境 | 要求超深 RequiresNew、等待第二連線、子存取父鎖住的列 | 超深 callback 不執行；等待在期限內失敗；父資源仍按原生命週期清理；沒有無限等待 |

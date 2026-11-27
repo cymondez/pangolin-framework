@@ -2,7 +2,7 @@
 
 Docusaurus 3.10.2、React 與 Markdown／MDX，使用 `@easyops-cn/docusaurus-search-local` 生成中文／英文靜態搜尋。產品版本仍是根目錄 [VERSION](../../VERSION) 的 0.1.0；網站引擎及第三方套件版本各自獨立。技術決策見 [ADR12](../adr/ADR12-documentation-site.md)。
 
-**讀者是套件使用者。** 依 ABP 的開始使用／循序教學／功能指南／參考分類，從建立使用者自己的 Go 專案開始。公開內容不放規格、Gate、驗收證據、內部里程碑或討論紀錄。自架網站與維護流程放在本 README；套件使用範例放在 [examples/basics](../../examples/basics/README.md) 的獨立 module。
+**讀者是套件使用者。** 依開始使用／循序教學／功能指南／參考分類，從建立使用者自己的 Go 專案開始。公開內容不放規格、Gate、驗收證據、內部里程碑或討論紀錄。自架網站與維護流程放在本 README；套件使用範例放在 [examples/basics](../../examples/basics/README.md) 的獨立 module。
 
 `sync-snippets.mjs` 在開發／建置／文件版本命令之前，從實際範例生成被忽略的 `content/_snippets/*.go`；MDX 使用相對路徑讀取。正式快照會連同片段一起保存，後續更新範例不改寫舊版文件。不要手動維護 current 的生成片段；versioned_docs 內已封存的片段則隨版本追蹤。原生版本回歸同時修改 current 的 Go 範例，檢查舊版內容及範例都保持不變。
 

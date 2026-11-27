@@ -16,35 +16,35 @@ var (
 	ErrScopeMismatch       = errors.New("UOW_SCOPE_MISMATCH")
 	ErrResourceMismatch    = errors.New("UOW_RESOURCE_MISMATCH")
 	ErrClosed              = errors.New("UOW_CLOSED")
-	ErrSuspended           = errors.New("UOW_SUSPENDED")
-	ErrBusy                = errors.New("UOW_BUSY")
-	ErrDepthExceeded       = errors.New("UOW_DEPTH_EXCEEDED")
-	ErrRollbackOnly        = errors.New("UOW_ROLLBACK_ONLY")
-	ErrCommitUnknown       = errors.New("UOW_COMMIT_UNKNOWN")
+	// ErrSuspended is retained for source and error-code compatibility. Under
+	// the immutable Copy-on-Write ambient UOW model, RequiresNew no longer
+	// suspends or mutates the parent scope, so Manager does not emit this code.
+	ErrSuspended     = errors.New("UOW_SUSPENDED")
+	ErrBusy          = errors.New("UOW_BUSY")
+	ErrDepthExceeded = errors.New("UOW_DEPTH_EXCEEDED")
+	ErrRollbackOnly  = errors.New("UOW_ROLLBACK_ONLY")
+	ErrCommitUnknown = errors.New("UOW_COMMIT_UNKNOWN")
 )
 
 type failure struct {
-	code, id string
-	outcome  Outcome
-	cause    error
+	code    error
+	id      string
+	outcome Outcome
+	cause   error
 }
 
-func (e *failure) Error() string        { return e.code + ": " + e.id }
-func (e *failure) Code() string         { return e.code }
+func (e *failure) Error() string        { return e.code.Error() + ": " + e.id }
+func (e *failure) Code() string         { return e.code.Error() }
 func (e *failure) ScopeID() string      { return e.id }
 func (e *failure) OperationID() string  { return e.id }
 func (e *failure) Outcome() Outcome     { return e.outcome }
 func (e *failure) Unwrap() error        { return e.cause }
-func (e *failure) Is(target error) bool { return target != nil && target.Error() == e.code }
+func (e *failure) Is(target error) bool { return target != nil && errors.Is(e.code, target) }
 func fail(code error, id string, outcome Outcome, cause error) error {
-	return &failure{code.Error(), id, outcome, cause}
+	return &failure{code, id, outcome, cause}
 }
 
 func errorCode(err error) error {
-	var classified Error
-	if errors.As(err, &classified) {
-		return errors.New(classified.Code())
-	}
 	for _, code := range []error{ErrOptionsInvalid, ErrOptionsConflict, ErrRequired, ErrReadOnly, ErrTransactionRequired, ErrTenantMismatch, ErrIdentityMismatch, ErrScopeMismatch, ErrResourceMismatch, ErrClosed, ErrSuspended, ErrBusy, ErrDepthExceeded, ErrRollbackOnly, ErrCommitUnknown} {
 		if errors.Is(err, code) {
 			return code
@@ -76,7 +76,7 @@ func Fail(ctx context.Context, cause error) error {
 	}
 	v.root.mu.Lock()
 	defer v.root.mu.Unlock()
-	if v.active && v.root.active && !v.root.suspended {
+	if v.active && v.root.active {
 		v.root.rollback = errors.Join(v.root.rollback, cause)
 	}
 	return cause

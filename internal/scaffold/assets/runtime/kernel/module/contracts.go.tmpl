@@ -21,6 +21,7 @@ type Builder interface {
 // Runtime is a sealed service/config view. It cannot register providers.
 type Runtime interface {
 	Services() di.Resolver
+	OpenScope(context.Context) (di.Scope, error)
 	Config() config.Reader
 }
 

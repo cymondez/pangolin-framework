@@ -1,6 +1,6 @@
 # Transactional Outbox
 
-`NewPublisher(registry, store)` 配合 `events/postgres.Resource.Publisher`，在可寫根 UOW 內 `Publish(ctx, distributed.Envelope)`。Envelope 必須與目前可信 owner 相等，符合已註冊 type／schema；入列即複製完整 wire bytes，完成階段同交易 Flush。缺 UOW／唯讀／未組裝 Outbox 一律拒絕，不退回直接 Broker Send。
+`NewPublisher(registry, store)` 配合 `events/postgres.Resource.Publisher`，在可寫根 UOW 內 `Publish(ctx, distributed.Envelope)`，或使用 context 感知輔助 `PublishJSON(ctx, EventSpec{...}, payload)` 與 `ForProducer(producer).PublishJSON(ctx, eventType, schemaVersion, payload, opts...)` 自動組裝 Envelope（從 `scope.Current(ctx)` 填 owner、`uow.Current(ctx)` 填預設 correlation／causation、自動產生 ID／時間與 JSON payload）。Envelope 必須與目前可信 owner 相等，符合已註冊 type／schema；入列即複製完整 wire bytes，完成階段同交易 Flush。缺 UOW／唯讀／未組裝 Outbox 一律拒絕，不退回直接 Broker Send。
 
 `NewWorker(store, broker, policy, workerName, authorize)` 以短交易認領，每次唯一 token；交易外 Send，持久化與路由確認後才標 sent。成功／失敗都經 token fencing，舊 Worker 不得覆蓋新認領。Policy 明示 lease、send timeout、退避、jitter 與最大次數，失敗進 pending 或 dead。authorize 每次驗證可信 producer／目前服務資格，不能信任 Envelope 自稱的身分。
 

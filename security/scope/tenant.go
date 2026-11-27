@@ -3,10 +3,14 @@ package scope
 import (
 	"context"
 	"fmt"
+
+	"github.com/cymondez/pangolin-framework/kernel/ambient"
 )
 
-type bindingKey struct{}
-type admitterKey struct{}
+var (
+	bindingVar  = ambient.New[ScopeBinding]()
+	admitterVar = ambient.New[ScopeAdmitter]()
+)
 
 // Admit refreshes the authoritative binding installed by the trusted resolver.
 // Only a new root calls it; nested UOWs keep their admission snapshot.
@@ -15,8 +19,8 @@ func Admit(ctx context.Context) (context.Context, error) {
 	if !ok {
 		return nil, ErrDenied
 	}
-	a, ok := ctx.Value(admitterKey{}).(ScopeAdmitter)
-	if !ok {
+	a, ok := admitterVar.Current(ctx)
+	if !ok || a == nil {
 		return nil, ErrAuthorityUnavailable
 	}
 	current, err := a.Admit(ctx, b)
@@ -26,16 +30,12 @@ func Admit(ctx context.Context) (context.Context, error) {
 	if current.Ref != b.Ref || current.Principal != b.Principal || current.AuthorityRevision == "" {
 		return nil, ErrDenied
 	}
-	return context.WithValue(ctx, bindingKey{}, current), nil
+	return bindingVar.With(ctx, current), nil
 }
 
 // Current returns only bindings installed by an authorized resolver.
 func Current(ctx context.Context) (ScopeBinding, bool) {
-	if ctx == nil {
-		return ScopeBinding{}, false
-	}
-	b, ok := ctx.Value(bindingKey{}).(ScopeBinding)
-	return b, ok
+	return bindingVar.Current(ctx)
 }
 
 // IdentityReader is supplied by the trusted authentication adapter at composition.
@@ -60,7 +60,7 @@ func (r *tenantResolver) Bind(ctx context.Context, ref ScopeRef) (context.Contex
 		return nil, fmt.Errorf("scope access denied")
 	}
 	b := ScopeBinding{Ref: ref, Principal: p, AuthorityRevision: "tenant-only-m1"}
-	return context.WithValue(context.WithValue(ctx, admitterKey{}, r), bindingKey{}, b), nil
+	return bindingVar.With(admitterVar.With(ctx, r), b), nil
 }
 func (r *tenantResolver) Current(ctx context.Context) (ScopeBinding, bool) { return Current(ctx) }
 

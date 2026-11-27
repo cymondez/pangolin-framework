@@ -35,7 +35,7 @@ import (
 // wrapper) is rejected; container failures (closed container, canceled
 // context) surface unchanged from the inner OpenScope.
 func OpenScope(ctx context.Context, resolver di.Resolver) (di.Scope, error) {
-	if ctx == nil {
+	if contextIsNil(ctx) {
 		return nil, fmt.Errorf("module OpenScope requires a context")
 	}
 	if resolver == nil {
@@ -89,7 +89,7 @@ func (s *moduleScope) Resolve(ctx context.Context, key di.Token) (any, error) {
 	if err != nil {
 		return nil, err
 	}
-	if ctx == nil {
+	if contextIsNil(ctx) {
 		return nil, fmt.Errorf("DI context is required")
 	}
 	s.c.mu.Lock()

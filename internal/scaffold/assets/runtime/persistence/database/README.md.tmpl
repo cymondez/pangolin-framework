@@ -8,7 +8,9 @@
 
 ExecResult.RowsAffected 是欄位。QueryRowWrite 用於單列寫入回傳；QueryWrite 用於多列寫入回傳。兩者均先執行 UOW 寫入檢查。QueryRow 的錯誤在 Scan 回報，查無資料可用 `errors.Is(err, database.ErrNoRows)` 判斷。Rows 使用後必須 Close 並檢查 Err；未釋放的 cursor 也會占用 Executor，不能與其他 SQL 重疊或帶離工作範圍。
 
-`database.CurrentOwner(ctx)` 從可信 Scope binding 取得 TenantID、ScopeKind、ScopeID；`ResolveOwner` 驗證外部 owner hint，不能藉 DTO 改寫 owner。Repository 的每個受保護查詢都必須帶完整 owner 等值條件，唯一鍵與需要同 owner 的關聯亦包含完整 owner。這些 helper 不授予權限。
+`database.CurrentOwner(ctx)` 從可信 Scope binding 取得 TenantID、ScopeKind、ScopeID；`database.CurrentWithScope(ctx)` 可一步同時驗證並取得 `(Executor, scope.ScopeRef, error)`。`ResolveOwner` 驗證外部 owner hint，不能藉 DTO 改寫 owner。Repository 的每個受保護查詢都必須帶完整 owner 等值條件，唯一鍵與需要同 owner 的關聯亦包含完整 owner。這些 helper 不授予權限。
+
+錯誤分類提供中立 sentinel `ErrNoRows` 與 `ErrConflict`，搭配 `IsNotFound(err)` 與 `IsConflict(err)` 判斷查無資料與唯一約束衝突。
 
 ## 組裝與能力
 
