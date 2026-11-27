@@ -11,3 +11,4 @@
 *.tmpl text eol=lf
 *.conf text eol=lf
 Dockerfile* text eol=lf
+.githooks/* text eol=lf

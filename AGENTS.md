@@ -38,6 +38,22 @@ M1 後續目錄整理已在來源 `b3bf59c03f4b66ff7389d44d8434356258a85d9a` 通
 4. 確認工作前置條件。M0 已將 Go／PostgreSQL、module path、單一 Broker／Migration Tool 及本機配置選擇記錄於 `docs/adr/`、`deploy/toolchain.json` 與 `deploy/profiles/local.json`；公開 Port、fixture、估算及同版證據已通過 M0 Gate；Runtime 實作依 M1–M6 推進。不要將選型或示例當作 Runtime 已驗證。
 5. 實作任務先建立對應驗收案例，再完成程式與回歸。尚未實作的案例保持明確待辦，不用空測試或假成功代替。
 
+## 本地 CI 驗證與禁止試錯推送紀律（所有 AI 代理強制遵守）
+
+**嚴禁把 GitHub Actions 當作除錯／試錯環境！** 頻繁無驗證推送、連續小幅試錯 commit、反覆 force-push 或刪除重推 tag 會浪費 CI 資源並可能觸發 GitHub 帳號風控。所有開發代理（Copilot、Codex、Claude Code、Antigravity 等）與維護者一律遵守：
+
+1. **先本地驗證（預設含原生 Linux ext4 Docker 容器），通過後才允許 push**：
+   - 一般程式／測試改動：`python scripts/local_ci.py --mode fast`（先跑本機 Windows `windows-portability`，再將原始碼複製進固定 Linux 容器的原生 ext4 `/work` 搭配 Linux named volume `GOMODCACHE` 跑契約、授權大小寫檢查、全部 M0–M7 Python 測試、Go build/vet/unit 與 CLI 交叉編譯；有改文件時自動跑 Docusaurus 與範例）。
+   - 文件網站或範例改動：`python scripts/local_ci.py --mode docs`（於 Linux Docker 容器內完整重現 `.github/workflows/docs.yml`，含 `/pangolin/` 子路徑建置、`check-versioning.mjs` 與 `docs_examples.py`）。
+   - 修改 `.github/workflows/`、發版設定或準備打 `v*.*.*` tag：`python scripts/local_ci.py --mode release`（於 Linux Docker 容器內完整重現 `.github/workflows/release.yml` 的五平台 CLI 建置與 Pages 建置）。
+   - 涉及真實資料庫／Broker／Coverage／Linux `-race` 或 `ci.yml` 改動：`python scripts/local_ci.py --mode ci`（在本機啟動隔離 Compose 並於固定 Linux/amd64 OCI 容器跑完整 `-race` + Coverage ≥ 90% + 5 項演練 + 官方 SignalR client，結束自動清理容器）。
+2. **本機 Hook 強制把關**：
+   - 啟用一次：`git config core.hooksPath .githooks`。
+   - `scripts/local_ci.py` 在乾淨工作樹通過後會於 `.cache/local-ci/<HEAD-sha>.json` 留下驗證章（必須含 `linux_docker: true`，不可用 `--no-docker` 繞過 Linux ext4 驗證）；`.githooks/pre-push` 在推送分支或 `v*` tag 前會核對該驗證章，未通過直接拒絕推送。**AI 代理禁止設定 `PANGOLIN_SKIP_PREPUSH=1` 或使用 `--no-verify` 繞過。**
+3. **禁止盲推試錯與擅自改寫遠端歷史**：
+   - 未經使用者明確指示，不得自行執行 `git push`、`git push --force`、刪除或移動遠端 tag。
+   - 若 GitHub Actions 出現失敗：先完整閱讀錯誤 log → **先在本機重現並驗證修復通過** → 整理成乾淨的單一提交後再請使用者確認推送；若本機環境受限無法重現，必須停止並清楚回報原因，**絕不靠連推測試**。
+
 ## 讀與改 Go 程式碼
 
 - 先按擁有者歸類，再在擁有者內分層；不增加 `src`。框架 production package 不得 import `examples/`，Bookstore 專用 main／Handler／fixture 全部歸 `examples/bookstore`。單元測試與套件並置；跨套件驗收、共享 fixture、操作腳本與工具依 [目錄指南](docs/guides/repository-layout.md) 放置。

@@ -295,8 +295,6 @@ def realtime_coverage_steps(report, output, execute, packages):
     if not list(covered.glob("covmeta.*")) or not list(covered.glob("covcounters.*")):
         raise ValueError("official-client harness produced no coverage instrumentation")
     execute(["go", "tool", "covdata", "textfmt", "-i=" + str(covered), "-o=" + str(output / "e2e-realtime.out")], "realtime-coverage")
-    db_tool = output / prepared["database_tool"]
-    execute([str(db_tool), "drop", str(prepared["database"])], "realtime-db-drop")
     return [output / "e2e-realtime.out"]
 
 
@@ -463,7 +461,11 @@ def validate_stored_release_realtime(report, directory, root=ROOT):
 
 
 def realtime_release_steps(report, output, execute):
-    """Injected into the cumulative gate after coverage: release acceptance plus realtime."""
+    """Injected into the cumulative gate after coverage and race: drop realtime DB, then release acceptance plus realtime."""
+    prepared = (report.get("prepare") or {}).get("realtime") or {}
+    if isinstance(prepared, dict) and prepared.get("database_tool") and prepared.get("database"):
+        db_tool = Path(output) / prepared["database_tool"]
+        execute([str(db_tool), "drop", str(prepared["database"])], "realtime-db-drop")
     release_steps(report, output, execute)
     validate_mapping(contracts.load(ROOT / REALTIME_MAPPING_REL), milestone="M7")
     report["inputs"][REALTIME_MAPPING_REL] = contracts.digest(ROOT / REALTIME_MAPPING_REL)

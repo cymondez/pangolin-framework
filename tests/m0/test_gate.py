@@ -115,6 +115,40 @@ class BaselineChecks(unittest.TestCase):
         for command in expensive:
             with self.subTest(command=command):
                 self.assertGreater(source.index(command), coverage)
+        verify_source = (ROOT / "scripts/verify.py").read_text(encoding="utf-8-sig")
+        cov_fn = verify_source.split("def realtime_coverage_steps", 1)[1].split("def validate_realtime_manifest", 1)[0]
+        rel_fn = verify_source.split("def realtime_release_steps", 1)[1].split("def validate_realtime_prepared", 1)[0]
+        self.assertNotIn("realtime-db-drop", cov_fn)
+        self.assertIn("realtime-db-drop", rel_fn)
+
+    def test_local_ci_stamp_and_prepush_contract(self):
+        import local_ci
+        (ROOT / ".cache").mkdir(exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=ROOT / ".cache") as directory:
+            root = Path(directory)
+            commit = "c" * 40
+            ok, _ = local_ci.check_stamp(commit, root=root)
+            self.assertFalse(ok)
+            # Host-only (--no-docker) stamp must NOT satisfy Linux ext4 pre-push gate.
+            local_ci.record_stamp(commit, "fast", docs_verified=False, linux_docker=False, root=root)
+            ok, reason = local_ci.check_stamp(commit, root=root)
+            self.assertFalse(ok)
+            self.assertIn("Linux ext4 Docker", reason)
+            # Recording fast with linux_docker=True passes branch push without docs changes,
+            # but still blocks docs push and release tag push until those modes pass.
+            local_ci.record_stamp(commit, "fast", docs_verified=False, linux_docker=True, root=root)
+            ok, _ = local_ci.check_stamp(commit, require_release=False, require_docs=False, root=root)
+            self.assertTrue(ok)
+            ok, _ = local_ci.check_stamp(commit, require_release=False, require_docs=True, root=root)
+            self.assertFalse(ok)
+            ok, _ = local_ci.check_stamp(commit, require_release=True, require_docs=True, root=root)
+            self.assertFalse(ok)
+            # Recording release with docs+linux_docker satisfies all checks.
+            local_ci.record_stamp(commit, "release", docs_verified=True, linux_docker=True, root=root)
+            ok, _ = local_ci.check_stamp(commit, require_release=True, require_docs=True, root=root)
+            self.assertTrue(ok)
+        self.assertTrue((ROOT / ".githooks/pre-push").is_file())
+        self.assertTrue((ROOT / ".github/copilot-instructions.md").is_file())
 
     def test_same_commit_logs_and_required_commands_are_enforced(self):
         (ROOT / ".cache").mkdir(exist_ok=True)

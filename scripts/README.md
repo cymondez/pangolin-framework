@@ -6,6 +6,7 @@
 
 | 腳本 | 用途 |
 |---|---|
+| `local_ci.py` | 推送前統一本地 CI 驗證入口（預設於固定 Linux ext4 Docker 容器跑 `fast\|docs\|release\|ci` 並於本機跑 Windows portability），通過後寫入含 `linux_docker: true` 的 `.cache/local-ci/<sha>.json` 供 `.githooks/pre-push` 查驗 |
 | `verify.py` | 統一累積驗證與同來源雙平台發布 Gate CLI（`verify`／`gate`，支援 `--scope release` 與 `--scope realtime`） |
 | `linux_runner.py`／`linux_entry.py` | 固定 digest 的 Linux/amd64 OCI `-race` runner（`--target release\|realtime`），以逐位元相同來源執行驗證 |
 | `check.ps1`／`check.sh` | 跨平台累積驗證包裝入口；Windows 可明示 `-Race` 與 `-Scope`，Linux 必跑 `-race` |
