@@ -100,6 +100,18 @@ class BaselineChecks(unittest.TestCase):
         with self.assertRaises(ValueError):
             contracts.json_stream('{"a":')
 
+    def test_coverage_fails_before_expensive_non_profile_checks(self):
+        source = (ROOT / "scripts/test_runner.py").read_text(encoding="utf-8-sig")
+        coverage = source.index('counts = execute(["go", "run", "./tools/check", "-coverage"')
+        expensive = (
+            'execute(["go", "mod", "verify"], "go-module-verify")',
+            'execute([sys.executable, "scripts/templates_verify.py", "compose"',
+            'race = execute(["go", "test"',
+        )
+        for command in expensive:
+            with self.subTest(command=command):
+                self.assertGreater(source.index(command), coverage)
+
     def test_same_commit_logs_and_required_commands_are_enforced(self):
         (ROOT / ".cache").mkdir(exist_ok=True)
         with tempfile.TemporaryDirectory(dir=ROOT / ".cache") as directory:

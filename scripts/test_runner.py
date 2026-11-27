@@ -205,7 +205,6 @@ def verify(args, increment=None, extra_steps=None, coverage_steps=None, prepare=
         (output / "dependencies.json").write_bytes((ROOT / "deploy/dependencies.json").read_bytes())
         execute(["go", "build", *build_dirs], "build")
         execute(["go", "vet", *go_dirs], "vet")
-        execute(["go", "mod", "verify"], "go-module-verify")
         execute([sys.executable, "-m", "unittest", "discover", "-v", "-s", "tests/m0", "-p", "test_*.py"], "m0-regression")
         execute([sys.executable, "-m", "unittest", "discover", "-v", "-s", "tests/m1", "-p", "test_*.py"], "m1-regression")
         packages = ",".join(p for p in contracts.command(["go", "list", *go_dirs]).splitlines() if "/internal/testkit/" not in p and "/infrastructure/internal/" not in p)
@@ -238,11 +237,6 @@ def verify(args, increment=None, extra_steps=None, coverage_steps=None, prepare=
                     os.environ["GOCOVERDIR"] = previous
             execute(["go", "tool", "covdata", "textfmt", "-i=" + str(covered), "-o=" + str(output / "cli.out")], "cli-coverage")
             profiles.append(output / "cli.out")
-            if os.name == "nt" or os.getenv("PANGOLIN_M5_COMPOSE") == "1":
-                execute([sys.executable, "scripts/templates_verify.py", "compose", "--output", str(output), "--project", args.project], "templates-compose")
-        if args.race:
-            race = execute(["go", "test", "-p=1", "-count=1", "-json", "-race", "-tags=integration", *contracts.go_packages(tags=True)], "race")
-            validate_tests(race)
         sqlc = os.getenv("PANGOLIN_SQLC", str(ROOT / ".cache/bin" / ("sqlc.exe" if os.name == "nt" else "sqlc")))
         if execute([sqlc, "version"], "generation-version").strip() != "v1.31.1":
             raise ValueError("wrong sqlc version")
@@ -257,6 +251,12 @@ def verify(args, increment=None, extra_steps=None, coverage_steps=None, prepare=
         counts = execute(["go", "run", "./tools/check", "-coverage", str(output / "merged.out")], "coverage")
         (output / "coverage.json").write_text(json.dumps(json.loads(counts.splitlines()[0]), indent=2) + "\n", encoding="utf-8")
         execute(["go", "tool", "cover", "-html=" + str(output / "merged.out"), "-o=" + str(output / "coverage.html")], "coverage-html")
+        execute(["go", "mod", "verify"], "go-module-verify")
+        if milestone in ("M5", "M6", "M7") and (os.name == "nt" or os.getenv("PANGOLIN_M5_COMPOSE") == "1"):
+            execute([sys.executable, "scripts/templates_verify.py", "compose", "--output", str(output), "--project", args.project], "templates-compose")
+        if args.race:
+            race = execute(["go", "test", "-p=1", "-count=1", "-json", "-race", "-tags=integration", *contracts.go_packages(tags=True)], "race")
+            validate_tests(race)
         validate_commands(report["commands"], args.race)
         if extra_steps:
             extra_steps(report, output, execute)

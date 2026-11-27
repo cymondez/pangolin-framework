@@ -39,6 +39,10 @@ func (p *countingPublisher) Send(_ context.Context, event distributed.Envelope) 
 	return nil
 }
 
+type failingPublisher struct{ err error }
+
+func (p failingPublisher) Send(context.Context, distributed.Envelope) error { return p.err }
+
 func TestRouteSend(t *testing.T) {
 	realtimePublisher, defaultPublisher := &countingPublisher{}, &countingPublisher{}
 	route := Route{Realtime: realtimePublisher, Default: defaultPublisher}
@@ -54,6 +58,49 @@ func TestRouteSend(t *testing.T) {
 	var missing Route
 	if err := missing.Send(context.Background(), distributed.Envelope{Type: realtime.EventType}); !errors.Is(err, realtime.ErrInvalid) {
 		t.Fatalf("missing target accepted: %v", err)
+	}
+	publishErr := errors.New("broker publish failed")
+	failed := Route{Realtime: failingPublisher{err: publishErr}}
+	if err := failed.Send(context.Background(), distributed.Envelope{Type: realtime.EventType}); !errors.Is(err, publishErr) {
+		t.Fatalf("publisher failure was replaced: %v", err)
+	}
+}
+
+func TestReceiverLifecycleWithoutBroker(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan struct{})
+	receiver := &Receiver{cancel: cancel, done: done}
+	if err := receiver.Quiesce(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if ctx.Err() != context.Canceled {
+		t.Fatal("quiesce did not cancel the receiver")
+	}
+
+	receiver.cancel = func() {}
+	receiver.Cancel()
+	close(done)
+	if err := receiver.Drain(context.Background()); err != nil {
+		t.Fatalf("completed receiver did not drain: %v", err)
+	}
+
+	waiting := &Receiver{done: make(chan struct{})}
+	drainCtx, cancelDrain := context.WithCancel(context.Background())
+	cancelDrain()
+	if err := waiting.Drain(drainCtx); !errors.Is(err, context.Canceled) {
+		t.Fatalf("cancelled drain returned %v", err)
+	}
+
+	closedCtx, closeCancel := context.WithCancel(context.Background())
+	closedDone := make(chan struct{})
+	close(closedDone)
+	closed := &Receiver{cancel: closeCancel, done: closedDone}
+	closed.cleanup.Do(func() {})
+	if err := closed.Close(context.Background()); err != nil {
+		t.Fatalf("idempotent close failed: %v", err)
+	}
+	if closedCtx.Err() != context.Canceled {
+		t.Fatal("close did not cancel the receiver")
 	}
 }
 

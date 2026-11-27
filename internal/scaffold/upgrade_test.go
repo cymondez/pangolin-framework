@@ -52,6 +52,53 @@ func TestClassifyThreeWay(t *testing.T) {
 	}
 }
 
+func TestUpgradeClassificationHelpers(t *testing.T) {
+	cause := errors.New("command failed")
+	commandFailure := commandError{message: "upgrade blocked", cause: cause}
+	if commandFailure.Error() != "upgrade blocked" || !errors.Is(commandFailure, cause) {
+		t.Fatalf("command error lost its message or cause: %v", commandFailure)
+	}
+
+	for input, want := range map[string]string{
+		"":              "Service",
+		"catalog":       "Catalog",
+		"order_service": "OrderService",
+	} {
+		if got := pascalName(input); got != want {
+			t.Fatalf("pascalName(%q) = %q, want %q", input, got, want)
+		}
+	}
+
+	for _, test := range []struct {
+		path        string
+		publicGo    bool
+		migration   bool
+		settingsCfg bool
+	}{
+		{"framework/application/service.go", true, false, false},
+		{"framework/application/service_test.go", false, false, false},
+		{"framework/_hidden.go", false, false, false},
+		{"modules/bookstore/main.go", false, false, false},
+		{"framework/persistence/migrations/5000000_books.sql", false, true, false},
+		{"framework/platform/settings/configuration.go", true, false, true},
+		{"framework/platform/features/features.go", true, false, true},
+		{"framework/go.mod", false, false, true},
+	} {
+		if got := isPublicGoChange(test.path); got != test.publicGo {
+			t.Fatalf("isPublicGoChange(%q) = %v, want %v", test.path, got, test.publicGo)
+		}
+		if got := isMigrationChange(test.path); got != test.migration {
+			t.Fatalf("isMigrationChange(%q) = %v, want %v", test.path, got, test.migration)
+		}
+		if got := isSettingsConfigChange(test.path); got != test.settingsCfg {
+			t.Fatalf("isSettingsConfigChange(%q) = %v, want %v", test.path, got, test.settingsCfg)
+		}
+	}
+	if digestOrDash("") != "-" || digestOrDash("abc") != "abc" {
+		t.Fatal("digest rendering changed")
+	}
+}
+
 func TestSafeUpgradeRelativePath(t *testing.T) {
 	for _, path := range []string{"framework/go.mod", "framework/a/b.go", "framework/platform/settings/configuration.go"} {
 		if err := validateUpgradeRelativePath(path); err != nil {
@@ -267,6 +314,56 @@ func TestUpgradeRuntimeConflictNoWrite(t *testing.T) {
 	}
 	if got := snapshotTree(t, dir); !equalSnapshot(before, got) {
 		t.Fatal("runtime conflict wrote project files")
+	}
+}
+
+func TestRestoreUpgradeBackupRestoresCommittedFiles(t *testing.T) {
+	dir := t.TempDir()
+	stage := filepath.Join(dir, ".pangolin-upgrade-stage")
+	backup := filepath.Join(dir, ".pangolin-backup", "20261127T000000Z")
+	for _, path := range []string{
+		filepath.Join(dir, "framework"),
+		filepath.Join(stage),
+		filepath.Join(backup, "framework"),
+	} {
+		if err := os.MkdirAll(path, 0755); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	files := map[string][]byte{
+		"framework/runtime.go":  []byte("new framework\n"),
+		"runtime-manifest.json": []byte(`{"new":"manifest"}` + "\n"),
+		"pangolin.json":         []byte(`{"version":"0.2.0"}` + "\n"),
+		".pangolin-backup/20261127T000000Z/framework/runtime.go":  []byte("committed framework\n"),
+		".pangolin-backup/20261127T000000Z/runtime-manifest.json": []byte(`{"old":"manifest"}` + "\n"),
+		".pangolin-backup/20261127T000000Z/pangolin.json":         []byte(`{"version":"0.1.0"}` + "\n"),
+	}
+	for relative, raw := range files {
+		path := filepath.Join(dir, filepath.FromSlash(relative))
+		if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(path, raw, 0644); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if err := restoreUpgradeBackup(CLI{Dir: dir}, stage, backup); err != nil {
+		t.Fatal(err)
+	}
+	for relative, backupRelative := range map[string]string{
+		"framework/runtime.go":  ".pangolin-backup/20261127T000000Z/framework/runtime.go",
+		"runtime-manifest.json": ".pangolin-backup/20261127T000000Z/runtime-manifest.json",
+		"pangolin.json":         ".pangolin-backup/20261127T000000Z/pangolin.json",
+	} {
+		got, err := os.ReadFile(filepath.Join(dir, filepath.FromSlash(relative)))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if string(got) != string(files[backupRelative]) {
+			t.Fatalf("%s was not restored from backup: %q", relative, got)
+		}
 	}
 }
 
