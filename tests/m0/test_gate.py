@@ -23,6 +23,10 @@ class BaselineChecks(unittest.TestCase):
         # the exact historical 95/532 plan stays enforced for M6-or-earlier scopes.
         self.assertEqual(contracts.check_data(ROOT), {"groups": 104, "named_subtests": 593, "profiles": 3, "fixture_files": 4})
 
+    def test_release_republish_removes_existing_release_before_create(self):
+        workflow = (ROOT / ".github/workflows/release.yml").read_text(encoding="utf-8-sig")
+        self.assertLess(workflow.index('gh release delete "${TAG_NAME}" --yes'), workflow.index('gh release create "${ARGS[@]}"'))
+
     def test_product_version_rejects_milestone_and_module_drift(self):
         self.assertEqual(product_version.check(ROOT), "0.1.0")
         paths = ("VERSION", "examples/bookstore/bootstrap/run.go", "tests/fixtures/modules.json", "docs/site/package.json", "docs/site/package-lock.json", "internal/scaffold/cli.go")

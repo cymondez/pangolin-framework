@@ -111,6 +111,9 @@ jobs:
           else
             ARGS+=(--generate-notes)
           fi
+          if gh release view "${TAG_NAME}" >/dev/null 2>&1; then
+            gh release delete "${TAG_NAME}" --yes
+          fi
           gh release create "${ARGS[@]}"
 
   build-pages:
