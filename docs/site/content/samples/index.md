@@ -8,20 +8,20 @@ import TabItem from '@theme/TabItem';
 
 這一頁彙整了 panGOlin 所有可直接執行的範例程式。你可以先從**無需啟動外部服務**的基礎範例跑起，確認行為符合預期後，再直接參考或搬移到自己的專案。
 
-> **執行目錄提醒**：除非特別標示，基礎範例一律從框架原始碼的 `examples/basics` 目錄執行：
+> **取得範例倉庫**：如果尚未下載範例原始碼，先執行 `git clone --branch v0.1.0 https://github.com/pangolin-framework/pangolin.git`。除非特別標示，基礎範例一律從 `pangolin/examples/basics` 目錄執行：
 
 <Tabs groupId="os">
 <TabItem value="powershell" label="Windows PowerShell">
 
 ```powershell
-cd pangolin-framework/examples/basics
+cd pangolin/examples/basics
 ```
 
 </TabItem>
 <TabItem value="bash" label="Linux / macOS (Bash)">
 
 ```bash
-cd pangolin-framework/examples/basics
+cd pangolin/examples/basics
 ```
 
 </TabItem>
@@ -53,7 +53,7 @@ cd pangolin-framework/examples/basics
 
 `examples/moduleapp` 示範真實專案如何把應用拆成 `store`、`catalog`、`pricing`、`app` 四個模組，並由契約擁有者把公開介面獨立在 `catalog/contracts` 套件內 `Export`，同時保護非公開服務不被跨模組存取。
 
-在框架原始碼的 **`pangolin-framework/examples/moduleapp`** 目錄執行：
+在範例倉庫的 **`pangolin/examples/moduleapp`** 目錄執行：
 
 <Tabs groupId="os">
 <TabItem value="powershell" label="Windows PowerShell">

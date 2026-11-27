@@ -16,6 +16,8 @@ module.exports = {
   favicon: 'img/logo.svg',
   url: process.env.DOCS_URL || 'http://localhost:18088',
   baseUrl,
+  organizationName: 'pangolin-framework',
+  projectName: 'pangolin',
   trailingSlash: true,
   onBrokenLinks: 'throw',
   markdown: {hooks: {onBrokenMarkdownLinks: 'throw', onBrokenMarkdownImages: 'throw'}},

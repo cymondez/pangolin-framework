@@ -1,9 +1,9 @@
 ---
 title: 0.1.0 功能相容性與支援邊界
-description: 一覽 panGOlin 0.1.0 預覽版所有已驗證交付的能力、工具鏈版本與尚未涵蓋的明確邊界，協助團隊評估導入範圍。
+description: 一覽 panGOlin v0.1.0 所有已驗證交付的能力、工具鏈版本與尚未涵蓋的明確邊界，協助團隊評估導入範圍。
 ---
 
-本頁對應 **panGOlin Framework 0.1.0 預覽版**（尚無遠端正式發行 tag，導入方式採標準 Go module 搭配本機 `replace` 或透過 `pangolin` CLI 生成）。在將某項能力導入正式專案前，請先透過下表核對實際支援邊界。
+本頁對應 **panGOlin Framework v0.1.0**（可透過標準 Go module `go get github.com/pangolin-framework/pangolin@v0.1.0` 或 `pangolin` CLI 直接導入）。在將某項能力導入正式專案前，請先透過下表核對實際支援邊界。
 
 ---
 
@@ -26,7 +26,7 @@ description: 一覽 panGOlin 0.1.0 預覽版所有已驗證交付的能力、工
 | **持久化背景工作** | 單次／延後 Job、版本 Registry、租約、取消、有界重試、同交易 Audit 重送 | At-least-once 執行（Handler 需冪等）；複雜 Cron 排程尚未提供 |
 | **觀測與維運** | 明確注入 OpenTelemetry、遮罩 JSON Logs、`/livez`／`/readyz`、資料庫級有界背壓與 `QUEUE_PRESSURE` 告警 | Exporter／Sampling／Retention 由應用設定；Metrics 禁止放無界 Tenant／Org Labels |
 | **設定、Features 與快取** | 5–7 層 Settings（含 JSON 陣列鍵）、Boolean／Quota／Enum + Ceiling、Permission 優先；Scoped Memory Cache | `MemoryProvider` 與 `Memory Cache` 僅存在單一程序；Redis Adapter 尚未提供 |
-| **panGOlin CLI** | `new`（`tenant-only`／`organization`／`--realtime`）、`module add --preset service`、`migrate`、`doctor --live`、`generate openapi`、`upgrade` | `--preset crud` 明示不支援；預覽版內附同源 `framework/` bundle |
+| **panGOlin CLI** | `new`（`tenant-only`／`organization`／`--realtime`）、`module add --preset service`、`migrate`、`doctor --live`、`generate openapi`、`upgrade` | `--preset crud` 明示不支援；生成專案內附同版 `framework/` 受管 bundle（供 `pangolin upgrade` 驗證與升級） |
 
 ---
 
@@ -35,6 +35,6 @@ description: 一覽 panGOlin 0.1.0 預覽版所有已驗證交付的能力、工
 - **Go**：`1.27.4`
 - **完整平台功能驗證環境**：PostgreSQL `18.7`、NATS `2.15.3`（JetStream FileStorage）
 - **中立資料存取額外驗證引擎**：MySQL `8.4`、內嵌純 Go SQLite（`modernc.org/sqlite`，不需 CGO 或外部資料庫程序）
-- **基礎教學需求**：零外部服務，僅需 Go 與 Git。
+- **基礎教學需求**：零外部服務，僅需 Go（執行倉庫完整範例時另需 Git）。
 
 > **兩種 Bookstore 提醒**：CLI 生成的專案（HTTP 200、`id`/`title`）與框架內 `examples/bookstore`（HTTP 201、`id`/`title`/`version`）為兩套獨立示範，詳見[生成教學](../tutorials/generated-bookstore.md)與[Bookstore API 參考](bookstore-api.md)。

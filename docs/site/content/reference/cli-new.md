@@ -47,7 +47,7 @@ pangolin new NAME --template modular-monolith [--with organization] [--realtime]
 bookstore/
 ├── pangolin.json               # 專案中繼資料（name、version、profile、realtime、modules）
 ├── runtime-manifest.json       # framework/ 下所有受管檔案的 SHA-256 雜湊清單
-├── go.mod / go.sum             # 以本機 replace 指向 ./framework
+├── go.mod / go.sum             # 鎖定同版 panGOlin 依賴並指向 ./framework 受管 Runtime
 ├── compose.yaml                # 本機 Docker Compose（postgres、idp、migrate、api）
 ├── Dockerfile / .dockerignore  # 多二進位檔建置（api、migrate、devidp）
 ├── README.md / PROFILE.md      # 專案與當前 Profile 說明（--realtime 另含 REALTIME.md）
@@ -72,19 +72,17 @@ bookstore/
 
 ## 4. 雙環境完整建立到啟動驗證流程
 
-以下示範從框架根目錄建置 CLI、建立專案、跑過單元測試、透過 Docker Compose 啟動並檢查 `/readyz`：
+以下示範安裝 CLI、建立專案、跑過單元測試、透過 Docker Compose 啟動並檢查 `/readyz`：
 
 <Tabs groupId="os">
 <TabItem value="powershell" label="Windows PowerShell">
 
 ```powershell
-# 1. 在 pangolin-framework 根目錄建置 CLI
-go build -o .cache/bin/pangolin.exe ./cmd/pangolin
-$pangolin = (Resolve-Path .cache/bin/pangolin.exe).Path
+# 1. 安裝 pangolin CLI（若已安裝可略過）
+go install github.com/pangolin-framework/pangolin/cmd/pangolin@v0.1.0
 
-# 2. 切到上層目錄建立專案（可依需求加上 --with organization 或 --realtime）
-cd ..
-& $pangolin new bookstore --template modular-monolith
+# 2. 在目標上層目錄建立專案（可依需求加上 --with organization 或 --realtime）
+pangolin new bookstore --template modular-monolith
 cd bookstore
 
 # 3. 驗證編譯與單元測試
@@ -99,13 +97,11 @@ docker compose up -d --build --wait
 <TabItem value="bash" label="Linux / macOS (Bash)">
 
 ```bash
-# 1. 在 pangolin-framework 根目錄建置 CLI
-go build -o .cache/bin/pangolin ./cmd/pangolin
-PANGOLIN="$(pwd)/.cache/bin/pangolin"
+# 1. 安裝 pangolin CLI（若已安裝可略過）
+go install github.com/pangolin-framework/pangolin/cmd/pangolin@v0.1.0
 
-# 2. 切到上層目錄建立專案（可依需求加上 --with organization 或 --realtime）
-cd ..
-"$PANGOLIN" new bookstore --template modular-monolith
+# 2. 在目標上層目錄建立專案（可依需求加上 --with organization 或 --realtime）
+pangolin new bookstore --template modular-monolith
 cd bookstore
 
 # 3. 驗證編譯與單元測試

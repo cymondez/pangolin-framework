@@ -111,10 +111,10 @@ func (m *Module) Configure(b module.RootBuilder) error {
 
 ```powershell
 # 1. 新增帶完整垂直切片與測試的 catalog 模組
-& $pangolin module add catalog --depends persistence,authorization --preset service
+pangolin module add catalog --depends persistence,authorization --preset service
 
 # 2. 新增依賴 catalog 的 pricing 精簡骨架模組
-& $pangolin module add pricing --depends catalog
+pangolin module add pricing --depends catalog
 
 # 3. 驗證編譯與單元測試全部通過
 go test ./...
@@ -125,10 +125,10 @@ go test ./...
 
 ```bash
 # 1. 新增帶完整垂直切片與測試的 catalog 模組
-"$PANGOLIN" module add catalog --depends persistence,authorization --preset service
+pangolin module add catalog --depends persistence,authorization --preset service
 
 # 2. 新增依賴 catalog 的 pricing 精簡骨架模組
-"$PANGOLIN" module add pricing --depends catalog
+pangolin module add pricing --depends catalog
 
 # 3. 驗證編譯與單元測試全部通過
 go test ./...

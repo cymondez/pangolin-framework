@@ -35,7 +35,7 @@ API 與 Worker 是兩個獨立程序，請在各自執行的終端機或容器�
 | `-listen` | `127.0.0.1:18081` | API HTTP 監聽位址（教學中刻意改為 `127.0.0.1:18181` 以免衝突） |
 | `-run-for` | `0`（持續運行） | 設定自動優雅停機期限（例如 `-run-for 10s`，常用於自動化驗證） |
 
-範例（在已設好 API 環境變數的 `pangolin-framework` 根目錄執行）：
+範例（在已設好 API 環境變數的 `pangolin` 倉庫根目錄執行）：
 
 <Tabs groupId="os">
 <TabItem value="powershell" label="Windows PowerShell">

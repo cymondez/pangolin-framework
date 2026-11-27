@@ -12,7 +12,8 @@ const topics = [
 
 export default function Home() {
   const {siteConfig} = useDocusaurusContext();
-  const {docsPath, currentLabel} = siteConfig.customFields;
+  const {docsPath, currentLabel, lastVersion} = siteConfig.customFields;
+  const versionLabel = lastVersion === 'current' ? currentLabel : `v${lastVersion}`;
   return <Layout title="官方文件" description="panGOlin Framework 官方文件：以顯式模組、嚴格工作單元交易、PostgreSQL RLS 與 Outbox/Inbox 打造可長期演進的 Go 單體應用。">
     <main>
       <section className="pg-hero">
@@ -22,7 +23,7 @@ export default function Home() {
             <h1>顯式模組、嚴格交易、可靠事件，<br/>經得起高速演進的<br/><em>Go 單體基座。</em></h1>
             <p className="pg-lead">保留 Go 的顯式簡潔、拒絕隱式魔術。用不可繞過的 DI 可見性、工作單元、PostgreSQL RLS 與 Outbox/Inbox，讓人寫得順手、AI 也寫不歪。</p>
             <div className="pg-actions"><Link className="button button--primary button--lg" to={`${docsPath}getting-started/installation/`}>開始使用</Link><Link className="button button--outline button--primary button--lg" to={`${docsPath}samples/`}>查看使用範例</Link></div>
-            <p className="pg-version"><span className="pg-pill">{currentLabel}</span> 從完整程式開始，依需求加入功能</p>
+            <p className="pg-version"><span className="pg-pill">{versionLabel}</span> 從完整程式開始，依需求加入功能</p>
           </div>
           <div className="pg-flow" aria-label="第一個 panGOlin 應用：執行程式、組裝服務並輸出問候訊息">
             <div className="pg-flow-top"><span className="pg-flow-dot"/> HELLO-PANGOLIN <span className="pg-flow-tag">GO</span></div>

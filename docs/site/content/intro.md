@@ -49,7 +49,7 @@ description: 為 Go 工程師設計的模組化應用框架入門導覽：建立
   8. 用 CLI 生成獨立專案 ──▶ 9. 依需求深入資料存取、多租戶、可靠事件與背景工作
 ```
 
-1. **[安裝與建立專案](getting-started/installation.md)**：建立獨立的 `hello-pangolin` Go 專案並接上本機套件來源。
+1. **[安裝與建立專案](getting-started/installation.md)**：建立獨立的 `hello-pangolin` Go 專案並安裝 `panGOlin v0.1.0` 套件。
 2. **[第一個應用](getting-started/quickstart.mdx)**：寫出第一個模組並透過 `app.Run` 啟動與優雅停機。
 3. **[安排你的應用程式（架構總覽）](concepts/architecture.md)**：先建立全站共用的心智地圖——看懂分層職責、啟動生命週期與單一請求管線。
 4. **[建立可設定的問候服務](tutorials/greeting-application.mdx)**：動手結合 DI 建構子註冊、設定預設值與環境變數覆寫。
@@ -64,9 +64,9 @@ description: 為 Go 工程師設計的模組化應用框架入門導覽：建立
 
 ---
 
-## 本版本（0.1.0 預覽版）支援現況
+## 本版本（v0.1.0）支援現況
 
-本文件對應 **0.1.0 預覽版**（目前尚未發布遠端正式 `v0.1.0` tag，安裝方式採標準 Go module 搭配本機 `replace`）。
+本文件對應 **panGOlin Framework v0.1.0 正式版**，可透過標準 Go module（`go get github.com/pangolin-framework/pangolin@v0.1.0`）或 `pangolin` CLI 直接導入專案。
 
 - **已完整提供並可直接使用**：Root 模組裝配與建構子 DI、組態分層與優雅停機、UOW（`Required`／`RequiresNew`）與高階 `CommandResult`／`QueryResult`、PostgreSQL／MySQL／SQLite 中立資料存取、可擴充身分驗證與多租戶／可選組織治理、Local Event 與 Outbox／Inbox 可靠配送、持久化背景工作（Jobs）與容量背壓、OpenTelemetry 觀測與健康檢查、分層 Settings／Features／Scoped Cache、可選 SignalR 即時通訊，以及 `pangolin` CLI。
 - **使用邊界**：公開文件僅介紹目前版本實際可執行並經驗證的功能。導入正式專案前，請務必查閱 **[功能相容性與支援邊界](reference/compatibility.md)** 確認各資料庫與模組的支援範圍。

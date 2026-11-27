@@ -87,10 +87,25 @@ node docs/site/scripts/docker.mjs down
 
 `PANGOLIN_DOCS_PROJECT`／`PANGOLIN_DOCS_PORT` 可改自己的隔離名稱／port。`DOCS_URL` 與 `DOCS_BASE_URL` 是建置參數，修改後要重新 build。子路徑需 `/framework/` 形式；反向代理原樣轉送前綴，由 Nginx 讀取相同前綴的實體靜態檔案。正式 origin 未指定時預設 localhost，不代表已綁定公開網域。
 
+## GitHub Pages 自動發布
+
+`.github/workflows/docs.yml` 已內建 GitHub Pages 建置與發布工作流（`build-pages` → `deploy-pages`）：
+
+1. 在 GitHub 倉庫的 **Settings → Pages → Build and deployment** 將 **Source** 設為 **GitHub Actions**。
+2. 推送至 `main`、推送 `v*` 發行 tag（例如 `v0.1.0`），或於 Actions 手動觸發 **Documentation website** workflow 時，會在通過靜態檢查與範例測試後自動發布至 `https://pangolin-framework.github.io/pangolin/`（亦透過 `actions/configure-pages` 自動相容自訂網域 `/`）。
+3. 本機驗證 GitHub Pages 子路徑建置與連結檢查：
+
+```powershell
+$env:DOCS_URL = 'https://pangolin-framework.github.io'
+$env:DOCS_BASE_URL = '/pangolin/'
+npm.cmd run build
+Remove-Item Env:DOCS_URL, Env:DOCS_BASE_URL
+```
+
 ## 版本與發布
 
-M1–M6 更新同一份 0.1.0 文件。正式發布 Gate 通過後才執行 `npm run docusaurus -- docs:version 0.1.0`，追蹤產生的快照與版本清單。網站會將 current 移至 Next（開發中），以凍結的 0.1.0 作預設。未來更新 VERSION 時同步 package.json 與 lockfile，版本不符會失敗。
+0.1.0 文件由根目錄 [VERSION](../../VERSION) 對齊 `package.json` 與 `package-lock.json`。當開始準備下一個版本（例如 `0.2.0`）時，執行 `npm run docusaurus -- docs:version 0.1.0` 並提交產生的 `versions.json`、`versioned_docs/` 與 `versioned_sidebars/`；網站會將 `current` 移至 `Next（開發中）`，以凍結的 `0.1.0` 作預設版本。未來更新 `VERSION` 時同步 `package.json` 與 lockfile，版本不符會失敗。
 
-頁首原生版本選單切換到同一 doc ID 的另一版；該頁不存在時退回該版首頁。搜尋索引由 plugin 按版本建立，不混合不同版本的手冊。現階段只有實際的 0.1.0 開發版，不建立虛構的歷史版本。
+頁首原生版本選單切換到同一 doc ID 的另一版；該頁不存在時退回該版首頁。搜尋索引由 plugin 按版本建立，不混合不同版本的手冊。
 
 參考：[Docusaurus 版本管理](https://docusaurus.io/docs/versioning)、[靜態部署](https://docusaurus.io/docs/deployment)、[搜尋插件](https://github.com/easyops-cn/docusaurus-search-local)。

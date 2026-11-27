@@ -36,7 +36,7 @@ pangolin generate openapi
 
 ```powershell
 # 在生成專案根目錄產生 openapi.json
-& $pangolin generate openapi
+pangolin generate openapi
 ```
 
 </TabItem>
@@ -44,7 +44,7 @@ pangolin generate openapi
 
 ```bash
 # 在生成專案根目錄產生 openapi.json
-"$PANGOLIN" generate openapi
+pangolin generate openapi
 ```
 
 </TabItem>
@@ -70,16 +70,16 @@ pangolin generate openapi
 
 ```powershell
 # 步驟 1：唯讀預覽版本與檔案差異
-& $pangolin upgrade plan
+pangolin upgrade plan
 
 # 步驟 2：唯讀乾跑確認無衝突或漏檔
-& $pangolin upgrade --dry-run
+pangolin upgrade --dry-run
 
 # 步驟 3：備份並套用新版 framework/ Runtime
-& $pangolin upgrade runtime
+pangolin upgrade runtime
 
 # 步驟 4：驗證全部 checksum 並以 -mod=readonly 執行 build / test / vet
-& $pangolin upgrade verify
+pangolin upgrade verify
 ```
 
 </TabItem>
@@ -87,16 +87,16 @@ pangolin generate openapi
 
 ```bash
 # 步驟 1：唯讀預覽版本與檔案差異
-"$PANGOLIN" upgrade plan
+pangolin upgrade plan
 
 # 步驟 2：唯讀乾跑確認無衝突或漏檔
-"$PANGOLIN" upgrade --dry-run
+pangolin upgrade --dry-run
 
 # 步驟 3：備份並套用新版 framework/ Runtime
-"$PANGOLIN" upgrade runtime
+pangolin upgrade runtime
 
 # 步驟 4：驗證全部 checksum 並以 -mod=readonly 執行 build / test / vet
-"$PANGOLIN" upgrade verify
+pangolin upgrade verify
 ```
 
 </TabItem>

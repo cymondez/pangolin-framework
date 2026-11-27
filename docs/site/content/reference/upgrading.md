@@ -1,22 +1,21 @@
 ---
 title: 選擇版本與安全升級指南
-description: 在 0.1.0 預覽期間固定依賴來源，以及透過 pangolin upgrade 安全升級生成專案。
+description: 說明如何固定 panGOlin 版本依賴、升級前的標準檢查，以及透過 pangolin upgrade 安全升級生成專案。
 ---
 
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-> **你在架構中的位置**：`版本治理與維護` **`[ 鎖定同源 Commit → 預覽升級影響（upgrade plan）→ 備份遷移 → 驗證與回滾預案 ]`**
+> **你在架構中的位置**：`版本治理與維護` **`[ 鎖定正式版本 Tag → 預覽升級影響（upgrade plan）→ 備份遷移 → 驗證與回滾預案 ]`**
 
-目前 panGOlin 為 **0.1.0 預覽版**，尚未發布遠端正式發行 tag。頁首版本選單用於切換對應版本的手冊；正式版發布後，歷史版本文件與程式碼範例將會凍結保留。
+本文件對應 **panGOlin v0.1.0**。頁首版本選單用於切換對應版本的手冊；未來發布新版本後，歷史版本文件與程式碼範例將會凍結保留。
 
 ---
 
-## 1. 預覽期間如何穩定固定依賴？
+## 1. 如何穩定固定依賴？
 
-- **手動 Go 專案**：依[安裝頁](../getting-started/installation.md)透過本機 `replace` 指向框架 checkout。請在團隊內**記錄並統一該 checkout 的 Git commit SHA**，避免不同成員拉到不同預覽快照導致 API 不一致。
-- **CLI 生成專案**：確保生成時使用的 `pangolin` CLI、內附 `framework/` 與 `runtime-manifest.json` 來自同一個 Framework commit。
-- **未來正式版遷移**：待正式 tag 發布後，移除 `go.mod` 中的本機 `replace` 並切換至標準版本 tag 即可。
+- **標準 Go 專案**：透過 `go get github.com/pangolin-framework/pangolin@v0.1.0` 在 `go.mod` 固定具體發行版本，並將 `go.mod` 與 `go.sum` 一同納入版本控制，確保團隊與 CI 使用完全一致的相依版本。
+- **CLI 生成專案**：確保安裝的 `pangolin` CLI（`go install github.com/pangolin-framework/pangolin/cmd/pangolin@v0.1.0`）、內附 `framework/` 與 `runtime-manifest.json` 維持同版一致；升級時一律透過目標版本的 `pangolin upgrade` 完成三路比對與雜湊驗證。
 
 ---
 
@@ -38,16 +37,16 @@ import TabItem from '@theme/TabItem';
 
 ```powershell
 # 步驟 1：只讀預覽版本差異與逐檔變更分類（零寫入）
-& $pangolin upgrade plan
+pangolin upgrade plan
 
 # 步驟 2：只讀乾跑檢查衝突與缺檔；有衝突回非零結束碼（零寫入）
-& $pangolin upgrade --dry-run
+pangolin upgrade --dry-run
 
 # 步驟 3：無衝突時安全套用新版 framework/ 與 manifest（自動備份至 .pangolin-backup/<UTC>/）
-& $pangolin upgrade runtime
+pangolin upgrade runtime
 
 # 步驟 4：只讀驗證版本、全部 checksum，並以 -mod=readonly 執行 build / test / vet
-& $pangolin upgrade verify
+pangolin upgrade verify
 ```
 
 </TabItem>
@@ -55,16 +54,16 @@ import TabItem from '@theme/TabItem';
 
 ```bash
 # 步驟 1：只讀預覽版本差異與逐檔變更分類（零寫入）
-"$PANGOLIN" upgrade plan
+pangolin upgrade plan
 
 # 步驟 2：只讀乾跑檢查衝突與缺檔；有衝突回非零結束碼（零寫入）
-"$PANGOLIN" upgrade --dry-run
+pangolin upgrade --dry-run
 
 # 步驟 3：無衝突時安全套用新版 framework/ 與 manifest（自動備份至 .pangolin-backup/<UTC>/）
-"$PANGOLIN" upgrade runtime
+pangolin upgrade runtime
 
 # 步驟 4：只讀驗證版本、全部 checksum，並以 -mod=readonly 執行 build / test / vet
-"$PANGOLIN" upgrade verify
+pangolin upgrade verify
 ```
 
 </TabItem>

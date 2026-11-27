@@ -21,6 +21,7 @@ for (const entry of readdirSync(site)) {
 }
 cpSync(path.join(repo, 'VERSION'), path.join(fixture, 'VERSION'));
 cpSync(path.join(repo, 'examples/basics'), path.join(fixture, 'examples/basics'), {recursive: true});
+cpSync(path.join(repo, 'examples/moduleapp'), path.join(fixture, 'examples/moduleapp'), {recursive: true});
 const version = readFileSync(path.join(repo, 'VERSION'), 'utf8').trim();
 const cli = path.join(site, 'node_modules/@docusaurus/core/bin/docusaurus.mjs');
 const env = {...process.env, DOCS_BASE_URL: '/framework-test/', DOCS_URL: 'http://localhost:18089', NO_UPDATE_NOTIFIER: 'true'};

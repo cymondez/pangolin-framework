@@ -6,44 +6,42 @@ description: pangolin CLI 建置方式、工作目錄規則、子命令導航、
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-> **前置操作**：第一次使用 CLI 時，建議先跟著實作一次 [用 CLI 建立自己的 Bookstore](../tutorials/generated-bookstore.md)。目前預覽版由 Framework checkout 建置 `./cmd/pangolin`，CLI 與生成 Runtime 版本均為 `0.1.0`。
+> **前置操作**：第一次使用 CLI 時，建議先跟著實作一次 [用 CLI 建立自己的 Bookstore](../tutorials/generated-bookstore.md)。本版本 CLI 與生成 Runtime 版本均為 `0.1.0`。
 
 ---
 
-## 1. 建置並取得 `pangolin` 執行檔
+## 1. 安裝並驗證 `pangolin` CLI
 
-從 `pangolin-framework` 原始碼根目錄建置 `pangolin` CLI，並確認版本輸出為 `0.1.0`：
+透過標準 `go install` 安裝 `v0.1.0` 版本的 `pangolin` CLI，並確認版本輸出為 `0.1.0`：
 
 <Tabs groupId="os">
 <TabItem value="powershell" label="Windows PowerShell">
 
 ```powershell
-# 在 pangolin-framework 根目錄建置執行檔
-go build -o .cache/bin/pangolin.exe ./cmd/pangolin
-$pangolin = (Resolve-Path .cache/bin/pangolin.exe).Path
+# 安裝 v0.1.0 CLI（請確認 "$(go env GOPATH)\bin" 已加入 PATH）
+go install github.com/pangolin-framework/pangolin/cmd/pangolin@v0.1.0
 
 # 驗證版本與說明
-& $pangolin --version
-& $pangolin --help
+pangolin --version
+pangolin --help
 ```
 
 </TabItem>
 <TabItem value="bash" label="Linux / macOS (Bash)">
 
 ```bash
-# 在 pangolin-framework 根目錄建置執行檔
-go build -o .cache/bin/pangolin ./cmd/pangolin
-PANGOLIN="$(pwd)/.cache/bin/pangolin"
+# 安裝 v0.1.0 CLI（請確認 "$(go env GOPATH)/bin" 已加入 PATH）
+go install github.com/pangolin-framework/pangolin/cmd/pangolin@v0.1.0
 
 # 驗證版本與說明
-"$PANGOLIN" --version
-"$PANGOLIN" --help
+pangolin --version
+pangolin --help
 ```
 
 </TabItem>
 </Tabs>
 
-若想在任何目錄直接輸入 `pangolin`，也可以改用 `go install ./cmd/pangolin`（前提是 `$(go env GOPATH)/bin` 已加入系統 `PATH`）。以下各子頁在範例中會同步示範透過變數（`& $pangolin`／`"$PANGOLIN"`）呼叫的方式。
+也可以直接從 [GitHub Releases](https://github.com/pangolin-framework/pangolin/releases/tag/v0.1.0) 下載對應作業系統的預編譯執行檔並放入 `PATH`；若需要從原始碼自行建置，可在 `pangolin` 倉庫根目錄執行 `go install ./cmd/pangolin`。以下各子頁皆直接使用 `pangolin` 指令示範。
 
 ---
 

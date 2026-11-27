@@ -78,7 +78,7 @@ go run .
 Hello, panGOlin!
 ```
 
-> **如果 `go mod tidy` 報錯找不到套件**：請回到 [安裝頁](installation.md) 檢查 `go.mod` 中的 `replace` 路徑是否正確指向並排的 `../pangolin-framework` 資料夾。
+> **如果 `go mod tidy` 報錯無法下載套件**：請確認網路與 `go env GOPROXY` 設定可存取 Go module proxy 或 GitHub，並回到 [安裝頁](installation.md) 確認 `go.mod` 已引入 `github.com/pangolin-framework/pangolin v0.1.0`。
 
 ---
 

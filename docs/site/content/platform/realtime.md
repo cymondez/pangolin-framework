@@ -23,17 +23,17 @@ panGOlin 的可選 `modules/realtime` 模組把即時通訊安全地接在既有
 
 ## 1. 透過 CLI 快速啟用 SignalR 模組
 
-在建立新專案時加上 `--realtime` 旗標即可生成完整骨架（包含 `/hub` 端點與專屬說明文件 `REALTIME.md`，CLI 建置方式見[建立專案：`pangolin new`](../reference/cli-new.md)）：
+在建立新專案時加上 `--realtime` 旗標即可生成完整骨架（包含 `/hub` 端點與專屬說明文件 `REALTIME.md`，CLI 安裝方式見[建立專案：`pangolin new`](../reference/cli-new.md)）：
 
 <Tabs groupId="os">
 <TabItem value="powershell" label="Windows PowerShell">
 
 ```powershell
 # Tenant-only 模式 + SignalR 即時通知
-& $pangolin new bookstore --template modular-monolith --realtime
+pangolin new bookstore --template modular-monolith --realtime
 
 # Organization-enabled 模式 + SignalR 即時通知
-& $pangolin new scopedstore --template modular-monolith --with organization --realtime
+pangolin new scopedstore --template modular-monolith --with organization --realtime
 ```
 
 </TabItem>
@@ -41,10 +41,10 @@ panGOlin 的可選 `modules/realtime` 模組把即時通訊安全地接在既有
 
 ```bash
 # Tenant-only 模式 + SignalR 即時通知
-"$PANGOLIN" new bookstore --template modular-monolith --realtime
+pangolin new bookstore --template modular-monolith --realtime
 
 # Organization-enabled 模式 + SignalR 即時通知
-"$PANGOLIN" new scopedstore --template modular-monolith --with organization --realtime
+pangolin new scopedstore --template modular-monolith --with organization --realtime
 ```
 
 </TabItem>

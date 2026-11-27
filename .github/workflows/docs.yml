@@ -2,12 +2,16 @@ name: Documentation website
 on:
   push:
     branches: [main, develop, 'codex/**']
-    paths: ['docs/**', 'examples/basics/**', 'scripts/docs_examples.py', 'VERSION', '.github/workflows/docs.yml']
+    paths: ['docs/**', 'examples/basics/**', 'examples/moduleapp/**', 'scripts/docs_examples.py', 'VERSION', '.github/workflows/docs.yml']
   pull_request:
-    paths: ['docs/**', 'examples/basics/**', 'scripts/docs_examples.py', 'VERSION', '.github/workflows/docs.yml']
+    paths: ['docs/**', 'examples/basics/**', 'examples/moduleapp/**', 'scripts/docs_examples.py', 'VERSION', '.github/workflows/docs.yml']
+  release:
+    types: [published]
   workflow_dispatch:
+
 permissions:
   contents: read
+
 jobs:
   static-docs:
     runs-on: ubuntu-24.04
@@ -20,7 +24,13 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: npm ci --no-audit --no-fund
       - run: npm test
-      - run: npm run build
+      - name: Verify GitHub Pages subpath build
+        env:
+          DOCS_URL: https://pangolin-framework.github.io
+          DOCS_BASE_URL: /pangolin/
+        run: npm run build
+      - name: Build root-path static site
+        run: npm run build
       - name: Native version snapshot, versioned search and subpath proof
         run: node scripts/check-versioning.mjs
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -28,6 +38,7 @@ jobs:
           name: pangolin-docs-static
           path: docs/site/build/
           if-no-files-found: error
+
   consumer-examples:
     runs-on: ubuntu-24.04
     steps:
@@ -37,3 +48,48 @@ jobs:
           go-version: '1.27.4'
           cache: false
       - run: python scripts/docs_examples.py
+
+  build-pages:
+    needs: [static-docs, consumer-examples]
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'release' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: docs/site/package-lock.json
+      - id: pages
+        uses: actions/configure-pages@v5
+      - name: Build Docusaurus for GitHub Pages
+        working-directory: docs/site
+        env:
+          PAGES_ORIGIN: ${{ steps.pages.outputs.origin }}
+          PAGES_BASE_PATH: ${{ steps.pages.outputs.base_path }}
+        run: |
+          npm ci --no-audit --no-fund
+          BASE_URL="${PAGES_BASE_PATH%/}/"
+          DOCS_URL="${PAGES_ORIGIN:-https://pangolin-framework.github.io}" \
+          DOCS_BASE_URL="${BASE_URL}" \
+          npm run build
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/site/build
+
+  deploy-pages:
+    needs: [build-pages]
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'release' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

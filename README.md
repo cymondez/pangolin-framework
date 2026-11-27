@@ -9,7 +9,8 @@
 
 <p align="center">
   <img alt="Go 1.27+" src="https://img.shields.io/badge/Go-1.27%2B-00ADD8?logo=go&logoColor=white" />
-  <img alt="Version 0.1.0-preview" src="https://img.shields.io/badge/version-0.1.0--preview-355f7f" />
+  <a href="docs/release-notes/0.1.0.md"><img alt="Version v0.1.0" src="https://img.shields.io/badge/version-v0.1.0-355f7f" /></a>
+  <a href="https://pangolin-framework.github.io/pangolin/"><img alt="Docs" src="https://img.shields.io/badge/docs-GitHub%20Pages-2d3f50" /></a>
   <a href="LICENSE"><img alt="License Apache-2.0" src="https://img.shields.io/badge/license-Apache--2.0-765237" /></a>
 </p>
 
@@ -17,7 +18,7 @@
 
 **panGOlin** 是一個為中大型 Go 應用程式設計的模組化應用框架：先以**模組化單體（Modular Monolith）**高速交付，並透過公開 Application Port、受控 DI 可見性與版本化事件保留日後按領域拆分為獨立服務的能力。
 
-> **目前版本狀態**：`0.1.0` 預覽開發期（定義於 [VERSION](VERSION)，尚未發布遠端正式 `v0.1.0` tag）。所有核心能力均以真實資料庫／Broker 驗證，詳見 [官方文件網站](docs/site/README.md) 與 [驗收紀錄](docs/evidence/)。
+> **目前版本**：`v0.1.0`（定義於 [VERSION](VERSION)）。完整使用手冊請見 [官方文件網站](https://pangolin-framework.github.io/pangolin/)，交付範圍與檢核紀錄見 [0.1.0 發布說明](docs/release-notes/0.1.0.md) 與 [驗收紀錄](docs/evidence/)。
 
 ## 核心設計特色
 
@@ -49,33 +50,31 @@ MODULEAPP_DEADLINE=2s go run .
 
 ### 2. 用 `pangolin` CLI 建立獨立應用專案
 
-從倉庫根目錄建置 CLI，生成包含登入、PostgreSQL、RLS、遷移與 OpenAPI 的完整專案骨架：
+安裝 `v0.1.0` 版本的 `pangolin` CLI，即可在任意工作目錄生成包含登入、PostgreSQL、RLS、遷移與 OpenAPI 的完整專案骨架：
 
-**Windows PowerShell：**
-```powershell
-go build -o .cache/bin/pangolin.exe ./cmd/pangolin
-$pangolin = (Resolve-Path .cache/bin/pangolin.exe).Path
-& $pangolin new my-bookstore --template modular-monolith
-```
-
-**Linux / macOS (Bash)：**
 ```bash
-go build -o .cache/bin/pangolin ./cmd/pangolin
-./.cache/bin/pangolin new my-bookstore --template modular-monolith
+# 安裝 pangolin CLI（請確認 $(go env GOPATH)/bin 已加入 PATH）
+go install github.com/pangolin-framework/pangolin/cmd/pangolin@v0.1.0
+
+# 建立新專案
+pangolin new my-bookstore --template modular-monolith
 ```
 
-加上 `--with organization` 可啟用完整企業／組織多層治理，加上 `--realtime` 可啟用 SignalR 即時通訊。
+加上 `--with organization` 可啟用完整企業／組織多層治理，加上 `--realtime` 可啟用 SignalR 即時通訊。若在倉庫內開發貢獻，亦可從根目錄執行 `go install ./cmd/pangolin`。
 
 ### 3. 瀏覽完整教學與 API 文件（Docusaurus）
 
-本倉庫內附完整版本化官方文件網站（含安裝指南、循序教學、CLI 子章節與雙平台指令）：
+完整版本化官方文件網站（含安裝指南、循序教學、CLI 子章節與雙平台指令）已發布於 GitHub Pages：
+
+- **線上官方文件**：[https://pangolin-framework.github.io/pangolin/](https://pangolin-framework.github.io/pangolin/)
+
+如需透過 Docker 在本機 `http://localhost:18088` 離線預覽：
 
 ```bash
-# 透過 Docker 在本機 http://localhost:18088 預覽官方文件網站
 node docs/site/scripts/docker.mjs up -d --build
 ```
 
-更多網站操作見 [docs/site/README.md](docs/site/README.md)。
+更多網站操作與 GitHub Pages 設定見 [docs/site/README.md](docs/site/README.md)。
 
 ---
 
@@ -98,7 +97,7 @@ node docs/site/scripts/docker.mjs up -d --build
 ```bash
 # 快速靜態與契約檢查（架構 import 邊界、需求與 API 清單）
 go run ./tools/check
-python scripts/m0.py check
+python scripts/contracts.py check
 python scripts/template_bundle.py --check
 
 # 執行無外部服務的單元與契約測試

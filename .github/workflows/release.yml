@@ -1,0 +1,85 @@
+name: Release v0.1.0+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
+        with:
+          go-version: '1.27.4'
+          cache: false
+
+      - name: Verify tag matches VERSION and static release contracts
+        env:
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          VERSION="$(tr -d ' \r\n' < VERSION)"
+          if [ "${TAG_NAME}" != "v${VERSION}" ]; then
+            echo "Tag ${TAG_NAME} does not match VERSION (${VERSION})" >&2
+            exit 1
+          fi
+          go run ./tools/check
+          python3 scripts/contracts.py check
+          python3 scripts/release_manifest.py --check
+          python3 scripts/template_bundle.py --check
+
+      - name: Run unit tests
+        run: |
+          go vet ./...
+          go test ./kernel/... ./application/... ./transport/... ./persistence/... ./security/... ./tenancy/... ./events/... ./platform/... ./observability/... ./modules/... ./cmd/... ./internal/scaffold/... ./tests/rootmodules/...
+
+      - name: Build pangolin CLI release archives
+        env:
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          mkdir -p dist
+          build_target() {
+            GOOS="$1"
+            GOARCH="$2"
+            EXT="$3"
+            OUT="pangolin_${TAG_NAME}_${GOOS}_${GOARCH}"
+            STAGE="$(mktemp -d)"
+            CGO_ENABLED=0 GOOS="${GOOS}" GOARCH="${GOARCH}" \
+              go build -trimpath -o "${STAGE}/pangolin${EXT}" ./cmd/pangolin
+            cp LICENSE NOTICE "${STAGE}/"
+            if [ "${GOOS}" = "windows" ]; then
+              (cd "${STAGE}" && zip -q -r "${GITHUB_WORKSPACE}/dist/${OUT}.zip" .)
+            else
+              tar -C "${STAGE}" -czf "dist/${OUT}.tar.gz" .
+            fi
+            rm -rf "${STAGE}"
+          }
+          build_target linux amd64 ""
+          build_target linux arm64 ""
+          build_target darwin amd64 ""
+          build_target darwin arm64 ""
+          build_target windows amd64 ".exe"
+          (cd dist && sha256sum * > SHA256SUMS.txt)
+          cat dist/SHA256SUMS.txt
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          VERSION="${TAG_NAME#v}"
+          NOTES_FILE="docs/release-notes/${VERSION}.md"
+          if [ -f "${NOTES_FILE}" ]; then
+            gh release create "${TAG_NAME}" dist/* \
+              --title "panGOlin Framework ${TAG_NAME}" \
+              --notes-file "${NOTES_FILE}" \
+              --verify-tag
+          else
+            gh release create "${TAG_NAME}" dist/* \
+              --title "panGOlin Framework ${TAG_NAME}" \
+              --generate-notes \
+              --verify-tag
+          fi

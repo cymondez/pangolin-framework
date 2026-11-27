@@ -27,7 +27,7 @@ import TabItem from '@theme/TabItem';
 
 ## 需要準備什麼？
 
-- 已取得 `pangolin-framework` 原始碼，並完成[第一個應用](../getting-started/quickstart.mdx)。
+- 已完成[第一個應用](../getting-started/quickstart.mdx)，並下載 `v0.1.0` 範例倉庫（`git clone --branch v0.1.0 https://github.com/pangolin-framework/pangolin.git`）。
 - **Docker Desktop**（或可用的 Docker Linux Engine）與 Docker Compose。
 - **終端機環境**：Windows 使用 **PowerShell**（建議 PowerShell 7 `pwsh`）；Linux／macOS 直接使用 **Bash** 與 `curl`（下方分頁點選一次即可全站同步）。
 - 確認本機以下 4 個 loopback port 沒有被其他服務占用：`15542`（PostgreSQL）、`14322`（NATS）、`18180`（示範 IdP）、`18181`（Bookstore API）。
@@ -38,7 +38,7 @@ import TabItem from '@theme/TabItem';
 
 ## 1. 準備示範服務
 
-在框架原始碼的 **`pangolin-framework` 根目錄**執行：
+在範例倉庫的 **`pangolin` 根目錄**執行：
 
 <Tabs groupId="os">
 <TabItem value="powershell" label="Windows PowerShell">
@@ -86,7 +86,7 @@ fi
 
 ## 2. 第一個終端：啟動 Bookstore API
 
-保持在 `pangolin-framework` 根目錄執行（注意 API 使用的是受 RLS 限制的最小權限帳號 **`pangolin_app`**）：
+保持在 `pangolin` 根目錄執行（注意 API 使用的是受 RLS 限制的最小權限帳號 **`pangolin_app`**）：
 
 <Tabs groupId="os">
 <TabItem value="powershell" label="Windows PowerShell">
@@ -115,7 +115,7 @@ API 會啟動在 `http://127.0.0.1:18181` 並持續運行。**保留這個終端
 
 ## 3. 第二個終端：啟動獨立背景 Worker
 
-切到 `pangolin-framework` 根目錄，以獨立的 **`pangolin_worker`** 角色啟動背景 Worker：
+切到 `pangolin` 根目錄，以獨立的 **`pangolin_worker`** 角色啟動背景 Worker：
 
 <Tabs groupId="os">
 <TabItem value="powershell" label="Windows PowerShell">
@@ -269,7 +269,7 @@ curl -s -o /dev/null -w '%{http_code}\n' \
 
 ## 8. 結束教學與停止服務
 
-對 API 與 Worker 的終端各按 `Ctrl+C`（觀察優雅停機日誌），接著回到 `pangolin-framework` 根目錄關閉示範容器：
+對 API 與 Worker 的終端各按 `Ctrl+C`（觀察優雅停機日誌），接著回到 `pangolin` 根目錄關閉示範容器：
 
 <Tabs groupId="os">
 <TabItem value="powershell" label="Windows PowerShell">

@@ -205,7 +205,7 @@ pg_restore --exit-on-error --dbname="$RESTORE_DSN" "$BACKUP_FILE"
 
 ## 4. 同源升級檢查流程
 
-0.1.0 預覽版應確保應用 Runtime、`pangolin` CLI 與生成 Template 來自**同一 Framework commit**（詳細升級步驟見[選擇版本與升級](../reference/upgrading.md)與[規格與升級 CLI 手冊](../reference/cli-openapi-upgrade.md)）。在 CLI 生成專案根目錄依序執行：
+升級前應確保應用 Runtime、`pangolin` CLI 與目標發行版本保持一致（詳細升級步驟見[選擇版本與升級](../reference/upgrading.md)與[規格與升級 CLI 手冊](../reference/cli-openapi-upgrade.md)）。在 CLI 生成專案根目錄依序執行：
 
 <Tabs groupId="os">
 <TabItem value="powershell" label="Windows PowerShell">
@@ -213,7 +213,7 @@ pg_restore --exit-on-error --dbname="$RESTORE_DSN" "$BACKUP_FILE"
 ```powershell
 go test ./...
 if ($LASTEXITCODE -ne 0) { throw 'go test failed' }
-& $pangolin doctor
+pangolin doctor
 if ($LASTEXITCODE -ne 0) { throw 'pangolin doctor failed' }
 go run ./cmd/migrate
 if ($LASTEXITCODE -ne 0) { throw 'migration command failed' }
@@ -225,7 +225,7 @@ if ($LASTEXITCODE -ne 0) { throw 'migration command failed' }
 ```bash
 set -euo pipefail
 go test ./...
-"$PANGOLIN" doctor
+pangolin doctor
 go run ./cmd/migrate
 ```
 

@@ -12,28 +12,26 @@ import TabItem from '@theme/TabItem';
 
 ## 開始前準備
 
-- **Go 1.27.4**、**Git**、**Docker Linux Engine／Compose**。
+- **Go 1.27.4**、**Docker Linux Engine／Compose**。
 - **終端機環境**：Windows 使用 **PowerShell**；Linux／macOS 使用 **Bash** 與 `curl`。
 - 確認本機 loopback ports **`15642`、`18280`、`18281`** 未被其他服務占用。
-- 預覽版只需從框架原始碼建置 `cmd/pangolin`，不需要 Node.js 或 Python。
+- 透過 `go install` 安裝 `pangolin` CLI 即可使用，不需要 Node.js 或 Python。
 
 ---
 
-## 1. 建置 CLI 並生成獨立專案（Tenant-only 預設 Profile）
+## 1. 安裝 CLI 並生成獨立專案（Tenant-only 預設 Profile）
 
-在 **`pangolin-framework` 根目錄**執行：
+在目標工作目錄執行：
 
 <Tabs groupId="os">
 <TabItem value="powershell" label="Windows PowerShell">
 
 ```powershell
-# 步驟 1：建置 pangolin CLI 可執行檔
-go build -o .cache/bin/pangolin.exe ./cmd/pangolin
-$pangolin = (Resolve-Path .cache/bin/pangolin.exe).Path
+# 步驟 1：安裝 pangolin v0.1.0 CLI（若已安裝可略過）
+go install github.com/pangolin-framework/pangolin/cmd/pangolin@v0.1.0
 
-# 步驟 2：切到上層目錄，生成與框架並排的獨立專案 bookstore
-cd ..
-& $pangolin new bookstore --template modular-monolith
+# 步驟 2：生成獨立專案 bookstore
+pangolin new bookstore --template modular-monolith
 cd bookstore
 
 # 步驟 3：立刻執行單元測試，確認生成專案乾淨可編譯
@@ -44,13 +42,11 @@ go test ./...
 <TabItem value="bash" label="Linux / macOS (Bash)">
 
 ```bash
-# 步驟 1：建置 pangolin CLI 可執行檔
-go build -o .cache/bin/pangolin ./cmd/pangolin
-PANGOLIN="$(pwd)/.cache/bin/pangolin"
+# 步驟 1：安裝 pangolin v0.1.0 CLI（若已安裝可略過）
+go install github.com/pangolin-framework/pangolin/cmd/pangolin@v0.1.0
 
-# 步驟 2：切到上層目錄，生成與框架並排的獨立專案 bookstore
-cd ..
-"$PANGOLIN" new bookstore --template modular-monolith
+# 步驟 2：生成獨立專案 bookstore
+pangolin new bookstore --template modular-monolith
 cd bookstore
 
 # 步驟 3：立刻執行單元測試，確認生成專案乾淨可編譯
@@ -62,7 +58,7 @@ go test ./...
 
 預期看到 `Created bookstore profile tenant-only runtime 0.1.0` 與通過的測試結果。接下來的所有指令都在你自己的 **`bookstore`** 目錄執行。
 
-> **預覽版 Runtime Bundle 說明**：因為 0.1.0 尚未發布遠端 Go tag，生成的專案會內附與 CLI 同版的 `framework/` 與 `runtime-manifest.json` 並用本機 `replace` 固定依賴。日後升級時請使用[安全升級工作流](../reference/upgrading.md)，切勿只手動替換部分檔案。
+> **受管 Runtime Bundle 說明**：`pangolin new` 產生的專案會內附與 CLI 同版（`0.1.0`）的 `framework/` 與 `runtime-manifest.json` 雜湊清單，確保可重現的離線建置與完整性驗證。日後升級時請使用[安全升級工作流](../reference/upgrading.md)（`pangolin upgrade`），切勿只手動替換部分檔案。
 
 ---
 
@@ -160,7 +156,7 @@ echo
 
 ```powershell
 cd ..
-& $pangolin new bookstore-org --template modular-monolith --with organization
+pangolin new bookstore-org --template modular-monolith --with organization
 cd bookstore-org
 go test ./...
 ```
@@ -170,7 +166,7 @@ go test ./...
 
 ```bash
 cd ..
-"$PANGOLIN" new bookstore-org --template modular-monolith --with organization
+pangolin new bookstore-org --template modular-monolith --with organization
 cd bookstore-org
 go test ./...
 ```
@@ -222,16 +218,16 @@ PANGOLIN_PG_PORT=15643 PANGOLIN_IDP_PORT=18290 PANGOLIN_API_PORT=18291 \
 
 ```powershell
 # 1. 新增具備完整契約、服務實作、建構子注入與單元測試的垂直切片模組
-& $pangolin module add catalog --depends persistence,authorization --preset service
+pangolin module add catalog --depends persistence,authorization --preset service
 
 # 2. 產生全專案唯一序號的 Goose SQL 遷移骨架
-& $pangolin migrate create add_catalog --module catalog
+pangolin migrate create add_catalog --module catalog
 
 # 3. 輸出目前 Profile 的 OpenAPI 3.1 規格檔
-& $pangolin generate openapi
+pangolin generate openapi
 
 # 4. 執行靜態專案與建置健康檢查
-& $pangolin doctor
+pangolin doctor
 
 # 5. 立即執行測試驗證新模組可編譯且全部通過！
 go test ./...
@@ -242,16 +238,16 @@ go test ./...
 
 ```bash
 # 1. 新增具備完整契約、服務實作、建構子注入與單元測試的垂直切片模組
-"$PANGOLIN" module add catalog --depends persistence,authorization --preset service
+pangolin module add catalog --depends persistence,authorization --preset service
 
 # 2. 產生全專案唯一序號的 Goose SQL 遷移骨架
-"$PANGOLIN" migrate create add_catalog --module catalog
+pangolin migrate create add_catalog --module catalog
 
 # 3. 輸出目前 Profile 的 OpenAPI 3.1 規格檔
-"$PANGOLIN" generate openapi
+pangolin generate openapi
 
 # 4. 執行靜態專案與建置健康檢查
-"$PANGOLIN" doctor
+pangolin doctor
 
 # 5. 立即執行測試驗證新模組可編譯且全部通過！
 go test ./...

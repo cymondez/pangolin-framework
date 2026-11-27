@@ -74,7 +74,7 @@ pangolin migrate status
 
 ```powershell
 # 1. 為 catalog 模組建立新遷移骨架檔
-& $pangolin migrate create add_catalog --module catalog
+pangolin migrate create add_catalog --module catalog
 
 # （編輯 modules/catalog/migrations/5000001_add_catalog.sql 加入資料表、授權與 FORCE RLS）
 
@@ -83,7 +83,7 @@ $env:PANGOLIN_MIGRATION_DSN = 'postgres://pangolin_bootstrap:local-bootstrap-onl
 go run ./cmd/migrate
 
 # 3. 唯讀查詢 Goose Ledger 確認所有版本皆為 applied=true
-& $pangolin migrate status
+pangolin migrate status
 Remove-Item Env:PANGOLIN_MIGRATION_DSN
 ```
 
@@ -92,7 +92,7 @@ Remove-Item Env:PANGOLIN_MIGRATION_DSN
 
 ```bash
 # 1. 為 catalog 模組建立新遷移骨架檔
-"$PANGOLIN" migrate create add_catalog --module catalog
+pangolin migrate create add_catalog --module catalog
 
 # （編輯 modules/catalog/migrations/5000001_add_catalog.sql 加入資料表、授權與 FORCE RLS）
 
@@ -101,7 +101,7 @@ export PANGOLIN_MIGRATION_DSN='postgres://pangolin_bootstrap:local-bootstrap-onl
 go run ./cmd/migrate
 
 # 3. 唯讀查詢 Goose Ledger 確認所有版本皆為 applied=true
-"$PANGOLIN" migrate status
+pangolin migrate status
 unset PANGOLIN_MIGRATION_DSN
 ```
 
@@ -151,13 +151,13 @@ pangolin doctor [--live]
 
 ```powershell
 # 1. 離線靜態健檢（不需啟動 Docker 或設定 DSN）
-& $pangolin doctor
+pangolin doctor
 
 # 2. 啟動服務後執行實機健檢
 $env:PANGOLIN_DSN = 'postgres://pangolin_app:local-app-only@127.0.0.1:15642/pangolin_m0?sslmode=disable'
 $env:PANGOLIN_MIGRATION_DSN = 'postgres://pangolin_bootstrap:local-bootstrap-only@127.0.0.1:15642/pangolin_m0?sslmode=disable'
 $env:PANGOLIN_API_URL = 'http://127.0.0.1:18281'
-& $pangolin doctor --live
+pangolin doctor --live
 
 # 清除目前視窗的示範環境變數
 Remove-Item Env:PANGOLIN_DSN, Env:PANGOLIN_MIGRATION_DSN, Env:PANGOLIN_API_URL
@@ -168,13 +168,13 @@ Remove-Item Env:PANGOLIN_DSN, Env:PANGOLIN_MIGRATION_DSN, Env:PANGOLIN_API_URL
 
 ```bash
 # 1. 離線靜態健檢（不需啟動 Docker 或設定 DSN）
-"$PANGOLIN" doctor
+pangolin doctor
 
 # 2. 啟動服務後執行實機健檢
 PANGOLIN_DSN='postgres://pangolin_app:local-app-only@127.0.0.1:15642/pangolin_m0?sslmode=disable' \
 PANGOLIN_MIGRATION_DSN='postgres://pangolin_bootstrap:local-bootstrap-only@127.0.0.1:15642/pangolin_m0?sslmode=disable' \
 PANGOLIN_API_URL='http://127.0.0.1:18281' \
-  "$PANGOLIN" doctor --live
+  pangolin doctor --live
 ```
 
 </TabItem>

@@ -12,9 +12,9 @@ import TabItem from '@theme/TabItem';
 
 ## 一、安裝與入門環境問題
 
-### `go run` 找不到本機套件
-- **原因**：工作目錄不在自己的 `hello-pangolin` 專案，或 `go.mod` 的 `replace` 相對路徑沒有正確指向並排的 `pangolin` 資料夾。
-- **修復**：依[安裝頁](../getting-started/installation.md)確認兩個資料夾並排放置，並檢查 `go.mod` 中的 `replace github.com/pangolin-framework/pangolin => ../pangolin`。
+### `go get` 或 `go mod tidy` 無法下載套件
+- **原因**：目前終端機不在 `hello-pangolin` 專案目錄、Go 版本低於 `1.27.4`，或本機網路／`GOPROXY` 無法連線至模組代理與 GitHub。
+- **修復**：執行 `go version` 與 `go env GOPROXY` 確認環境，並依[安裝頁](../getting-started/installation.md)在專案目錄執行 `go get github.com/pangolin-framework/pangolin@v0.1.0`。
 
 ### `no Go files` 或執行 `go mod tidy` 後依賴消失
 - **原因**：在還沒建立任何 `.go` 檔案前就執行了 `go mod tidy`，Go 會把未被引用的 `require` 清掉。

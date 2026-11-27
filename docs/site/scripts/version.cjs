@@ -21,7 +21,7 @@ function versionState(siteDir = path.resolve(__dirname, '..')) {
   const frozen = released.includes(productVersion);
   return {
     productVersion, released,
-    currentLabel: frozen ? 'Next（預覽版）' : `${productVersion}（預覽版）`,
+    currentLabel: frozen ? 'Next（開發中）' : `v${productVersion}`,
     currentPath: frozen ? 'next' : productVersion,
     lastVersion: frozen ? productVersion : 'current',
   };
