@@ -6,7 +6,7 @@ description: 依學習階段分類的所有可執行 panGOlin 範例程式，每
 import Tabs from '@theme/Tabs';
 import TabItem from '@theme/TabItem';
 
-這一頁彙整了 panGOlin 所有可直接執行的範例程式。你可以先從**零外部依賴**的基礎範例跑起，確認行為符合預期後，再直接參考或搬移到自己的專案。
+這一頁彙整了 panGOlin 所有可直接執行的範例程式。你可以先從**無需啟動外部服務**的基礎範例跑起，確認行為符合預期後，再直接參考或搬移到自己的專案。
 
 > **執行目錄提醒**：除非特別標示，基礎範例一律從框架原始碼的 `examples/basics` 目錄執行：
 
@@ -29,7 +29,7 @@ cd pangolin-framework/examples/basics
 
 ---
 
-## 階段 1：零外部依賴範例（只需要 Go）
+## 階段 1：免外部服務範例（只需 Go）
 
 以下範例不需要 Docker、資料庫或任何外部服務，全部都能在幾秒內跑出明確結果：
 
