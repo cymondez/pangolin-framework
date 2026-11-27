@@ -1,9 +1,10 @@
 name: Documentation website
 on:
   push:
-    branches: [main, 'codex/**']
+    branches: [main]
     paths: ['docs/**', 'examples/basics/**', 'examples/moduleapp/**', 'scripts/docs_examples.py', 'VERSION', '.github/workflows/docs.yml']
   pull_request:
+    branches: [main]
     paths: ['docs/**', 'examples/basics/**', 'examples/moduleapp/**', 'scripts/docs_examples.py', 'VERSION', '.github/workflows/docs.yml']
   release:
     types: [published]

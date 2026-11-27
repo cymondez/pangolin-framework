@@ -1,8 +1,9 @@
 name: Cumulative verification gates
 on:
   push:
-    branches: [main, 'codex/**']
+    branches: [main]
   pull_request:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
