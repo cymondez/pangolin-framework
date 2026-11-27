@@ -7,7 +7,7 @@ package m7
 // generates both Bookstore profiles without --realtime into a runner
 // directory, the migration entry seeds the pinned PostgreSQL, and the API
 // binary serves its health contract while no /hub realtime path exists.
-// The proof reuses the same build/test/start flow scripts/m5_templates.py runs.
+// The proof reuses the same build/test/start flow scripts/templates_verify.py runs.
 
 import (
 	"bytes"

@@ -1,6 +1,6 @@
 # 發布演練操作手冊（Release Drills Runbook）
 
-本手冊定義 v0.1.0 發布前必須實際執行的發布演練（A72／REL-005）：乾淨重建、前向升級、備份／還原、效能基線與安全審查。可執行入口是 `scripts/m6_drills.py`；演練不啟停任何服務，只使用既有的固定版本 fixture（PostgreSQL 18.7、NATS 2.15.3、測試 IdP），並對應 [M6 開發指南](../guides/m6-development.md) 的環境。操作邊界與清理責任見 [operations runbook](operations.md)；本檔不重複佇列訊號處置。
+本手冊定義 v0.1.0 發布前必須實際執行的發布演練（A72／REL-005）：乾淨重建、前向升級、備份／還原、效能基線與安全審查。可執行入口是 `scripts/release_drills.py`；演練不啟停任何服務，只使用既有的固定版本 fixture（PostgreSQL 18.7、NATS 2.15.3、測試 IdP），並對應 [M6 開發指南](../guides/m6-development.md) 的環境。操作邊界與清理責任見 [operations runbook](operations.md)；本檔不重複佇列訊號處置。
 
 ## 執行入口與前置條件
 
@@ -12,7 +12,7 @@ $env:PANGOLIN_M1_WORKER_DSN  = 'postgres://pangolin_worker:local-worker-only@127
 $env:PANGOLIN_M1_NATS_URL    = 'nats://127.0.0.1:14322'
 $env:PANGOLIN_M1_ISSUER      = 'http://127.0.0.1:18180'
 
-python scripts/m6_drills.py --output artifacts/m6-drills-<label> --project pangolin-m6-<suffix>
+python scripts/release_drills.py --output artifacts/m6-drills-<label> --project pangolin-m6-<suffix>
 ```
 
 - `--project` 必須是專屬的 `pangolin-m6-*` 名稱；release gate 傳入已盤點並運行的 verify project，作為識別與 Docker pg client fallback 的依據。獨立執行時可用 `--compose-project`／`PANGOLIN_M6_COMPOSE_PROJECT` 明示服務 project。
@@ -34,7 +34,7 @@ python scripts/m6_drills.py --output artifacts/m6-drills-<label> --project pango
 
 ## pg client fallback 與 host-run 程序
 
-backup-restore 需要真實 `pg_dump`／`pg_restore`，`scripts/m6_drills.py` 的解析順序：
+backup-restore 需要真實 `pg_dump`／`pg_restore`，`scripts/release_drills.py` 的解析順序：
 
 1. `--pg-bin`／`PANGOLIN_PG_BIN` 指定的主機 binary 目錄；
 2. PATH 上的 `pg_dump`＋`pg_restore`（client major ≥ server major，否則失敗）；
@@ -45,11 +45,11 @@ Go 測試本身（例如累積 Gate 直接跑 `go test -tags=integration ./tests
 
 host-run 步驟（僅在 runner 無工具且無 Docker 時）：
 
-1. 在與驗收同 commit 的乾淨 host 上，以相同 `PANGOLIN_M1_*` 環境與專屬 project 執行 `python scripts/m6_drills.py --output <workspace>/artifacts/m6-drills-host --project pangolin-m6-<suffix>`；
+1. 在與驗收同 commit 的乾淨 host 上，以相同 `PANGOLIN_M1_*` 環境與專屬 project 執行 `python scripts/release_drills.py --output <workspace>/artifacts/m6-drills-host --project pangolin-m6-<suffix>`；
 2. 將輸出目錄保留在 workspace `artifacts/` 內，於 Linux 驗收時設定 `PANGOLIN_M6_DRILLS_DIR` 指向該目錄；gate 會逐檔 hash 對帳、驗證 provenance 後原位複製採用。
 
 ## 證據綁定與清理
 
-- 報告記錄 commit、`source_sha256`（與 `scripts/m1.py` 相同的工作樹 bytes 雜湊）、平台、project、每個命令的 argv／exit code／log hash，以及五項演練的 checks；`release_manifest.py` 對 schema 嚴格驗證（命令記錄僅含 `argv`/`exit_code`/`log`/`sha256`）。
+- 報告記錄 commit、`source_sha256`（與 `scripts/test_runner.py` 相同的工作樹 bytes 雜湊）、平台、project、每個命令的 argv／exit code／log hash，以及五項演練的 checks；`release_manifest.py` 對 schema 嚴格驗證（命令記錄僅含 `argv`/`exit_code`/`log`/`sha256`）。
 - 演練只建立自己的資源：唯一資料庫（測試 cleanup 刪除，含失敗路徑）、一個 JetStream stream（測試刪除）、clean-source 匯出與建置快取（演練刪除）。不操作其他 project、不碰既有資料、不做全域 prune。
 - dirty 工作樹可跑除錯，但報告標記 `development-only`；只有乾淨 commit 的演練證據可進入 release gate 的 Verified 判定。

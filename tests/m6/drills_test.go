@@ -94,7 +94,7 @@ func TestM6FixtureTokenFallsBackToIssuerTokenPath(t *testing.T) {
 
 // TestM6CleanRebuild deploys a unique fresh database with the real framework
 // migration set, builds the real example Bookstore API/Worker binaries from
-// the module hosting this test (scripts/m6_drills.py points the test at an
+// the module hosting this test (scripts/release_drills.py points the test at an
 // exported clean source tree with a fresh build cache), then operates them
 // against the pinned PostgreSQL/NATS/test-IdP fixture: a signed RS256 JWT
 // write/read, denial probes, outbox→JetStream→inbox→read-model delivery and

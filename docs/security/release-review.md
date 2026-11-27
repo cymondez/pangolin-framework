@@ -1,6 +1,6 @@
 # v0.1.0 安全審查（Release Security Review）
 
-本文件是 panGOlin-framework v0.1.0 發布前的正式安全審查，依[實作規範 §14.1](../../design/panGOlin-framework_實作規範書.md#s-14.1)對每個威脅類別記錄攻擊面、濫用路徑、控制措施、可執行測試與剩餘風險。`scripts/m6_drills.py` 的 security-review 演練解析本文件的控制清單、逐一執行所列測試，並在出現未解決的高風險項時阻擋發布（A72／REL-005）。
+本文件是 panGOlin-framework v0.1.0 發布前的正式安全審查，依[實作規範 §14.1](../../design/panGOlin-framework_實作規範書.md#s-14.1)對每個威脅類別記錄攻擊面、濫用路徑、控制措施、可執行測試與剩餘風險。`scripts/release_drills.py` 的 security-review 演練解析本文件的控制清單、逐一執行所列測試，並在出現未解決的高風險項時阻擋發布（A72／REL-005）。
 
 審查基線：規範 v1.3；測試證據以同 commit 的累積 Gate 為準。本文件描述的是已實作並由測試覆蓋的控制；尚未實作的緩解不會寫進 control 欄位。所有測試選擇器（`package:Test`）指向實際存在的可執行驗收測試，由演練逐一執行並驗證通過、無 skip。
 
@@ -44,4 +44,4 @@
 
 ## 發布判定
 
-security-review 演練對上述控制清單逐項執行測試並驗證無 skip；任何類別出現未解決的高風險項時，`scripts/m6_drills.py` 依 fail-closed 原則讓發布演練失敗。本審查在 v0.1.0 範圍內沒有未解決的高風險項；low 等剩餘風險均屬部署方責任並已記錄於各控制項。
+security-review 演練對上述控制清單逐項執行測試並驗證無 skip；任何類別出現未解決的高風險項時，`scripts/release_drills.py` 依 fail-closed 原則讓發布演練失敗。本審查在 v0.1.0 範圍內沒有未解決的高風險項；low 等剩餘風險均屬部署方責任並已記錄於各控制項。

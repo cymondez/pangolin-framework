@@ -174,7 +174,7 @@ func escapesRoot(name string) bool {
 // errGitless marks a root outside any git repository.
 var errGitless = errors.New("root outside any git repository")
 
-// trackedPackageInventory reproduces the scripts/m0.py Gate package list: the
+// trackedPackageInventory reproduces the scripts/contracts.py Gate package list: the
 // Go packages derived from `git ls-files --cached --others --exclude-standard
 // -- *.go`, so ignored generated/bug-reproducer directories under artifacts/
 // are excluded while every tracked package stays in the inventory. A module
@@ -192,7 +192,7 @@ func trackedPackageInventory(root string) ([]byte, error) {
 		return nil, err
 	}
 	// A test/temp module placed under a GOTMPDIR that itself lives inside a
-	// repository (the gate's m0.go_environment default) resolves git up the
+	// repository (the gate's contracts.go_environment default) resolves git up the
 	// ancestor chain; names outside the inventory root (the repo's own files
 	// with ../ prefixes) are already dropped by gitFiles, and the nested
 	// module boundary still applies to what remains.
@@ -231,7 +231,7 @@ func trackedPackageInventory(root string) ([]byte, error) {
 		}
 		dirs[index] = "./" + dirs[index]
 	}
-	// scripts/m0.py semantics: directories whose tracked Go files are fully
+	// scripts/contracts.py semantics: directories whose tracked Go files are fully
 	// excluded by build constraints (integration-tagged tests/mN suites) only
 	// run under -tags=integration; the default-constraint coverage inventory
 	// matches the historical `./...` selection without the ignored dirs.

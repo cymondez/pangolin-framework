@@ -14,16 +14,16 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
-import m0
-import m1
-import m6
+import contracts
 import release_manifest
+import test_runner
+import verify
 
 
 def drill_fixture(commit="a" * 40, source="b" * 64, platform="windows-amd64", project="pangolin-m6-test", dirty=False):
-    """A complete drill report matching scripts/m6_drills.py's emitted shape."""
+    """A complete drill report matching scripts/release_drills.py's emitted shape."""
     data = {
-        "interface": "python scripts/m6_drills.py --output <dir> --project <project>",
+        "interface": "python scripts/release_drills.py --output <dir> --project <project>",
         "baseline": "v1.3", "product_version": "0.1.0",
         "commit": commit, "source_sha256": source,
         "working_tree_dirty": dirty, "evidence_class": "development-only" if dirty else "evidence-ready",
@@ -74,13 +74,13 @@ def write_drills(directory, data):
     for name in logs:
         log = directory / name
         log.write_text("drill command output\n", encoding="utf-8")
-    data["commands"][0]["sha256"] = m0.digest(directory / data["commands"][0]["log"])
+    data["commands"][0]["sha256"] = contracts.digest(directory / data["commands"][0]["log"])
     for entry in data["drills"].values():
         for command in entry["commands"]:
-            command["sha256"] = m0.digest(directory / command["log"])
+            command["sha256"] = contracts.digest(directory / command["log"])
     for name in ("clean-rebuild.json", "upgrade-drill.json", "backup-restore.json", "load-baseline.json", "security-drill.json"):
         (directory / name).write_text(json.dumps({"fixture": True}, indent=2) + "\n", encoding="utf-8")
-    data["artifacts"] = {name: m0.digest(directory / name) for name in
+    data["artifacts"] = {name: contracts.digest(directory / name) for name in
                          ("clean-rebuild.json", "upgrade-drill.json", "backup-restore.json", "load-baseline.json", "security-drill.json")}
     (directory / "release-drills.json").write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
     return directory
@@ -90,7 +90,7 @@ class ReleaseGates(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.manifest = release_manifest.load_manifest()
-        cls.groups = m0.load(ROOT / "tests/contract/subtests.json")["groups"]
+        cls.groups = contracts.load(ROOT / "tests/contract/subtests.json")["groups"]
         cls.mappings = release_manifest.load_mappings()
 
     # A70/missing-release-item
@@ -126,10 +126,10 @@ class ReleaseGates(unittest.TestCase):
         mappings[6]["python_tests"]["A99/phantom"] = "test_gate.ReleaseGates.test_phantom"
         with self.assertRaisesRegex(ValueError, "unknown subtest"):
             release_manifest.check_closure(mappings, self.groups)
-        mapping = copy.deepcopy(m0.load(ROOT / "tests/contract/m6.json"))
+        mapping = copy.deepcopy(contracts.load(ROOT / "tests/contract/m6.json"))
         mapping["drills"]["A72/clean-rebuild-x"] = "clean-rebuild"
         with self.assertRaises(ValueError):
-            m6.validate_mapping(mapping)
+            verify.validate_mapping(mapping, milestone="M6")
 
     # A70/duplicate-delivery
     def test_A70_duplicate_delivery(self):
@@ -197,7 +197,7 @@ class ReleaseGates(unittest.TestCase):
     def test_A95_applicable_case_skipped(self):
         log = "test_example (test_gate.ReleaseGates.test_example) ... ok\n\nRan 1 test in 0.001s\n\nOK (skipped=1)\n"
         with self.assertRaisesRegex(ValueError, "skip"):
-            m1.validate_python_output(log)
+            test_runner.validate_python_output(log)
         with tempfile.TemporaryDirectory(dir=ROOT / ".cache") as directory:
             data = drill_fixture()
             write_drills(directory, data)
@@ -212,7 +212,7 @@ class ReleaseGates(unittest.TestCase):
 
     # A95/critical-package-below-threshold
     def test_A95_critical_package_below_threshold(self):
-        module = m0.MODULE
+        module = contracts.MODULE
         # One package under every critical prefix, each at exactly the raw-count
         # threshold: covered*100 == total*90.
         critical = {prefix: module + "/" + prefix + "/fixture" for prefix in self.manifest["critical_packages"]}
@@ -251,15 +251,15 @@ class ReleaseGates(unittest.TestCase):
 
     # A95/tenant-only-build-independent
     def test_A95_tenant_only_build_independent(self):
-        deps = m0.command(["go", "list", "-deps", "./internal/testkit/assemblies/tenant"]).splitlines()
+        deps = contracts.command(["go", "list", "-deps", "./internal/testkit/assemblies/tenant"]).splitlines()
         release_manifest.check_tenant_only(deps)
         with self.assertRaisesRegex(ValueError, "organization"):
-            release_manifest.check_tenant_only(deps + [m0.MODULE + "/modules/organization/store"])
+            release_manifest.check_tenant_only(deps + [contracts.MODULE + "/modules/organization/store"])
 
     def test_mapping_docs_and_release_closure(self):
-        mapping = m0.load(ROOT / "tests/contract/m6.json")
-        m6.validate_mapping(mapping)
-        m1.check_module_docs(mapping)
+        mapping = contracts.load(ROOT / "tests/contract/m6.json")
+        verify.validate_mapping(mapping, milestone="M6")
+        test_runner.check_module_docs(mapping)
         self.assertEqual(release_manifest.check_closure(self.mappings, self.groups)["mapped"], 532)
         # Repo-content release declarations all validate today; required release
         # assets are checked fail-closed by check_assets/the full gate instead.

@@ -19,7 +19,7 @@ import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
-import m7_client_dependencies as module
+import client_dependencies as module
 
 LOCK = {
     "lockfileVersion": 3,
@@ -193,7 +193,7 @@ class ClientDependenciesTest(unittest.TestCase):
     def test_cli_check_passes_and_writes_gate_artifact(self):
         with tempfile.TemporaryDirectory() as tmp:
             artifact = Path(tmp) / "m7-client-dependencies-actual.json"
-            result = subprocess.run([sys.executable, "scripts/m7_client_dependencies.py", "--check", "--output", str(artifact)],
+            result = subprocess.run([sys.executable, "scripts/client_dependencies.py", "--check", "--output", str(artifact)],
                                     cwd=ROOT, capture_output=True, text=True, encoding="utf-8")
             self.assertEqual(result.returncode, 0, result.stderr)
             summary = json.loads(result.stdout)
@@ -208,7 +208,7 @@ class ClientDependenciesTest(unittest.TestCase):
             manifest = Path(tmp) / "drifted-manifest.json"
             manifest.write_text(json.dumps({**json.loads((ROOT / "deploy/release/m7-client-dependencies.json").read_text(encoding="utf-8")),
                                             "allowed_licenses": ["MIT"]}), encoding="utf-8")
-            result = subprocess.run([sys.executable, "scripts/m7_client_dependencies.py", "--check", "--manifest", str(manifest)],
+            result = subprocess.run([sys.executable, "scripts/client_dependencies.py", "--check", "--manifest", str(manifest)],
                                     cwd=ROOT, capture_output=True, text=True, encoding="utf-8")
             self.assertEqual(result.returncode, 1)
             self.assertIn("client dependency check failed", result.stderr)

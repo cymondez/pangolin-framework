@@ -1,7 +1,9 @@
-"""Deterministic M0 baseline checks and same-commit evidence collection.
+"""Contract, public API surface, architecture import, and dependency checks.
 
-M0 validates contracts, fixture plans and engineering infrastructure. It never
-marks planned product/runtime acceptance cases as passed.
+Validates the specification contracts, profile plans, fixture manifests,
+configuration bounds, Go import boundaries, frozen public API surface, and
+reviewed dependency/license allowlist. Never marks planned runtime acceptance
+cases as passed.
 """
 import argparse
 import hashlib
@@ -11,10 +13,8 @@ import os
 from pathlib import Path
 import posixpath
 import re
-import shutil
 import subprocess
 import sys
-import time
 
 ROOT = Path(__file__).resolve().parents[1]
 MODULE = "github.com/pangolin-framework/pangolin"
@@ -57,6 +57,8 @@ def _go_git_scope(root):
     if check.returncode in (0, 1):
         return check.returncode != 0
     raise ValueError("checking the git ignore state of the inventory root failed (no silent fallback): " + (check.stderr or "").strip()[:200])
+
+
 def _go_sources(root=ROOT):
     """Tracked Go source inventory: (package dir args, `go list -e -json` entries)."""
     root = Path(root)
@@ -161,7 +163,7 @@ def api_surface(root=ROOT):
 
 def check_api(expected, actual):
     if expected != actual:
-        raise ValueError("public API surface changed; review the specification/ADR and run m0.py freeze-api explicitly")
+        raise ValueError("public API surface changed; review the specification/ADR and run contracts.py freeze-api explicitly")
 
 
 def check_profiles(groups, profiles, max_milestone=None):
@@ -299,8 +301,8 @@ def check_data(root=ROOT):
     for name in fixtures["files"]:
         load(root / name)
     scopes = load(root / "tests/fixtures/scopes.json")
-    ids = [(item["tenant"],item["kind"],item["id"]) for item in scopes["catalog"]]
-    if len(set(ids)) != len(ids) or any((item["tenant"],item["kind"],item["scope"]) not in ids for item in scopes["memberships"] + scopes["enterprise_roles"] + scopes["service_grants"]):
+    ids = [(item["tenant"], item["kind"], item["id"]) for item in scopes["catalog"]]
+    if len(set(ids)) != len(ids) or any((item["tenant"], item["kind"], item["scope"]) not in ids for item in scopes["memberships"] + scopes["enterprise_roles"] + scopes["service_grants"]):
         raise ValueError("fixture catalog references are inconsistent")
     for key, value in scopes["assemblies"].items():
         if set(value["kinds"]) != ({"tenant"} if key == "tenant-only" else {"tenant", "org.enterprise", "org.organization"}):
@@ -336,138 +338,18 @@ def clean(root=ROOT):
     return not command(["git", "status", "--porcelain"], root).strip()
 
 
-def verify(args):
-    root = ROOT
-    if not clean(root):
-        raise ValueError("M0 evidence requires a clean, committed source tree")
-    commit = revision(root)
-    metadata = json.loads(command(["go", "env", "-json", "GOVERSION", "GOOS", "GOARCH", "CGO_ENABLED", "GOMOD", "GOWORK"], root))
-    if metadata["GOVERSION"] != "go" + load(root / "deploy/toolchain.json")["go"]:
-        raise ValueError("unexpected Go toolchain")
-    platform = metadata["GOOS"] + "-" + metadata["GOARCH"]
-    stage = "environment" if args.environment else platform
-    output = root / "artifacts" / commit / "m0" / stage
-    output.mkdir(parents=True, exist_ok=True)
-    report = {"commit": commit, "baseline": "v1.3", "platform": platform, "working_tree_dirty": False, "metadata": metadata, "status": "failed", "commands": [], "runtime_acceptance": "planned"}
-    report["inputs"] = {name:digest(root / name) for name in ("deploy/toolchain.json", "deploy/profiles/local.json", "tests/fixtures/manifest.json", "tests/contract/api.json", "tests/contract/subtests.json")}
-    try:
-        if args.environment:
-            commands = [[sys.executable, "scripts/smoke.py", "--project", args.project, "--nats-port", str(args.nats_port), "--nats-proxy-port", str(args.nats_proxy_port), "--idp-port", str(args.idp_port), "--toxi-port", str(args.toxi_port)]]
-        else:
-            report["inventory"] = check(root)
-            go_dirs = go_packages(root)
-            go_build_dirs = go_build_packages(root)
-            commands = [["go", "build", *go_build_dirs], ["go", "vet", *go_dirs], ["go", "run", "./tools/check"], [sys.executable, "-m", "unittest", "discover", "-s", "tests/m0", "-p", "test_*.py"]]
-            packages = ",".join(p for p in command(["go", "list", *go_dirs], root).splitlines() if "/internal/testkit/" not in p)
-            profile = output / "unit.out"
-            commands += [["go", "test", "-json", "-coverpkg=" + packages, "-covermode=atomic", "-coverprofile=" + str(profile), *go_dirs], ["go", "run", "./tools/check", "-coverage", str(profile)]]
-            commands.append(["go", "run", "./tools/check", "-release"])
-            if args.race:
-                commands.append(["go", "test", "-race", *go_dirs])
-            report["race"] = "required-pending" if args.race else "not-run-on-this-platform"
-        for index, argv in enumerate(commands):
-            started = time.monotonic()
-            result = subprocess.run(argv, cwd=root, env=go_environment(root), capture_output=True, text=True, encoding="utf-8", errors="replace")
-            expected_exit = 1 if argv == ["go", "run", "./tools/check", "-release"] else 0
-            log = output / f"{index:02d}.log"
-            log.write_text(result.stdout + result.stderr, encoding="utf-8")
-            report["commands"].append({"argv": argv, "exit_code": result.returncode, "expected_exit_code": expected_exit, "seconds": round(time.monotonic()-started, 3), "log": log.name, "sha256": digest(log)})
-            print("PASS" if result.returncode == expected_exit else "FAIL", " ".join(argv[:3]), flush=True)
-            if result.returncode != expected_exit:
-                raise ValueError(f"command failed; see {log}")
-            if argv[0:3] == ["go", "test", "-json"]:
-                events = [json.loads(line) for line in result.stdout.splitlines() if line.startswith("{")]
-                if any(event.get("Action") == "skip" and event.get("Test") for event in events):
-                    raise ValueError("M0 engineering tests must not be skipped")
-        if args.environment:
-            smoke = load(root / "artifacts/m0-smoke.json")
-            if smoke["commit"] != commit or smoke["working_tree_dirty"] or smoke["status"] != "passed":
-                raise ValueError("environment evidence does not match clean source commit")
-            shutil.copyfile(root / "artifacts/m0-smoke.json", output / "smoke.json")
-            report["environment_checks"] = smoke["checks"]
-            result = subprocess.run(["docker", "compose", "-p", args.project, "-f", "deploy/compose/compose.yaml", "logs", "--no-color"], cwd=root, capture_output=True, text=True, encoding="utf-8", errors="replace", check=True)
-            (output / "compose.log").write_text(result.stdout + result.stderr, encoding="utf-8")
-        elif args.race:
-            report["race"] = "passed"
-        if not clean(root) or revision(root) != commit:
-            raise ValueError("source changed during verification")
-        report["status"] = "passed"
-    except Exception as error:
-        report["error"] = str(error)
-    report["artifacts"] = {path.name: digest(path) for path in sorted(output.iterdir()) if path.is_file() and path.name != "report.json"}
-    (output / "report.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
-    print(json.dumps(report, indent=2))
-    return 0 if report["status"] == "passed" else 1
-
-
-def validate_report(report, name, commit, directory):
-    if report["commit"] != commit or report["baseline"] != "v1.3" or report["working_tree_dirty"] or report["status"] != "passed" or report["runtime_acceptance"] != "planned" or not report["commands"] or any(c["exit_code"] != (1 if c["argv"] == ["go","run","./tools/check","-release"] else 0) for c in report["commands"]):
-        raise ValueError("incomplete/different-commit evidence: " + name)
-    if not report["artifacts"] or not report["inputs"]:
-        raise ValueError("evidence or input hashes missing")
-    for path, expected in report["artifacts"].items():
-        if Path(path).name != path or digest(directory / path) != expected:
-            raise ValueError("evidence artifact changed: " + path)
-    for item in report["commands"]:
-        if item["log"] not in report["artifacts"] or item["sha256"] != report["artifacts"][item["log"]]:
-            raise ValueError("command log hash mismatch")
-    commands = [c["argv"] for c in report["commands"]]
-    if name != "environment":
-        for prefix in (["go","build"],["go","vet"],["go","run","./tools/check"],["go","test","-json"]):
-            if not any(argv[:len(prefix)] == prefix for argv in commands):
-                raise ValueError("mandatory engineering command missing")
-        if not any("unittest" in argv for argv in commands) or not any("-coverage" in argv for argv in commands):
-            raise ValueError("M0 regression/coverage command missing")
-        if ["go","run","./tools/check","-release"] not in commands:
-            raise ValueError("unimplemented-runtime release guard proof missing")
-        if report["platform"] != name:
-            raise ValueError("platform evidence mislabeled")
-    if name == "linux-amd64" and (report["race"] != "passed" or not any(argv[:3] == ["go", "test", "-race"] for argv in commands)):
-        raise ValueError("race command proof missing")
-    if name == "environment" and not any("scripts/smoke.py" in argv for argv in commands):
-        raise ValueError("environment command proof missing")
-
-
-def gate(commit):
-    root = ROOT / "artifacts" / commit / "m0"
-    reports = {}
-    for name in ("windows-amd64", "linux-amd64", "environment"):
-        report = load(root / name / "report.json")
-        validate_report(report, name, commit, root / name)
-        reports[name] = report
-    if reports["linux-amd64"]["race"] != "passed" or len(reports["environment"].get("environment_checks", [])) < 9:
-        raise ValueError("race or environment proof missing")
-    if any(report["inputs"] != reports["windows-amd64"]["inputs"] for report in reports.values()):
-        raise ValueError("evidence inputs differ across runners")
-    result = {"milestone": "M0", "status": "verified", "source_commit": commit, "runtime_requirements": "all-planned", "reports": {name: digest(root / name / "report.json") for name in reports}}
-    (root / "gate.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
-    print(json.dumps(result, indent=2))
-
-
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("action", choices=["check", "freeze-api", "verify", "gate"])
-    parser.add_argument("--race", action="store_true")
-    parser.add_argument("--environment", action="store_true")
-    parser.add_argument("--project", default="pangolin-m0")
-    parser.add_argument("--commit")
-    for name, default in (("nats-port",14222),("nats-proxy-port",14223),("idp-port",18080),("toxi-port",18474)):
-        parser.add_argument("--" + name, type=int, default=default)
+    parser.add_argument("action", choices=["check", "freeze-api"])
     args = parser.parse_args()
     try:
         if args.action == "freeze-api":
             (ROOT / "tests/contract/api.json").write_text(json.dumps(api_surface(), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-        elif args.action == "check":
-            print(json.dumps(check(), indent=2))
-        elif args.action == "verify":
-            return verify(args)
         else:
-            if not args.commit or not re.fullmatch(r"[a-f0-9]{40}", args.commit):
-                raise ValueError("gate requires the full source commit")
-            gate(args.commit)
+            print(json.dumps(check(), indent=2))
         return 0
     except (ValueError, OSError, KeyError, subprocess.CalledProcessError) as error:
-        print("M0 check failed:", error, file=sys.stderr)
+        print("contract check failed:", error, file=sys.stderr)
         return 1
 
 

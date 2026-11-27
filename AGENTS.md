@@ -187,7 +187,7 @@ v0.1.0 的正式範圍只由[實作規範 §15](design/panGOlin-framework_實作
 
 依據：[實作規範 §13](design/panGOlin-framework_實作規範書.md#s-13)、[里程碑規劃書](design/panGOlin-framework_里程碑規劃書.md)。
 
-目前完整工程驗證入口為已通過的 M6 累積發布 Gate；Windows 使用 `scripts/check.ps1`，Linux 使用 `scripts/check.sh`，依 [M6 開發指南](docs/guides/m6-development.md) 設定連線並先盤點共用環境。`m0.py check` 保留契約盤點，M0 歷史 verify 不代替 M1 Gate。文件修改仍需檢查連結、章節、ID 與敘述一致性；品質工具測試不能代替 Runtime 驗收。從實際 module／workspace 執行適用的基礎檢查：
+目前完整工程驗證入口為統一的累積發布 Gate（`scripts/verify.py`）；Windows 使用 `scripts/check.ps1`，Linux 使用 `scripts/check.sh`，依 [M6 開發指南](docs/guides/m6-development.md) 設定連線並先盤點共用環境。`scripts/contracts.py check` 保留契約、API、import 邊界與依賴盤點。文件修改仍需檢查連結、章節、ID 與敘述一致性；品質工具測試不能代替 Runtime 驗收。從實際 module／workspace 執行適用的基礎檢查：
 
 ```powershell
 go env GOMOD GOWORK

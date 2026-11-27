@@ -1,6 +1,6 @@
 # tests/m6 — 發布 Gate 回歸
 
-本目錄持有 M6（WP18）發布 Gate 的 Python 回歸 `test_gate.py`，以及 A72（REL-005）可執行演練的 Go 整合測試（`drills_test.go`／`helper_test.go`，屬發布演練工作包）。Python 回歸對應 `tests/contract/m6.json` 的 8 個 A70／A95 subtest；A72 的 5 個 subtest 由 `scripts/m6_drills.py` 產生的 `release-drills.json` 演練證據覆蓋。
+本目錄持有 M6（WP18）發布 Gate 的 Python 回歸 `test_gate.py`，以及 A72（REL-005）可執行演練的 Go 整合測試（`drills_test.go`／`helper_test.go`，屬發布演練工作包）。Python 回歸對應 `tests/contract/m6.json` 的 8 個 A70／A95 subtest；A72 的 5 個 subtest 由 `scripts/release_drills.py` 產生的 `release-drills.json` 演練證據覆蓋。
 
 ## 執行方式
 
@@ -11,7 +11,7 @@ python -m unittest discover -v -s tests/m6 -p test_*.py
 go test -tags=integration ./tests/m6   # 需要 PANGOLIN_M1_* fixture DSN（drills 測試）
 ```
 
-Go 演練測試使用與舊里程碑相同的 `PANGOLIN_M1_ADMIN_DSN`／`APP_DSN`／`WORKER_DSN`／`NATS_URL`／`ISSUER`，並以 `PANGOLIN_M6_EVIDENCE_DIR` 輸出機器可讀證據供 `scripts/m6_drills.py` 驗證；每個演練自建且自清專屬資料庫，不觸碰共享 fixture 資料。`PANGOLIN_M1_ISSUER` 是 API 驗證 JWT `iss` claim 的 issuer 值；測試 runner 呼叫 fixture IdP 取得 token 則使用 `PANGOLIN_M1_TOKEN_URL`。兩者可使用不同網路位址，例如 Linux runner 以 `http://test-idp:8080/token` 呼叫 IdP，同時保留 token 中與 API 設定相符的 issuer claim。未設定 `PANGOLIN_M1_TOKEN_URL` 時，演練回退使用 `<ISSUER>/token`。
+Go 演練測試使用與舊里程碑相同的 `PANGOLIN_M1_ADMIN_DSN`／`APP_DSN`／`WORKER_DSN`／`NATS_URL`／`ISSUER`，並以 `PANGOLIN_M6_EVIDENCE_DIR` 輸出機器可讀證據供 `scripts/release_drills.py` 驗證；每個演練自建且自清專屬資料庫，不觸碰共享 fixture 資料。`PANGOLIN_M1_ISSUER` 是 API 驗證 JWT `iss` claim 的 issuer 值；測試 runner 呼叫 fixture IdP 取得 token 則使用 `PANGOLIN_M1_TOKEN_URL`。兩者可使用不同網路位址，例如 Linux runner 以 `http://test-idp:8080/token` 呼叫 IdP，同時保留 token 中與 API 設定相符的 issuer claim。未設定 `PANGOLIN_M1_TOKEN_URL` 時，演練回退使用 `<ISSUER>/token`。
 
 ## 覆蓋的拒絕語意
 
@@ -28,9 +28,9 @@ Go 演練測試使用與舊里程碑相同的 `PANGOLIN_M1_ADMIN_DSN`／`APP_DSN
 
 ## release-drills.json 介面
 
-`scripts/m6_drills.py --output <dir> --project <project>` 必須產出 `<dir>/release-drills.json`（完整契約見 `.workflow/m6/results/release-drills.md`）。本 Gate 的 `validate_drills` 在其上獨立驗證：
+`scripts/release_drills.py --output <dir> --project <project>` 必須產出 `<dir>/release-drills.json`（完整契約見 `.workflow/m6/results/release-drills.md`）。本 Gate 的 `validate_drills` 在其上獨立驗證：
 
-- **Provenance**：`commit`、`source_sha256`（m1.py 來源 bytes 方法）與驗證 run 相同；乾淨 commit 要求 `working_tree_dirty=false` 且 `evidence_class="evidence-ready"`；`platform` 為 `GOOS`/`GOARCH` 物件，inline 演練必須等於驗證平台；`project` 符合 `pangolin-m6-[a-z0-9-]+`；`baseline` v1.3、`product_version` 0.1.0。
+- **Provenance**：`commit`、`source_sha256`（`test_runner.py` 來源 bytes 方法）與驗證 run 相同；乾淨 commit 要求 `working_tree_dirty=false` 且 `evidence_class="evidence-ready"`；`platform` 為 `GOOS`/`GOARCH` 物件，inline 演練必須等於驗證平台；`project` 符合專用隔離命名；`baseline` v1.3、`product_version` 0.1.0。
 - **命令與資產 hash**：頂層與每個 drill 的 `commands`（`argv`、`exit_code` 0、log 與 sha256）逐條驗證 log digest；`artifacts` 映射內每個證據檔的 sha256 重新計算比對。
 - **五項 drill**：`drills` 恰含 `clean-rebuild`、`forward-upgrade`、`backup-restore`、`load-baseline`、`security-review`，各 `status: "passed"`、非空 `commands` 與非空 `evidence`（演練腳本自行再驗證的檔案內容／hash）。
 - **逐項 release-blocking `checks`**（每個 drill 條目另附的扁平斷言，由本 Gate 獨立檢查）：升級 `seeded_tenant_rows>=1`、`owner_preserved`、`force_rls` 且無 permissive policy 殘留；備份復原 `restore_verified`、`row_counts_match`、`checksums_match`、`independent_connection`；負載含硬體／pool／load／concurrency／p95／p99／methodology 與至少 10 個原始樣本；安全審查覆蓋規範 §14.1 全部 12 類、`unresolved_high_risk=0` 且每類有 attack surface／abuse path／control／executable test／residual risk。

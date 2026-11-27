@@ -1,4 +1,6 @@
 #!/bin/sh
 set -eu
 cd "$(dirname "$0")/.."
-exec python3 scripts/m6.py verify --project "${PANGOLIN_M6_PROJECT:?set the isolated M6 Compose project}" --race
+project="${PANGOLIN_PROJECT:-${PANGOLIN_M6_PROJECT:?set the isolated Compose project}}"
+scope="${PANGOLIN_SCOPE:-release}"
+exec python3 scripts/verify.py verify --project "$project" --scope "$scope" --race

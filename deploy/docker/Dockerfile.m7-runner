@@ -7,7 +7,7 @@
 # (selected 2026-11-26; the digest resolves to exactly this amd64 image, no
 # floating tag read at build time). Node/npm versions are recorded at build
 # time and again in the M7 evidence logs; the runner image id recorded by
-# scripts/m3_linux.py binds the final built image.
+# scripts/linux_runner.py binds the final built image.
 FROM postgres:18.7-bookworm@sha256:194e55feb2597b1465dbee81cc9fd8d204566cd2eb42c8d22fd6c931a38781b1 AS postgres_tools
 FROM node:22-bookworm@sha256:81ad3f93f122008a146891525948c689cfd8e9ff9f8cb8445cc95991d7a0251c AS node_runtime
 FROM golang:1.27.4-bookworm@sha256:4fa7c968ba93f1635670522dbb01a2c78150443e1385746924566079f36570ea

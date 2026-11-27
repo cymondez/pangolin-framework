@@ -11,6 +11,6 @@ M4 累積回歸另以 `persistent_jobs_test.go` 擴充原有 Organization／repl
 - `events_test.go`、`broker_test.go`：完整 Envelope、Lease fencing、持鎖 Inbox、分程序 crash、外部穩定冪等鍵與真實 JetStream file store。
 - `idempotency_test.go`、`migration_test.go`：唯一約束等待 barrier、回滾釋放、同鍵成功復原／Unknown 對帳、版本相容性、全域鎖與前向升級中斷復原。
 
-Broker 重啟案例透過 `PANGOLIN_M3_BROKER_RESTART_DIR` 的 file barrier 交給 host `scripts/m3_fixture.py`，僅重啟已核對 labels 的本次專用 NATS。Linux runner 不取得 Docker socket。NATS ACL 的部署責任與可信 producer verifier 必須明示；測試不宣稱已驗證外部生產環境 ACL 配置。
+Broker 重啟案例透過 `PANGOLIN_M3_BROKER_RESTART_DIR` 的 file barrier 交給 host `scripts/nats_fixture.py`，僅重啟已核對 labels 的本次專用 NATS。Linux runner 不取得 Docker socket。NATS ACL 的部署責任與可信 producer verifier 必須明示；測試不宣稱已驗證外部生產環境 ACL 配置。
 
-完整 Gate 使用 `scripts/m3.py verify`，累積 M0/M1/M2、分程序 E2E、90% 整體／關鍵 package、sqlc、依賴／license。Linux 加 race；雙平台的 source hash、commit、命令／profile／artifact hash 一致才可由 gate 判 Verified。單獨執行某個 Test 的成功不等於完成 M3。
+完整 Gate 使用 `scripts/verify.py verify`，累積所有已交付案例、分程序 E2E、90% 整體／關鍵 package、sqlc、依賴／license。Linux 加 race；雙平台的 source hash、commit、命令／profile／artifact hash 一致才可由 gate 判 Verified。單獨執行某個 Test 的成功不等於完成驗收。

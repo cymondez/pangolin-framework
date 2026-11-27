@@ -18,9 +18,9 @@ from pathlib import Path
 import re
 import sys
 
-import m0
+import contracts
 
-ROOT = m0.ROOT
+ROOT = contracts.ROOT
 BASELINE = "v1.3"
 PRODUCT_VERSION = "0.1.0"
 VERSION_SCOPE = "v0.1.0"
@@ -130,8 +130,8 @@ def check_structure(manifest):
 
 def check_deliveries(manifest, root=ROOT):
     root = Path(root)
-    cases = m0.load(root / "tests/contract/cases.json")["cases"]
-    groups = m0.load(root / "tests/contract/subtests.json")["groups"]
+    cases = contracts.load(root / "tests/contract/cases.json")["cases"]
+    groups = contracts.load(root / "tests/contract/subtests.json")["groups"]
     plan = (root / "design/panGOlin-framework_里程碑規劃書.md").read_text(encoding="utf-8-sig")
     rows = re.findall(r"^\| (M[0-6]) \| ([A-Z]+-[0-9]{3}) \| (A[0-9]{2})；", plan, re.M)
     if len(rows) != 95:
@@ -163,9 +163,9 @@ def check_deliveries(manifest, root=ROOT):
 
 def profile_rows(root=ROOT):
     root = Path(root)
-    groups = m0.load(root / "tests/contract/subtests.json")["groups"]
-    profiles = [m0.load(root / f"tests/contract/profiles/{name}.json") for name in PROFILES]
-    m0.check_profiles(groups, profiles)
+    groups = contracts.load(root / "tests/contract/subtests.json")["groups"]
+    profiles = [contracts.load(root / f"tests/contract/profiles/{name}.json") for name in PROFILES]
+    contracts.check_profiles(groups, profiles)
     return [{"profile": name, "required": sum(1 for entry in profile["subtests"] if entry["applicability"] == "required"),
              "not_applicable": sum(1 for entry in profile["subtests"] if entry["applicability"] != "required")}
             for name, profile in zip(PROFILES, profiles)]
@@ -263,12 +263,12 @@ def check_assets(manifest, root=ROOT):
     absent = [name for name in listed if not (root / name).is_file() or (root / name).stat().st_size == 0]
     if absent:
         raise ValueError("missing release asset(s): " + ", ".join(absent))
-    return {name: m0.digest(root / name) for name in listed}
+    return {name: contracts.digest(root / name) for name in listed}
 
 
 def load_mappings(root=ROOT):
     root = Path(root)
-    return {number: m0.load(root / f"tests/contract/m{number}.json") for number in range(1, 7)}
+    return {number: contracts.load(root / f"tests/contract/m{number}.json") for number in range(1, 7)}
 
 
 def _milestone_fields(mapping):
@@ -347,7 +347,7 @@ def check_report_closure(report, mappings, groups):
 def validate_regression_logs(report, directory, extra=None):
     """Re-validate every milestone regression log from its command evidence.
 
-    Called inside the m1 hook before the final artifact map exists, so log
+    Called inside the test_runner hook before the final artifact map exists, so log
     hashes are recomputed directly and bound by the finalized report later.
     `extra` names additional acceptance regressions (e.g. {"m7-regression": set()})
     owned by later additive milestones; historical callers are unchanged.
@@ -355,21 +355,21 @@ def validate_regression_logs(report, directory, extra=None):
     directory = Path(directory)
     required = {}
     for number in range(1, 7):
-        mapping = m0.load(ROOT / f"tests/contract/m{number}.json")
+        mapping = contracts.load(ROOT / f"tests/contract/m{number}.json")
         required[f"m{number}-regression"] = set(mapping.get("python_tests", {}).values())
     required["m0-regression"] = set()
     required.update({name: set(tests) for name, tests in (extra or {}).items()})
     result = {}
-    import m1
+    import test_runner
     for name, expected_tests in required.items():
         commands = [command for command in report["commands"] if command["name"] == name]
         if len(commands) != 1 or commands[0]["exit_code"] != 0:
             raise ValueError("missing or failed regression evidence: " + name)
         command = commands[0]
         log = directory / command["log"]
-        if not log.is_file() or m0.digest(log) != command["sha256"]:
+        if not log.is_file() or contracts.digest(log) != command["sha256"]:
             raise ValueError("regression log hash mismatch: " + name)
-        m1.validate_python_output(log.read_text(encoding="utf-8-sig"), expected_tests)
+        test_runner.validate_python_output(log.read_text(encoding="utf-8-sig"), expected_tests)
         result[name] = len(expected_tests)
     return result
 
@@ -380,7 +380,7 @@ def _statement_counts(value, label):
     return value
 
 
-def release_coverage(coverage, critical_packages, module=m0.MODULE):
+def release_coverage(coverage, critical_packages, module=contracts.MODULE):
     overall = coverage["overall"]
     total = _statement_counts(overall.get("total_statements"), "overall.total")
     covered = _statement_counts(overall.get("covered_statements"), "overall.covered")
@@ -484,7 +484,7 @@ def validate_drills(data, directory, commit, source_sha256, platform, project=No
     """Validate a release-drills.json against the documented drill interface.
 
     The drills worker owns the report's rich `evidence` content and re-validates
-    it in scripts/m6_drills.py; this gate independently re-checks provenance
+    it in scripts/release_drills.py; this gate independently re-checks provenance
     (commit/source bytes/dirty class), the recorded platform, every command
     log hash, every artifact hash and the release-blocking `checks` per drill.
     """
@@ -510,8 +510,8 @@ def validate_drills(data, directory, commit, source_sha256, platform, project=No
         raise ValueError("inline drills must run on the verifying platform")
     if project is not None and data.get("project") != project:
         raise ValueError("drill project mismatch: " + str(data.get("project")))
-    if not isinstance(data.get("project"), str) or not re.fullmatch(r"pangolin-m[67]-[a-z0-9-]+", data["project"]):
-        raise ValueError("drills must use a dedicated pangolin-m6-* or pangolin-m7-* project")
+    if not isinstance(data.get("project"), str) or not re.fullmatch(r"pangolin-(?:m[67]|release|realtime)-[a-z0-9-]+", data["project"]):
+        raise ValueError("drills must use a dedicated release/realtime verification project")
 
     def command_log(command, scope):
         if not isinstance(command, dict) or not {"argv", "exit_code", "log", "sha256"} <= set(command):
@@ -521,7 +521,7 @@ def validate_drills(data, directory, commit, source_sha256, platform, project=No
         if command["exit_code"] != 0:
             raise ValueError("release drill command failed: " + scope)
         log = directory / command["log"]
-        if not log.resolve().is_relative_to(directory.resolve()) or not log.is_file() or m0.digest(log) != command["sha256"]:
+        if not log.resolve().is_relative_to(directory.resolve()) or not log.is_file() or contracts.digest(log) != command["sha256"]:
             raise ValueError("drill command log is missing or its hash mismatch: " + scope)
 
     for command in data.get("commands") or []:
@@ -533,7 +533,7 @@ def validate_drills(data, directory, commit, source_sha256, platform, project=No
         if not isinstance(name, str) or not name.strip() or "\x00" in name:
             raise ValueError("drill artifact name is invalid: " + str(name)[:80])
         path = directory / name
-        if not path.resolve().is_relative_to(directory.resolve()) or not path.is_file() or m0.digest(path) != digest:
+        if not path.resolve().is_relative_to(directory.resolve()) or not path.is_file() or contracts.digest(path) != digest:
             raise ValueError("drill artifact missing or hash mismatch: " + name)
     entries = data.get("drills")
     if not isinstance(entries, dict) or set(entries) != set(DRILLS):
@@ -568,17 +568,17 @@ def collect_evidence(report, output, root=ROOT):
     check_critical(manifest, root)
     assets = check_assets(manifest, root)
     mappings = load_mappings(root)
-    groups = m0.load(root / "tests/contract/subtests.json")["groups"]
+    groups = contracts.load(root / "tests/contract/subtests.json")["groups"]
     closure = check_report_closure(report, mappings, groups)
     regressions = validate_regression_logs(report, output)
     commands = {command["name"]: command for command in report["commands"]}
     if commands.get("template-source", {}).get("exit_code") != 0:
         raise ValueError("same-version template bundle gate is missing or failed")
-    templates = m0.load(output / "templates.json")
+    templates = contracts.load(output / "templates.json")
     if templates.get("status") != "passed" or {profile["profile"] for profile in templates.get("profiles", [])} != {"tenant-only", "organization-enabled"}:
         raise ValueError("generated profile evidence is incomplete")
-    coverage = release_coverage(m0.load(output / "coverage.json"), manifest["critical_packages"])
-    drills = m0.load(output / "release-drills" / "release-drills.json")
+    coverage = release_coverage(contracts.load(output / "coverage.json"), manifest["critical_packages"])
+    drills = contracts.load(output / "release-drills" / "release-drills.json")
     release_drills = report.get("release_drills", {})
     drills_summary = validate_drills(drills, output / "release-drills", report["commit"], report["source_sha256"],
                                      report["platform"]["GOOS"] + "-" + report["platform"]["GOARCH"],
@@ -594,7 +594,7 @@ def collect_evidence(report, output, root=ROOT):
         "regressions": regressions, "template_bundle": "verified",
         "template_profiles": sorted({profile["profile"] for profile in templates["profiles"]}),
         "coverage": coverage, "drills": drills_summary, "assets": assets,
-        "manifest_sha256": m0.digest(root / MANIFEST_REL), "gates": list(GATES),
+        "manifest_sha256": contracts.digest(root / MANIFEST_REL), "gates": list(GATES),
     }
 
 
@@ -627,7 +627,7 @@ def check_manifest(manifest, root=ROOT):
 
 def check_tenant_only(deps):
     for name in deps:
-        if name.startswith(m0.MODULE + "/modules/organization"):
+        if name.startswith(contracts.MODULE + "/modules/organization"):
             raise ValueError("tenant-only assembly depends on the optional organization module: " + name)
 
 
@@ -635,12 +635,12 @@ def check(root=ROOT):
     root = Path(root)
     manifest = load_manifest(root)
     summary = check_manifest(manifest, root)
-    summary["closure"] = check_closure(load_mappings(root), m0.load(root / "tests/contract/subtests.json")["groups"])
+    summary["closure"] = check_closure(load_mappings(root), contracts.load(root / "tests/contract/subtests.json")["groups"])
     return summary
 
 
 def load_manifest(root=ROOT):
-    manifest = m0.load(Path(root) / MANIFEST_REL)
+    manifest = contracts.load(Path(root) / MANIFEST_REL)
     check_structure(manifest)
     return manifest
 

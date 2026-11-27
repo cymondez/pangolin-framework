@@ -1,15 +1,19 @@
-param([string]$Project = 'pangolin-m6-dev', [switch]$Race, [int]$Milestone = 6)
+param(
+    [string]$Project = 'pangolin-m6-dev',
+    [switch]$Race,
+    [ValidateSet('release', 'realtime')][string]$Scope = 'release'
+)
 $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path -Parent $PSScriptRoot
-$script = Join-Path $repoRoot ("scripts/m{0}.py" -f $Milestone)
-if (-not (Test-Path $script)) { throw "unknown milestone gate: $Milestone" }
-if ($Project -notlike ("pangolin-m{0}-*" -f $Milestone)) { throw "project must be a dedicated pangolin-m$Milestone-* project" }
+if ($Project -notmatch '^pangolin-(m[67]|release|realtime)-[a-z0-9-]+$') {
+    throw "project must be a dedicated pangolin-release-*, pangolin-realtime-*, pangolin-m6-*, or pangolin-m7-* project"
+}
 Push-Location -LiteralPath $repoRoot
 try {
-    $arguments = @("scripts/m$Milestone.py", 'verify', '--project', $Project)
+    $arguments = @('scripts/verify.py', 'verify', '--project', $Project, '--scope', $Scope)
     if ($Race) { $arguments += '--race' }
     & python @arguments
-    if ($LASTEXITCODE -ne 0) { throw "M$Milestone cumulative gate failed; inspect artifacts report" }
+    if ($LASTEXITCODE -ne 0) { throw "cumulative verification gate ($Scope) failed; inspect artifacts report" }
 } finally {
     Pop-Location
 }

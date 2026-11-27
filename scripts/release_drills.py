@@ -1,4 +1,4 @@
-"""M6 executable release drills (A72/REL-005).
+"""Executable release drills (A72/REL-005).
 
 Runs the clean rebuild, forward upgrade, backup/restore, load baseline and
 security review drills against the pinned fixture services using the same
@@ -11,35 +11,30 @@ command errors, skipped or missing tests, missing tools or services, and
 missing or contradictory evidence. It never starts or stops services.
 """
 import argparse
-import hashlib
 import json
 import os
+from pathlib import Path
 import re
 import shutil
 import subprocess
 import sys
 import time
-from pathlib import Path
 from urllib.parse import urlsplit
 
-import m0
+import contracts
 import release_manifest
+import test_runner
 
-ROOT = m0.ROOT
+ROOT = contracts.ROOT
 REQUIRED_ENV = ("PANGOLIN_M1_ADMIN_DSN", "PANGOLIN_M1_APP_DSN", "PANGOLIN_M1_WORKER_DSN", "PANGOLIN_M1_NATS_URL", "PANGOLIN_M1_ISSUER")
 EVIDENCE_ENV = "PANGOLIN_M6_EVIDENCE_DIR"
 EXPECTED_UPGRADE_VERSIONS = [3000001, 3000002, 3100001, 3100002, 3100003, 3100004, 3200001, 3200002, 3300001, 4000001, 4000002, 4100002, 4100003]
+PROJECT_RE = r"pangolin-(?:m[67]|release|realtime)-[a-z0-9-]+"
 
 
 def source_hash():
-    """Same working-tree source identity as scripts/m1.py evidence."""
-    paths = m0.command(["git", "-c", "core.quotepath=false", "ls-files", "--cached", "--others", "--exclude-standard"]).splitlines()
-    digest = hashlib.sha256()
-    for name in sorted(set(paths)):
-        path = ROOT / name
-        if path.is_file():
-            digest.update(name.encode() + b"\0" + path.read_bytes())
-    return digest.hexdigest()
+    """Same working-tree source identity as scripts/test_runner.py evidence."""
+    return test_runner.source_hash()
 
 
 def validate_go_tests(text, required):
@@ -61,7 +56,7 @@ def endpoint(raw):
 
 
 def drill_env(output, extra=None):
-    env = m0.go_environment(ROOT)
+    env = contracts.go_environment(ROOT)
     env[EVIDENCE_ENV] = str(output)
     for key, value in (extra or {}).items():
         env[key] = value
@@ -74,25 +69,25 @@ class Drills:
         if (self.output / "release-drills.json").is_file():
             raise ValueError("refusing to overwrite an existing release-drills.json: " + str(self.output))
         self.output.mkdir(parents=True, exist_ok=True)
-        if not re.fullmatch(r"pangolin-m[67]-[a-z0-9-]+", args.project):
-            raise ValueError("--project must be a dedicated pangolin-m6-* or pangolin-m7-* project: " + str(args.project))
+        if not re.fullmatch(PROJECT_RE, args.project):
+            raise ValueError("--project must be a dedicated release/realtime verification project: " + str(args.project))
         self.project = args.project
         self.compose_project = args.compose_project or os.getenv("PANGOLIN_M6_COMPOSE_PROJECT") or args.project.removesuffix("-drills")
-        if not re.fullmatch(r"pangolin-m[67]-[a-z0-9-]+", self.compose_project):
-            raise ValueError("compose project must be a dedicated pangolin-m6-* or pangolin-m7-* project: " + self.compose_project)
+        if not re.fullmatch(PROJECT_RE, self.compose_project):
+            raise ValueError("compose project must be a dedicated release/realtime verification project: " + self.compose_project)
         self.compose_files = args.compose_file or [os.getenv("PANGOLIN_M6_COMPOSE_FILE") or "deploy/compose/m1.yaml"]
         for name in self.compose_files:
             if not (ROOT / name).is_file():
                 raise ValueError("compose file missing: " + name)
         self.pg_bin = args.pg_bin or os.getenv("PANGOLIN_PG_BIN") or os.getenv("PANGOLIN_M6_PG_BIN_DIR") or ""
-        self.commit = m0.revision()
+        self.commit = contracts.revision()
         self.source = source_hash()
-        self.dirty = not m0.clean()
-        platform = json.loads(m0.command(["go", "env", "-json", "GOOS", "GOARCH", "GOVERSION", "CGO_ENABLED"]))
+        self.dirty = not contracts.clean()
+        platform = json.loads(contracts.command(["go", "env", "-json", "GOOS", "GOARCH", "GOVERSION", "CGO_ENABLED"]))
         self.platform = platform["GOOS"] + "-" + platform["GOARCH"]
         self.platform_details = platform
         self.report = {
-            "interface": "python scripts/m6_drills.py --output <dir> --project <project>",
+            "interface": "python scripts/release_drills.py --output <dir> --project <project>",
             "baseline": "v1.3",
             "product_version": (ROOT / "VERSION").read_text(encoding="utf-8-sig").strip(),
             "commit": self.commit,
@@ -103,7 +98,7 @@ class Drills:
             "platform_details": platform,
             "project": self.project,
             "compose": {"project": self.compose_project, "files": list(self.compose_files)},
-            "inputs": {name: m0.digest(ROOT / name) for name in ("VERSION", "go.mod", "go.sum", "deploy/toolchain.json", "deploy/dependencies.json", "docs/security/release-review.md")},
+            "inputs": {name: contracts.digest(ROOT / name) for name in ("VERSION", "go.mod", "go.sum", "deploy/toolchain.json", "deploy/dependencies.json", "docs/security/release-review.md")},
             "environment": {},
             "services": {},
             "drills": {name: {"status": "failed", "error": None, "commands": [], "checks": {}} for name in release_manifest.DRILLS},
@@ -118,10 +113,10 @@ class Drills:
 
     def execute(self, argv, name, drill, cwd=ROOT, env=None, check=True):
         started = time.monotonic()
-        result = subprocess.run(argv, cwd=str(cwd), env=env or m0.go_environment(ROOT), capture_output=True, text=True, encoding="utf-8", errors="replace")
+        result = subprocess.run(argv, cwd=str(cwd), env=env or contracts.go_environment(ROOT), capture_output=True, text=True, encoding="utf-8", errors="replace")
         log = self.output / (f"{len(self.report['drills'][drill]['commands']):02d}-{name}.log")
         log.write_text(result.stdout + result.stderr, encoding="utf-8")
-        record = {"argv": [str(part) for part in argv], "exit_code": result.returncode, "log": log.name, "sha256": m0.digest(log)}
+        record = {"argv": [str(part) for part in argv], "exit_code": result.returncode, "log": log.name, "sha256": contracts.digest(log)}
         self.report["drills"][drill]["commands"].append(record)
         self.report["diagnostics"].append({"drill": drill, "name": name, "seconds": round(time.monotonic() - started, 3)})
         if check and result.returncode:
@@ -129,12 +124,12 @@ class Drills:
         return result
 
     def evidence(self, name):
-        return m0.load(self.output / name)
+        return contracts.load(self.output / name)
 
     def load(self, drill, test, evidence_file):
         """Run one drill Go test and require its exact pass set + evidence."""
         result = self.execute(["go", "test", "-count=1", "-json", "-tags=integration", "-run", "^" + test + "$", "./tests/m6"], "drill-" + drill, drill, env=drill_env(self.output))
-        validate_go_tests(result.stdout, {m0.MODULE + "/tests/m6:" + test})
+        validate_go_tests(result.stdout, {contracts.MODULE + "/tests/m6:" + test})
         evidence = self.evidence(evidence_file)
         if not isinstance(evidence, dict) or not evidence:
             raise ValueError("drill evidence missing: " + evidence_file)
@@ -151,7 +146,7 @@ class Drills:
 def export_source(drills):
     """Copy the current working-tree source bytes to <output>/clean-source."""
     clean = drills.output / "clean-source"
-    names = m0.command(["git", "-c", "core.quotepath=false", "ls-files", "--cached", "--others", "--exclude-standard"]).splitlines()
+    names = contracts.command(["git", "-c", "core.quotepath=false", "ls-files", "--cached", "--others", "--exclude-standard"]).splitlines()
     copied = 0
     for name in sorted(set(names)):
         path = ROOT / name
@@ -174,7 +169,7 @@ def clean_rebuild(drills):
     env = drill_env(drills.output, {"GOCACHE": str(cache / "go-cache"), "GOTMPDIR": str(cache / "go-tmp")})
     drills.execute(["go", "build", "./..."], "clean-source-build", "clean-rebuild", cwd=clean, env=env)
     result = drills.execute(["go", "test", "-count=1", "-json", "-tags=integration", "-run", "^TestM6CleanRebuild$", "./tests/m6"], "clean-rebuild-test", "clean-rebuild", cwd=clean, env=env)
-    validate_go_tests(result.stdout, {m0.MODULE + "/tests/m6:TestM6CleanRebuild"})
+    validate_go_tests(result.stdout, {contracts.MODULE + "/tests/m6:TestM6CleanRebuild"})
     evidence = drills.evidence("clean-rebuild.json")
     post, reconciled, denials, http = evidence["post_commit"], evidence["worker_reconciled"], evidence["denials"], evidence["http"]
     if post["books_rows"] != 1 or post["outbox_rows"] != 1 or post["outbox_state"] != "pending":
@@ -225,7 +220,7 @@ def resolve_pg(drills):
     already-running fixture postgres of the drills' compose project."""
     hints = {"PANGOLIN_M6_PG_MODE": ""}
     if os.getenv("PANGOLIN_M6_PG_MODE", "") not in ("", "host", "container"):
-        raise ValueError("unknown M6 PostgreSQL client mode")
+        raise ValueError("unknown PostgreSQL client mode")
     if drills.pg_bin:
         for program in ("pg_dump", "pg_restore"):
             suffix = ".exe" if os.name == "nt" else ""
@@ -261,12 +256,12 @@ def backup_restore(drills):
     hints = resolve_pg(drills)
     env = drill_env(drills.output, hints)
     result = drills.execute(["go", "test", "-count=1", "-json", "-tags=integration", "-run", "^TestM6BackupRestore$", "./tests/m6"], "drill-backup-restore", "backup-restore", env=env)
-    validate_go_tests(result.stdout, {m0.MODULE + "/tests/m6:TestM6BackupRestore"})
+    validate_go_tests(result.stdout, {contracts.MODULE + "/tests/m6:TestM6BackupRestore"})
     evidence = drills.evidence("backup-restore.json")
     pg, restore, rpo, rto = evidence["pg"], evidence["restore"], evidence["rpo"], evidence["rto"]
     if pg["mode"] not in ("host", "container") or pg["dump_exit"] != 0 or pg["restore_exit"] != 0:
         raise ValueError("backup/restore pg execution failed: " + json.dumps(pg))
-    if not (drills.output / "backup.dump").is_file() or m0.digest(drills.output / "backup.dump") != pg["dump_sha256"]:
+    if not (drills.output / "backup.dump").is_file() or contracts.digest(drills.output / "backup.dump") != pg["dump_sha256"]:
         raise ValueError("backup dump missing or its hash does not match the recorded archive")
     if restore["mismatches"] or restore["tables_compared"] < 1:
         raise ValueError("restored database did not match the source: " + json.dumps(restore["mismatches"]))
@@ -299,7 +294,7 @@ def load_baseline(drills):
         "hardware": hardware["goos"] + "/" + hardware["goarch"] + ", " + str(hardware["num_cpu"]) + " CPUs, GOMAXPROCS " + str(hardware["gomaxprocs"]),
         "go_version": hardware["go_version"],
         "database": "PostgreSQL " + evidence["server_version"] + ", pool max " + str(load_pool(evidence)) + ", role pangolin_app",
-        "broker": "NATS " + drills.report.get("services", {}).get("nats_server_version", m0.load(ROOT / "deploy/toolchain.json")["nats"]) + " fixture (not exercised by this drill)",
+        "broker": "NATS " + drills.report.get("services", {}).get("nats_server_version", contracts.load(ROOT / "deploy/toolchain.json")["nats"]) + " fixture (not exercised by this drill)",
         "methodology": evidence["method"],
         "pool_size": load_pool(evidence),
         "load_count": load["ops"],
@@ -349,7 +344,7 @@ def security_review(drills):
             arguments.append("-tags=integration")
         arguments += ["-run", "|".join(sorted(by_package[package])), "./" + package.removeprefix("./")]
         result = drills.execute(arguments, "security-" + package.split("/")[-1], "security-review", env=drill_env(drills.output))
-        required = {m0.MODULE + "/" + package.removeprefix("./") + ":" + test[1:-1] for test in by_package[package]}
+        required = {contracts.MODULE + "/" + package.removeprefix("./") + ":" + test[1:-1] for test in by_package[package]}
         validate_go_tests(result.stdout, required)
         results.extend(sorted(required))
     drill = drills.evidence("security-drill.json")
@@ -378,14 +373,14 @@ def run(drills):
             drills.report["drills"][name]["error"] = str(error)
             drills.report["error"] = name + ": " + str(error)
     passed = all(drills.report["drills"][name]["status"] == "passed" for name in release_manifest.DRILLS)
-    if source_hash() != drills.source or m0.revision() != drills.commit:
+    if source_hash() != drills.source or contracts.revision() != drills.commit:
         passed = False
         drills.report["error"] = "source changed during release drills"
     drills.report["status"] = "passed" if passed else "failed"
     drills.report["artifacts"] = {}
     for path in sorted(drills.output.rglob("*")):
         if path.is_file() and path.name != "release-drills.json":
-            drills.report["artifacts"][path.relative_to(drills.output).as_posix()] = m0.digest(path)
+            drills.report["artifacts"][path.relative_to(drills.output).as_posix()] = contracts.digest(path)
     (drills.output / "release-drills.json").write_text(json.dumps(drills.report, indent=2) + "\n", encoding="utf-8")
     print(json.dumps({"status": drills.report["status"], "error": drills.report["error"], "report": str(drills.output / "release-drills.json")}, indent=2))
     return 0 if passed else 1
@@ -402,7 +397,7 @@ def main():
     try:
         return run(Drills(args))
     except (ValueError, OSError, KeyError, subprocess.SubprocessError, json.JSONDecodeError) as error:
-        print("M6 drills failed:", error, file=sys.stderr)
+        print("release drills failed:", error, file=sys.stderr)
         return 1
 
 

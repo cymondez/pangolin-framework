@@ -5,8 +5,8 @@
 ## 驗證方式
 
 - 靜態檢查（不含執行演練）：`python scripts/release_manifest.py --check`。輸出摘要；缺項以非零退出碼列出。
-- 完整發布驗收：`python scripts/m6.py verify --project pangolin-m6-dev`，同時執行 M0–M5 累積 Gate、五項演練（`scripts/m6_drills.py`）與機器產生的 `release-manifest.json` 證據（綁定 commit、來源 bytes、coverage 原始計數與演練 hash）。
-- 雙平台 Gate：`python scripts/m6.py gate --commit <完整 SHA>`。
+- 完整發布驗收：`python scripts/verify.py verify --project pangolin-m6-dev --scope release`，同時執行累積 Gate、五項演練（`scripts/release_drills.py`）與機器產生的 `release-manifest.json` 證據（綁定 commit、來源 bytes、coverage 原始計數與演練 hash）。
+- 雙平台 Gate：`python scripts/verify.py gate --commit <完整 SHA> --scope release`。
 
 ## 版本與 Schema 政策
 
@@ -19,5 +19,5 @@ runtime（`VERSION`）、CLI（`internal/scaffold/cli.go` 的 `Version` 常數�
 ## 目前交付邊界
 
 - M6 尚未通過同版雙平台 Gate；`docs/runbooks/release.md`、`docs/security/release-review.md`、`docs/release-notes/0.1.0.md` 等清單要求的資產由發布演練工作包交付，缺檔時本檢查 fail-closed。
-- 五項演練由 `scripts/m6_drills.py` 執行（另一工作包）；其 `release-drills.json` 介面由 `scripts/release_manifest.py` 的 `validate_drills` 驗證：同 commit／來源 bytes provenance、真實命令 log 與 hash、逐項實測欄位（升級的 FORCE RLS 與 owner 保留、備份復原的獨立連線對帳、負載的 p95／p99 與原始樣本、安全審查覆蓋 §14.1 全部 12 類威脅且無未解高風險）。
+- 五項演練由 `scripts/release_drills.py` 執行；其 `release-drills.json` 介面由 `scripts/release_manifest.py` 的 `validate_drills` 驗證：同 commit／來源 bytes provenance、真實命令 log 與 hash、逐項實測欄位（升級的 FORCE RLS 與 owner 保留、備份復原的獨立連線對帳、負載的 p95／p99 與原始樣本、安全審查覆蓋 §14.1 全部 12 類威脅且無未解高風險）。
 - 本清單不取代實作規範 §13／§15 或里程碑規劃 §5；正式 Verified 狀態只由同 commit Gate 證據更新。

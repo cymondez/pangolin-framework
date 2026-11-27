@@ -8,7 +8,7 @@ import shutil
 import subprocess
 import tempfile
 
-import m0
+import contracts
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -21,7 +21,7 @@ def main():
     cache.mkdir(exist_ok=True)
     project = Path(tempfile.mkdtemp(prefix='docs-beginner-', dir=cache)).resolve()
     assert project.is_relative_to(cache.resolve())
-    env = m0.go_environment(ROOT)
+    env = contracts.go_environment(ROOT)
     env.pop('APP_NAME', None)
     commands = []
 

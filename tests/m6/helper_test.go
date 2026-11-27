@@ -3,7 +3,7 @@
 // Package m6 hosts the executable A72 (REL-005) release drills. Every drill
 // owns an isolated, uniquely named database that the test itself creates and
 // drops — including failure paths — and writes machine-readable evidence for
-// scripts/m6_drills.py to validate. The tests never touch shared fixture data
+// scripts/release_drills.py to validate. The tests never touch shared fixture data
 // and rely on the same PANGOLIN_M1_* connection variables as earlier suites.
 package m6
 

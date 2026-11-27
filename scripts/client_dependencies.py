@@ -1,4 +1,4 @@
-"""Reviewed npm dependency/license inventory for the official M7 SignalR client.
+"""Reviewed npm dependency/license inventory for the official SignalR client.
 
 The official client (examples/realtime/client) pins @microsoft/signalr 10.0.0
 and `npm ci --ignore-scripts` resolves a fixed transitive tree. This validator
@@ -15,22 +15,28 @@ import json
 from pathlib import Path
 import sys
 
-import m0
+import contracts
 
-ROOT = m0.ROOT
+ROOT = contracts.ROOT
 CLIENT_REL = "examples/realtime/client"
 MANIFEST_REL = "deploy/release/m7-client-dependencies.json"
 LICENSE_FILES = ("LICENSE", "LICENSE.txt", "LICENSE.md", "LICENCE", "LICENCE.txt", "LICENCE.md", "COPYING", "UNLICENSE", "LICENSE-MIT.txt")
 ENTRY_FIELDS = ("version", "resolved", "integrity", "license", "license_file", "license_sha256")
-DRIFT = {"version": "lockfile version drift", "resolved": "resolved URL drift", "integrity": "integrity drift",
-         "license": "license metadata drift", "license_file": "license-file content drift", "license_sha256": "license-file content drift"}
+DRIFT = {
+    "version": "lockfile version drift",
+    "resolved": "resolved URL drift",
+    "integrity": "integrity drift",
+    "license": "license metadata drift",
+    "license_file": "license-file content drift",
+    "license_sha256": "license-file content drift",
+}
 
 
 def inventory(client_root=None):
     """Derive the actual dependency inventory from the lockfile and the installed tree."""
     client_root = Path(client_root) if client_root else ROOT / CLIENT_REL
     lockfile = client_root / "package-lock.json"
-    lock = m0.load(lockfile)
+    lock = contracts.load(lockfile)
     packages = lock.get("packages")
     if not isinstance(packages, dict):
         raise ValueError("unsupported package-lock.json layout: " + str(lockfile))
@@ -38,11 +44,13 @@ def inventory(client_root=None):
         source = client_root.relative_to(ROOT).as_posix()
     except ValueError:
         source = str(client_root)
-    result = {"client_root": source,
-              "sources": {"package_json": source + "/package.json", "lockfile": source + "/package-lock.json"},
-              "package_json_sha256": m0.digest(client_root / "package.json"),
-              "lockfile_sha256": m0.digest(lockfile),
-              "packages": {}}
+    result = {
+        "client_root": source,
+        "sources": {"package_json": source + "/package.json", "lockfile": source + "/package-lock.json"},
+        "package_json_sha256": contracts.digest(client_root / "package.json"),
+        "lockfile_sha256": contracts.digest(lockfile),
+        "packages": {},
+    }
     for key, entry in sorted(packages.items()):
         if not key or not key.startswith("node_modules/"):
             continue
@@ -56,7 +64,7 @@ def inventory(client_root=None):
         installed = client_root / key / "package.json"
         if not installed.is_file():
             raise ValueError("installed package missing: " + name + "; run npm ci --ignore-scripts")
-        metadata = m0.load(installed)
+        metadata = contracts.load(installed)
         if metadata.get("name") != name:
             raise ValueError("installed package name drift: " + name)
         if metadata.get("version") != entry["version"]:
@@ -64,11 +72,15 @@ def inventory(client_root=None):
         if metadata.get("license") != entry.get("license"):
             raise ValueError("installed license metadata mismatch: " + name)
         license_path = next((client_root / key / candidate for candidate in LICENSE_FILES if (client_root / key / candidate).is_file()), None)
-        result["packages"][name] = {"version": entry["version"], "installed_version": metadata["version"],
-                                    "resolved": entry["resolved"], "integrity": entry["integrity"],
-                                    "license": entry.get("license"),
-                                    "license_file": license_path.name if license_path else None,
-                                    "license_sha256": m0.digest(license_path) if license_path else None}
+        result["packages"][name] = {
+            "version": entry["version"],
+            "installed_version": metadata["version"],
+            "resolved": entry["resolved"],
+            "integrity": entry["integrity"],
+            "license": entry.get("license"),
+            "license_file": license_path.name if license_path else None,
+            "license_sha256": contracts.digest(license_path) if license_path else None,
+        }
     return result
 
 
@@ -98,11 +110,16 @@ def validate(expected, actual):
 
 def check(client_root=None, manifest_path=None):
     """Validate the actual inventory against the reviewed manifest; returns a summary."""
-    manifest = m0.load(Path(manifest_path) if manifest_path else ROOT / MANIFEST_REL)
+    manifest = contracts.load(Path(manifest_path) if manifest_path else ROOT / MANIFEST_REL)
     actual = inventory(client_root)
     validate(manifest, actual)
-    return {"status": "ok", "locked_packages": len(actual["packages"]), "client_root": actual["client_root"],
-            "package_json_sha256": actual["package_json_sha256"], "lockfile_sha256": actual["lockfile_sha256"]}
+    return {
+        "status": "ok",
+        "locked_packages": len(actual["packages"]),
+        "client_root": actual["client_root"],
+        "package_json_sha256": actual["package_json_sha256"],
+        "lockfile_sha256": actual["lockfile_sha256"],
+    }
 
 
 def main():
