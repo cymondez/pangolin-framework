@@ -26,9 +26,9 @@ go run ./root-greeting
 
 ## 如何使用
 
-1. 在 `Configure` 用 `b.Services().Add(NewGreetingService, module.Singleton())` 註冊建構子；解析鍵就是建構子的精確回傳型別。
+1. 在 `Configure` 用 `module.AddSingleton(b.Services(), NewGreetingService)` 註冊 singleton；相同選項並可搭配 `module.As(contract)`。需要 transient 或 operation 時分別使用 `module.AddTransient`／`module.AddOperation`；它們都委派既有 `Services.Add`，相同 lifetime 選項衝突仍由既有驗證拒絕。
 2. 省略生命週期選項時預設為 Transient：每次解析建立新物件。
-3. `Start` 之後用 `rt.Services().Resolve(ctx, module.Contract[*GreetingService]())` 取得服務；`module.Contract[T]()` 由 T 的完整型別身分推導出鍵，介面與具象型別皆可用。
+3. `Start` 之後用 `module.Resolve[*GreetingService](ctx, rt.Services())` 取得具型別服務；介面契約也用相同方式：`module.Resolve[MyContract](ctx, resolver)`。底層 `resolver.Resolve(ctx, module.Contract[T]())` 仍保留。
 4. 服務清理（Cleanup）由組合容器在應用收尾時執行；你只在自己的資源確實需要關閉時才回傳 Cleanup。
 
 建構子參數會自動解析：`NewService(s *store.Store)` 的 `*store.Store` 若已由自己的模組或直接相依模組提供，直接寫在參數上即可。重複、缺漏或循環在任何建構子執行前就失敗，不會啟動出半套的應用。
@@ -37,11 +37,11 @@ go run ./root-greeting
 
 | 選項 | 何時使用 |
 |---|---|
-| 預設（Transient） | 每次取得都要建立新物件 |
-| `module.Singleton()` | 整個應用共用的服務，例如可安全並行使用的連線池 |
-| `module.Operation()` | 同一次操作共用，操作結束即清理 |
+| 預設（`module.AddTransient` 或省略 lifetime） | 每次取得都要建立新物件 |
+| `module.AddSingleton`／`module.Singleton()` | 整個應用共用的服務，例如可安全並行使用的連線池 |
+| `module.AddOperation`／`module.Operation()` | 同一次操作共用，操作結束即清理 |
 
-Operation 服務只能經明示操作範圍解析：在 Start／Stop 內呼叫 `module.OpenScope(ctx, rt.Services())` 取得屬於這個模組的 scope，透過 `scope.Resolve` 取得服務，最後由呼叫端 `scope.Close`（清理只做一次，重複呼叫無害）。Singleton 不能保留 Operation 服務，避免跨請求共用本來應該隔離的狀態。
+Operation 服務只能經明示操作範圍解析：在 Start／Stop 內呼叫 `scope, err := rt.OpenScope(ctx)`，再用 `module.Resolve[T](ctx, scope)`取得具型別服務，最後由呼叫端 `scope.Close`（清理只做一次，重複呼叫無害）。package-level `module.OpenScope(ctx, rt.Services())` 保留為過渡 API。Root／legacy view 都固定不洩漏 sealed container；Root scope 固定建立時的 module owner。Singleton 不能保留 Operation 服務，避免跨請求共用本來應該隔離的狀態。
 
 ## 跨模組介面契約
 

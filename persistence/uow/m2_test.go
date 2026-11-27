@@ -8,6 +8,17 @@ import (
 	"time"
 )
 
+type foreignCodeError struct {
+	code string
+}
+
+func (e foreignCodeError) Error() string       { return e.code }
+func (e foreignCodeError) Code() string        { return e.code }
+func (e foreignCodeError) ScopeID() string     { return "foreign" }
+func (e foreignCodeError) OperationID() string { return "foreign" }
+func (e foreignCodeError) Outcome() Outcome    { return Unknown }
+func (e foreignCodeError) Unwrap() error       { return nil }
+
 type sequenceResource struct {
 	transactions []*testTx
 	options      []EffectiveOptions
@@ -267,8 +278,19 @@ func TestM2ViewGuards(t *testing.T) {
 	for _, code := range []error{ErrOptionsInvalid, ErrOptionsConflict, ErrRequired, ErrReadOnly, ErrTransactionRequired, ErrTenantMismatch, ErrIdentityMismatch, ErrScopeMismatch, ErrResourceMismatch, ErrClosed, ErrSuspended, ErrBusy, ErrDepthExceeded, ErrRollbackOnly, ErrCommitUnknown} {
 		e := fail(code, "op", Unknown, code)
 		var classified Error
-		if !errors.Is(e, code) || !errors.As(e, &classified) || classified.Code() != code.Error() || errorCode(code) != code {
+		if !errors.Is(e, code) || !errors.As(e, &classified) || classified.Code() != code.Error() || classified.ScopeID() != "op" || classified.OperationID() != "op" || classified.Outcome() != Unknown || classified.Unwrap() != code || errorCode(code) != code {
 			t.Fatal(e)
+		}
+		foreign := errors.New(code.Error())
+		if errors.Is(e, foreign) {
+			t.Fatalf("foreign error with matching text classified as %s", code)
+		}
+		classifiedForeign := foreignCodeError{code: code.Error()}
+		classifiedCode := errorCode(classifiedForeign)
+		for _, sentinel := range []error{ErrOptionsInvalid, ErrOptionsConflict, ErrRequired, ErrReadOnly, ErrTransactionRequired, ErrTenantMismatch, ErrIdentityMismatch, ErrScopeMismatch, ErrResourceMismatch, ErrClosed, ErrSuspended, ErrBusy, ErrDepthExceeded, ErrRollbackOnly, ErrCommitUnknown} {
+			if classifiedCode == sentinel {
+				t.Fatalf("foreign UOW Error implementation classified as sentinel %s", code)
+			}
 		}
 	}
 }

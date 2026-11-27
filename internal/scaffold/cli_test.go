@@ -104,7 +104,7 @@ func TestA67(t *testing.T) {
 	})
 	t.Run("help", func(t *testing.T) {
 		dir := t.TempDir()
-		for _, args := range [][]string{nil, {"--help"}, {"help"}, {"--version"}, {"new", "--help"}, {"new", "demo", "--help"}, {"module", "--help"}, {"module", "add", "--help"}, {"module", "add", "m", "--help"}, {"migrate", "--help"}, {"migrate", "create", "--help"}, {"migrate", "create", "m", "--help"}, {"migrate", "status", "--help"}, {"doctor", "--help"}, {"generate", "--help"}, {"generate", "openapi", "--help"}} {
+		for _, args := range [][]string{nil, {"--help"}, {"help"}, {"--version"}, {"upgrade", "--help"}, {"upgrade", "plan", "--help"}, {"upgrade", "runtime", "--help"}, {"upgrade", "verify", "--help"}, {"new", "--help"}, {"new", "demo", "--help"}, {"module", "--help"}, {"module", "add", "--help"}, {"module", "add", "m", "--help"}, {"migrate", "--help"}, {"migrate", "create", "--help"}, {"migrate", "create", "m", "--help"}, {"migrate", "status", "--help"}, {"doctor", "--help"}, {"generate", "--help"}, {"generate", "openapi", "--help"}} {
 			if code, out := invoke(t, dir, args...); code != 0 || out == "" {
 				t.Fatal(args, code, out)
 			}
@@ -112,7 +112,7 @@ func TestA67(t *testing.T) {
 	})
 	t.Run("invalid-arguments", func(t *testing.T) {
 		dir := create(t, false)
-		for _, args := range [][]string{{"unknown"}, {"new"}, {"new", "../escape"}, {"new", "x", "--template", "bad"}, {"new", "x", "--with", "enterprise"}, {"new", "x", "--unknown"}, {"new", "x", "extra"}, {"module", "add", "m", "extra"}, {"module", "add", "m", "--depends", "missing"}, {"module", "add", "m", "--depends", "m"}, {"module", "add", "m", "--depends", "bookstore"}, {"module", "add", "m", "--depends", "persistence,persistence"}, {"migrate", "create", "bad", "--module", "missing"}, {"migrate", "create", "bad", "--module", "bookstore", "extra"}, {"migrate", "status", "extra"}, {"doctor", "extra"}, {"generate", "openapi", "extra"}} {
+		for _, args := range [][]string{{"unknown"}, {"upgrade"}, {"upgrade", "nope"}, {"upgrade", "plan", "extra"}, {"upgrade", "--dry-run", "extra"}, {"upgrade", "runtime", "extra"}, {"upgrade", "verify", "extra"}, {"new"}, {"new", "../escape"}, {"new", "x", "--template", "bad"}, {"new", "x", "--with", "enterprise"}, {"new", "x", "--unknown"}, {"new", "x", "extra"}, {"module", "add", "m", "extra"}, {"module", "add", "m", "--depends", "missing"}, {"module", "add", "m", "--depends", "m"}, {"module", "add", "m", "--depends", "bookstore"}, {"module", "add", "m", "--depends", "persistence,persistence"}, {"migrate", "create", "bad", "--module", "missing"}, {"migrate", "create", "bad", "--module", "bookstore", "extra"}, {"migrate", "status", "extra"}, {"doctor", "extra"}, {"generate", "openapi", "extra"}} {
 			if code, out := invoke(t, dir, args...); code == 0 {
 				t.Fatal(args, out)
 			}
@@ -230,27 +230,24 @@ func TestA67Doctor(t *testing.T) {
 		dir := create(t, false)
 		var out bytes.Buffer
 		calls := 0
-		c := CLI{Dir: dir, Out: &out, Command: func(_ context.Context, name string, args ...string) ([]byte, error) {
+		c := CLI{Dir: dir, Out: &out, Err: &out, Command: func(_ context.Context, name string, args ...string) ([]byte, error) {
 			calls++
-			if name == "go" {
-				return []byte("go version go1.27.4 windows/amd64\n"), nil
+			if name != "go" || len(args) != 3 || args[0] != "build" || args[1] != "-mod=readonly" || args[2] != "./..." {
+				return nil, errors.New("unexpected static command")
 			}
-			return []byte("Docker Compose version v2\n"), nil
+			return nil, nil
 		}}
-		if err := c.doctor(context.Background(), nil); err != nil || calls != 2 {
+		if err := c.doctor(context.Background(), nil); err != nil || calls != 1 {
 			t.Fatal(err, calls)
+		}
+		if !strings.Contains(out.String(), "[PASS] project files") || !strings.Contains(out.String(), "[PASS] runtime manifest") || !strings.Contains(out.String(), "[PASS] go build ./...") {
+			t.Fatal(out.String())
 		}
 		c.Command = func(context.Context, string, ...string) ([]byte, error) {
 			return nil, errors.New("process unavailable")
 		}
 		if c.doctor(context.Background(), nil) == nil {
-			t.Fatal("missing tool ignored")
-		}
-		c.Command = func(context.Context, string, ...string) ([]byte, error) {
-			return []byte("go version go1.20 linux/amd64"), nil
-		}
-		if c.doctor(context.Background(), nil) == nil {
-			t.Fatal("wrong Go accepted")
+			t.Fatal("missing build tool ignored")
 		}
 	})
 }

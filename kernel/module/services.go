@@ -1464,7 +1464,7 @@ func (r *lifecycleResolver) Resolve(ctx context.Context, key di.Token) (any, err
 	if err != nil {
 		return nil, err
 	}
-	if ctx == nil {
+	if contextIsNil(ctx) {
 		return nil, fmt.Errorf("DI context is required")
 	}
 	r.c.mu.Lock()

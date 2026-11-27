@@ -29,18 +29,19 @@ func (m *Module) DependsOn() []module.Ref {
 }
 
 func (m *Module) Start(ctx context.Context, rt module.Runtime) error {
-	// The consumer depends only on the contract owner (catalog) and resolves
-	// the exported contract; the implementation module is never a dependency.
-	value, err := rt.Services().Resolve(ctx, module.Contract[contracts.Catalog]())
+	// OpenScope demonstrates the owner-fixed operation view. It may resolve
+	// the catalog contract because app directly depends on catalog.
+	scope, err := rt.OpenScope(ctx)
 	if err != nil {
 		return err
 	}
-	application, ok := value.(contracts.Catalog)
-	if !ok {
-		return fmt.Errorf("app: catalog contract is not available: %T", value)
+	defer scope.Close(ctx)
+	application, err := module.Resolve[contracts.Catalog](ctx, scope)
+	if err != nil {
+		return err
 	}
 	fmt.Printf("start app: catalog ready with %d entr%s via %T\n",
-		application.Len(), plural(application.Len()), value)
+		application.Len(), plural(application.Len()), application)
 	return nil
 }
 

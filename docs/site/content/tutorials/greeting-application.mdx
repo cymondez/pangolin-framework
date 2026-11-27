@@ -27,7 +27,7 @@ import legacySource from '../_snippets/greeting-app.go';
 
 <CodeBlock language="go" title="hello-pangolin/main.go">{source}</CodeBlock>
 
-在 `Configure` 中以 `b.Services().Add(NewGreetingService, module.Singleton())` 註冊建構子：解析鍵是建構子的精確回傳型別 `*GreetingService`，`module.Singleton()` 表示整個應用只建立一份；省略它時預設每次解析建立新物件（Transient）。`Start` 用 `rt.Services().Resolve(ctx, module.Contract[*GreetingService]())` 取得服務，並以 `rt.Config().Lookup("app.name")` 讀取設定。
+在 `Configure` 中以 `module.AddSingleton(b.Services(), NewGreetingService)` 註冊建構子：解析鍵是建構子的精確回傳型別 `*GreetingService`，singleton 表示整個應用只建立一份；需要 transient 或 operation 時分別使用 `module.AddTransient`／`module.AddOperation`，都可與 `module.As(contract)` 組合。`Start` 用 `module.Resolve[*GreetingService](ctx, rt.Services())` 取得具型別服務，並以 `rt.Config().Lookup("app.name")` 讀取設定。底層 `di.Resolver.Resolve` 仍保留為相容 API。
 
 ## 4. 執行並改變設定
 

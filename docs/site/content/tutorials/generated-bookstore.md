@@ -89,13 +89,21 @@ docker compose up -d --build --wait
 保持在自己的生成專案：
 
 ```powershell
-& $pangolin module add catalog --depends persistence,authorization
+& $pangolin module add catalog --depends persistence,authorization --preset service
 & $pangolin migrate create add_catalog --module catalog
 & $pangolin generate openapi
 & $pangolin doctor
 ```
 
-catalog 會以 Root 模式加入 UserRoot 聚合，並附上 module.go 與 README。在 `Configure` 內用 `b.Services().Add(NewCatalogService)` 註冊建構子（預設 Transient，需要時加 `module.Singleton()`），在 `Start` 內用 `rt.Services()` 解析精確型別。框架能力以型別直接注入：`--depends persistence`／`authorization`（或 `organization`）翻譯為 `foundation` 的 Type 邊，建構子參數直接寫 `uow.UnitOfWorkManager`、`foundation.Scopes`、`foundation.Publisher`、`foundation.Idempotency` 等公開契約；`foundation` 平台模組取得所有 DB／事件資源，`internal/app` 根模組只保留 HTTP 組裝與相容檢查。`bookstore` 名稱是生成網域示例，請依賴 foundation 能力或已註冊的使用者模組。填寫 migration SQL 後，先部署 migration 再啟動使用新 schema 的 API。命令說明與環境變數見 [CLI 參考](../reference/cli.md)。
+catalog 會以 Root 模式加入 UserRoot 聚合，並一次產生 application contract/implementation、typed constructor injection、錯誤路徑、單元測試與 README。預設不帶 `--preset` 仍保留小型 skeleton；`--preset crud` 目前明確回報 unsupported，不會產生半套 CRUD。成功生成後立刻執行：
+
+```powershell
+go test ./...
+```
+
+在 `Configure` 內，service preset 已使用 `module.AddSingleton(b.Services(), application.NewService)`；在 `Start` 內可用 `module.Resolve[*application.Service](ctx, rt.Services())` 驗證精確型別。框架能力以型別直接注入：`--depends persistence`／`authorization`（或 `organization`）翻譯為 `foundation` 的 Type 邊，建構子參數直接寫 `uow.UnitOfWorkManager`、`foundation.ScopeAccess` 等公開契約；`foundation` 平台模組取得所有 DB／事件資源，`internal/app` 根模組只保留 HTTP 組裝與相容檢查。`bookstore` 名稱是生成網域示例，請依賴 foundation 能力或已註冊的使用者模組。填寫 migration SQL 後，先部署 migration 再啟動使用新 schema 的 API。命令說明與環境變數見 [CLI 參考](../reference/cli.md)。
+
+`pangolin doctor` 預設只檢查專案檔案、runtime manifest 與 `go build ./...`，DB、migration 與 live service 顯示 SKIP，不啟動 Compose。確認環境後執行 `pangolin doctor --live`，逐項檢查 Compose、`PANGOLIN_DSN`、`PANGOLIN_MIGRATION_DSN` 與 API `/livez`／`/readyz`；失敗只回報檢查層與修復方向，不回顯 DSN。
 
 ## 停止與下一步
 

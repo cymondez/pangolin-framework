@@ -59,7 +59,7 @@ func TestGeneratedTypedFrameworkInjection(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if !strings.Contains(string(prices), "module.Of[catalog.Module]()") {
+		if !strings.Contains(string(prices), "module.Of[catalog.Module]()") && !strings.Contains(string(prices), "module.Of[m_catalog.Module]()") {
 			t.Fatalf("%s: chained Type edge missing:\n%s", dir, prices)
 		}
 		if err = os.WriteFile(filepath.Join(dir, "modules", "catalog", "service.go"), []byte(catalogServiceGo), 0o644); err != nil {

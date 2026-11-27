@@ -43,25 +43,21 @@ func (m *Module) DependsOn() []module.Ref {
 
 func (m *Module) Configure(b module.RootBuilder) error {
 	// Default lifetime Transient would rebuild per resolve; this service has no
-	// state worth sharing, demonstrating the default explicitly.
-	return b.Services().Add(NewPrices)
+	// state worth sharing, demonstrating the explicit façade for it.
+	return module.AddTransient(b.Services(), NewPrices)
 }
 
 func (m *Module) Start(ctx context.Context, rt module.Runtime) error {
 	// Resolving an own-module concrete does not require an export.
-	value, err := rt.Services().Resolve(ctx, module.Contract[*Prices]())
+	prices, err := module.Resolve[*Prices](ctx, rt.Services())
 	if err != nil {
 		return err
-	}
-	prices, ok := value.(*Prices)
-	if !ok {
-		return fmt.Errorf("pricing: unexpected service type %T", value)
 	}
 	estimate, err := prices.Estimate("demo")
 	if err != nil {
 		return err
 	}
-	fmt.Printf("start pricing via %T: %s\n", value, estimate)
+	fmt.Printf("start pricing via %T: %s\n", prices, estimate)
 	return nil
 }
 

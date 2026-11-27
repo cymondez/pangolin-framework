@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"reflect"
 	"sync"
 	"sync/atomic"
 
@@ -84,12 +85,34 @@ type view struct {
 }
 
 func (v view) Services() di.Resolver { return v.services }
+func contextIsNil(ctx context.Context) bool {
+	if ctx == nil {
+		return true
+	}
+	value := reflect.ValueOf(ctx)
+	switch value.Kind() {
+	case reflect.Chan, reflect.Func, reflect.Interface, reflect.Map, reflect.Ptr, reflect.Slice:
+		return value.IsNil()
+	default:
+		return false
+	}
+}
+
 func (v view) Config() config.Reader { return v.reader }
-func (h *host) Ready() bool          { return h.ready.Load() }
+func (v view) OpenScope(ctx context.Context) (di.Scope, error) {
+	if contextIsNil(ctx) {
+		return nil, fmt.Errorf("runtime OpenScope requires a context")
+	}
+	if container, ok := v.services.(di.Container); ok {
+		return container.OpenScope(ctx)
+	}
+	return module.OpenScope(ctx, v.services)
+}
+func (h *host) Ready() bool { return h.ready.Load() }
 func (h *host) Start(ctx context.Context, modules []module.Module) (err error) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	if ctx == nil || h.attempted || h.stopped {
+	if contextIsNil(ctx) || h.attempted || h.stopped {
 		return fmt.Errorf("runtime cannot start")
 	}
 	h.attempted = true

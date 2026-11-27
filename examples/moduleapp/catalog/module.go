@@ -55,7 +55,7 @@ func (m *Module) DependsOn() []module.Ref {
 }
 
 func (m *Module) Configure(b module.RootBuilder) error {
-	if err := b.Services().Add(NewService, module.Singleton()); err != nil {
+	if err := module.AddSingleton(b.Services(), NewService); err != nil {
 		return err
 	}
 	// The contract owner exports its own interface contract; one owner per
@@ -64,19 +64,15 @@ func (m *Module) Configure(b module.RootBuilder) error {
 }
 
 func (m *Module) Start(ctx context.Context, rt module.Runtime) error {
-	value, err := rt.Services().Resolve(ctx, module.Contract[contracts.Catalog]())
+	service, err := module.Resolve[contracts.Catalog](ctx, rt.Services())
 	if err != nil {
 		return err
-	}
-	service, ok := value.(contracts.Catalog)
-	if !ok {
-		return fmt.Errorf("catalog: implementation for contract is not registered: %T", value)
 	}
 	if err := service.Put("demo", "root-composed"); err != nil {
 		return err
 	}
 	item, ok := service.Get("demo")
-	fmt.Printf("start catalog via %T: %v/%v=%q\n", value, item.ID, ok, item.Title)
+	fmt.Printf("start catalog via %T: %v/%v=%q\n", service, item.ID, ok, item.Title)
 	return nil
 }
 

@@ -45,7 +45,7 @@ func run() (err error) {
 		defer cancel()
 		err = errors.Join(err, host.Stop(cleanup))
 	}()
-	key := di.NewKey[*GreetingService]("greeting-service")
+	key := module.Service[*GreetingService]()
 	app := module.Module{
 		Name: "greeting", Version: "0.1.0",
 		Configure: func(b module.Builder) error {
@@ -58,11 +58,11 @@ func run() (err error) {
 		},
 		Start: func(ctx context.Context, app module.Runtime) error {
 			name, _ := app.Config().Lookup("app.name")
-			service, err := app.Services().Resolve(ctx, key)
+			service, err := module.Resolve[*GreetingService](ctx, app.Services())
 			if err != nil {
 				return err
 			}
-			return service.(*GreetingService).Greet(name)
+			return service.Greet(name)
 		},
 	}
 	return host.Start(context.Background(), []module.Module{app})

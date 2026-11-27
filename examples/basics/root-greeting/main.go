@@ -34,18 +34,17 @@ func (m *greetingModule) Configure(b module.RootBuilder) error {
 	if err := b.SetDefault("app.name", "World"); err != nil {
 		return err
 	}
-	// module.Singleton keeps one instance for the whole application; without
-	// it the default lifetime builds a fresh instance per resolve.
-	return b.Services().Add(NewGreetingService, module.Singleton())
+	// module.AddSingleton keeps one instance for the whole application.
+	return module.AddSingleton(b.Services(), NewGreetingService)
 }
 
 func (m *greetingModule) Start(ctx context.Context, rt module.Runtime) error {
 	name, _ := rt.Config().Lookup("app.name")
-	service, err := rt.Services().Resolve(ctx, module.Contract[*GreetingService]())
+	service, err := module.Resolve[*GreetingService](ctx, rt.Services())
 	if err != nil {
 		return err
 	}
-	return service.(*GreetingService).Greet(name)
+	return service.Greet(name)
 }
 
 func main() {

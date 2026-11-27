@@ -13,14 +13,25 @@ description: 生成兩種 Bookstore Profile、新增模組與 migration、查驗
 |---|---|
 | `pangolin new bookstore --template modular-monolith` | 建立預設 tenant-only 專案 |
 | `pangolin new bookstore-org --template modular-monolith --with organization` | 同時加入完整 Enterprise／Organization 與 Scope-aware schema |
-| `pangolin module add catalog --depends persistence,authorization` | 產生 Root 模式 module.go（`ModuleMetadata`／`DependsOn`／`RootBuilder` hooks），framework 名稱翻譯為 `foundation` Type 邊並登記 UserRoot 聚合 |
+| `pangolin module add catalog --depends persistence,authorization` | 產生預設 Root skeleton（`ModuleMetadata`／`DependsOn`／`RootBuilder` hooks），framework 名稱翻譯為 `foundation` Type 邊並登記 UserRoot 聚合 |
+| `pangolin module add catalog --depends persistence,authorization --preset service` | 產生可直接 build/test 的 service vertical slice：application contract/implementation、typed constructor injection、失敗路徑、單元測試、README 與 registry 更新；旗標可任意順序 |
 | `pangolin migrate create add_books --module catalog` | 產生全專案唯一序號的 Goose SQL 骨架 |
 | `pangolin migrate status` | 查詢實際資料庫的 Goose ledger |
-| `pangolin doctor` | 檢查 Go／Compose、專案及 Runtime checksum |
+| `pangolin doctor` | 分層檢查專案檔案、runtime manifest 與 `go build ./...`；DB、migration ledger 與 live API 明示為 SKIP |
+| `pangolin doctor --live` | 額外檢查 Compose state、DB 連線、Goose ledger 與 `/livez` `/readyz`；不啟動服務，逾時有界且不回顯 DSN |
 | `pangolin generate openapi` | 輸出目前 Profile 的 OpenAPI 3.1 JSON |
 | `pangolin --version` | 顯示 0.1.0 |
 
-每個命令接受 --help，錯誤以非零退出。專案名稱以小寫字母開頭，可用小寫字母、數字、底線與連字號；模組與 migration 名稱使用小寫字母、數字及底線。名稱參數放在 flags 之前。模組依賴必須已存在且無循環。
+每個命令接受 --help，錯誤以非零退出。專案名稱以小寫字母開頭，可用小寫字母、數字、底線與連字號；模組與 migration 名稱使用小寫字母、數字及底線。名稱參數放在 flags 之前；依 flags 可出現在 name 後的任意順序。未知 flag 或未知 preset 都會拒絕。`--preset crud` 目前明確為 unsupported，不會產生半套 CRUD。模組依賴必須已存在且無循環；無效依賴會列出依據目前 profile／registered modules 可用的 candidates。
+
+`module add --preset service` 的第一個驗證是：
+
+```text
+cd <generated-project>
+go test ./...
+```
+
+成功的 module 會一次性 staging，完成後更新 registry 與 `pangolin.json`；失敗不保留只寫一半的 module 目錄。
 
 ## 既有檔案與重複執行
 
@@ -41,7 +52,7 @@ migrate status 從環境變數 PANGOLIN_MIGRATION_DSN 取得連線，僅讀取�
 | PANGOLIN_LISTEN | 原生 API 監聽位址；預設 127.0.0.1:18081 |
 | PANGOLIN_PG_PORT／PANGOLIN_IDP_PORT／PANGOLIN_API_PORT | 生成 Compose 的 loopback ports；預設 15642／18280／18281 |
 
-`--seed` 僅供明示初始化本機 demo。DSN 與 Token 不放在命令參數或 log。缺少 ledger 時 status 回錯誤，先部署 migration；API 發現 schema／Profile 不合時拒絕 Ready。
+`--seed` 僅供明示初始化本機 demo。DSN 與 Token 不放在命令參數或 log。缺少 ledger 時 status 回錯誤，先部署 migration；API 發現 schema／Profile 不合時拒絕 Ready。`doctor --live` 使用 `PANGOLIN_DSN` 與 `PANGOLIN_MIGRATION_DSN`，API base 可由 `PANGOLIN_API_URL` 指定，否則使用 `PANGOLIN_API_PORT`（預設 `18281`）。只讀或查詢失敗會逐項回報，不啟動 Compose 或套用 migration，不 dump DSN／secret。
 
 ## 生成 API 的範圍
 
