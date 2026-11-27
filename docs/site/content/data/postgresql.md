@@ -69,10 +69,10 @@ UOW 開啟交易時 ──▶ 自動執行 transaction-local SET LOCAL（寫入�
 
 ---
 
-## 3. 何時需要原生 `postgres.Current`？
+## 3. 何時需要原生 `postgres.Current` 與精簡錯誤映射？
 
-- **一般業務 Repository**：統一使用中立的 `database.Current(ctx)` 即可。
-- **需要 PostgreSQL／pgx 專屬語法（例如 `pgx.Batch`、特定陣列型別或專屬指令）的 Infrastructure Adapter**：可明示呼叫 `postgres.Current(ctx, write)` 取得原生執行器（`write=true` 表示本次要寫入，唯讀 UOW 會直接拒絕）。
+- **一般業務 Repository**：統一使用中立的 `database.Current(ctx)` 或 `database.CurrentWithScope(ctx)` 即可。
+- **需要 PostgreSQL／pgx 專屬語法（例如 `pgx.Batch`、特定陣列型別或專屬指令）的 Infrastructure Adapter**：可呼叫 `postgres.CurrentWithScope(ctx, write)` 一步取得原生執行器與可信 `scope.ScopeRef`（`write=true` 表示本次要寫入，唯讀 UOW 會直接拒絕），並以 `postgres.MapError(err)` 將 `pgx.ErrNoRows` 與唯一鍵衝突（SQLSTATE `23505`，亦可用 `postgres.IsUniqueViolation(err)` 檢查）映射為中立 `database.ErrNoRows`／`database.ErrConflict`，同時保留原始 driver cause。
 - **共用同一個 UOW Session**：原生 `postgres.Current` 與中立 `database.Current` 背後操作的是同一筆交易與同一條連線，因此**同一筆 UOW 內不可平行執行 SQL**（不可藉兩個入口同時下查詢）；若需多執行緒平行操作資料庫，請在各 goroutine 中以 `RequiresNew` 或 `uow.Detach` 開啟各自獨立的 UOW 與連線。
 
 ---

@@ -3,6 +3,9 @@ title: 安裝與建立專案
 description: 準備 Go 環境，並建立一個獨立的 consumer 專案來引用 panGOlin 0.1.0 預覽套件。
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 完成這一頁後，你會在自己的工作目錄下建立一個全新的 Go 專案 **`hello-pangolin`**，並正確連結 panGOlin 的公開套件。
 
 > **重要觀念：你是在「建立自己的應用」，而不是在「修改框架原始碼」**
@@ -26,13 +29,30 @@ description: 準備 Go 環境，並建立一個獨立的 consumer 專案來引�
 
 因為目前是 **0.1.0 預覽版**，尚未對外發布遠端 `v0.1.0` Git tag，所以先透過本機路徑引入套件。請選擇你的工作位置執行：
 
-```bash
+<Tabs groupId="os">
+<TabItem value="powershell" label="Windows PowerShell">
+
+```powershell
 mkdir pangolin-work
 cd pangolin-work
 git clone https://github.com/cymondez/pangolin-framework.git
 mkdir hello-pangolin
 cd hello-pangolin
 ```
+
+</TabItem>
+<TabItem value="bash" label="Linux / macOS (Bash)">
+
+```bash
+mkdir -p pangolin-work
+cd pangolin-work
+git clone https://github.com/cymondez/pangolin-framework.git
+mkdir -p hello-pangolin
+cd hello-pangolin
+```
+
+</TabItem>
+</Tabs>
 
 如果你手邊已經有一份 `pangolin-framework` 原始碼，不需要重新 `git clone`，只要在它旁邊建立 `hello-pangolin` 資料夾即可。完成後的目錄應如下所示：
 
@@ -50,11 +70,26 @@ pangolin-work/
 
 確認終端機目前位於 **`hello-pangolin`** 資料夾內，依序執行：
 
+<Tabs groupId="os">
+<TabItem value="powershell" label="Windows PowerShell">
+
+```powershell
+go mod init example.com/hello-pangolin
+go mod edit -require=github.com/cymondez/pangolin-framework@v0.1.0
+go mod edit -replace=github.com/cymondez/pangolin-framework=../pangolin-framework
+```
+
+</TabItem>
+<TabItem value="bash" label="Linux / macOS (Bash)">
+
 ```bash
 go mod init example.com/hello-pangolin
 go mod edit -require=github.com/cymondez/pangolin-framework@v0.1.0
 go mod edit -replace=github.com/cymondez/pangolin-framework=../pangolin-framework
 ```
+
+</TabItem>
+</Tabs>
 
 ### 為什麼要寫 `require` 又寫 `replace`？
 

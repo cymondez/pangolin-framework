@@ -70,3 +70,11 @@ description: 為 Go 工程師設計的模組化應用框架入門導覽：建立
 
 - **已完整提供並可直接使用**：Root 模組裝配與建構子 DI、組態分層與優雅停機、UOW（`Required`／`RequiresNew`）與高階 `CommandResult`／`QueryResult`、PostgreSQL／MySQL／SQLite 中立資料存取、可擴充身分驗證與多租戶／可選組織治理、Local Event 與 Outbox／Inbox 可靠配送、持久化背景工作（Jobs）與容量背壓、OpenTelemetry 觀測與健康檢查、分層 Settings／Features／Scoped Cache、可選 SignalR 即時通訊，以及 `pangolin` CLI。
 - **使用邊界**：公開文件僅介紹目前版本實際可執行並經驗證的功能。導入正式專案前，請務必查閱 **[功能相容性與支援邊界](reference/compatibility.md)** 確認各資料庫與模組的支援範圍。
+
+---
+
+## 設計靈感與致謝
+
+panGOlin Framework 是以 Go 語言獨立設計並從零實作的開源專案，未複製或移植任何外部框架的原始碼。在模組化單體架構、工作單元、多租戶與分層設定等高層設計概念上，本專案受到開源社群與 [ABP Framework](https://abp.io/) 等企業級應用框架的理念啟發，謹此致謝。
+
+panGOlin Framework 與 ABP Framework（VoloSoft）之間無任何官方隸屬、合作、授權或背書關係；相關名稱僅作概念參考與致謝之用，商標歸屬各自原權利人。

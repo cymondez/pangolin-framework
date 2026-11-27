@@ -10,5 +10,17 @@ module.exports = {manual: [
   {type: 'category', label: '事件', items: ['events/integration-events', 'events/reliable-delivery', 'platform/realtime']},
   {type: 'category', label: '設定、功能與快取', items: ['platform/settings', 'platform/features', 'platform/cache']},
   {type: 'category', label: '背景工作與維運', items: ['platform/jobs', 'platform/observability', 'platform/operations', 'platform/backup-restore']},
-  {type: 'category', label: '參考與疑難排解', items: ['reference/cli', 'reference/configuration', 'reference/bookstore-api', 'reference/compatibility', 'reference/upgrading', 'reference/troubleshooting']},
+  {type: 'category', label: '參考與疑難排解', items: [
+    {type: 'category', label: 'pangolin CLI 參考', link: {type: 'doc', id: 'reference/cli'}, items: [
+      'reference/cli-new',
+      'reference/cli-module',
+      'reference/cli-migrate-doctor',
+      'reference/cli-openapi-upgrade',
+    ]},
+    'reference/configuration',
+    'reference/bookstore-api',
+    'reference/compatibility',
+    'reference/upgrading',
+    'reference/troubleshooting',
+  ]},
 ]};

@@ -3,6 +3,9 @@ title: SignalR 即時通知（Realtime）
 description: 使用可選的 SignalR 模組與 NATS JetStream，讓已授權的使用者在業務交易確認提交後收到安全隔離的即時推播。
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 > **你在架構中的位置**：`業務 Write Command（同交易寫入 Outbox）→` **`[ 獨立 Outbox Worker → NATS JetStream → 各節點 SignalR Receiver → /hub WebSocket Client ]`**
 >
 > **前置建議**：先了解[組裝可靠事件配送](../events/reliable-delivery.md)與[資源 Scope](../security/resource-scopes.md)。
@@ -20,15 +23,32 @@ panGOlin 的可選 `modules/realtime` 模組把即時通訊安全地接在既有
 
 ## 1. 透過 CLI 快速啟用 SignalR 模組
 
-在建立新專案時加上 `--realtime` 旗標即可生成完整骨架（包含 `/hub` 端點與專屬說明文件 `REALTIME.md`）：
+在建立新專案時加上 `--realtime` 旗標即可生成完整骨架（包含 `/hub` 端點與專屬說明文件 `REALTIME.md`，CLI 建置方式見[建立專案：`pangolin new`](../reference/cli-new.md)）：
+
+<Tabs groupId="os">
+<TabItem value="powershell" label="Windows PowerShell">
+
+```powershell
+# Tenant-only 模式 + SignalR 即時通知
+& $pangolin new bookstore --template modular-monolith --realtime
+
+# Organization-enabled 模式 + SignalR 即時通知
+& $pangolin new scopedstore --template modular-monolith --with organization --realtime
+```
+
+</TabItem>
+<TabItem value="bash" label="Linux / macOS (Bash)">
 
 ```bash
 # Tenant-only 模式 + SignalR 即時通知
-pangolin new bookstore --template modular-monolith --realtime
+"$PANGOLIN" new bookstore --template modular-monolith --realtime
 
 # Organization-enabled 模式 + SignalR 即時通知
-pangolin new scopedstore --template modular-monolith --with organization --realtime
+"$PANGOLIN" new scopedstore --template modular-monolith --with organization --realtime
 ```
+
+</TabItem>
+</Tabs>
 
 建立完成後，請依生成專案根目錄的 `REALTIME.md` 設定 JetStream、憑證 introspection 與 TLS。
 

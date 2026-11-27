@@ -3,6 +3,9 @@ title: Bookstore 設定參考
 description: 框架內建 Bookstore 範例 API、背景 Worker 的環境變數、命令列旗標，以及 Jobs 與觀測的起始調校建議。
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 > **適用範圍提醒**：本頁設定專屬於框架原始碼內建的 `examples/bookstore`（見 [Bookstore 教學](../tutorials/bookstore.md)）。如果你使用的是 **CLI 生成的獨立專案**（如 `PANGOLIN_MIGRATION_DSN`、`PANGOLIN_API_PORT`），請改查 **[pangolin CLI 參考](cli.md)**。
 
 API 與 Worker 是兩個獨立程序，請在各自執行的終端機或容器環境設定對應變數。
@@ -34,9 +37,22 @@ API 與 Worker 是兩個獨立程序，請在各自執行的終端機或容器�
 
 範例（在已設好 API 環境變數的 `pangolin-framework` 根目錄執行）：
 
+<Tabs groupId="os">
+<TabItem value="powershell" label="Windows PowerShell">
+
+```powershell
+go run ./examples/bookstore/cmd/api -listen 127.0.0.1:18181 -run-for 10s
+```
+
+</TabItem>
+<TabItem value="bash" label="Linux / macOS (Bash)">
+
 ```bash
 go run ./examples/bookstore/cmd/api -listen 127.0.0.1:18181 -run-for 10s
 ```
+
+</TabItem>
+</Tabs>
 
 ---
 

@@ -82,7 +82,15 @@ func EventServices(
 - **`capacity`（有界背壓）**：Outbox 與 Inbox 上限皆須為正整數，部署時須一併套用 `eventpg.CapacityMigrations`（子目錄 `capacity_migrations`）。佇列滿額時回 429 並回滾該筆業務交易。
 - **`registry`（事件契約註冊）**：須明示註冊所有 `distributed.Schema{Type, Version, Required, Validate}`；已發布的 `(Type, Version)` 絕不事後改寫。
 - **`retry`（重試政策）**：`Lease`、`SendTimeout`、`RetryInitial`、`RetryMax`、`MaxAttempts` 皆須為正值，`JitterFraction` 介於 `0–1`。
-- **業務內呼叫方式**：在可寫 UOW 回呼中先寫業務資料，再呼叫 `publisher.Publish(workCtx, envelope)`。`envelope` 的 Tenant 與完整 Scope 必須等於可信 binding，否則直接拒絕並標記交易 rollback-only。
+- **業務內呼叫方式（一行精簡發布）**：在可寫 UOW 回呼中先寫業務資料，再直接透過綁定預設 Producer 的 context 感知輔助發布 JSON 事件：
+
+```go
+if err := publisher.ForProducer("bookstore").PublishJSON(workCtx, "bookstore.book.created", 1, book); err != nil {
+	return err
+}
+```
+
+`PublishJSON`（以及底層 `distributed.NewEnvelope`）會自動從 `scope.Current(workCtx)` 填入可信 Tenant／Scope、從 `uow.Current(workCtx)` 取得當前 OperationID 作為預設 `CorrelationID`／`CausationID`、產生事件 ID 與 UTC 時間，並將 `payload` 序列化為 JSON 後交給 `publisher.Publish` 執行完整的 Registry Schema 檢查、owner 核對與 W3C `traceparent` 注入；缺少有效 UOW 或 Scope 一律 fail-closed 拒絕。若需手動覆寫欄位，可傳入 `distributed.WithCorrelationID(...)`、`WithCausationID(...)`、`WithEventID(...)` 等選項，或直接組裝 `distributed.Envelope` 呼叫 `publisher.Publish(workCtx, envelope)`。
 
 ---
 

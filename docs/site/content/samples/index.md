@@ -3,12 +3,29 @@ title: 套件使用範例總覽
 description: 依學習階段分類的所有可執行 panGOlin 範例程式，每個範例皆附有中文導讀註解、執行命令與預期輸出。
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 這一頁彙整了 panGOlin 所有可直接執行的範例程式。你可以先從**零外部依賴**的基礎範例跑起，確認行為符合預期後，再直接參考或搬移到自己的專案。
 
 > **執行目錄提醒**：除非特別標示，基礎範例一律從框架原始碼的 `examples/basics` 目錄執行：
-> ```bash
-> cd pangolin-framework/examples/basics
-> ```
+
+<Tabs groupId="os">
+<TabItem value="powershell" label="Windows PowerShell">
+
+```powershell
+cd pangolin-framework/examples/basics
+```
+
+</TabItem>
+<TabItem value="bash" label="Linux / macOS (Bash)">
+
+```bash
+cd pangolin-framework/examples/basics
+```
+
+</TabItem>
+</Tabs>
 
 ---
 
@@ -16,28 +33,19 @@ description: 依學習階段分類的所有可執行 panGOlin 範例程式，每
 
 以下範例不需要 Docker、資料庫或任何外部服務，全部都能在幾秒內跑出明確結果：
 
-### A. 推薦主線範例（新專案必學）
-
 | 學習目標 | 執行命令 | 預期輸出摘要 | 對應教學指南 |
 |---|---|---|---|
 | 第一個 Root 裝配應用與優雅停機 | `go run ./hello` | `Hello, panGOlin!` | [第一個應用](../getting-started/quickstart.mdx) |
 | 註冊 DI 服務、預設設定與環境變數覆寫 | `go run ./root-greeting` | `Hello, World!`（設 `APP_NAME=Reader` 變 `Hello, Reader!`） | [問候服務教學](../tutorials/greeting-application.mdx) |
 | 讀取設定、優先序覆寫與必填驗證 | `go run ./configuration` | `Application: My App` | [應用設定](../fundamentals/configuration.mdx) |
 | 多模組 Type 相依排序與反序停機 | `go run ./root-lifecycle` | 啟動 `storage` → `books`，反序停止 `books` → `storage` | [應用啟動與停止](../fundamentals/application-startup.mdx) |
+| 獨立低階 DI 容器（`di.NewRegistry`／`Seal`） | `go run ./dependency-injection` | `Hello, Alice!` | [依賴注入](../fundamentals/dependency-injection.mdx) |
 | 權限判斷、User 明確 Deny 與 Feature 不授權 | `go run ./authorization` | `read allowed`、`write denied`、`feature enabled: write denied` | [權限與資源政策](../security/authorization.mdx) |
 | 分層 Settings（5–7 層）、配額與 Scoped Cache | `go run ./platform-services` | 8 行驗證輸出（含租戶快取隔離、版本收斂等） | [分層設定與 Features](../platform/settings.mdx) |
 | 建立與反序列化版本化 Event Envelope | `go run ./event-envelope` | 事件 ID、型別、Schema 版本與書籍 JSON | [事件格式與設計](../events/integration-events.mdx) |
 | OpenTelemetry Trace、JSON Log 與 `/livez`／`/readyz` | `go run ./observability` | `Trace correlated: true`、`/livez: 204`、`/readyz: 204` | [觀測與 Health](../platform/observability.mdx) |
 
 > **小提醒**：如果你在終端機設定過 `APP_NAME` 環境變數，設定與問候範例會改印該值；移除該環境變數即可恢復表中的預設輸出。
-
-### B. 進階相容範例（維護舊式組裝對照）
-
-| 用途 | 執行命令 | 預期輸出摘要 | 對應說明 |
-|---|---|---|---|
-| 明示清單組裝（`Host.Start`）與 `host.Ready()` | `go run ./lifecycle` | 啟動順序、`ready: true` 與反序停機 | [應用啟動與停止](../fundamentals/application-startup.mdx) |
-| 獨立低階 DI 容器（`di.NewRegistry`／`Seal`） | `go run ./dependency-injection` | `Hello, Alice!` | [依賴注入](../fundamentals/dependency-injection.mdx) |
-| 舊式 `module.Module` + `b.Provide` 組合 | `go run ./greeting-app` | `Hello, World!` | [問候服務教學](../tutorials/greeting-application.mdx) |
 
 ---
 
@@ -47,17 +55,26 @@ description: 依學習階段分類的所有可執行 panGOlin 範例程式，每
 
 在框架原始碼的 **`pangolin-framework/examples/moduleapp`** 目錄執行：
 
-```bash
-# Windows PowerShell（非互動環境建議加上 2 秒自動結束）
+<Tabs groupId="os">
+<TabItem value="powershell" label="Windows PowerShell">
+
+```powershell
+# 非互動環境建議加上 2 秒自動結束
 $env:MODULEAPP_DEADLINE = '2s'
 go run .
 Remove-Item Env:MODULEAPP_DEADLINE
 ```
 
+</TabItem>
+<TabItem value="bash" label="Linux / macOS (Bash)">
+
 ```bash
-# macOS / Linux
+# 非互動環境建議加上 2 秒自動結束
 MODULEAPP_DEADLINE=2s go run .
 ```
+
+</TabItem>
+</Tabs>
 
 完整原始碼與跨模組可見性規則解析見 **[依賴注入：跨模組介面契約](../fundamentals/dependency-injection.mdx)**。
 

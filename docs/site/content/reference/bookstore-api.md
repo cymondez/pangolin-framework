@@ -3,6 +3,9 @@ title: Bookstore HTTP API 參考
 description: 框架內建 Bookstore 範例 API 的端點規格、JSON 格式、Tenant Header 規則與 RFC 9457 Problem Details 錯誤碼處理指引。
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 > **適用範圍提醒**：本頁記載的是框架原始碼內建的 **`examples/bookstore`** API（建立回 **201**、含 `version` 欄位）。若使用 CLI 生成的獨立專案（建立與讀取皆回 **200**、僅含 `id`/`title`），請查閱 **[pangolin CLI 參考](cli.md)** 與 **[用 CLI 建立自己的 Bookstore](../tutorials/generated-bookstore.md)**。
 
 除 `/readyz` 健康檢查外，所有端點皆須提供有效認證標頭：`Authorization: Bearer <access_token>`（操作流程見 [Bookstore 教學](../tutorials/bookstore.md)）。
@@ -34,6 +37,45 @@ description: 框架內建 Bookstore 範例 API 的端點規格、JSON 格式、T
 ```json
 {"id": "client-generated-id", "title": "My first panGOlin book", "version": 1}
 ```
+
+### 快速呼叫範例
+
+取得本機示範 Token 後（詳見 [Bookstore 教學](../tutorials/bookstore.md)），可直接透過終端機呼叫：
+
+<Tabs groupId="os">
+<TabItem value="powershell" label="Windows PowerShell">
+
+```powershell
+# 檢查 API 健康狀態（預期 HTTP 204）
+(Invoke-WebRequest http://127.0.0.1:18181/readyz).StatusCode
+
+# 建立與讀取書籍（請先設定 $headers = @{ Authorization = "Bearer <access_token>" }）
+Invoke-RestMethod -Method Post -Uri http://127.0.0.1:18181/books `
+  -Headers $headers -ContentType application/json `
+  -Body '{"id":"book-1","title":"My first panGOlin book"}'
+Invoke-RestMethod -Uri http://127.0.0.1:18181/books/book-1 -Headers $headers
+```
+
+</TabItem>
+<TabItem value="bash" label="Linux / macOS (Bash)">
+
+```bash
+# 檢查 API 健康狀態（預期 HTTP 204）
+curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:18181/readyz
+
+# 建立與讀取書籍（請先設定 TOKEN='<access_token>'）
+curl -fsS -X POST http://127.0.0.1:18181/books \
+  -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"id":"book-1","title":"My first panGOlin book"}'
+echo
+curl -fsS http://127.0.0.1:18181/books/book-1 \
+  -H "Authorization: Bearer $TOKEN"
+echo
+```
+
+</TabItem>
+</Tabs>
 
 ---
 

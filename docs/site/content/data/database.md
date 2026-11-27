@@ -169,9 +169,10 @@ func NewDatabaseService(resource database.Resource) (*Service, error) {
 
 ---
 
-## 4. 錯誤處理、Cursor 清理與資源關閉
+## 4. 單行取得 Executor + Scope 與錯誤分類
 
-- **查無資料判斷**：統一用 `errors.Is(err, database.ErrNoRows)` 判斷，不直接比對各 Driver 自己的 `sql.ErrNoRows` 或 `pgx.ErrNoRows`；其他資料庫錯誤會完整保留底層 Driver cause。
+- **單行取得受控執行器與可信 Scope**：除了分開呼叫 `database.Current(ctx)` 與 `database.CurrentOwner(ctx)`，也可以直接呼叫 `executor, owner, err := database.CurrentWithScope(ctx)` 一步驗證並同時取得 `(database.Executor, scope.ScopeRef, error)`。
+- **查無資料與衝突判斷**：統一使用 `database.IsNotFound(err)`（對應 `database.ErrNoRows`／`sql.ErrNoRows`）與 `database.IsConflict(err)`（對應 `database.ErrConflict`），不直接比對各 Driver 自己的錯誤型別；底層 Driver cause 皆完整保留供 `errors.Is`／`errors.As` 檢查。
 - **Rows／Row 必須徹底收尾**：呼叫 `Query` 取得多列 `Rows` 後，務必 `defer rows.Close()` 並在迴圈結束後檢查 `rows.Err()`；呼叫 `QueryRow` 必須呼叫 `Scan`。未關閉的 `Rows` 會被 UOW 視為資源仍被占用（`ErrBusy`）而阻止正常提交。
 - **連線池生命週期**：連線池一律由建立它的組裝端擁有，並在應用停機的 `Quiesce → Drain → UOW Cleanup` 全數完成後才關閉。
 

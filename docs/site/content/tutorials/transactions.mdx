@@ -4,6 +4,8 @@ description: 用真實 PostgreSQL 動手實測 Required 共用交易、RequiresN
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 import source from '../_snippets/transactions.go';
 
 > **你在架構中的位置**：`Application 巢狀呼叫 →` **`[ Required（共用根交易） vs RequiresNew（獨立根 UOW、新連線獨立提交，且不鎖定父視圖）]`**
@@ -24,18 +26,25 @@ import source from '../_snippets/transactions.go';
 
 確認 Bookstore 的示範 PostgreSQL 正在運行後，切到框架原始碼的 **`pangolin-framework/examples/basics`**：
 
-**Windows PowerShell：**
+<Tabs groupId="os">
+<TabItem value="powershell" label="Windows PowerShell">
 
 ```powershell
 $env:PANGOLIN_DSN = 'postgres://pangolin_app:local-app-only@127.0.0.1:15542/pangolin_m0?sslmode=disable'
 go run ./transactions
+Remove-Item Env:PANGOLIN_DSN
 ```
 
-**macOS／Linux：**
+</TabItem>
+<TabItem value="bash" label="Linux / macOS (Bash)">
 
 ```bash
-PANGOLIN_DSN='postgres://pangolin_app:local-app-only@127.0.0.1:15542/pangolin_m0?sslmode=disable' go run ./transactions
+PANGOLIN_DSN='postgres://pangolin_app:local-app-only@127.0.0.1:15542/pangolin_m0?sslmode=disable' \
+  go run ./transactions
 ```
+
+</TabItem>
+</Tabs>
 
 預期輸出（5 行皆為 `true`）：
 

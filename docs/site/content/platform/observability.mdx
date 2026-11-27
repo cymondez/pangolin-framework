@@ -4,6 +4,8 @@ description: 透過明確注入的 OpenTelemetry Tracer／Meter、結構化 JSON
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 import source from '../_snippets/observability.go';
 
 > **你在架構中的位置**：`橫切觀測層` **`[ observability（Trace + Metrics + JSON Log + /livez /readyz）]`** `貫穿 HTTP → UOW → PostgreSQL → Outbox/Inbox → Jobs`
@@ -22,7 +24,24 @@ panGOlin 的觀測設計堅持三項紀律：**明確注入 Provider**、**Metri
 
 ## 1. 動手執行免資料庫的完整觀測範例
 
-從框架原始碼的 `examples/basics` 執行 `go run ./observability`（或直接貼入你自己專案的 `main.go` 執行 `go mod tidy && go run .`）：
+從框架原始碼的 `examples/basics` 執行（或直接貼入你自己專案的 `main.go` 依序執行 `go mod tidy` 與 `go run .`）：
+
+<Tabs groupId="os">
+<TabItem value="powershell" label="Windows PowerShell">
+
+```powershell
+go run ./observability
+```
+
+</TabItem>
+<TabItem value="bash" label="Linux / macOS (Bash)">
+
+```bash
+go run ./observability
+```
+
+</TabItem>
+</Tabs>
 
 <CodeBlock language="go" title="examples/basics/observability/main.go">{source}</CodeBlock>
 

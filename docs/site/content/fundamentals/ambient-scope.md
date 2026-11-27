@@ -1,6 +1,6 @@
 ---
 title: Ambient Scope（顯式環境範圍）
-description: 理解 panGOlin 如何以 kernel/ambient 的不可變 Copy-on-Write 巢狀鏈取代 GLS，兼顧多執行緒平行隔離、.NET ABP AsyncLocal<T> 同構語意與防偽造安全邊界。
+description: 理解 panGOlin 如何以 kernel/ambient 的不可變 Copy-on-Write 巢狀鏈取代 GLS，兼顧多執行緒平行隔離、顯式上下文傳遞與防偽造安全邊界。
 ---
 
 > **你在架構中的位置**：`HTTP / Worker 入口 →` **`[ kernel/ambient：以 context.Context 承載不可變 Ambient Scope 鏈 ]`** `→ Identity / Tenant / ScopeBinding / UOW / Executor / Telemetry`
@@ -22,17 +22,17 @@ panGOlin 在 **`kernel/ambient`** 提供統一底層原語 **`ambient.Var[T]`**�
 
 ---
 
-## 與 .NET ABP `AsyncLocal<T>` 的設計同構
+## 與執行期隱式傳遞模型（如 `AsyncLocal<T>`）的結構對照
 
-熟悉 .NET ABP Framework 的開發者，一定對 ABP 用 `AsyncLocal<T>` 實作 `ICurrentTenant`、`IAmbientUnitOfWork`、`ICurrentPrincipalAccessor` 的設計印象深刻。`kernel/ambient` 的 `ambient.Var[T]` 在語意上與 `AsyncLocal<T>` 高度同構，並採用最符合 Go 慣例的顯式實作方式：
+在許多具備執行期環境傳遞機制的語言與框架中（例如以 `AsyncLocal<T>` 管理租戶、工作單元或使用者身分的設計），核心價值在於「每個非同步邏輯流保有獨立的 Copy-on-Write 狀態鏈，互不干擾」。`kernel/ambient` 的 `ambient.Var[T]` 在結構上具備相同的不可變隔離特性，同時堅持 Go 語言的顯式傳遞慣例：
 
-| 設計面向 | .NET ABP（`AsyncLocal<T>`） | panGOlin（`kernel/ambient` — `ambient.Var[T]`） |
+| 設計面向 | 隱式執行流模型（如 `AsyncLocal<T>`） | panGOlin（`kernel/ambient` — `ambient.Var[T]`） |
 |---|---|---|
-| **傳遞載體** | .NET `ExecutionContext` 隨 `async`/`await` 隱式流動 | Go 標準 `context.Context` 顯式傳遞 |
-| **巢狀覆寫模型** | 變更時複製 `ExecutionContext`（Copy-on-Write），離開 `using` 還原外層值 | 不可變單向鏈結 `frame[T]{value, present, outer, depth}`（Copy-on-Write），離開函式自然回到未變動的父 `ctx` |
-| **平行分支隔離** | 多個 `Task.Run` 從同一父範圍各自開啟獨立子範圍，互不干擾父層 | 多個 goroutine 從同一父 `ctx` 同時呼叫 `With`／`Clear`／`RequiresNew`，**零共享可變狀態、零計數器**，互不鎖死 |
-| **清除／脫離範圍** | 設為 `null` 建立新的乾淨邏輯流 | `v.Clear(ctx)` 插入已清除哨兵 frame（`Current=false`、`Depth=0`），父 `ctx` 絲毫不受影響 |
-| **防偽造安全邊界** | 透過 `internal` accessor 限制寫入權 | 每個 `Var[T]` 持有獨立且非零大小的未匯出指標鍵；各套件將 `Var[T]` 保持 **package-private**，外部無法偽造 |
+| **傳遞載體** | 由語言執行期隨非同步流程隱式流動 | Go 標準 `context.Context` 顯式傳遞 |
+| **巢狀覆寫模型** | 變更時複製執行環境（Copy-on-Write），離開範圍還原外層值 | 不可變單向鏈結 `frame[T]{value, present, outer, depth}`（Copy-on-Write），離開函式自然回到未變動的父 `ctx` |
+| **平行分支隔離** | 多個非同步分支從同一父範圍各自開啟獨立子範圍，互不干擾父層 | 多個 goroutine 從同一父 `ctx` 同時呼叫 `With`／`Clear`／`RequiresNew`，**零共享可變狀態、零計數器**，互不鎖死 |
+| **清除／脫離範圍** | 清空當前邏輯流槽位建立乾淨分支 | `v.Clear(ctx)` 插入已清除哨兵 frame（`Current=false`、`Depth=0`），父 `ctx` 絲毫不受影響 |
+| **防偽造安全邊界** | 透過內部存取器限制寫入權 | 每個 `Var[T]` 持有獨立且非零大小的未匯出指標鍵；各套件將 `Var[T]` 保持 **package-private**，外部無法偽造 |
 
 ---
 

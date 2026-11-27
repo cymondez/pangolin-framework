@@ -13,14 +13,14 @@ const topics = [
 export default function Home() {
   const {siteConfig} = useDocusaurusContext();
   const {docsPath, currentLabel} = siteConfig.customFields;
-  return <Layout title="官方文件" description="從 Bookstore 開始，學習 panGOlin Framework 的模組、交易、安全邊界與可靠事件。">
+  return <Layout title="官方文件" description="panGOlin Framework 官方文件：以顯式模組、嚴格工作單元交易、PostgreSQL RLS 與 Outbox/Inbox 打造可長期演進的 Go 單體應用。">
     <main>
       <section className="pg-hero">
         <div className="container pg-hero-grid">
           <div>
             <div className="pg-eyebrow">GO MODULAR APPLICATION FRAMEWORK</div>
-            <h1>用 Go，<br/>把應用的邊界<br/><em>寫清楚。</em></h1>
-            <p className="pg-lead">從模組化單體開始，用明確的依賴、交易與租戶邊界，建立能持續演進的應用。</p>
+            <h1>顯式模組、嚴格交易、可靠事件，<br/>經得起高速演進的<br/><em>Go 單體基座。</em></h1>
+            <p className="pg-lead">保留 Go 的顯式簡潔、拒絕隱式魔術。用不可繞過的 DI 可見性、工作單元、PostgreSQL RLS 與 Outbox/Inbox，讓人寫得順手、AI 也寫不歪。</p>
             <div className="pg-actions"><Link className="button button--primary button--lg" to={`${docsPath}getting-started/installation/`}>開始使用</Link><Link className="button button--outline button--primary button--lg" to={`${docsPath}samples/`}>查看使用範例</Link></div>
             <p className="pg-version"><span className="pg-pill">{currentLabel}</span> 從完整程式開始，依需求加入功能</p>
           </div>

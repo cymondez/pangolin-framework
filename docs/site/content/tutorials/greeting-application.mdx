@@ -4,8 +4,9 @@ description: 延續第一個應用，學會如何在模組內用建構子註冊 
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 import source from '../_snippets/root-greeting.go';
-import legacySource from '../_snippets/greeting-app.go';
 
 > **你在架構中的位置**：`應用入口 main.go →` **`[ Module.Configure（宣告預設值 + 註冊 DI 建構子）→ Module.Start（讀取設定 + 解析服務）]`**
 >
@@ -56,9 +57,22 @@ import legacySource from '../_snippets/greeting-app.go';
 
 在 **`hello-pangolin`** 資料夾先執行預設版本：
 
+<Tabs groupId="os">
+<TabItem value="powershell" label="Windows PowerShell">
+
+```powershell
+go run .
+```
+
+</TabItem>
+<TabItem value="bash" label="Linux / macOS (Bash)">
+
 ```bash
 go run .
 ```
+
+</TabItem>
+</Tabs>
 
 預期輸出（使用模組預設值 `"World"`）：
 
@@ -68,7 +82,8 @@ Hello, World!
 
 接著注入環境變數 `APP_NAME=Reader` 覆寫預設值，再次執行：
 
-**Windows PowerShell：**
+<Tabs groupId="os">
+<TabItem value="powershell" label="Windows PowerShell">
 
 ```powershell
 $env:APP_NAME = 'Reader'
@@ -76,11 +91,15 @@ go run .
 Remove-Item Env:APP_NAME
 ```
 
-**macOS／Linux：**
+</TabItem>
+<TabItem value="bash" label="Linux / macOS (Bash)">
 
 ```bash
 APP_NAME=Reader go run .
 ```
+
+</TabItem>
+</Tabs>
 
 這次應該看到：
 
@@ -96,19 +115,6 @@ Hello, Reader!
 
 - **不要把 `b.Services()` 存成 struct 欄位留到 `Start` 再註冊**：`Configure` 結束後註冊權限會立即撤銷（Revoke），事後呼叫會被框架拒絕，確保服務圖在啟動前就完全定型。
 - **不要在 `Configure` 裡試圖解析服務**：此時其他模組可能還沒註冊完畢；所有解析與實際業務執行都應放在 `Start` 或後續請求處理中。
-
----
-
-<details>
-<summary>維護舊版應用參考：進階相容路徑（明示清單組裝 <code>Host.Start</code>）</summary>
-
-如果你正在維護早期以結構值 `module.Module` + `runtime.New` + `Host.Start` 切片組裝的既有專案，該路徑依然完整支援（未棄用）。以下是與上方完全等價的相容寫法，但**新專案請優先使用上方的 `app.Run` Root 裝配**：
-
-<CodeBlock language="go" title="examples/basics/greeting-app/main.go（進階相容版本）">{legacySource}</CodeBlock>
-
-兩者主要差異：明示清單組裝須由呼叫端手動補齊 `uow.*` 必要預設設定、手動建立 `runtime.New` 與 `defer host.Stop(...)`，並以低階 `b.Provide(di.Provider{...})` 註冊服務。
-
-</details>
 
 ---
 

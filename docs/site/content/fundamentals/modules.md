@@ -136,17 +136,6 @@ func (m *Module) DependsOn() []module.Ref {
 
 ---
 
-<details>
-<summary>維護舊版應用參考：進階相容路徑（明示清單組裝 <code>[]module.Module</code>）</summary>
-
-舊式明示清單組裝仍然完整支援（未棄用）：以結構值 `module.Module{...}` 填寫函式欄位，並用字串 `module.Dependency{Name: "storage", VersionConstraint: "=0.1.0"}` 宣告相依，再把整個切片交給 `host.Start(ctx, modules)`。
-
-維護既有應用時可繼續使用，完整範例對照請見 **[應用啟動與停止](application-startup.mdx)** 尾端的相容路徑折疊區。
-
-</details>
-
----
-
 ## 下一步
 
 學會把系統切成模組後，接著閱讀 **[依賴注入（DI）](dependency-injection.mdx)**，了解模組內建構子如何自動注入參數，以及模組之間如何透過 `contracts` 與 `Export` 安全共享服務。

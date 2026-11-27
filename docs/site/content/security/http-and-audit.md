@@ -33,6 +33,44 @@ description: 用 transport/http.NewPipeline 統一串接驗證、租戶 Scope、
 8. Commit & Respond ──▶ 確認 Commit 成功後才序列化並寫回 2xx；失敗統一回 Problem Details
 ```
 
+### 精簡多路由組裝：`NewEndpoints`、`ProblemError` 與 `ServerParticipant`
+
+當同一個服務有多條 HTTP 路由時，不需要在每條路由重複組裝 `PipelineOptions` 或對 `any` 做型別斷言。建議在啟動期建立一次 `transport/http.NewEndpoints(EndpointConfig)`，再用泛型建構函式直接產生 `http.Handler`：
+
+```go
+endpoints, err := transport.NewEndpoints(transport.EndpointConfig{
+	Timeout:                5 * time.Second,
+	MaxBodyBytes:           1 << 20,
+	Manager:                manager,
+	AuthenticateCredential: validator.AuthenticateCredential,
+	Credentials:            transport.BearerCredentials(),
+	ResolveTenant:          resolveTenant,
+	ResolveScope:           resolveScope,
+	Authorize:              scopes.Authorize,
+	Rejected:               onRejected,
+})
+
+createBook, err := transport.CommandEndpoint(endpoints, func(ctx context.Context, in transport.Input[domain.Book]) (domain.Book, error) {
+	created, createErr := books.Create(ctx, in.Body, in.IdempotencyKey)
+	if database.IsConflict(createErr) {
+		return domain.Book{}, transport.NewProblemError(http.StatusConflict, "CONFLICT", createErr)
+	}
+	return created, createErr
+}, transport.WithPermission("books.write"), transport.WithIdempotencyHeader("Idempotency-Key", true))
+
+getBook, err := transport.QueryEndpoint(endpoints, func(ctx context.Context, in transport.QueryInput) (domain.Book, error) {
+	book, getErr := books.Get(ctx, in.Request.PathValue("id"))
+	if database.IsNotFound(getErr) {
+		return domain.Book{}, transport.NewProblemError(http.StatusNotFound, "NOT_FOUND", getErr)
+	}
+	return book, getErr
+}, transport.WithPermission("books.read"))
+```
+
+- **嚴格 JSON 解碼與自動驗證**：`CommandEndpoint` 內建 `DisallowUnknownFields`、拒絕 trailing tokens，並自動呼叫請求型別可選的 `Validate() error`（失敗回 `422 VALIDATION_FAILED`）；`WithStatus` 可自訂 `2xx` 狀態碼（如 `201 Created`），`WithResourcePolicy[Req]`／`WithResourceCheck` 於交易內執行資源檢查。
+- **標準錯誤分類**：使用 `transport.NewProblemError(status, code, cause)` 直接對接 `WriteError`，免除應用層重複定義錯誤 struct，同時保留原始 `cause` 不洩漏給外部用戶端。
+- **內建停機協調**：使用 `transport.NewServerParticipant(runtime.NewWorkGroup())` 搭配 `Attach(server)`、`Add(extra...)` 與 `Wrap(mux)`，直接交給 `runtime.New(...)` 完成優雅停機與 Drain。
+
 ### 重要使用邊界
 - **單次非串流請求專用**：本 Pipeline 適用於一般 REST／JSON API。若是 **SSE 或 WebSocket 長連線**，請改用[工作單元](../data/unit-of-work.md)提到的 `StreamOperation` 為每次互動開啟短交易，切勿用一筆長交易包住整條長連線。
 - **路由／Header 候選防衝突**：使用 `scope.Select` 拒絕路由與 Header 互相矛盾的請求；若資源 DTO 帶有 owner 欄位，務必使用 `scope.MatchOwner` 與可信 binding 比對，絕不拿 DTO 覆蓋 owner。

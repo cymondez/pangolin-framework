@@ -4,6 +4,8 @@ description: 在自己的專案建立 main.go，透過 Root 裝配與 app.Run �
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 import source from '../_snippets/hello.go';
 
 > **你在架構中的位置**：**`[ 應用入口 main.go + 最簡 Module 生命週期 ]`**（不需要資料庫、設定檔或網路服務）
@@ -51,10 +53,24 @@ panGOlin 把這整套骨架收斂成一個極簡入口：**定義 Module struct 
 
 確認終端機位於 **`hello-pangolin`** 資料夾，執行：
 
+<Tabs groupId="os">
+<TabItem value="powershell" label="Windows PowerShell">
+
+```powershell
+go mod tidy
+go run .
+```
+
+</TabItem>
+<TabItem value="bash" label="Linux / macOS (Bash)">
+
 ```bash
 go mod tidy
 go run .
 ```
+
+</TabItem>
+</Tabs>
 
 你應該會在 1 秒內看到以下輸出，接著程式乾淨結束（exit code 0）：
 

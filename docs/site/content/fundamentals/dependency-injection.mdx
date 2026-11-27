@@ -4,8 +4,10 @@ description: 用建構子註冊服務、正確挑選 Singleton / Transient / Ope
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 import source from '../_snippets/root-greeting.go';
-import legacySource from '../_snippets/dependency-injection.go';
+import containerSource from '../_snippets/dependency-injection.go';
 import contracts from '../_snippets/moduleapp-contracts.go';
 import catalog from '../_snippets/moduleapp-catalog.go';
 import appRoot from '../_snippets/moduleapp-app.go';
@@ -33,9 +35,22 @@ panGOlin 的 DI 設計結合了 Go 的簡潔與嚴格邊界：
 
 從框架原始碼的 `examples/basics` 執行最小 DI 示範：
 
+<Tabs groupId="os">
+<TabItem value="powershell" label="Windows PowerShell">
+
+```powershell
+go run ./root-greeting
+```
+
+</TabItem>
+<TabItem value="bash" label="Linux / macOS (Bash)">
+
 ```bash
 go run ./root-greeting
 ```
+
+</TabItem>
+</Tabs>
 
 預期輸出 `Hello, World!`（設定 `APP_NAME=Reader` 後為 `Hello, Reader!`）。完整程式如下：
 
@@ -44,13 +59,16 @@ go run ./root-greeting
 ### 註冊與解析的 4 個核心規則
 
 1. **建構子就是一般函式**：支援三種簽名——`func(...) T`、`func(..., error)` 或 `func(...) (T, func(context.Context) error, error)`（第二回傳值為 `Cleanup` 函式）。建構子參數可選擇接收最多一個 `context.Context`，其餘參數皆自動從 DI 解析。
-2. **用高階輔助函式指定存活期**：
+2. **用高階輔助函式與流暢註冊器指定存活期**：
    - `module.AddSingleton(b.Services(), NewSvc)`：全應用單例共用。
    - `module.AddTransient(b.Services(), NewSvc)`：每次解析建立新實例（省略選項時的預設值）。
    - `module.AddOperation(b.Services(), NewSvc)`：綁定單次操作 Scope，操作結束即清理。
-   - 若要讓建構子同時貢獻給另一個模組的介面契約，加上 `module.As(module.Contract[MyInterface]())` 選項即可。
+   - 若要一次完成「註冊實作貢獻給介面契約 + `Export` 該契約」，可用 `module.AddAndExportSingleton[MyContract](b.Services(), NewSvc)`（亦有 `AddAndExportTransient`／`AddAndExportOperation`）。
+   - 模組有多項註冊時，可用錯誤累積式流暢註冊器 `module.Register(b.Services()).Singleton(NewA).Singleton(NewB, module.As(Contract)).Export(Contract).Err()`，遇到首個錯誤自動短路並由 `.Err()` 回傳。
 3. **解析鍵 = 建構子的精確回傳型別**：建構子必須回傳具象型別（如 `*GreetingService`），不可直接回傳介面；這樣能明確區分「實作擁有權」與「契約公開權」。
-4. **用泛型 `module.Resolve[T]` 型別安全解析**：在 `Start` 或操作 Scope 內一律使用 `module.Resolve[*GreetingService](ctx, rt.Services())`（或 `module.Resolve[contracts.Catalog](ctx, scope)`），不需要自己做 `any` 轉型。
+4. **用泛型安全解析，零 `any` 轉型**：
+   - 解析模組契約／服務使用 `module.Resolve[*GreetingService](ctx, rt.Services())`（或 `module.Resolve[contracts.Catalog](ctx, scope)`）。
+   - 解析具名低階鍵 `di.Key[T]` 使用 `di.ResolveKey(ctx, rt.Services(), myKey)`，自動檢查 `ctx`、`resolver` 與執行期型別。
 
 > **Cleanup 自動化**：若你的建構子回傳了 `Cleanup` 函式（例如關閉連線池或檔案），容器會在應用停機（或 Operation Scope `Close`）時依反序自動呼叫，不需要再於 `Module.Stop` 重複關閉。
 
@@ -86,7 +104,7 @@ func (m *Module) Start(ctx context.Context, rt module.Runtime) error {
 }
 ```
 
-> **安全保證**：`rt.OpenScope(ctx)` 建立的 Scope 會鎖定建立當下的模組擁有者身分，絕不會洩漏底層封存容器（Sealed Container）或繞過模組可見性檢查。（早期 `module.OpenScope(ctx, rt.Services())` 僅作過渡保留，新程式請直接使用 `rt.OpenScope(ctx)`。）
+> **安全保證**：`rt.OpenScope(ctx)` 建立的 Scope 會鎖定建立當下的模組擁有者身分，絕不會洩漏底層封存容器（Sealed Container）或繞過模組可見性檢查。
 
 ---
 
@@ -119,17 +137,26 @@ func (m *Module) Start(ctx context.Context, rt module.Runtime) error {
 
 切到框架原始碼的 **`pangolin-framework/examples/moduleapp`** 執行：
 
-```bash
-# Windows PowerShell（非互動環境建議加上 2 秒期限自動停機）
+<Tabs groupId="os">
+<TabItem value="powershell" label="Windows PowerShell">
+
+```powershell
+# 非互動環境建議加上 2 秒期限自動停機
 $env:MODULEAPP_DEADLINE = '2s'
 go run .
 Remove-Item Env:MODULEAPP_DEADLINE
 ```
 
+</TabItem>
+<TabItem value="bash" label="Linux / macOS (Bash)">
+
 ```bash
-# macOS / Linux
+# 非互動環境建議加上 2 秒期限自動停機
 MODULEAPP_DEADLINE=2s go run .
 ```
+
+</TabItem>
+</Tabs>
 
 預期輸出（完整呈現相依分層、各模組解析到的實作型別與反序停機）：
 
@@ -167,11 +194,11 @@ stop store
 ---
 
 <details>
-<summary>維護舊版或非模組工具參考：獨立 DI 容器（<code>kernel/di</code>）</summary>
+<summary>進階參考：在獨立工具或測試中直接使用低階 DI 容器（<code>kernel/di</code>）</summary>
 
-如果你在撰寫不經 Root 模組裝配的獨立工具、測試輔助程式，或維護舊式明示清單應用，底層 `kernel/di` 的 `Registry`／`Container` 依然完整可用：
+如果你在撰寫不經 Root 模組裝配的獨立命令列工具或測試輔助程式，可以直接使用底層 `kernel/di` 的 `Registry`／`Container`：
 
-<CodeBlock language="go" title="examples/basics/dependency-injection/main.go（獨立低階容器）">{legacySource}</CodeBlock>
+<CodeBlock language="go" title="examples/basics/dependency-injection/main.go（獨立低階容器）">{containerSource}</CodeBlock>
 
 從 `examples/basics` 執行 `go run ./dependency-injection`，預期輸出 `Hello, Alice!`。使用低階容器時須手動在 `Provider.DependsOn` 宣告所有依賴鍵、手動 `Seal`，並在離開前以有界 context 呼叫 `container.Close`。
 

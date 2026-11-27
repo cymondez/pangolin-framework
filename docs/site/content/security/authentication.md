@@ -115,9 +115,9 @@ func NewSessionAuthentication(store SessionStore) (*identity.Pipeline, transport
 ### 怎麼接到 HTTP 管線？
 
 在你的 HTTP 組裝端：
-- 將 `pipeline.AuthenticateCredential` 傳給 `transport.PipelineOptions.AuthenticateCredential`。
-- 將回傳的 `extractor` 傳給 `PipelineOptions.Credentials`（在 Bookstore Handler 中對應欄位為 `CredentialAuth` 與 `Credentials`）。
-- 舊版僅支援 Bearer Token 的 `Authenticate`／`Auth` 欄位仍保留相容，兩組模式**擇一設定**即可。
+- 將 `pipeline.AuthenticateCredential` 傳給 `transport.EndpointConfig.AuthenticateCredential`（或 `transport.PipelineOptions.AuthenticateCredential`）。
+- 將回傳的 `extractor` 傳給 `EndpointConfig.Credentials`（或 `PipelineOptions.Credentials`；在 Bookstore Handler 中對應欄位為 `CredentialAuth` 與 `Credentials`）。
+- 若端點只需單純 Bearer Token 驗證，也可使用精簡的 `Authenticate` 欄位（與 `AuthenticateCredential` **二擇一設定**即可）。
 
 > **Cookie CSRF 安全保護**：內建的 `transport.CookieCredentials(...)` **只允許安全方法（`GET`／`HEAD`／`OPTIONS`）**；若偵測到帶 Cookie 的 `POST`/`PUT`/`DELETE` 請求會直接拒絕並回 `COOKIE_UNSAFE_METHOD`。如果你需要支援 Cookie 寫入，必須由 Session 模組提供已完成 CSRF 驗證的自訂 `CredentialExtractor`，並正確設定 Cookie 的 `HttpOnly`、`Secure`、`SameSite`、到期與撤銷策略——**切勿直接繞過方法檢查**。
 

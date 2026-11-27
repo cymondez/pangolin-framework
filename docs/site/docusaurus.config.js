@@ -12,7 +12,7 @@ if (!/^\/(?:[A-Za-z0-9_-]+\/)*$/.test(baseUrl)) {
 /** @type {import('@docusaurus/types').Config} */
 module.exports = {
   title: 'panGOlin Framework',
-  tagline: '用 Go，把應用的邊界寫清楚。',
+  tagline: '顯式模組、嚴格交易、可靠事件，經得起高速演進的 Go 單體基座。',
   favicon: 'img/logo.svg',
   url: process.env.DOCS_URL || 'http://localhost:18088',
   baseUrl,

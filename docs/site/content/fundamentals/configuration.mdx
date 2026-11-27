@@ -4,6 +4,8 @@ description: 理解 panGOlin 啟動組態的分層覆寫順序、必填與格式
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 import source from '../_snippets/configuration.go';
 
 > **你在架構中的位置**：`應用入口 main.go` **`[ 讀取並驗證啟動設定（defaults < file < environment < cli）]`** `→ 轉成只讀 config.Reader → 交給模組 Start 使用`
@@ -31,9 +33,22 @@ import source from '../_snippets/configuration.go';
 
 從框架原始碼的 `examples/basics` 執行：
 
+<Tabs groupId="os">
+<TabItem value="powershell" label="Windows PowerShell">
+
+```powershell
+go run ./configuration
+```
+
+</TabItem>
+<TabItem value="bash" label="Linux / macOS (Bash)">
+
 ```bash
 go run ./configuration
 ```
+
+</TabItem>
+</Tabs>
 
 預設會看到 `Application: My App`。這份程式也可以直接貼進你自己專案的 `main.go` 執行：
 
@@ -51,7 +66,8 @@ go run ./configuration
 
 ### 測試 A：用環境變數覆寫預設值
 
-**Windows PowerShell：**
+<Tabs groupId="os">
+<TabItem value="powershell" label="Windows PowerShell">
 
 ```powershell
 $env:APP_NAME = 'Bookstore'
@@ -59,23 +75,38 @@ go run ./configuration
 Remove-Item Env:APP_NAME
 ```
 
-**macOS／Linux：**
+</TabItem>
+<TabItem value="bash" label="Linux / macOS (Bash)">
 
 ```bash
 APP_NAME=Bookstore go run ./configuration
 ```
 
+</TabItem>
+</Tabs>
+
 預期輸出：`Application: Bookstore`。
 
 ### 測試 B：刻意傳入空字串，驗證 `Required: true` 生效
 
-**Windows PowerShell：**
+<Tabs groupId="os">
+<TabItem value="powershell" label="Windows PowerShell">
 
 ```powershell
 $env:APP_NAME = ''
 go run ./configuration
 Remove-Item Env:APP_NAME
 ```
+
+</TabItem>
+<TabItem value="bash" label="Linux / macOS (Bash)">
+
+```bash
+APP_NAME='' go run ./configuration
+```
+
+</TabItem>
+</Tabs>
 
 預期結果：程式立即以非零結束碼退出並回報設定驗證失敗，不會印出空白的 `Application:`。
 

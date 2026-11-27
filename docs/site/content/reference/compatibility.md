@@ -11,7 +11,7 @@ description: 一覽 panGOlin 0.1.0 預覽版所有已驗證交付的能力、工
 
 | 能力模組 | 0.1.0 已交付並經驗證 ✅ | 導入前務必注意的明確邊界 ⚠️ |
 |---|---|---|
-| **模組與生命週期** | Root Type 相依 DAG、穩定拓撲排序、三段 Configure、優雅停機 Drain、明示清單相容路徑 | 刻意不提供執行期動態熱插拔模組 |
+| **模組與生命週期** | Root Type 相依 DAG、穩定拓撲排序、三段 Configure、優雅停機 Drain | 刻意不提供執行期動態熱插拔模組 |
 | **依賴注入（DI）** | 建構子自動解析、`AddSingleton`／`AddTransient`／`AddOperation`、泛型 `Resolve[T]`、`rt.OpenScope`、跨模組 `Export` 與顯式 `Replace` 紀錄 | Singleton 不可捕獲 Operation 服務；建構子必須回傳具象型別 |
 | **啟動設定（Config）** | `defaults < file < environment < cli` 合併與必填／URL 驗證 | 檔案與環境變數讀取由應用入口明確映射 |
 | **工作單元（UOW）** | `application.CommandResult`／`QueryResult`、`Required`／`RequiresNew`、三種隔離級別、Deadline、`UOW_COMMIT_UNKNOWN` 與完成回呼 | 不提供非交易寫入、Savepoint、Suppress、跨資料庫原子提交或隱式重試 |

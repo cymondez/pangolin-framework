@@ -3,6 +3,9 @@ title: 疑難排解（Troubleshooting）
 description: 依「環境與安裝 → 模組與 DI → 交易與 UOW → 安全與租戶 → 事件與背景工作」分類的快速診斷手冊：症狀、根本原因與修復方式一次查清。
 ---
 
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
+
 這份手冊整理了新進人員導入 panGOlin 時最常遇到的錯誤訊息與卡關情境。你可以直接用右上角搜尋欄輸入錯誤碼（例如 `UOW_BUSY`、`SCOPE_KIND_UNSUPPORTED`、`missing provider`）快速跳轉。
 
 ---
@@ -18,8 +21,27 @@ description: 依「環境與安裝 → 模組與 DI → 交易與 UOW → 安全
 - **修復**：先依[第一個應用](../getting-started/quickstart.mdx)建立 `main.go`，再執行 `go mod tidy`。
 
 ### 設定 `APP_NAME` 後程式輸出沒變
-- **原因**：環境變數只對設定它的那一個終端視窗有效，或執行路徑錯誤。
-- **修復**：PowerShell 請用 `$env:APP_NAME = 'Reader'` 後在**同一個終端**執行 `go run .`；macOS／Linux 使用 `APP_NAME=Reader go run .`。執行套件現成範例時須位於 `examples/basics` 目錄。
+- **原因**：環境變數只對設定它的那一個終端視窗有效，或執行路徑錯誤（執行套件現成範例時須位於 `examples/basics` 目錄）。
+- **修復**：在**同一個終端**設定變數並執行：
+
+<Tabs groupId="os">
+<TabItem value="powershell" label="Windows PowerShell">
+
+```powershell
+$env:APP_NAME = 'Reader'
+go run .
+Remove-Item Env:APP_NAME
+```
+
+</TabItem>
+<TabItem value="bash" label="Linux / macOS (Bash)">
+
+```bash
+APP_NAME=Reader go run .
+```
+
+</TabItem>
+</Tabs>
 
 ---
 
@@ -61,8 +83,25 @@ description: 依「環境與安裝 → 模組與 DI → 交易與 UOW → 安全
 ## 四、Bookstore 環境、登入與多租戶錯誤
 
 ### Bookstore 示範環境無法啟動或找不到資料表
-- **原因**：Docker Engine 未開啟、本機 ports（`15542`/`14322`/`18180`/`18181`）被占用，或尚未跑初始化腳本。
-- **修復**：先執行 `pwsh ./examples/bookstore/scripts/demo.ps1 status` 檢查狀態；停止自己的 API／Worker 後重新執行 `demo.ps1 up`（既有書籍資料會保留；不要重設整台 Docker Engine）。
+- **原因**：Docker Engine 未開啟、本機 ports（`15542`/`14322`/`18180`/`18181`）被占用，或尚未跑初始化步驟。
+- **修復**：先檢查示範專案容器狀態；停止自己的 API／Worker 後再依[Bookstore 教學](../tutorials/bookstore.md#1-準備示範服務)重新啟動（既有書籍資料會保留；不要重設整台 Docker Engine）：
+
+<Tabs groupId="os">
+<TabItem value="powershell" label="Windows PowerShell">
+
+```powershell
+pwsh ./examples/bookstore/scripts/demo.ps1 status
+```
+
+</TabItem>
+<TabItem value="bash" label="Linux / macOS (Bash)">
+
+```bash
+docker compose -p pangolin-bookstore-demo -f deploy/compose/m1.yaml ps
+```
+
+</TabItem>
+</Tabs>
 
 ### API 回應 `400`、`401` 或 `403`
 - **`400 SCOPE_KIND_UNSUPPORTED`**：預設 `tenant-only` Bookstore 只接受 `tenant` Kind，不會把其他 Kind 默默降級成 tenant。

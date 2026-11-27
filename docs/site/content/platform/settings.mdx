@@ -4,6 +4,8 @@ description: 執行完整無外部依賴範例，掌握 panGOlin 五至七層設
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 import source from '../_snippets/platform-services.go';
 
 > **你在架構中的位置**：`執行期平台服務` **`[ platform/settings（5–7 層動態偏好與產品設定）+ platform/cache（版本核對快取）]`**
@@ -22,9 +24,22 @@ panGOlin 把分層解析、版本核對與租戶隔離全部收攏在 `platform/
 
 切到框架原始碼的 **`pangolin-framework/examples/basics`**，執行：
 
+<Tabs groupId="os">
+<TabItem value="powershell" label="Windows PowerShell">
+
+```powershell
+go run ./platform-services
+```
+
+</TabItem>
+<TabItem value="bash" label="Linux / macOS (Bash)">
+
 ```bash
 go run ./platform-services
 ```
+
+</TabItem>
+</Tabs>
 
 這份程式一次驗證 **Scoped Cache、Settings 5 層解析、JSON 陣列鍵、Feature Quota 上限、Permission 優先，以及快取通知失敗後的版本收斂**，預期看到 8 行輸出：
 
@@ -84,7 +99,7 @@ Version converged: true
 ## 4. JSON 啟動設定鍵的攤平規則（Config 層）
 
 JSON 設定透過 `config.ParseJSON` 解析進入 Config 層，例如 `{"Settings":{"Channels":[{"Name":"mail"}]}}` 會攤平為 `Settings:Channels:0:Name`，對應 Setting 名稱為 `Channels:0:Name`：
-- 陣列索引從 `0` 起算，多層陣列一律以冒號 `:` 分隔；`Settings` 只查詢 `Settings:` 加完整名稱，不會把 `Abp.Mailing.Smtp.Host` 裡的點號拆開（點號是字面值，與巢狀物件的冒號路徑不同）。
+- 陣列索引從 `0` 起算，多層陣列一律以冒號 `:` 分隔；`Settings` 只查詢 `Settings:` 加完整名稱，不會把 `App.Mailing.Smtp.Host` 裡的點號拆開（點號是字面值，與巢狀物件的冒號路徑不同）。
 - JSON Key 比對不區分大小寫，重複或攤平衝突直接拒絕。
 - 型別遵循 .NET 10 慣例：`null` 與空物件不產出字串值、空陣列為空字串、`bool` 為 `True`/`False`、數值保留原字面字串；Configuration Provider 預設回傳 JSON string，不猜測型別。
 

@@ -4,6 +4,8 @@ description: 透過免外部服務的範例認識標準 Event Envelope 結構，
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 import source from '../_snippets/event-envelope.go';
 
 > **你在架構中的位置**：`Application 寫入交易內 →` **`[ 建立版本化 distributed.Envelope → 寫入 Outbox ]`** `→ Worker 派送 NATS JetStream → Consumer Inbox 去重處理`
@@ -32,9 +34,22 @@ panGOlin 用 **標準化 Event Envelope + Outbox / Inbox 模式** 徹底解決�
 
 切到框架原始碼的 **`pangolin-framework/examples/basics`**，執行：
 
+<Tabs groupId="os">
+<TabItem value="powershell" label="Windows PowerShell">
+
+```powershell
+go run ./event-envelope
+```
+
+</TabItem>
+<TabItem value="bash" label="Linux / macOS (Bash)">
+
 ```bash
 go run ./event-envelope
 ```
+
+</TabItem>
+</Tabs>
 
 預期輸出：
 
@@ -64,7 +79,7 @@ event-1 / bookstore.book_created / schema 1
 
 ## 3. 實務運作與 NATS JetStream Adapter 要點
 
-1. **Registry 嚴格驗證 Schema**：使用通用 Outbox／Inbox 時，需在 `distributed.Registry` 明示註冊每個 `distributed.Schema{Type, Version, Required, Validate}`；未註冊或格式不符的事件在寫入或接收時就會被拒絕（僅有明示 `LegacyTenant` 的舊版 Schema 才會自動補齊 `tenant` owner）。
+1. **Registry 嚴格驗證 Schema**：使用通用 Outbox／Inbox 時，需在 `distributed.Registry` 明示註冊每個 `distributed.Schema{Type, Version, Required, Validate}`；未註冊或格式不符的事件在寫入或接收時就會被拒絕。
 2. **Broker ACK ≠ 業務完成**：`events/nats` 透過 `Connect` 建立連線、`Provision` 建立 `FileStorage` 串流、`Send` 等待 JetStream 持久化確認。請記住：**publish ACK 只代表 Broker 已安全收下訊息，不代表下游消費者已經把業務處理完**。
 3. **兩階段消費保障**：`Subscribe`／`Next` 收到訊息後，通用 Inbox Receiver 會先驗證完整 Envelope 並落盤至 Inbox 表後才向 NATS 送出 ACK，再由獨立 Inbox Worker 在同一業務交易內完成業務與 `processed` 標記。
 4. **連線歸屬與恢復**：`stream`／`subject`／`durable consumer` 設定必須一致，且連線由單一擁有者模組於停機 Drain 後關閉；目前版本若 Broker 連線中斷，由程序重啟恢復，框架不會在背景自動重跑業務 callback。

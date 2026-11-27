@@ -4,8 +4,9 @@ description: 透過真實範例理解多模組依相依順序啟動、啟動前�
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 import source from '../_snippets/root-lifecycle.go';
-import legacySource from '../_snippets/lifecycle.go';
 
 > **你在架構中的位置**：`啟動前驗證（Seal + StartupChecks）→` **`[ 依序 Start → Ready → Quiesce/Drain → 反序 Stop → Cleanup ]`**
 >
@@ -43,9 +44,22 @@ panGOlin 把整個應用的啟動與停機標準化為一條不可顛倒的狀�
 
 從框架原始碼的 `examples/basics` 執行：
 
+<Tabs groupId="os">
+<TabItem value="powershell" label="Windows PowerShell">
+
+```powershell
+go run ./root-lifecycle
+```
+
+</TabItem>
+<TabItem value="bash" label="Linux / macOS (Bash)">
+
 ```bash
 go run ./root-lifecycle
 ```
+
+</TabItem>
+</Tabs>
 
 預期輸出（清楚看到「底層 `storage` 先起、最後停；上層 `books` 後起、先停」）：
 
@@ -99,8 +113,8 @@ if err := app.Run(ctx, rootModule,
 2. **註冊 Participant**：透過 `app.Participants(...)` 把 HTTP／Worker 接進停機排程。收到停機訊號時，Runtime 會先要求所有 Participant 停止接新案（Quiesce），接著在 `DrainTimeout` 內等 `WorkGroup` 歸零，確認沒有半筆資料正在寫入後，才依反序呼叫模組 `Stop` 與關閉資料庫連線池。
 3. **HTTP Server 的 Shutdown**：HTTP listener 本身的 `http.Server.Shutdown(ctx)` 仍由你的應用在 Participant 或專屬模組中接入，確保不再接受新 TCP 連線並釋放 Port。
 
-> **需要自訂 `DrainTimeout`／`CleanupTimeout` 預算？**
-> 可以先用 `runtime.New(runtime.Options{DrainTimeout: ..., CleanupTimeout: ...}, sources)` 建立自訂主機，再呼叫 `runtime.StartRoot(ctx, host, rootModule)` 啟動同一個根模組。CLI 生成的專案就是採用這種組裝方式，詳見[用 CLI 建立自己的 Bookstore](../tutorials/generated-bookstore.md) 與 [Bookstore 實戰](../tutorials/bookstore.md)。
+> **需要自訂 `DrainTimeout`／`CleanupTimeout` 預算或查詢 `host.Ready()`？**
+> 可以先用 `runtime.New(runtime.Options{DrainTimeout: ..., CleanupTimeout: ...}, sources)` 建立自訂主機，再呼叫 `runtime.StartRoot(ctx, host, rootModule)` 啟動同一個根模組；只有全部模組完成啟動後 `host.Ready()` 才會為 `true`，可直接接到 `/readyz` 探針。CLI 生成的專案就是採用這種組裝方式，詳見[用 CLI 建立自己的 Bookstore](../tutorials/generated-bookstore.md) 與 [Bookstore 實戰](../tutorials/bookstore.md)。
 
 ---
 
@@ -110,29 +124,6 @@ if err := app.Run(ctx, rootModule,
   每個資源只能有一個關閉責任者。連線池若由建構子回傳 `Cleanup` 關閉，就交給容器在停機最後階段統一關閉；若由專屬模組的 `Stop` 關閉，就不要重複註冊 `Cleanup`。
 - **❌ 反例：停機清理沿用已被取消的主 `ctx`**
   當主 `ctx` 因收到 `SIGTERM` 取消時，若直接拿它去執行資料庫收尾會立刻 `context.Canceled`。panGOlin 內部在 `Stop` 與 `Cleanup` 皆使用獨立且有界的清理 context，你自己寫的清理邏輯也應尊重傳入的 cleanup `ctx` 期限。
-
----
-
-<details>
-<summary>維護舊版應用參考：進階相容路徑（明示清單組裝與 <code>host.Ready()</code>）</summary>
-
-舊式 `Host.Start(ctx, []module.Module)` 依然完整支援（未棄用），並提供 `host.Ready()` 供健康檢查端點查詢所有模組是否已完成啟動：
-
-<CodeBlock language="go" title="examples/basics/lifecycle/main.go（進階相容版本）">{legacySource}</CodeBlock>
-
-從 `examples/basics` 執行 `go run ./lifecycle`，預期輸出：
-
-```text
-start storage
-start books
-ready: true
-stop books
-stop storage
-```
-
-只有 `host.Start` 全部成功後 `host.Ready()` 才會為 `true`，可直接接到 `/readyz` 探針避免服務未就緒就接收流量。
-
-</details>
 
 ---
 

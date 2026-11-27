@@ -72,6 +72,8 @@ panGOlin 的 **工作單元（Unit of Work，簡稱 UOW）** 用一個受控的�
 |---|---|---|
 | `application.Command` / `CommandResult[T]` | **90% 的日常寫入 Use Case**（新增、修改、刪除） | 自動套用統一的 `ReadWrite + Transactional` 政策、補上 `use_case` Tracing Span，且 `CommandResult` 只有在 **確認 Commit 成功後** 才回傳結果 `T`（失敗時自動回傳零值，避免誤回未提交資料）。 |
 | `application.Query` / `QueryResult[T]` | **90% 的日常查詢 Use Case** | 明示 `ReadOnly` 政策（配合 RLS Adapter 自動開唯讀交易）並統一接入 Tracing，直接回傳查詢結果 `T`。 |
+| `application.AuthorizedCommandResult[T]` / `AuthorizedQueryResult[T]` | **需要內建授權護欄的敏感 Use Case** | 交易前先檢查入口權限，交易內再驗證 `ResourcePolicy`，直接由非 HTTP 入口呼叫也同樣受保護。 |
+| `application.Runner`（`RunCommand[T]` / `RunQuery[T]`） | **單一 DI 注入點整合 UOW + 授權 + 可選冪等** | 一次注入 `Manager`、`Authorizer` 與中立 `IdempotencyExecutor`；以 `CommandSpec`／`QuerySpec` 宣告權限、UOW 選項與冪等鍵，缺少對應依賴一律 fail-closed 拒絕。 |
 | `uow.UnitOfWorkManager.Within` | **進階控制情境** | 當你需要明確覆寫 `Propagation: uow.RequiresNew`、指定 `Isolation`（例如 `uow.Serializable`）或縮短單次操作 `Timeout` 時使用。 |
 
 ### 完整範例：`books/service.go`
@@ -203,7 +205,7 @@ Service A: Command (ReadWrite) ──[ 根交易 #1 (連線 #1) ]─────
 ```
 
 - 適合「**即使主流程最後失敗，這筆紀錄仍要保留**」的場景（例如獨立安全事件、扣點失敗紀錄、外部回呼收件紀錄），以及「**在一個已驗證的父操作內，安全地以多條 goroutine 平行執行獨立資料庫工作**」。
-- **對齊 .NET ABP 的不可變 Ambient UOW 模型**：`RequiresNew` 透過 [`kernel/ambient`](../fundamentals/ambient-scope.md) 的 Copy-on-Write 鏈建立全新的獨立根 UOW 與獨立連線，**不會回寫或暫停父節點狀態**。因此多個 goroutine 可以對同一個有效的父 `work` context **同時併發呼叫 `Within(..., RequiresNew)`**，共用同一個無狀態 Repository 實例、各自持有獨立交易與連線，互不鎖死、互不汙染。
+- **不可變 Ambient UOW 模型**：`RequiresNew` 透過 [`kernel/ambient`](../fundamentals/ambient-scope.md) 的 Copy-on-Write 鏈建立全新的獨立根 UOW 與獨立連線，**不會回寫或暫停父節點狀態**。因此多個 goroutine 可以對同一個有效的父 `work` context **同時併發呼叫 `Within(..., RequiresNew)`**，共用同一個無狀態 Repository 實例、各自持有獨立交易與連線，互不鎖死、互不汙染。
 - **三個務必牢記的限制**：
   1. **它不是 Savepoint**：子交易已經 Commit 的資料，不會因為父交易稍後回滾而撤銷；同時子交易也**看不到**父交易尚未 Commit 的資料。
   2. **需要額外連線且小心鎖衝突**：每個同時進行的 `RequiresNew` 都會向連線池借用一條獨立連線。請確保連線池容量足以負荷併發度；若子交易試圖更新父交易已經鎖住的同一筆資料列（或 SQLite 單一 writer 寫鎖），會依 `Timeout` 失敗，不會退回共用父交易。
@@ -237,7 +239,7 @@ err := application.Query(detached, s.transactions, func(topWork context.Context)
 
 ```go title="反例：切勿不開新 UOW 就共用同一條連線平行查 DB ❌"
 application.Command(ctx, s.transactions, func(work context.Context) error {
-	// ❌ 錯誤 1：同一筆 UOW 綁定單一資料庫連線（如同 ABP 中單一 DbContext 不可並發查詢），
+	// ❌ 錯誤 1：同一筆 UOW 綁定單一資料庫連線（底層單一連線同一時間只能執行一條 SQL），
 	//    在同一個 work 上直接開 goroutine 平行呼叫 Repository 會觸發 ErrBusy 並使交易回滾！
 	// ❌ 錯誤 2：沒有等 goroutine 結束就讓回呼返回，連線關閉後背景 goroutine 會拿到 ErrClosed！
 	go func() {

@@ -4,6 +4,8 @@ description: 執行完整授權範例，掌握 panGOlin「預設拒絕、User �
 ---
 
 import CodeBlock from '@theme/CodeBlock';
+import Tabs from '@theme/Tabs';
+import TabItem from '@theme/TabItem';
 import source from '../_snippets/authorization.go';
 
 > **你在架構中的位置**：`已綁定 Tenant / Scope →` **`[ Entry Policy（動作權限檢查）→ UOW → Resource Policy（特定資料規則檢查）]`**
@@ -18,9 +20,22 @@ import source from '../_snippets/authorization.go';
 
 切到框架原始碼的 **`pangolin-framework/examples/basics`**，執行：
 
+<Tabs groupId="os">
+<TabItem value="powershell" label="Windows PowerShell">
+
+```powershell
+go run ./authorization
+```
+
+</TabItem>
+<TabItem value="bash" label="Linux / macOS (Bash)">
+
 ```bash
 go run ./authorization
 ```
+
+</TabItem>
+</Tabs>
 
 預期輸出（三行結果直接驗證 panGOlin 三大授權鐵律）：
 
