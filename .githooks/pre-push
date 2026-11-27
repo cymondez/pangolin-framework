@@ -3,12 +3,15 @@
 # Enable once per clone with: git config core.hooksPath .githooks
 set -eu
 
-if command -v python3 >/dev/null 2>&1; then
-  PY=python3
-elif command -v python >/dev/null 2>&1; then
-  PY=python
-else
-  echo "[BLOCKED] Neither python3 nor python is available to verify the local CI pre-push stamp." >&2
+PY=""
+for candidate in python3 python py; do
+  if command -v "$candidate" >/dev/null 2>&1 && "$candidate" --version >/dev/null 2>&1; then
+    PY="$candidate"
+    break
+  fi
+done
+if [ -z "$PY" ]; then
+  echo "[BLOCKED] Neither python3, python, nor py is available to verify the local CI pre-push stamp." >&2
   exit 1
 fi
 
