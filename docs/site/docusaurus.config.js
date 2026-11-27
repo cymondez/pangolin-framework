@@ -62,9 +62,9 @@ module.exports = {
       links: [
         {title: '開始使用', items: [{label: '安裝與建立專案', to: `${docsPath}getting-started/installation/`}, {label: '第一個應用', to: `${docsPath}getting-started/quickstart/`}]},
         {title: '範例與教學', items: [{label: '套件使用範例', to: `${docsPath}samples/`}, {label: 'Bookstore', to: `${docsPath}tutorials/bookstore/`}, {label: '文件版本', to: '/versions'}]},
-        {title: '參與開發', items: [{label: 'GitHub', href: 'https://github.com/cymondez/pangolin-framework'}, {label: '回報問題', href: 'https://github.com/cymondez/pangolin-framework/issues'}]},
+        {title: '參與開發', items: [{label: 'GitHub', href: 'https://github.com/cymondez/pangolin-framework'}, {label: '回報問題', href: 'https://github.com/cymondez/pangolin-framework/issues'}, {label: '授權條款 (Apache-2.0)', href: 'https://github.com/cymondez/pangolin-framework/blob/main/LICENSE'}]},
       ],
-      copyright: `panGOlin Framework · ${version.productVersion} · Go 應用開發指南`,
+      copyright: `panGOlin Framework · ${version.productVersion} · Apache-2.0 License · Go 應用開發指南`,
     },
     prism: {
       theme: {...themes.github, plain: {color: '#2d3f50', backgroundColor: '#edf3f7'}},

@@ -80,3 +80,7 @@ panGOlin Framework 是一套以 Go 語言獨立設計並從零實作（clean-roo
 在模組化單體架構分層、工作單元（Unit of Work）、多租戶與資源 Scope 隔離、分層設定與功能旗標、以及文件導覽組織等高層架構概念上，本專案受到開源社群與 [ABP Framework](https://abp.io/) 等現代企業級應用框架之設計理念啟發，謹此致謝。
 
 > **獨立聲明**：panGOlin Framework 與 ABP Framework（VoloSoft）及上述開源專案之間無任何官方隸屬、合作、授權或背書關係；相關名稱僅作設計理念參考致謝之用，其商標與權利歸屬各自原權利人。
+
+## 授權條款（License）
+
+本專案採用 **Apache License, Version 2.0** 授權，完整條文與歸屬聲明見 [LICENSE](LICENSE) 與 [NOTICE](NOTICE)。透過 `pangolin` CLI 生成的使用者專案業務程式碼歸使用者自行選擇授權，內附的 `framework/` Runtime 目錄則保留框架本身的 `LICENSE` 與 `NOTICE`。

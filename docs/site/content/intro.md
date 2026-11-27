@@ -78,3 +78,7 @@ description: 為 Go 工程師設計的模組化應用框架入門導覽：建立
 panGOlin Framework 是以 Go 語言獨立設計並從零實作的開源專案，未複製或移植任何外部框架的原始碼。在模組化單體架構、工作單元、多租戶與分層設定等高層設計概念上，本專案受到開源社群與 [ABP Framework](https://abp.io/) 等企業級應用框架的理念啟發，謹此致謝。
 
 panGOlin Framework 與 ABP Framework（VoloSoft）之間無任何官方隸屬、合作、授權或背書關係；相關名稱僅作概念參考與致謝之用，商標歸屬各自原權利人。
+
+## 授權條款
+
+panGOlin Framework 採用 **Apache License, Version 2.0** 開源授權（詳見倉庫根目錄的 `LICENSE` 與 `NOTICE`）。使用 `pangolin` CLI 生成的業務應用程式碼歸使用者自行決定授權，僅內附的 `framework/` 套件原始碼沿用 Apache-2.0 與其歸屬聲明。

@@ -10,7 +10,7 @@ OWNERS=('application','kernel','persistence','security','tenancy','events','plat
 
 def bundle():
     result={}
-    paths=[ROOT/'go.mod',ROOT/'go.sum',ROOT/'VERSION']
+    paths=[ROOT/'go.mod',ROOT/'go.sum',ROOT/'VERSION',ROOT/'LICENSE',ROOT/'NOTICE']
     for owner in OWNERS:
         paths.extend(p for p in (ROOT/owner).rglob('*') if p.is_file() and (p.suffix in ('.go','.sql') or p.name=='README.md') and not p.name.endswith('_test.go'))
     for p in paths:result['runtime/'+p.relative_to(ROOT).as_posix()+'.tmpl']=p.read_bytes()
