@@ -47,19 +47,22 @@ jobs:
         with:
           go-version: '1.27.4'
           cache: false
-      - run: python scripts/docs_examples.py
+      - run: python3 scripts/docs_examples.py
 
   build-pages:
     needs: [static-docs, consumer-examples]
     if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pages: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
       - name: Verify release commit is on main
         run: |
-          git fetch origin main --depth=0 || true
+          git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main
           git merge-base --is-ancestor HEAD origin/main || {
             echo "GitHub Pages deployment requires the commit to be on main." >&2
             exit 1
