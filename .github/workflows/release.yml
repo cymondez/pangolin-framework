@@ -19,8 +19,6 @@ jobs:
     permissions:
       contents: write
     env:
-      GOMODCACHE: ${{ github.workspace }}/.cache/go-mod
-      GOTMPDIR: ${{ github.workspace }}/.cache/go-tmp
       TAG_NAME: ${{ inputs.tag || github.ref_name }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -50,18 +48,24 @@ jobs:
             exit 1
           fi
           mkdir -p .cache/go-mod .cache/go-tmp
-          go mod download all
-          go run ./tools/check
+          GOMODCACHE="${GITHUB_WORKSPACE}/.cache/go-mod" GOTMPDIR="${GITHUB_WORKSPACE}/.cache/go-tmp" go mod download all
+          GOMODCACHE="${GITHUB_WORKSPACE}/.cache/go-mod" GOTMPDIR="${GITHUB_WORKSPACE}/.cache/go-tmp" go run ./tools/check
           python3 scripts/contracts.py check
           python3 scripts/release_manifest.py --check
           python3 scripts/template_bundle.py --check
 
       - name: Run unit tests
+        env:
+          GOMODCACHE: ${{ github.workspace }}/.cache/go-mod
+          GOTMPDIR: ${{ github.workspace }}/.cache/go-tmp
         run: |
           go vet ./...
           go test ./kernel/... ./application/... ./transport/... ./persistence/... ./security/... ./tenancy/... ./events/... ./platform/... ./observability/... ./modules/... ./cmd/... ./internal/scaffold/... ./tests/rootmodules/...
 
       - name: Build pangolin CLI release archives
+        env:
+          GOMODCACHE: ${{ github.workspace }}/.cache/go-mod
+          GOTMPDIR: ${{ github.workspace }}/.cache/go-tmp
         run: |
           mkdir -p dist
           build_target() {
