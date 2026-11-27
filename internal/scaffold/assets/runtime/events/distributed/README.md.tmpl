@@ -25,3 +25,7 @@ Execution 在入口及新根 admission 之後各自驗證目前 Permission 與�
 ## 運維與追蹤整合
 
 Envelope 新增可省略的 TraceParent，wire 欄位 traceparent 使用 omitempty；舊版無此欄位的 bytes 與解碼語意維持不變。此欄位只用於 W3C Trace Context，不是身分或授權憑據。
+
+## Context 感知 Envelope 建構
+
+`NewEnvelope(ctx, producer, eventType, schemaVersion, payload, opts...)` 自動從 `scope.Current(ctx)` 填入可信 owner（缺 scope 直接 fail-closed）、產生 `ID` 與 UTC `OccurredAt`、從 `uow.Current(ctx)` 取得預設 `CorrelationID`／`CausationID`，並將 struct／map 序列化為 JSON object（或防禦性複製 `json.RawMessage`／`[]byte`）。可透過 `WithEventID`、`WithOccurredAt`、`WithCorrelationID`、`WithCausationID`、`WithTraceParent` 覆寫欄位。

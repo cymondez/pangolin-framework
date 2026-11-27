@@ -17,7 +17,7 @@ import (
 func TestA65JSONConfiguration(t *testing.T) {
 	ctx := contextFor(t, "tenant", "tenant")
 	binding, _ := scope.Current(ctx)
-	reader, err := config.ParseJSON([]byte(`{"Settings":{"Channels":[{"Name":"mail"},{"Name":"sms"}],"List":[0,1,2,3,4,5,6,7,8,9,10,11],"Grid":[["nested"]],"0":"property","Abp.Mailing.Smtp.Host":"literal","Abp":{"Mailing":{"Smtp":{"Host":"nested"}}},"Null":null,"EmptyObject":{},"EmptyArray":[],"TextNumber":"123","Bool":true,"Quota":25}}`))
+	reader, err := config.ParseJSON([]byte(`{"Settings":{"Channels":[{"Name":"mail"},{"Name":"sms"}],"List":[0,1,2,3,4,5,6,7,8,9,10,11],"Grid":[["nested"]],"0":"property","App.Mailing.Smtp.Host":"literal","App":{"Mailing":{"Smtp":{"Host":"nested"}}},"Null":null,"EmptyObject":{},"EmptyArray":[],"TextNumber":"123","Bool":true,"Quota":25}}`))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -34,7 +34,7 @@ func TestA65JSONConfiguration(t *testing.T) {
 		t.Fatal(err)
 	}
 	definitions := []Definition{}
-	for _, key := range []string{"Channels:0:Name", "Channels:1:Name", "List:11", "Grid:0:0", "0", "Abp.Mailing.Smtp.Host", "Abp:Mailing:Smtp:Host", "Null", "EmptyObject", "EmptyArray", "TextNumber", "Bool", "Quota"} {
+	for _, key := range []string{"Channels:0:Name", "Channels:1:Name", "List:11", "Grid:0:0", "0", "App.Mailing.Smtp.Host", "App:Mailing:Smtp:Host", "Null", "EmptyObject", "EmptyArray", "TextNumber", "Bool", "Quota"} {
 		definitions = append(definitions, Definition{Key: key, Default: json.RawMessage(`"fallback"`), Inherit: true})
 	}
 	memory, _ := cache.NewMemory("app", "v", 32)
@@ -43,7 +43,7 @@ func TestA65JSONConfiguration(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Run("json-flatmap", func(t *testing.T) {
-		for key, want := range map[string]string{"Channels:0:Name": `"mail"`, "Channels:1:Name": `"sms"`, "List:11": `"11"`, "Grid:0:0": `"nested"`, "0": `"property"`, "Abp.Mailing.Smtp.Host": `"literal"`, "Abp:Mailing:Smtp:Host": `"nested"`, "TextNumber": `"123"`, "Bool": `"True"`, "Quota": `25`} {
+		for key, want := range map[string]string{"Channels:0:Name": `"mail"`, "Channels:1:Name": `"sms"`, "List:11": `"11"`, "Grid:0:0": `"nested"`, "0": `"property"`, "App.Mailing.Smtp.Host": `"literal"`, "App:Mailing:Smtp:Host": `"nested"`, "TextNumber": `"123"`, "Bool": `"True"`, "Quota": `25`} {
 			got, e := service.Resolve(ctx, key)
 			if e != nil || string(got.Value) != want {
 				t.Fatal(key, got, e)

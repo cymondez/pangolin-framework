@@ -352,7 +352,7 @@ API 使用 `application/problem+json`（RFC 9457 風格），包含 `type`、`ti
 panGOlin-framework 跨層傳遞請求／操作情境狀態（Identity、Tenant、ScopeBinding、Unit of Work 視圖、受控資料庫 Executor、交易綁定事件佇列、Telemetry）統一建立在 `kernel/ambient` 套件的泛型原語 `ambient.Var[T]` 之上：
 
 - **零內部依賴與顯式 `context.Context` 傳遞**：`kernel/ambient` 僅依賴 Go 標準函式庫 `context`，避免任何循環 import。所有狀態一律隨 `context.Context` 顯式傳遞，禁止全域 `Current` 變數、goroutine-local storage（GLS）、執行期堆疊解析或反射攔截器。
-- **與 .NET ABP `AsyncLocal<T>` 的同構 Copy-on-Write 模型**：`ambient.Var[T]` 底層維護不可變單向鏈結（`frame[T]{value, present, outer, depth}`），**零共享可變狀態、零計數器**。呼叫 `With`／`Clear`／`Scope`／`ScopeResult` 只會衍生新的 `context.Context`，絕不回寫父節點，使多個 goroutine 可同時從同一個父 context 安全衍生各自獨立的子範圍（例如平行 `uow.RequiresNew`）。
+- **不可變 Copy-on-Write 巢狀鏈模型**：`ambient.Var[T]` 底層維護不可變單向鏈結（`frame[T]{value, present, outer, depth}`），**零共享可變狀態、零計數器**。呼叫 `With`／`Clear`／`Scope`／`ScopeResult` 只會衍生新的 `context.Context`，絕不回寫父節點，使多個 goroutine 可同時從同一個父 context 安全衍生各自獨立的子範圍（例如平行 `uow.RequiresNew`）。
 - **套件私有防偽造與封閉清除契約**：每次 `ambient.New[T]()` 配置獨立且非零大小的未匯出指標鍵，消除字串鍵碰撞；各擁有者套件將 `Var[T]` 宣告為 package-private，只透過受控公開 API 讀寫，確保外部程式碼與 DTO 無法偽造安全或生命週期狀態。封閉介面 `ambient.Slot`（僅由 `*Var[T]` 實作）供 `uow.Detach` 與 `RequiresNew` 清除交易綁定的資源槽位，而不接受任意 context 改寫回呼。
 
 <a id="s-4"></a>

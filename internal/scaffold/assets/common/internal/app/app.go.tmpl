@@ -1,11 +1,9 @@
 package app
 
 import (
-	"bytes"
 	"context"
 	"crypto/rand"
 	"database/sql"
-	"encoding/json"
 	"errors"
 	"io/fs"
 	"net"
@@ -14,19 +12,19 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
+	pangolinapp "github.com/cymondez/pangolin-framework/application"
 	"github.com/cymondez/pangolin-framework/kernel/config"
 	"github.com/cymondez/pangolin-framework/kernel/di"
 	"github.com/cymondez/pangolin-framework/kernel/module"
 	"github.com/cymondez/pangolin-framework/kernel/runtime"
+	"github.com/cymondez/pangolin-framework/persistence/database"
 	"github.com/cymondez/pangolin-framework/persistence/idempotency"
 	"github.com/cymondez/pangolin-framework/persistence/migration"
 	"github.com/cymondez/pangolin-framework/persistence/uow"
 	"github.com/cymondez/pangolin-framework/platform/audit"
 	"github.com/cymondez/pangolin-framework/security/authn"
-	"github.com/cymondez/pangolin-framework/security/policy"
 	"github.com/cymondez/pangolin-framework/security/scope"
 	"github.com/cymondez/pangolin-framework/tenancy"
 	transport "github.com/cymondez/pangolin-framework/transport/http"
@@ -42,17 +40,6 @@ import (
 // contracts through typed resolution, never from low-level composition here.
 var bookToken = di.NewKey[application.Books]("app.books")
 
-type requestError struct {
-	cause  error
-	status int
-	code   string
-}
-
-func (e requestError) Error() string   { return e.code }
-func (e requestError) Unwrap() error   { return e.cause }
-func (e requestError) HTTPStatus() int { return e.status }
-func (e requestError) Code() string    { return e.code }
-
 // rootApplication is the HTTP/drain assembly of this generated app. The
 // module owns no platform resource: pools, unit-of-work manager, scope
 // registry and event resources are owned by the foundation module, and the
@@ -63,7 +50,7 @@ func (e requestError) Code() string    { return e.code }
 // business packages never import the app root.
 type rootApplication struct {
 	realtime realtimeState
-	bridge   *drainParticipant
+	bridge   *transport.ServerParticipant
 	serveErr chan error
 	listen   string
 }
@@ -80,84 +67,41 @@ func (ra *rootApplication) DependsOn() []module.Ref {
 }
 
 func (ra *rootApplication) Configure(b module.RootBuilder) error {
-	return b.Provide(di.Provider{Key: bookToken, Lifetime: di.Singleton, DependsOn: []di.Token{foundation.Scopes, foundation.Effects, foundation.Idempotency}, Factory: ra.newBooks})
+	return b.Provide(di.Provider{Key: bookToken, Lifetime: di.Singleton, DependsOn: []di.Token{foundation.UnitOfWork, foundation.Scopes, foundation.Effects, foundation.Idempotency}, Factory: ra.newBooks})
 }
 
 func (ra *rootApplication) newBooks(ctx context.Context, resolve di.Resolver) (any, di.Cleanup, error) {
-	scopesValue, err := resolve.Resolve(ctx, foundation.Scopes)
+	units, err := module.Resolve[uow.UnitOfWorkManager](ctx, resolve)
 	if err != nil {
 		return nil, nil, err
 	}
-	authorizer, ok := scopesValue.(policy.Authorizer)
-	if !ok {
-		return nil, nil, errors.New("scope contract is not a policy authorizer")
-	}
-	effectsValue, err := resolve.Resolve(ctx, foundation.Effects)
+	scopes, err := module.Resolve[foundation.ScopeAccess](ctx, resolve)
 	if err != nil {
 		return nil, nil, err
 	}
-	effects, ok := effectsValue.(infrastructure.Effects)
-	if !ok {
-		return nil, nil, errors.New("effects contract is not the framework bundle")
-	}
-	idemValue, err := resolve.Resolve(ctx, foundation.Idempotency)
+	effects, err := module.Resolve[infrastructure.Effects](ctx, resolve)
 	if err != nil {
 		return nil, nil, err
 	}
-	idem, ok := idemValue.(*idempotency.Store)
-	if !ok {
-		return nil, nil, errors.New("idempotency contract is not the framework store")
+	idem, err := module.Resolve[*idempotency.Store](ctx, resolve)
+	if err != nil {
+		return nil, nil, err
 	}
-	return application.Books{Repository: infrastructure.Repository{}, Authorizer: authorizer, Idempotency: idem, Effects: effects}, nil, nil
+	runner, err := pangolinapp.NewRunner(units, scopes, idem)
+	if err != nil {
+		return nil, nil, err
+	}
+	return application.Books{Repository: infrastructure.Repository{}, Runner: runner, Effects: effects}, nil, nil
 }
 
-// drainParticipant bridges the HTTP server accepted in module Start into the
-// host drain contract: admission stops first, drain waits under its deadline.
-type drainParticipant struct {
-	work   *runtime.WorkGroup
-	mu     sync.Mutex
-	server *http.Server
-	extra  runtime.Participant
-}
-
-func (p *drainParticipant) attach(server *http.Server) {
-	p.mu.Lock()
-	defer p.mu.Unlock()
-	p.server = server
-}
-
-func (p *drainParticipant) Quiesce(ctx context.Context) error {
-	p.mu.Lock()
-	server := p.server
-	p.mu.Unlock()
-	if server != nil {
-		server.SetKeepAlivesEnabled(false)
-	}
-	err := p.work.Quiesce(ctx)
-	if p.extra != nil {
-		err = errors.Join(err, p.extra.Quiesce(ctx))
-	}
-	return err
-}
-func (p *drainParticipant) Drain(ctx context.Context) error {
-	p.mu.Lock()
-	server := p.server
-	p.mu.Unlock()
-	var err error
-	if p.extra != nil {
-		err = p.extra.Drain(ctx)
-	}
-	if server != nil {
-		if err := server.Shutdown(ctx); err != nil {
-			return errors.Join(err, p.work.Drain(ctx))
-		}
-	}
-	return errors.Join(err, p.work.Drain(ctx))
-}
-func (p *drainParticipant) Cancel() {
-	p.work.Cancel()
-	if p.extra != nil {
-		p.extra.Cancel()
+func mapBookError(err error) error {
+	switch {
+	case database.IsConflict(err):
+		return transport.NewProblemError(http.StatusConflict, "CONFLICT", err)
+	case database.IsNotFound(err):
+		return transport.NewProblemError(http.StatusNotFound, "NOT_FOUND", err)
+	default:
+		return err
 	}
 }
 
@@ -168,60 +112,31 @@ func (ra *rootApplication) Start(ctx context.Context, rt module.Runtime) error {
 	if err := ra.checkAndResolve(ctx, rt); err != nil {
 		return err
 	}
-	managerValue, err := rt.Services().Resolve(ctx, foundation.UnitOfWork)
+	manager, err := module.Resolve[uow.UnitOfWorkManager](ctx, rt.Services())
 	if err != nil {
 		return err
 	}
-	manager, ok := managerValue.(uow.UnitOfWorkManager)
-	if !ok {
-		return errors.New("unit-of-work contract is not the framework manager")
-	}
-	resolved := struct {
-		tenants   *tenancy.Resolver
-		validator *authn.Validator
-		scopes    *scope.Registry
-	}{}
-	tenantsValue, err := rt.Services().Resolve(ctx, foundation.Tenants)
+	tenants, err := module.Resolve[*tenancy.Resolver](ctx, rt.Services())
 	if err != nil {
 		return err
 	}
-	resolved.tenants, ok = tenantsValue.(*tenancy.Resolver)
-	if !ok {
-		return errors.New("tenant resolver is not the framework resolver")
-	}
-	validatorValue, err := rt.Services().Resolve(ctx, foundation.Validator)
+	validator, err := module.Resolve[*authn.Validator](ctx, rt.Services())
 	if err != nil {
 		return err
 	}
-	resolved.validator, ok = validatorValue.(*authn.Validator)
-	if !ok {
-		return errors.New("credential validator is not the framework validator")
-	}
-	scopesValue, err := rt.Services().Resolve(ctx, foundation.Scopes)
+	scopes, err := module.Resolve[foundation.ScopeAccess](ctx, rt.Services())
 	if err != nil {
 		return err
 	}
-	resolved.scopes, ok = scopesValue.(*scope.Registry)
-	if !ok {
-		return errors.New("scope contract is not the framework registry")
-	}
-	booksValue, err := rt.Services().Resolve(ctx, bookToken)
+	books, err := di.ResolveKey(ctx, rt.Services(), bookToken)
 	if err != nil {
 		return err
 	}
-	books := booksValue.(application.Books)
-	databaseValue, err := rt.Services().Resolve(ctx, foundation.ApplicationDatabase)
+	db, err := module.Resolve[foundation.DB](ctx, rt.Services())
 	if err != nil {
 		return err
-	}
-	database, ok := databaseValue.(foundation.DB)
-	if !ok {
-		return errors.New("application database is not the foundation handle")
 	}
 	log, _ := audit.NewSecurityLog(os.Stderr, tenancy.Identity)
-	scopes := resolved.scopes
-	tenants := resolved.tenants
-	validator := resolved.validator
 	mux := http.NewServeMux()
 	if err := ra.realtime.mount(ctx, rt, mux, ra.bridge); err != nil {
 		return err
@@ -230,91 +145,72 @@ func (ra *rootApplication) Start(ctx context.Context, rt module.Runtime) error {
 	mux.HandleFunc("GET /readyz", func(w http.ResponseWriter, r *http.Request) {
 		c, cancel := context.WithTimeout(r.Context(), time.Second)
 		defer cancel()
-		if database.Pool.Ping(c) != nil {
+		if db.Pool.Ping(c) != nil {
 			w.WriteHeader(503)
 			return
 		}
 		w.WriteHeader(204)
 	})
-	resolveTenant := func(c context.Context, r *http.Request) (context.Context, error) {
-		return tenants.Resolve(c, "", r.Header.Get("X-Tenant-ID"))
+	endpoints, err := transport.NewEndpoints(transport.EndpointConfig{
+		Timeout:                5 * time.Second,
+		MaxBodyBytes:           1 << 20,
+		Manager:                manager,
+		AuthenticateCredential: validator.AuthenticateCredential,
+		Credentials:            transport.BearerCredentials(),
+		ResolveTenant: func(c context.Context, r *http.Request) (context.Context, error) {
+			return tenants.Resolve(c, "", r.Header.Get("X-Tenant-ID"))
+		},
+		ResolveScope: func(c context.Context, r *http.Request) (context.Context, error) {
+			_, tenant, _ := tenancy.Identity(c)
+			kind, id := r.Header.Get("X-Scope-Kind"), r.Header.Get("X-Scope-ID")
+			if kind == "" && id == "" {
+				kind, id = "tenant", tenant
+			}
+			if kind == "" || id == "" {
+				return nil, scope.ErrRequired
+			}
+			return scopes.Bind(c, scope.ScopeRef{TenantID: tenant, Kind: kind, ID: id})
+		},
+		Authorize: scopes.Authorize,
+		Rejected: func(c context.Context, _ error) {
+			_ = log.Write(c, audit.Record{Action: "request.rejected", Resource: "bookstore", Result: "denied", Trace: rand.Text()})
+		},
+	})
+	if err != nil {
+		return err
 	}
-	resolveScope := func(c context.Context, r *http.Request) (context.Context, error) {
-		_, tenant, _ := tenancy.Identity(c)
-		kind, id := r.Header.Get("X-Scope-Kind"), r.Header.Get("X-Scope-ID")
-		if kind == "" && id == "" {
-			kind, id = "tenant", tenant
-		}
-		if kind == "" || id == "" {
-			return nil, scope.ErrRequired
-		}
-		return scopes.Bind(c, scope.ScopeRef{TenantID: tenant, Kind: kind, ID: id})
+	createBook, err := transport.CommandEndpoint(endpoints, func(c context.Context, in transport.Input[domain.Book]) (domain.Book, error) {
+		created, createErr := books.Create(c, in.Body, in.IdempotencyKey)
+		return created, mapBookError(createErr)
+	}, transport.WithPermission("books.write"), transport.WithIdempotencyHeader("Idempotency-Key", true))
+	if err != nil {
+		return err
 	}
-	for _, route := range []struct {
-		pattern, permission string
-		read                bool
-	}{{"POST /books", "books.write", false}, {"GET /books/{id}", "books.read", true}} {
-		mux.HandleFunc(route.pattern, func(w http.ResponseWriter, r *http.Request) {
-			key := r.Header.Get("Idempotency-Key")
-			// Default HTTP profile uses the extension ports: Bearer credential
-			// extraction plus the trusted credential authentication pipeline.
-			pipeline, _ := transport.NewPipeline(transport.PipelineOptions{Timeout: 5 * time.Second, MaxBodyBytes: 1 << 20, Manager: manager, ReadOnly: route.read, AuthenticateCredential: validator.AuthenticateCredential, Credentials: transport.BearerCredentials(), ResolveTenant: resolveTenant, ResolveScope: resolveScope, Entry: func(c context.Context) error { return scopes.Authorize(c, route.permission) }, Rejected: func(c context.Context, _ error) {
-				_ = log.Write(c, audit.Record{Action: "request.rejected", Resource: "bookstore", Result: "denied", Trace: rand.Text()})
-			}, Decode: func(raw []byte) (any, error) {
-				if route.read {
-					if len(raw) != 0 {
-						return nil, requestError{scope.ErrInvalid, 400, "MALFORMED_REQUEST"}
-					}
-					return nil, nil
-				}
-				var b domain.Book
-				d := json.NewDecoder(bytes.NewReader(raw))
-				d.DisallowUnknownFields()
-				if err := d.Decode(&b); err != nil {
-					return nil, requestError{err, 400, "MALFORMED_REQUEST"}
-				}
-				if !json.Valid(raw) || key == "" {
-					return nil, requestError{scope.ErrInvalid, 400, "MALFORMED_REQUEST"}
-				}
-				if err := b.Validate(); err != nil {
-					return nil, requestError{err, 422, "VALIDATION_FAILED"}
-				}
-				return b, nil
-			}, Work: func(c context.Context, dto any) (any, error) {
-				if route.read {
-					return books.Get(c, r.PathValue("id"))
-				}
-				return books.Create(c, dto.(domain.Book), key)
-			}})
-			pipeline.ServeHTTP(w, r)
-		})
+	getBook, err := transport.QueryEndpoint(endpoints, func(c context.Context, in transport.QueryInput) (domain.Book, error) {
+		book, getErr := books.Get(c, in.Request.PathValue("id"))
+		return book, mapBookError(getErr)
+	}, transport.WithPermission("books.read"))
+	if err != nil {
+		return err
 	}
-	optionalValue, optionalErr := rt.Services().Resolve(ctx, foundation.OptionalHandler)
-	if optionalErr != nil {
-		return optionalErr
+	mux.Handle("POST /books", createBook)
+	mux.Handle("GET /books/{id}", getBook)
+
+	optionalHandler, err := di.ResolveKey(ctx, rt.Services(), foundation.OptionalHandler)
+	if err != nil {
+		return err
 	}
 	// Unmounted is the foundation stand-in for "no profile handler"; any
 	// other value is the profile control-plane surface.
-	if _, unmounted := optionalValue.(foundation.Unmounted); !unmounted {
-		if handler, ok := optionalValue.(http.Handler); ok && handler != nil {
-			mux.Handle("/", handler)
-		}
+	if _, unmounted := optionalHandler.(foundation.Unmounted); !unmounted && optionalHandler != nil {
+		mux.Handle("/", optionalHandler)
 	}
 	listen := ra.listen
 	if listen == "" {
 		listen = "127.0.0.1:18081"
 	}
-	server := &http.Server{Addr: listen, ReadHeaderTimeout: 3 * time.Second, ReadTimeout: 6 * time.Second, WriteTimeout: 6 * time.Second, IdleTimeout: 30 * time.Second}
-	server.Handler = http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		c, done, err := ra.bridge.work.Enter(req.Context())
-		if err != nil {
-			transport.WriteError(w, req, err)
-			return
-		}
-		defer done()
-		mux.ServeHTTP(w, req.WithContext(c))
-	})
-	ra.bridge.attach(server)
+	server := &http.Server{Addr: listen, ReadHeaderTimeout: 3 * time.Second, ReadTimeout: 6 * time.Second, WriteTimeout: 6 * time.Second, IdleTimeout: 30 * time.Second, Handler: ra.bridge.Wrap(mux)}
+	ra.bridge.Attach(server)
 	if ra.serveErr != nil {
 		listener, listenErr := net.Listen("tcp", listen)
 		if listenErr != nil {
@@ -400,7 +296,7 @@ func (ra *rootApplication) Stop(context.Context, module.Runtime) error { return 
 // loader rejects invalid graphs before any of them runs.
 func Run(ctx context.Context) error {
 	serveErr := make(chan error, 1)
-	root := &rootApplication{serveErr: serveErr, bridge: &drainParticipant{work: runtime.NewWorkGroup()}, listen: os.Getenv("PANGOLIN_LISTEN")}
+	root := &rootApplication{serveErr: serveErr, bridge: transport.NewServerParticipant(runtime.NewWorkGroup()), listen: os.Getenv("PANGOLIN_LISTEN")}
 	defaults := []config.Source{{Name: "defaults", Values: map[string]string{"uow.default_timeout": "5s", "uow.cleanup_timeout": "2s", "uow.hook_timeout": "1s", "uow.max_requires_new_depth": "4"}}}
 	host, err := runtime.New(runtime.Options{DrainTimeout: 15 * time.Second, CleanupTimeout: 5 * time.Second}, defaults, root.bridge)
 	if err != nil {

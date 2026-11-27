@@ -8,11 +8,11 @@ import (
 
 func TestJSONConfiguration(t *testing.T) {
 	t.Run("arrays-and-literal-paths", func(t *testing.T) {
-		r, err := ParseJSON([]byte(`{"Settings":{"Channels":[{"Name":"mail"},{"Name":"sms"}],"Matrix":[[1,2],[3]],"Abp.Mailing.Smtp.Host":"literal","Abp":{"Mailing":{"Smtp":{"Host":"nested"}}},"0":{"Name":"property"}}}`))
+		r, err := ParseJSON([]byte(`{"Settings":{"Channels":[{"Name":"mail"},{"Name":"sms"}],"Matrix":[[1,2],[3]],"App.Mailing.Smtp.Host":"literal","App":{"Mailing":{"Smtp":{"Host":"nested"}}},"0":{"Name":"property"}}}`))
 		if err != nil {
 			t.Fatal(err)
 		}
-		for k, want := range map[string]string{"Settings:Channels:0:Name": "mail", "settings:channels:1:name": "sms", "Settings:Matrix:0:1": "2", "Settings:Matrix:1:0": "3", "Settings:Abp.Mailing.Smtp.Host": "literal", "Settings:Abp:Mailing:Smtp:Host": "nested", "Settings:0:Name": "property"} {
+		for k, want := range map[string]string{"Settings:Channels:0:Name": "mail", "settings:channels:1:name": "sms", "Settings:Matrix:0:1": "2", "Settings:Matrix:1:0": "3", "Settings:App.Mailing.Smtp.Host": "literal", "Settings:App:Mailing:Smtp:Host": "nested", "Settings:0:Name": "property"} {
 			if got, ok := r.Lookup(k); !ok || got != want {
 				t.Fatal(k, got, ok)
 			}

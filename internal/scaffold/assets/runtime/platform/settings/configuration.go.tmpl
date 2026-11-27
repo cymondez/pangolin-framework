@@ -11,7 +11,7 @@ import (
 )
 
 // ConfigurationProvider implements the standard Config layer, the lowest
-// priority above Default. It uses ABP's exact Settings:+name lookup with the
+// priority above Default. It uses an exact Settings:+name lookup with the
 // existing flatmap; configuration text becomes a JSON string unless a converter
 // is explicitly registered. Config is distinct from the mutable Global layer:
 // values never store through the empty-Layer Global address, and every

@@ -126,7 +126,9 @@ func currentView(ctx context.Context) *view {
 	v, _ := scopeVar.Current(ctx)
 	return v
 }
-func (m *manager) Current(ctx context.Context) (Scope, bool) {
+
+// Current returns the active unit-of-work scope view carried by ctx, if any.
+func Current(ctx context.Context) (Scope, bool) {
 	v := currentView(ctx)
 	if v == nil {
 		return nil, false
@@ -138,6 +140,7 @@ func (m *manager) Current(ctx context.Context) (Scope, bool) {
 	}
 	return v, true
 }
+func (m *manager) Current(ctx context.Context) (Scope, bool) { return Current(ctx) }
 func bindingError(b, want scope.ScopeBinding) error {
 	if b.Ref.TenantID != want.Ref.TenantID {
 		return ErrTenantMismatch

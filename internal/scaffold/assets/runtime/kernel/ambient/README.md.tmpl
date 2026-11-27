@@ -5,7 +5,7 @@
 ## 設計原則
 
 - **顯式傳遞、零 GLS**：所有狀態依附於顯式傳入的 `context.Context`，不依賴 goroutine-local storage（GLS）、全域變數、執行期棧檢查或反射攔截器。
-- **不可變 Copy-on-Write 巢狀鏈**：每個 `With`／`Clear` 都會衍生新的不可變 `frame[T]` 節點，絕不回寫父節點，也沒有共享可變計數器。這與 .NET ABP 的 `AsyncLocal<T>` 在邏輯執行流隔離上是同構的：多個 goroutine 可同時從同一個父 `context.Context` 衍生出各自獨立的子範圍（例如平行 `uow.RequiresNew`），互不鎖死、互不汙染。
+- **不可變 Copy-on-Write 巢狀鏈**：每個 `With`／`Clear` 都會衍生新的不可變 `frame[T]` 節點，絕不回寫父節點，也沒有共享可變計數器。這與非同步執行流中常見的 Copy-on-Write 環境隔離模型（如 `AsyncLocal<T>`）在結構上同構：多個 goroutine 可同時從同一個父 `context.Context` 衍生出各自獨立的子範圍（例如平行 `uow.RequiresNew`），互不鎖死、互不汙染。
 - **套件私有防偽造**：每次呼叫 `ambient.New[T]()` 都會配置獨立且非零大小的未匯出指標鍵。各框架套件把自己的 `Var[T]` 宣告為 package-private，只透過受控公開 API 讀寫，確保外部程式碼無法憑字串鍵偽造 Tenant、Principal、ScopeBinding 或 UoW 狀態。
 
 ## 用法

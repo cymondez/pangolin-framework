@@ -44,7 +44,7 @@ plan, err := module.LoadRoot(&AuthModule{}) // 根模組以 instance pointer 提
 
 日常解析優先使用 `module.Resolve[T](ctx, resolver)`：它使用既有 `module.Contract[T]()` 建立 canonical token，呼查既有 Resolver，並在型別不符時回傳包含期待／實際型別的錯誤。`module.MustResolve[T]` 是 panic-on-error 的 convenience，只適合組態或測試 fixture；production lifecycle hook 應處理 `Resolve` 的 error。
 
-註冊仍走既有 `Services.Add`：`module.AddSingleton(services, constructor, opts...)`、`module.AddTransient(...)` 與 `module.AddOperation(...)` 是 lifetime façade，可與 `module.As(contract)` 等 `AddOption` 組合；多個 lifetime option 相互衝突仍由既有 registration validation 在 `Add` 時拒絕。可逐步採用，不會改變 `Services` 或低階 provider 介面。
+註冊仍走既有 `Services.Add`：`module.AddSingleton(services, constructor, opts...)`、`module.AddTransient(...)` 與 `module.AddOperation(...)` 是 lifetime façade，可與 `module.As(contract)` 等 `AddOption` 組合；多個 lifetime option 相互衝突仍由既有 registration validation 在 `Add` 時拒絕。若模組同時註冊實作並公開介面契約，可用 `module.AddAndExportSingleton[Contract]`、`AddAndExportTransient[Contract]`、`AddAndExportOperation[Contract]` 一步完成 `Add(..., As(Contract[Contract]()))` 與 `Export(Contract[Contract]())`。多項註冊時可用錯誤累積式流暢註冊器 `module.Register(b.Services()).Singleton(...).Transient(...).Operation(...).Export(...).Bind(...).Replace(...).ReplaceContract(...).ReplaceBinding(...).Err()`，首個錯誤後短路記錄。可逐步採用，不會改變 `Services` 或低階 provider 介面。
 
 ## Root 建構子組合引擎（services.go）
 

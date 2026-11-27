@@ -7,12 +7,13 @@
 `&postgres.Resource{Pool: pool}` 交給 `uow.NewManager`。Pool 由組裝端／DI Factory 擁有並最終關閉；Resource 只管理每次 Within 取得的交易。Begin 驗證可信完整 Scope binding，以明示隔離級別及 ReadOnly 或 ReadWrite 開交易，並使用 `set_config(..., true)` 安裝 transaction-local tenant 與完整 Scope owner。
 
 ```go
-executor, err := postgres.Current(work, true) // 寫入必須使用有效可寫 Scope
+executor, owner, err := postgres.CurrentWithScope(work, true) // 一步驗證並取得可寫 Executor 與可信 ScopeRef
 if err != nil { return err }
-_, err = executor.Exec(work, query, args...)
+_, err = executor.Exec(work, query, owner.TenantID, owner.Kind, owner.ID, args...)
+return postgres.MapError(err) // pgx.ErrNoRows -> database.ErrNoRows；23505 -> database.ErrConflict（保留原 cause）
 ```
 
-`Current(work, false)` 用於讀取；GetBook 等 sqlc QueryRow 呼叫也必須傳同一個 work。Exec 一律要求可寫 Scope；沒有 Scope、已結束 context、不同 context 或平行 SQL 都拒絕。QueryRow 直到 Scan 完成才釋放占用，包含延遲錯誤；Repository 必須呼叫 Scan。寫入 RETURNING 的 QueryRow／Query 需以 Current(work,true) 取得 Executor。Commit 前檢查未消耗的 row。Query 支援多列 Rows，直到 Close／讀盡才釋放占用，Scan／Err 的延遲錯誤會使根 rollback-only。Rows.Conn 回傳 nil；沒有公開 Batch／交易控制入口。
+`Current(work, false)`／`CurrentWithScope(work, false)` 用於讀取；`IsUniqueViolation(err)` 檢查 SQLSTATE `23505`，`MapError(err)` 將 `pgx.ErrNoRows` 與 `23505` 包裝為中立 `database.ErrNoRows`／`database.ErrConflict` 並保留原 driver cause。GetBook 等 sqlc QueryRow 呼叫也必須傳同一個 work。Exec 一律要求可寫 Scope；沒有 Scope、已結束 context、不同 context 或平行 SQL 都拒絕。QueryRow 直到 Scan 完成才釋放占用，包含延遲錯誤；Repository 必須呼叫 Scan。寫入 RETURNING 的 QueryRow／Query 需以 Current(work,true) 取得 Executor。Commit 前檢查未消耗的 row。Query 支援多列 Rows，直到 Close／讀盡才釋放占用，Scan／Err 的延遲錯誤會使根 rollback-only。Rows.Conn 回傳 nil；沒有公開 Batch／交易控制入口。
 
 RLS 與 schema 權限由部署／fixture 建立；此 Resource 不執行 DDL、不提升 DB role，也不以 Pool 自動提交補救 Scope 缺漏。應用 role 不得是 owner、superuser 或 BYPASSRLS。Bookstore schema 與 sqlc 用法見 [Infrastructure](../../examples/bookstore/infrastructure/README.md)。
 

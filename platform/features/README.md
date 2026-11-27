@@ -16,4 +16,4 @@ Definition.ScopeKinds 可明示允許的 Scope Kind；空值表示所有可信 K
 
 錯誤保留授權／來源 cause；非法型別、負配額、未知 enum 與重複 enum 選項回 FEATURE_INVALID。無背景資源需清理。`go test ./platform/features`；持久化來源由 Settings Provider 提供，Features 不實作管理 UI。
 
-ABP 對照：[FeatureChecker](https://github.com/abpframework/abp/blob/dev/framework/src/Volo.Abp.Features/Volo/Abp/Features/FeatureChecker.cs) 解析功能值，[PermissionChecker](https://github.com/abpframework/abp/blob/dev/framework/src/Volo.Abp.Authorization/Volo/Abp/Authorization/Permissions/PermissionChecker.cs) 判斷授權，兩者是獨立職責。本套件在 Evaluate 組合它們，固定先 Permission、後 Feature。
+功能值解析與權限判斷維持各自獨立職責；本套件在 `Evaluate` 組合兩者，固定先驗證 Permission、後解析 Feature。

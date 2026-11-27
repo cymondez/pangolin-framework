@@ -21,6 +21,7 @@ import (
 	"github.com/cymondez/pangolin-framework/security/identity"
 	"github.com/cymondez/pangolin-framework/security/scope"
 	"github.com/cymondez/pangolin-framework/tenancy"
+	transport "github.com/cymondez/pangolin-framework/transport/http"
 	"{{MODULE}}/foundation"
 )
 
@@ -88,8 +89,8 @@ func (state *realtimeState) start(ctx context.Context, hub *realtime.Hub) (func(
 	}, nil
 }
 
-func (state *realtimeState) mount(ctx context.Context, rt module.Runtime, mux *http.ServeMux, bridge *drainParticipant) error {
-	service, err := rt.Services().Resolve(ctx, module.Contract[realtime.Gateway]())
+func (state *realtimeState) mount(ctx context.Context, rt module.Runtime, mux *http.ServeMux, bridge *transport.ServerParticipant) error {
+	gateway, err := module.Resolve[realtime.Gateway](ctx, rt.Services())
 	if err != nil {
 		return err
 	}
@@ -97,7 +98,7 @@ func (state *realtimeState) mount(ctx context.Context, rt module.Runtime, mux *h
 	if configured := os.Getenv("PANGOLIN_REALTIME_ORIGINS"); configured != "" {
 		origins = strings.Split(configured, ",")
 	}
-	state.endpoint, err = signalr.New(service.(realtime.Gateway), signalr.Options{
+	state.endpoint, err = signalr.New(gateway, signalr.Options{
 		Path: "/hub", Origins: origins, NegotiationLimit: 128, HandshakeConcurrency: 16,
 		NegotiationTTL: 15 * time.Second, HandshakeTimeout: 5 * time.Second,
 		ReadTimeout: 30 * time.Second, WriteTimeout: 3 * time.Second, KeepAlive: 10 * time.Second, MaxMessage: 64 << 10,
@@ -107,7 +108,7 @@ func (state *realtimeState) mount(ctx context.Context, rt module.Runtime, mux *h
 	}
 	mux.Handle("/hub", state.endpoint)
 	mux.Handle("/hub/negotiate", state.endpoint)
-	bridge.extra = state
+	bridge.Add(state)
 	return nil
 }
 
