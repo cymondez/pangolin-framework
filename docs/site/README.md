@@ -87,13 +87,14 @@ node docs/site/scripts/docker.mjs down
 
 `PANGOLIN_DOCS_PROJECT`／`PANGOLIN_DOCS_PORT` 可改自己的隔離名稱／port。`DOCS_URL` 與 `DOCS_BASE_URL` 是建置參數，修改後要重新 build。子路徑需 `/framework/` 形式；反向代理原樣轉送前綴，由 Nginx 讀取相同前綴的實體靜態檔案。正式 origin 未指定時預設 localhost，不代表已綁定公開網域。
 
-## GitHub Pages 自動發布
+## GitHub Pages 自動發布（僅隨正式／預覽發版）
 
-`.github/workflows/docs.yml` 已內建 GitHub Pages 建置與發布工作流（`build-pages` → `deploy-pages`）：
+GitHub Pages 只在發版時更新，且強制驗證目標 commit 位於 `main`：
 
 1. 在 GitHub 倉庫的 **Settings → Pages → Build and deployment** 將 **Source** 設為 **GitHub Actions**。
-2. 推送至 `main`、推送 `v*` 發行 tag（例如 `v0.1.0`），或於 Actions 手動觸發 **Documentation website** workflow 時，會在通過靜態檢查與範例測試後自動發布至 `https://pangolin-framework.github.io/pangolin/`（亦透過 `actions/configure-pages` 自動相容自訂網域 `/`）。
-3. 本機驗證 GitHub Pages 子路徑建置與連結檢查：
+2. 在 **Settings → Environments → `github-pages` → Deployment branches and tags** 保留預設 `main` 分支規則，並新增 Tag 規則 **`v*`**（同時涵蓋正式版 `v0.1.0` 與預覽版 `v0.1.0-rc.1`）。
+3. 推送位於 `main` 上的 SemVer tag（如 `v0.1.0-rc.1` 或 `v0.1.0`）後，`.github/workflows/release.yml` 會依序驗證 commit 屬於 `main` 且主版號對齊 `VERSION` → 建立 GitHub Release（含 `-` 後綴自動標為 Pre-release）→ 建置並部署 GitHub Pages 至 `https://pangolin-framework.github.io/pangolin/`（亦自動相容自訂網域 `/`）。一般 `push` 至 `main`／`develop` 或 PR 僅由 `.github/workflows/docs.yml` 執行靜態與範例驗證，不會發布網站；必要時可在 `main` 上手動執行 **Documentation website** 的 `workflow_dispatch` 補發。
+4. 本機驗證 GitHub Pages 子路徑建置與連結檢查：
 
 ```powershell
 $env:DOCS_URL = 'https://pangolin-framework.github.io'

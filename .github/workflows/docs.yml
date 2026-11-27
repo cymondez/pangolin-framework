@@ -51,10 +51,19 @@ jobs:
 
   build-pages:
     needs: [static-docs, consumer-examples]
-    if: github.event_name == 'workflow_dispatch' || github.event_name == 'release' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Verify release commit is on main
+        run: |
+          git fetch origin main --depth=0 || true
+          git merge-base --is-ancestor HEAD origin/main || {
+            echo "GitHub Pages deployment requires the commit to be on main." >&2
+            exit 1
+          }
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -79,7 +88,7 @@ jobs:
 
   deploy-pages:
     needs: [build-pages]
-    if: github.event_name == 'workflow_dispatch' || github.event_name == 'release' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-24.04
     permissions:
       pages: write
