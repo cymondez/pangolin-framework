@@ -83,7 +83,7 @@ jobs:
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
           go vet ./...
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
-          $liveSkip = '^(TestDurableDeliveryAcknowledge|TestLiveFanOutAckRejectAndClose|TestLiveAckWaitRedeliverySameConsumer|TestReceiverFanOutLifecycle|TestReceiverDrainDeadline|TestReceiverNoClientAckAndRedelivery|TestRealtimePublish)'
+          $liveSkip = '^(TestDurableDeliveryAcknowledge|TestLiveFanOutAckRejectAndClose|TestLiveAckWaitRedeliverySameConsumer|TestReceiverFanOutLifecycle|TestReceiverDrainDeadline|TestReceiverNoClientAckAndRedelivery|TestRealtimePublish|TestCleanupStreamLive)'
           go test -json -skip $liveSkip ./... | Set-Content -Encoding utf8 windows-tests.json
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
           python -c "import sys; sys.path.insert(0,'scripts'); import test_runner; test_runner.validate_tests(open('windows-tests.json',encoding='utf-8-sig').read())"

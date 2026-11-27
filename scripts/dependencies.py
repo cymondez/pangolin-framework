@@ -10,8 +10,8 @@ def inventory():
         if module.get("Replace"): raise ValueError("unreviewed module replacement")
         if not module.get("Dir"):raise ValueError("dependency source unavailable; run go mod download all: "+module["Path"])
         directory = Path(module["Dir"])
-        candidates = [directory / name for name in ("LICENSE", "LICENSE.txt", "LICENSE.md", "LICENCE", "COPYING")]
-        license_path = next((p for p in candidates if p.is_file()), None)
+        files = {p.name.lower(): p for p in directory.iterdir() if p.is_file()}
+        license_path = next((files[name] for name in ("license", "license.txt", "license.md", "licence", "copying") if name in files), None)
         if license_path is None: raise ValueError("license missing: " + module["Path"])
         result.append({"module":module["Path"],"version":module["Version"],"sum":module.get("Sum"),"license_file":license_path.name,"license_sha256":contracts.digest(license_path)})
     return result
