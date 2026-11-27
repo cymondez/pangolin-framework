@@ -12,12 +12,12 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/cymondez/pangolin-framework/modules/organization"
-	"github.com/cymondez/pangolin-framework/modules/organization/contracts"
-	"github.com/cymondez/pangolin-framework/persistence/uow"
-	"github.com/cymondez/pangolin-framework/security/identity"
-	"github.com/cymondez/pangolin-framework/security/scope"
-	transport "github.com/cymondez/pangolin-framework/transport/http"
+	"github.com/pangolin-framework/pangolin/modules/organization"
+	"github.com/pangolin-framework/pangolin/modules/organization/contracts"
+	"github.com/pangolin-framework/pangolin/persistence/uow"
+	"github.com/pangolin-framework/pangolin/security/identity"
+	"github.com/pangolin-framework/pangolin/security/scope"
+	transport "github.com/pangolin-framework/pangolin/transport/http"
 )
 
 type Governance interface {

@@ -13,10 +13,10 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/cymondez/pangolin-framework/kernel/app"
-	"github.com/cymondez/pangolin-framework/kernel/module"
-	"github.com/cymondez/pangolin-framework/modules/realtime"
-	"github.com/cymondez/pangolin-framework/modules/realtime/signalr"
+	"github.com/pangolin-framework/pangolin/kernel/app"
+	"github.com/pangolin-framework/pangolin/kernel/module"
+	"github.com/pangolin-framework/pangolin/modules/realtime"
+	"github.com/pangolin-framework/pangolin/modules/realtime/signalr"
 )
 
 func main() {

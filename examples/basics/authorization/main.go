@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/cymondez/pangolin-framework/security/policy"
-	"github.com/cymondez/pangolin-framework/security/scope"
-	"github.com/cymondez/pangolin-framework/tenancy"
+	"github.com/pangolin-framework/pangolin/security/policy"
+	"github.com/pangolin-framework/pangolin/security/scope"
+	"github.com/pangolin-framework/pangolin/tenancy"
 )
 
 // 以下兩個教學用 fixture 只用來在本機無外部服務的環境示範 Permission 判斷邏輯，

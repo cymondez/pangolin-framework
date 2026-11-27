@@ -5,11 +5,11 @@ package m3
 import (
 	"context"
 	"crypto/rand"
-	"github.com/cymondez/pangolin-framework/events/distributed"
-	"github.com/cymondez/pangolin-framework/events/inbox"
-	eventpg "github.com/cymondez/pangolin-framework/events/postgres"
-	"github.com/cymondez/pangolin-framework/persistence/postgres"
-	"github.com/cymondez/pangolin-framework/security/scope"
+	"github.com/pangolin-framework/pangolin/events/distributed"
+	"github.com/pangolin-framework/pangolin/events/inbox"
+	eventpg "github.com/pangolin-framework/pangolin/events/postgres"
+	"github.com/pangolin-framework/pangolin/persistence/postgres"
+	"github.com/pangolin-framework/pangolin/security/scope"
 	"testing"
 	"time"
 )

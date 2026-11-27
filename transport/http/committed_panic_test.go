@@ -2,7 +2,7 @@ package http
 
 import (
 	"context"
-	"github.com/cymondez/pangolin-framework/persistence/uow"
+	"github.com/pangolin-framework/pangolin/persistence/uow"
 	"net/http/httptest"
 	"strings"
 	"testing"

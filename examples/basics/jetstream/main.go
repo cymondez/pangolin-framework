@@ -8,7 +8,7 @@ import (
 	"os"
 	"time"
 
-	broker "github.com/cymondez/pangolin-framework/events/nats"
+	broker "github.com/pangolin-framework/pangolin/events/nats"
 )
 
 func run() error {

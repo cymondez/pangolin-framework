@@ -13,9 +13,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cymondez/pangolin-framework/platform/cache"
-	"github.com/cymondez/pangolin-framework/security/policy"
-	"github.com/cymondez/pangolin-framework/security/scope"
+	"github.com/pangolin-framework/pangolin/platform/cache"
+	"github.com/pangolin-framework/pangolin/security/policy"
+	"github.com/pangolin-framework/pangolin/security/scope"
 )
 
 var ErrInvalid = errors.New("SETTING_INVALID")

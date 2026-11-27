@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/cymondez/pangolin-framework/kernel/config"
+	"github.com/pangolin-framework/pangolin/kernel/config"
 )
 
 // ConfigurationProvider implements the standard Config layer, the lowest

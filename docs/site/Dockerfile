@@ -19,7 +19,7 @@ FROM nginx:stable-alpine@sha256:caf4e1e032a20f9c3c5e28fc7f25ffd768ad8677b4975c54
 ARG FRAMEWORK_VERSION
 LABEL org.opencontainers.image.title="panGOlin Framework Docs" \
       org.opencontainers.image.version=$FRAMEWORK_VERSION \
-      org.opencontainers.image.source="https://github.com/cymondez/pangolin-framework"
+      org.opencontainers.image.source="https://github.com/pangolin-framework/pangolin"
 RUN rm -f /usr/share/nginx/html/index.html /usr/share/nginx/html/50x.html
 COPY --from=build /workspace/docs/site/.cache/nginx-html/ /usr/share/nginx/html/
 COPY --from=build /workspace/docs/site/.cache/nginx.conf /etc/nginx/nginx.conf

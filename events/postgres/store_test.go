@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cymondez/pangolin-framework/events/distributed"
-	"github.com/cymondez/pangolin-framework/events/inbox"
-	"github.com/cymondez/pangolin-framework/events/outbox"
-	"github.com/cymondez/pangolin-framework/security/scope"
+	"github.com/pangolin-framework/pangolin/events/distributed"
+	"github.com/pangolin-framework/pangolin/events/inbox"
+	"github.com/pangolin-framework/pangolin/events/outbox"
+	"github.com/pangolin-framework/pangolin/security/scope"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 

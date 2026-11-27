@@ -54,7 +54,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/cymondez/pangolin-framework/kernel/module"
+	"github.com/pangolin-framework/pangolin/kernel/module"
 )
 
 type Module struct{}

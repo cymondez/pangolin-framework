@@ -8,11 +8,11 @@ import (
 	"errors"
 	"time"
 
-	frameworkapplication "github.com/cymondez/pangolin-framework/application"
-	"github.com/cymondez/pangolin-framework/events/distributed"
-	"github.com/cymondez/pangolin-framework/examples/bookstore/domain"
-	"github.com/cymondez/pangolin-framework/persistence/uow"
-	"github.com/cymondez/pangolin-framework/security/scope"
+	frameworkapplication "github.com/pangolin-framework/pangolin/application"
+	"github.com/pangolin-framework/pangolin/events/distributed"
+	"github.com/pangolin-framework/pangolin/examples/bookstore/domain"
+	"github.com/pangolin-framework/pangolin/persistence/uow"
+	"github.com/pangolin-framework/pangolin/security/scope"
 )
 
 var ErrDenied = errors.New("PERMISSION_DENIED")

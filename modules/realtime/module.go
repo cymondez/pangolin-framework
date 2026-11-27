@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/cymondez/pangolin-framework/kernel/module"
-	"github.com/cymondez/pangolin-framework/security/identity"
+	"github.com/pangolin-framework/pangolin/kernel/module"
+	"github.com/pangolin-framework/pangolin/security/identity"
 )
 
 // Gateway is the transport contract. Broker ingress is kept on the

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/cymondez/pangolin-framework/security/scope"
+	"github.com/pangolin-framework/pangolin/security/scope"
 )
 
 func TestA13Permission(t *testing.T) {

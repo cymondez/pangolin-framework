@@ -6,7 +6,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/cymondez/pangolin-framework/events/distributed"
+	"github.com/pangolin-framework/pangolin/events/distributed"
 )
 
 func main() {

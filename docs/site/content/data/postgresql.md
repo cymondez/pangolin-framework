@@ -21,8 +21,8 @@ package composition
 import (
 	"context"
 
-	"github.com/cymondez/pangolin-framework/persistence/database"
-	"github.com/cymondez/pangolin-framework/persistence/postgres"
+	"github.com/pangolin-framework/pangolin/persistence/database"
+	"github.com/pangolin-framework/pangolin/persistence/postgres"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 

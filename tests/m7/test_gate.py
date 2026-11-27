@@ -513,7 +513,7 @@ class GateInventoryTestCase(unittest.TestCase):
         (ROOT / ".cache" / "go-tmp").mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(dir=ROOT / ".cache" / "go-tmp") as temporary:
             Path(temporary, "kernel", "check").mkdir(parents=True, exist_ok=True)
-            Path(temporary, "go.mod").write_text("module github.com/cymondez/pangolin-framework\n\ngo 1.27.0\n", encoding="utf-8")
+            Path(temporary, "go.mod").write_text("module github.com/pangolin-framework/pangolin\n\ngo 1.27.0\n", encoding="utf-8")
             Path(temporary, "kernel", "check", "f.go").write_text("package check\nfunc F() int { return 1 }\n", encoding="utf-8")
             self.assertEqual(m0._go_git_scope(temporary), False)
             self.assertEqual(m0.go_packages(root=temporary), ["./kernel/check"])

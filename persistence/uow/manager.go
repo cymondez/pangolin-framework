@@ -8,9 +8,9 @@ import (
 	"log/slog"
 	"sync"
 
-	"github.com/cymondez/pangolin-framework/kernel/ambient"
-	"github.com/cymondez/pangolin-framework/observability"
-	"github.com/cymondez/pangolin-framework/security/scope"
+	"github.com/pangolin-framework/pangolin/kernel/ambient"
+	"github.com/pangolin-framework/pangolin/observability"
+	"github.com/pangolin-framework/pangolin/security/scope"
 )
 
 // Transaction is owned exclusively by Manager, never exposed to application code.

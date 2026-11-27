@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/cymondez/pangolin-framework/kernel/di"
+	"github.com/pangolin-framework/pangolin/kernel/di"
 )
 
 // Resolve resolves T through the canonical module contract token and verifies

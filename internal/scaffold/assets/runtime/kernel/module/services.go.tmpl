@@ -10,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cymondez/pangolin-framework/kernel/di"
+	"github.com/pangolin-framework/pangolin/kernel/di"
 )
 
 // RootBuilder is the hook-facing registration view the root runtime hands to

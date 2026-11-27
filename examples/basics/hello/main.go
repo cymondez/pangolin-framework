@@ -6,8 +6,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/cymondez/pangolin-framework/kernel/app"
-	"github.com/cymondez/pangolin-framework/kernel/module"
+	"github.com/pangolin-framework/pangolin/kernel/app"
+	"github.com/pangolin-framework/pangolin/kernel/module"
 )
 
 // 步驟 1：用普通的 Go struct 定義你的第一個功能模組。

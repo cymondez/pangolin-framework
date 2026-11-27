@@ -65,7 +65,7 @@ package myfeature
 import (
 	"context"
 
-	"github.com/cymondez/pangolin-framework/kernel/ambient"
+	"github.com/pangolin-framework/pangolin/kernel/ambient"
 )
 
 // 宣告為 package-private，只讓本套件的受控 API 讀寫。

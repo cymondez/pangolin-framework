@@ -10,12 +10,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cymondez/pangolin-framework/examples/bookstore/domain"
-	"github.com/cymondez/pangolin-framework/internal/testkit/idp"
-	"github.com/cymondez/pangolin-framework/kernel/runtime"
-	"github.com/cymondez/pangolin-framework/persistence/uow"
-	"github.com/cymondez/pangolin-framework/security/authn"
-	"github.com/cymondez/pangolin-framework/security/scope"
+	"github.com/pangolin-framework/pangolin/examples/bookstore/domain"
+	"github.com/pangolin-framework/pangolin/internal/testkit/idp"
+	"github.com/pangolin-framework/pangolin/kernel/runtime"
+	"github.com/pangolin-framework/pangolin/persistence/uow"
+	"github.com/pangolin-framework/pangolin/security/authn"
+	"github.com/pangolin-framework/pangolin/security/scope"
 )
 
 type rootResource struct{}

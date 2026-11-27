@@ -56,9 +56,9 @@ Tenant A
 package setup
 
 import (
-	"github.com/cymondez/pangolin-framework/kernel/module"
-	"github.com/cymondez/pangolin-framework/modules/organization"
-	"github.com/cymondez/pangolin-framework/security/authn"
+	"github.com/pangolin-framework/pangolin/kernel/module"
+	"github.com/pangolin-framework/pangolin/modules/organization"
+	"github.com/pangolin-framework/pangolin/security/authn"
 )
 
 // OrganizationModule 建立可選的組織治理模組。

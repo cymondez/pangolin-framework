@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cymondez/pangolin-framework/persistence/postgres"
-	"github.com/cymondez/pangolin-framework/persistence/uow"
+	"github.com/pangolin-framework/pangolin/persistence/postgres"
+	"github.com/pangolin-framework/pangolin/persistence/uow"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )

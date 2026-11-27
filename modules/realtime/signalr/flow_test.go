@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cymondez/pangolin-framework/modules/realtime"
+	"github.com/pangolin-framework/pangolin/modules/realtime"
 )
 
 func TestNewRejectsInvalidOptions(t *testing.T) {

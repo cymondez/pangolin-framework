@@ -5,12 +5,12 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/cymondez/pangolin-framework/events/distributed"
-	"github.com/cymondez/pangolin-framework/examples/bookstore/domain"
-	"github.com/cymondez/pangolin-framework/examples/bookstore/infrastructure/internal/bookdb"
-	"github.com/cymondez/pangolin-framework/persistence/postgres"
-	"github.com/cymondez/pangolin-framework/persistence/uow"
-	"github.com/cymondez/pangolin-framework/security/scope"
+	"github.com/pangolin-framework/pangolin/events/distributed"
+	"github.com/pangolin-framework/pangolin/examples/bookstore/domain"
+	"github.com/pangolin-framework/pangolin/examples/bookstore/infrastructure/internal/bookdb"
+	"github.com/pangolin-framework/pangolin/persistence/postgres"
+	"github.com/pangolin-framework/pangolin/persistence/uow"
+	"github.com/pangolin-framework/pangolin/security/scope"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 )

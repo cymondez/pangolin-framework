@@ -16,8 +16,8 @@ def bundle():
     for p in paths:result['runtime/'+p.relative_to(ROOT).as_posix()+'.tmpl']=p.read_bytes()
     result['common/internal/devidp/idp.go.tmpl']=(ROOT/'internal/testkit/idp/idp.go').read_bytes()
     result['common/deploy/init/001-roles.sql.tmpl']=(ROOT/'deploy/compose/postgres-init/001-roles.sql').read_bytes()
-    gomod=(ROOT/'go.mod').read_text().replace('module github.com/cymondez/pangolin-framework','module {{MODULE}}',1)
-    gomod+='\nrequire github.com/cymondez/pangolin-framework v0.1.0\n\nreplace github.com/cymondez/pangolin-framework => ./framework\n'
+    gomod=(ROOT/'go.mod').read_text().replace('module github.com/pangolin-framework/pangolin','module {{MODULE}}',1)
+    gomod+='\nrequire github.com/pangolin-framework/pangolin v0.1.0\n\nreplace github.com/pangolin-framework/pangolin => ./framework\n'
     result['common/go.mod.tmpl']=gomod.encode()
     result['common/go.sum.tmpl']=(ROOT/'go.sum').read_bytes()
     manifest={k:hashlib.sha256(v).hexdigest() for k,v in sorted(result.items())}

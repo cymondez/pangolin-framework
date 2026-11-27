@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/cymondez/pangolin-framework/modules/organization/contracts"
-	"github.com/cymondez/pangolin-framework/security/scope"
+	"github.com/pangolin-framework/pangolin/modules/organization/contracts"
+	"github.com/pangolin-framework/pangolin/security/scope"
 	"github.com/jackc/pgx/v5"
 )
 

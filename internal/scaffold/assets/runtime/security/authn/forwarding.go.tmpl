@@ -9,8 +9,8 @@ package authn
 import (
 	"context"
 
-	"github.com/cymondez/pangolin-framework/security/identity"
-	"github.com/cymondez/pangolin-framework/security/scope"
+	"github.com/pangolin-framework/pangolin/security/identity"
+	"github.com/pangolin-framework/pangolin/security/scope"
 )
 
 // ErrUnauthenticated is the same fail-closed sentinel used by the identity

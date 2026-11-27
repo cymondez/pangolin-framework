@@ -14,16 +14,16 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cymondez/pangolin-framework/examples/bookstore/domain"
-	bookstorehttp "github.com/cymondez/pangolin-framework/examples/bookstore/transport/http"
-	"github.com/cymondez/pangolin-framework/internal/testkit/idp"
-	"github.com/cymondez/pangolin-framework/kernel/runtime"
-	"github.com/cymondez/pangolin-framework/security/authn"
-	"github.com/cymondez/pangolin-framework/security/identity"
-	"github.com/cymondez/pangolin-framework/security/policy"
-	"github.com/cymondez/pangolin-framework/security/scope"
-	"github.com/cymondez/pangolin-framework/tenancy"
-	frameworkhttp "github.com/cymondez/pangolin-framework/transport/http"
+	"github.com/pangolin-framework/pangolin/examples/bookstore/domain"
+	bookstorehttp "github.com/pangolin-framework/pangolin/examples/bookstore/transport/http"
+	"github.com/pangolin-framework/pangolin/internal/testkit/idp"
+	"github.com/pangolin-framework/pangolin/kernel/runtime"
+	"github.com/pangolin-framework/pangolin/security/authn"
+	"github.com/pangolin-framework/pangolin/security/identity"
+	"github.com/pangolin-framework/pangolin/security/policy"
+	"github.com/pangolin-framework/pangolin/security/scope"
+	"github.com/pangolin-framework/pangolin/tenancy"
+	frameworkhttp "github.com/pangolin-framework/pangolin/transport/http"
 )
 
 // userSessions is an external, custom user Session verifier: it owns its

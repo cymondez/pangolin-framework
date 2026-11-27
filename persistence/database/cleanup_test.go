@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cymondez/pangolin-framework/persistence/uow"
+	"github.com/pangolin-framework/pangolin/persistence/uow"
 )
 
 // The cleanup regressions in this file use a barrier driver so the exact

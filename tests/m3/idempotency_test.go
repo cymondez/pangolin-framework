@@ -17,11 +17,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cymondez/pangolin-framework/persistence/idempotency"
-	"github.com/cymondez/pangolin-framework/persistence/migration"
-	"github.com/cymondez/pangolin-framework/persistence/postgres"
-	"github.com/cymondez/pangolin-framework/persistence/uow"
-	"github.com/cymondez/pangolin-framework/security/scope"
+	"github.com/pangolin-framework/pangolin/persistence/idempotency"
+	"github.com/pangolin-framework/pangolin/persistence/migration"
+	"github.com/pangolin-framework/pangolin/persistence/postgres"
+	"github.com/pangolin-framework/pangolin/persistence/uow"
+	"github.com/pangolin-framework/pangolin/security/scope"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 

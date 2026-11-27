@@ -54,7 +54,7 @@ import (
 	"database/sql"
 	"io/fs"
 
-	"github.com/cymondez/pangolin-framework/persistence/migration"
+	"github.com/pangolin-framework/pangolin/persistence/migration"
 	_ "github.com/jackc/pgx/v5/stdlib" // 註冊 pgx 給標準 database/sql（Goose 使用）
 )
 

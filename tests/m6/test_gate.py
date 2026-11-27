@@ -56,7 +56,7 @@ def drill_fixture(commit="a" * 40, source="b" * 64, platform="windows-amd64", pr
                                     "controls": [{"category": category, "attack_surface": "surface", "abuse_path": "path",
                                                   "control": "control", "test": "package:TestX", "residual_risk": "accepted"}
                                                  for category in release_manifest.THREAT_CATEGORIES]},
-                                "executable_tests": ["github.com/cymondez/pangolin-framework/security/authn:TestX"],
+                                "executable_tests": ["github.com/pangolin-framework/pangolin/security/authn:TestX"],
                                 "review_document": "docs/security/release-review.md", "database": "m6_security_x"},
         },
     }
@@ -162,7 +162,7 @@ class ReleaseGates(unittest.TestCase):
 
             def drift_template():
                 text = template.read_text(encoding="utf-8-sig")
-                template.write_text(text.replace("require github.com/cymondez/pangolin-framework v0.1.0", "require github.com/cymondez/pangolin-framework v0.2.0", 1), encoding="utf-8")
+                template.write_text(text.replace("require github.com/pangolin-framework/pangolin v0.1.0", "require github.com/pangolin-framework/pangolin v0.2.0", 1), encoding="utf-8")
 
             for name, mutate in {
                 "template": drift_template,

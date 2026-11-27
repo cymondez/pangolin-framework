@@ -7,7 +7,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/cymondez/pangolin-framework/kernel/di"
+	"github.com/pangolin-framework/pangolin/kernel/di"
 )
 
 // 本檔案示範「獨立低階 DI 容器（kernel/di）」，適用於非模組工具、測試或舊式組裝。

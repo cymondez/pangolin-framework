@@ -12,8 +12,8 @@ package identity
 import (
 	"context"
 
-	"github.com/cymondez/pangolin-framework/kernel/ambient"
-	"github.com/cymondez/pangolin-framework/security/scope"
+	"github.com/pangolin-framework/pangolin/kernel/ambient"
+	"github.com/pangolin-framework/pangolin/security/scope"
 )
 
 type identity struct {

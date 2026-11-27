@@ -19,8 +19,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cymondez/pangolin-framework/security/identity"
-	"github.com/cymondez/pangolin-framework/security/scope"
+	"github.com/pangolin-framework/pangolin/security/identity"
+	"github.com/pangolin-framework/pangolin/security/scope"
 )
 
 // KeyPolicy bounds one Validator's JWKS fetching, caching and key retention.

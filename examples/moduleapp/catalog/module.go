@@ -9,7 +9,7 @@ import (
 
 	"example.com/moduleapp/catalog/contracts"
 	"example.com/moduleapp/store"
-	"github.com/cymondez/pangolin-framework/kernel/module"
+	"github.com/pangolin-framework/pangolin/kernel/module"
 )
 
 // Service 是 catalog 模組內部的具象實作（滿足 contracts.Catalog 介面）。

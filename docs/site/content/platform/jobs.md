@@ -37,8 +37,8 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/cymondez/pangolin-framework/platform/jobs"
-	jobpg "github.com/cymondez/pangolin-framework/platform/jobs/postgres"
+	"github.com/pangolin-framework/pangolin/platform/jobs"
+	jobpg "github.com/pangolin-framework/pangolin/platform/jobs/postgres"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 

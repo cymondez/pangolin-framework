@@ -9,9 +9,9 @@ import (
 	"errors"
 	"time"
 
-	"github.com/cymondez/pangolin-framework/kernel/config"
-	"github.com/cymondez/pangolin-framework/kernel/module"
-	"github.com/cymondez/pangolin-framework/kernel/runtime"
+	"github.com/pangolin-framework/pangolin/kernel/config"
+	"github.com/pangolin-framework/pangolin/kernel/module"
+	"github.com/pangolin-framework/pangolin/kernel/runtime"
 )
 
 // Fixed kernel runtime budgets. They are NOT configurable through

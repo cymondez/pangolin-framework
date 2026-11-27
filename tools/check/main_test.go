@@ -51,7 +51,7 @@ func TestCoverageCLIRejectsIncompleteEvidence(t *testing.T) {
 	if err := checkCoverage(root, "missing", io.Discard); err == nil {
 		t.Fatal("invalid module accepted")
 	}
-	write("go.mod", "module github.com/cymondez/pangolin-framework\n\ngo 1.27.0\n")
+	write("go.mod", "module github.com/pangolin-framework/pangolin\n\ngo 1.27.0\n")
 	write("kernel/check/f.go", "package check\nfunc F() int { return 1 }\n")
 	if err := checkCoverage(root, "missing", io.Discard); err == nil {
 		t.Fatal("missing exclusions accepted")
@@ -60,7 +60,7 @@ func TestCoverageCLIRejectsIncompleteEvidence(t *testing.T) {
 	if err := checkCoverage(root, "missing", io.Discard); err == nil {
 		t.Fatal("corrupt exclusions accepted")
 	}
-	write("tests/coverage/exclusions.json", `{"github.com/cymondez/pangolin-framework/kernel/check/f.go":"hard to test"}`)
+	write("tests/coverage/exclusions.json", `{"github.com/pangolin-framework/pangolin/kernel/check/f.go":"hard to test"}`)
 	if err := checkCoverage(root, "missing", io.Discard); err == nil {
 		t.Fatal("invalid inventory accepted")
 	}
@@ -73,11 +73,11 @@ func TestCoverageCLIRejectsIncompleteEvidence(t *testing.T) {
 	if err := checkCoverage(root, profile, io.Discard); err == nil {
 		t.Fatal("invalid profile accepted")
 	}
-	write("profile.out", "mode: atomic\ngithub.com/cymondez/pangolin-framework/kernel/check/f.go:2.1,2.26 1 0\n")
+	write("profile.out", "mode: atomic\ngithub.com/pangolin-framework/pangolin/kernel/check/f.go:2.1,2.26 1 0\n")
 	if err := checkCoverage(root, profile, io.Discard); err == nil {
 		t.Fatal("zero coverage accepted")
 	}
-	write("profile.out", "mode: atomic\ngithub.com/cymondez/pangolin-framework/kernel/check/f.go:2.1,2.26 1 1\n")
+	write("profile.out", "mode: atomic\ngithub.com/pangolin-framework/pangolin/kernel/check/f.go:2.1,2.26 1 1\n")
 	if err := checkCoverage(root, profile, failedWriter{}); err == nil {
 		t.Fatal("write failure ignored")
 	}
@@ -85,24 +85,24 @@ func TestCoverageCLIRejectsIncompleteEvidence(t *testing.T) {
 		t.Fatal(err)
 	}
 	write("other/f.go", "package other\nfunc F() int { return 1 }\n")
-	write("profile.out", "mode: atomic\ngithub.com/cymondez/pangolin-framework/kernel/check/f.go:2.1,2.26 1 0\ngithub.com/cymondez/pangolin-framework/other/f.go:2.1,2.26 100 1\n")
+	write("profile.out", "mode: atomic\ngithub.com/pangolin-framework/pangolin/kernel/check/f.go:2.1,2.26 1 0\ngithub.com/pangolin-framework/pangolin/other/f.go:2.1,2.26 100 1\n")
 	if err := checkCoverage(root, profile, io.Discard); err == nil {
 		t.Fatal("critical package failed but aggregate masked it")
 	}
 	// Each new database backend package is critical on its own raw counts even
 	// when the aggregate stays above 90%.
 	rows := []string{
-		"github.com/cymondez/pangolin-framework/kernel/check/f.go:2.1,2.26 1 1",
-		"github.com/cymondez/pangolin-framework/other/f.go:2.1,2.26 100 1",
+		"github.com/pangolin-framework/pangolin/kernel/check/f.go:2.1,2.26 1 1",
+		"github.com/pangolin-framework/pangolin/other/f.go:2.1,2.26 100 1",
 	}
 	for _, critical := range []string{"persistence/database", "persistence/mysql", "persistence/sqlite"} {
 		write(critical+"/f.go", "package "+filepath.Base(critical)+"\nfunc F() int { return 1 }\n")
-		rows = append(rows, "github.com/cymondez/pangolin-framework/"+critical+"/f.go:2.1,2.26 1 0")
+		rows = append(rows, "github.com/pangolin-framework/pangolin/"+critical+"/f.go:2.1,2.26 1 0")
 		write("profile.out", "mode: atomic\n"+strings.Join(rows, "\n")+"\n")
 		if err := checkCoverage(root, profile, io.Discard); err == nil {
 			t.Fatal("new critical database package failed but aggregate masked it")
 		}
-		rows[len(rows)-1] = "github.com/cymondez/pangolin-framework/" + critical + "/f.go:2.1,2.26 1 1"
+		rows[len(rows)-1] = "github.com/pangolin-framework/pangolin/" + critical + "/f.go:2.1,2.26 1 1"
 	}
 	write("profile.out", "mode: atomic\n"+strings.Join(rows, "\n")+"\n")
 	if err := checkCoverage(root, profile, io.Discard); err != nil {
@@ -118,7 +118,7 @@ func TestCoverageCLIRejectsIncompleteEvidence(t *testing.T) {
 // the backend, and both backends must produce the same inventory here.
 func TestTrackedPackageInventoryGitlessModuleKeepsLegacySemantics(t *testing.T) {
 	root := t.TempDir()
-	if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte("module github.com/cymondez/pangolin-framework\n\ngo 1.27.0\n"), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte("module github.com/pangolin-framework/pangolin\n\ngo 1.27.0\n"), 0644); err != nil {
 		t.Fatal(err)
 	}
 	if err := os.MkdirAll(filepath.Join(root, "kernel", "check"), 0755); err != nil {
@@ -136,7 +136,7 @@ func TestTrackedPackageInventoryGitlessModuleKeepsLegacySemantics(t *testing.T) 
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(string(data), `"ImportPath": "github.com/cymondez/pangolin-framework/kernel/check"`) {
+	if !strings.Contains(string(data), `"ImportPath": "github.com/pangolin-framework/pangolin/kernel/check"`) {
 		t.Fatalf("legacy inventory missed the module package: %s", data)
 	}
 	if strings.Contains(string(data), `"../`) || strings.Contains(string(data), `\..\`) {
@@ -169,7 +169,7 @@ func TestTrackedPackageInventoryRepositoryExcludesIgnoredDirectories(t *testing.
 	}
 	t.Cleanup(func() { os.RemoveAll(work) })
 	seed(work, ".gitignore", "/artifacts/\n")
-	seed(work, "go.mod", "module github.com/cymondez/pangolin-framework\n\ngo 1.27.0\n")
+	seed(work, "go.mod", "module github.com/pangolin-framework/pangolin\n\ngo 1.27.0\n")
 	seed(work, "kernel/check/f.go", "package check\nfunc F() int { return 1 }\n")
 	seed(work, "artifacts/design-review/x_test.go", "package designreview\n")
 	commands := [][]string{
@@ -193,7 +193,7 @@ func TestTrackedPackageInventoryRepositoryExcludesIgnoredDirectories(t *testing.
 	if strings.Contains(string(data), "artifacts/design-review") {
 		t.Fatalf("ignored directory entered the tracked inventory: %s", data)
 	}
-	if !strings.Contains(string(data), `"ImportPath": "github.com/cymondez/pangolin-framework/kernel/check"`) {
+	if !strings.Contains(string(data), `"ImportPath": "github.com/pangolin-framework/pangolin/kernel/check"`) {
 		t.Fatalf("tracked package missing from the inventory: %s", data)
 	}
 }

@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cymondez/pangolin-framework/kernel/config"
-	"github.com/cymondez/pangolin-framework/kernel/di"
-	"github.com/cymondez/pangolin-framework/kernel/module"
+	"github.com/pangolin-framework/pangolin/kernel/config"
+	"github.com/pangolin-framework/pangolin/kernel/di"
+	"github.com/pangolin-framework/pangolin/kernel/module"
 )
 
 type runtimeFacadeOperation struct{}

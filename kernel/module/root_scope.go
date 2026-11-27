@@ -13,7 +13,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/cymondez/pangolin-framework/kernel/di"
+	"github.com/pangolin-framework/pangolin/kernel/di"
 )
 
 // OpenScope opens one operation scope in root mode for the module that owns

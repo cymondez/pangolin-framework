@@ -9,10 +9,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/cymondez/pangolin-framework/kernel/config"
-	"github.com/cymondez/pangolin-framework/kernel/di"
-	"github.com/cymondez/pangolin-framework/kernel/module"
-	"github.com/cymondez/pangolin-framework/kernel/runtime"
+	"github.com/pangolin-framework/pangolin/kernel/config"
+	"github.com/pangolin-framework/pangolin/kernel/di"
+	"github.com/pangolin-framework/pangolin/kernel/module"
+	"github.com/pangolin-framework/pangolin/kernel/runtime"
 )
 
 // 本檔案示範「舊式明示清單組裝（runtime.New + Host.Start）」。

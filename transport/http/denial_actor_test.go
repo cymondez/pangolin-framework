@@ -3,8 +3,8 @@ package http
 import (
 	"bytes"
 	"context"
-	"github.com/cymondez/pangolin-framework/platform/audit"
-	"github.com/cymondez/pangolin-framework/security/scope"
+	"github.com/pangolin-framework/pangolin/platform/audit"
+	"github.com/pangolin-framework/pangolin/security/scope"
 	"net/http"
 	"net/http/httptest"
 	"strings"

@@ -9,12 +9,12 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/cymondez/pangolin-framework/application"
-	"github.com/cymondez/pangolin-framework/persistence/idempotency"
-	"github.com/cymondez/pangolin-framework/persistence/uow"
-	"github.com/cymondez/pangolin-framework/security/identity"
-	"github.com/cymondez/pangolin-framework/security/scope"
-	"github.com/cymondez/pangolin-framework/tenancy"
+	"github.com/pangolin-framework/pangolin/application"
+	"github.com/pangolin-framework/pangolin/persistence/idempotency"
+	"github.com/pangolin-framework/pangolin/persistence/uow"
+	"github.com/pangolin-framework/pangolin/security/identity"
+	"github.com/pangolin-framework/pangolin/security/scope"
+	"github.com/pangolin-framework/pangolin/tenancy"
 )
 
 // Problem exposes safe metadata without SQL, DSN, token or raw error text.

@@ -22,8 +22,8 @@ import (
 	"context"
 	"errors"
 
-	"github.com/cymondez/pangolin-framework/persistence/database"
-	"github.com/cymondez/pangolin-framework/persistence/mysql"
+	"github.com/pangolin-framework/pangolin/persistence/database"
+	"github.com/pangolin-framework/pangolin/persistence/mysql"
 )
 
 // OpenMySQLResource 建立 MySQL 連線池並回傳中立 database.Resource 與清理函式。

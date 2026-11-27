@@ -6,7 +6,7 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/cymondez/pangolin-framework/platform/jobs"
+	"github.com/pangolin-framework/pangolin/platform/jobs"
 	"github.com/jackc/pgx/v5/pgconn"
 )
 

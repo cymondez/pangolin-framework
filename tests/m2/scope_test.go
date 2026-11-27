@@ -10,13 +10,13 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/cymondez/pangolin-framework/examples/bookstore/application"
-	"github.com/cymondez/pangolin-framework/examples/bookstore/domain"
-	"github.com/cymondez/pangolin-framework/examples/bookstore/infrastructure"
-	"github.com/cymondez/pangolin-framework/modules/organization"
-	"github.com/cymondez/pangolin-framework/persistence/postgres"
-	"github.com/cymondez/pangolin-framework/persistence/uow"
-	"github.com/cymondez/pangolin-framework/security/scope"
+	"github.com/pangolin-framework/pangolin/examples/bookstore/application"
+	"github.com/pangolin-framework/pangolin/examples/bookstore/domain"
+	"github.com/pangolin-framework/pangolin/examples/bookstore/infrastructure"
+	"github.com/pangolin-framework/pangolin/modules/organization"
+	"github.com/pangolin-framework/pangolin/persistence/postgres"
+	"github.com/pangolin-framework/pangolin/persistence/uow"
+	"github.com/pangolin-framework/pangolin/security/scope"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 

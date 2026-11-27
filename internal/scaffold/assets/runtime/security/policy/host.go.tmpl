@@ -2,7 +2,7 @@ package policy
 
 import (
 	"context"
-	"github.com/cymondez/pangolin-framework/security/scope"
+	"github.com/pangolin-framework/pangolin/security/scope"
 )
 
 // Host is a separate control-plane path. It grants no session-wide DB bypass.

@@ -16,7 +16,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cymondez/pangolin-framework/persistence/migration"
+	"github.com/pangolin-framework/pangolin/persistence/migration"
 	"github.com/jackc/pgx/v5"
 )
 

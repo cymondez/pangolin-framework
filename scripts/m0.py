@@ -17,7 +17,7 @@ import sys
 import time
 
 ROOT = Path(__file__).resolve().parents[1]
-MODULE = "github.com/cymondez/pangolin-framework"
+MODULE = "github.com/pangolin-framework/pangolin"
 
 
 def load(path):

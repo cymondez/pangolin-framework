@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cymondez/pangolin-framework/security/identity"
-	"github.com/cymondez/pangolin-framework/security/scope"
+	"github.com/pangolin-framework/pangolin/security/identity"
+	"github.com/pangolin-framework/pangolin/security/scope"
 )
 
 // The identity.Pipeline dispatches by credential kind; the JWT adapter must

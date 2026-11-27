@@ -2,8 +2,8 @@
 package replacement
 
 import (
-	"github.com/cymondez/pangolin-framework/modules/organization/contracts"
-	"github.com/cymondez/pangolin-framework/security/scope"
+	"github.com/pangolin-framework/pangolin/modules/organization/contracts"
+	"github.com/pangolin-framework/pangolin/security/scope"
 )
 
 type Ports struct {

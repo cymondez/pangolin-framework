@@ -8,12 +8,12 @@ import (
 	"errors"
 	"time"
 
-	"github.com/cymondez/pangolin-framework/events/distributed"
-	"github.com/cymondez/pangolin-framework/events/outbox"
-	"github.com/cymondez/pangolin-framework/observability"
-	"github.com/cymondez/pangolin-framework/persistence/uow"
-	"github.com/cymondez/pangolin-framework/security/policy"
-	"github.com/cymondez/pangolin-framework/security/scope"
+	"github.com/pangolin-framework/pangolin/events/distributed"
+	"github.com/pangolin-framework/pangolin/events/outbox"
+	"github.com/pangolin-framework/pangolin/observability"
+	"github.com/pangolin-framework/pangolin/persistence/uow"
+	"github.com/pangolin-framework/pangolin/security/policy"
+	"github.com/pangolin-framework/pangolin/security/scope"
 )
 
 const EventType = "pangolin.realtime.notification"

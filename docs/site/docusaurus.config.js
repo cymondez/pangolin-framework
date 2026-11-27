@@ -54,7 +54,7 @@ module.exports = {
         {type: 'docSidebar', sidebarId: 'manual', position: 'left', label: '文件'},
         {type: 'doc', docId: 'samples/index', label: '使用範例', position: 'left'},
         {type: 'docsVersionDropdown', position: 'right', dropdownItemsAfter: [{to: '/versions', label: '所有文件版本'}]},
-        {href: 'https://github.com/cymondez/pangolin-framework', label: '原始碼', position: 'right'},
+        {href: 'https://github.com/pangolin-framework/pangolin', label: '原始碼', position: 'right'},
       ],
     },
     footer: {
@@ -62,7 +62,7 @@ module.exports = {
       links: [
         {title: '開始使用', items: [{label: '安裝與建立專案', to: `${docsPath}getting-started/installation/`}, {label: '第一個應用', to: `${docsPath}getting-started/quickstart/`}]},
         {title: '範例與教學', items: [{label: '套件使用範例', to: `${docsPath}samples/`}, {label: 'Bookstore', to: `${docsPath}tutorials/bookstore/`}, {label: '文件版本', to: '/versions'}]},
-        {title: '參與開發', items: [{label: 'GitHub', href: 'https://github.com/cymondez/pangolin-framework'}, {label: '回報問題', href: 'https://github.com/cymondez/pangolin-framework/issues'}, {label: '授權條款 (Apache-2.0)', href: 'https://github.com/cymondez/pangolin-framework/blob/main/LICENSE'}]},
+        {title: '參與開發', items: [{label: 'GitHub', href: 'https://github.com/pangolin-framework/pangolin'}, {label: '回報問題', href: 'https://github.com/pangolin-framework/pangolin/issues'}, {label: '授權條款 (Apache-2.0)', href: 'https://github.com/pangolin-framework/pangolin/blob/main/LICENSE'}]},
       ],
       copyright: `panGOlin Framework · ${version.productVersion} · Apache-2.0 License · Go 應用開發指南`,
     },

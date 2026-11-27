@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	persistence "github.com/cymondez/pangolin-framework/persistence/postgres"
-	"github.com/cymondez/pangolin-framework/security/scope"
+	persistence "github.com/pangolin-framework/pangolin/persistence/postgres"
+	"github.com/pangolin-framework/pangolin/security/scope"
 )
 
 var ErrReplayNotDead = errors.New("EVENT_REPLAY_REQUIRES_DEAD")

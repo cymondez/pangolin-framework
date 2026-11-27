@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cymondez/pangolin-framework/security/scope"
+	"github.com/pangolin-framework/pangolin/security/scope"
 )
 
 var ErrInvalid = errors.New("CACHE_INVALID")

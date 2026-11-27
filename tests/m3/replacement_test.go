@@ -11,16 +11,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cymondez/pangolin-framework/events/distributed"
-	"github.com/cymondez/pangolin-framework/events/inbox"
-	eventpg "github.com/cymondez/pangolin-framework/events/postgres"
-	"github.com/cymondez/pangolin-framework/modules/organization"
-	"github.com/cymondez/pangolin-framework/modules/organization/contracts"
-	"github.com/cymondez/pangolin-framework/persistence/postgres"
-	"github.com/cymondez/pangolin-framework/persistence/uow"
-	"github.com/cymondez/pangolin-framework/security/scope"
-	"github.com/cymondez/pangolin-framework/tenancy"
-	tenantpg "github.com/cymondez/pangolin-framework/tenancy/postgres"
+	"github.com/pangolin-framework/pangolin/events/distributed"
+	"github.com/pangolin-framework/pangolin/events/inbox"
+	eventpg "github.com/pangolin-framework/pangolin/events/postgres"
+	"github.com/pangolin-framework/pangolin/modules/organization"
+	"github.com/pangolin-framework/pangolin/modules/organization/contracts"
+	"github.com/pangolin-framework/pangolin/persistence/postgres"
+	"github.com/pangolin-framework/pangolin/persistence/uow"
+	"github.com/pangolin-framework/pangolin/security/scope"
+	"github.com/pangolin-framework/pangolin/tenancy"
+	tenantpg "github.com/pangolin-framework/pangolin/tenancy/postgres"
 )
 
 func TestA91Replacement(t *testing.T) {

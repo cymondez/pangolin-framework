@@ -6,8 +6,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/cymondez/pangolin-framework/platform/settings"
-	"github.com/cymondez/pangolin-framework/security/scope"
+	"github.com/pangolin-framework/pangolin/platform/settings"
+	"github.com/pangolin-framework/pangolin/security/scope"
 )
 
 type authority struct {

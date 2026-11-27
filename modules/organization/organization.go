@@ -7,10 +7,10 @@ import (
 	"encoding/hex"
 	"strings"
 
-	"github.com/cymondez/pangolin-framework/kernel/di"
-	"github.com/cymondez/pangolin-framework/kernel/module"
-	"github.com/cymondez/pangolin-framework/modules/organization/contracts"
-	"github.com/cymondez/pangolin-framework/security/scope"
+	"github.com/pangolin-framework/pangolin/kernel/di"
+	"github.com/pangolin-framework/pangolin/kernel/module"
+	"github.com/pangolin-framework/pangolin/modules/organization/contracts"
+	"github.com/pangolin-framework/pangolin/security/scope"
 )
 
 // Authority reads a consistent, trusted membership/governance snapshot.

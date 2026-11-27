@@ -190,7 +190,7 @@ def check_versions(manifest, root=ROOT):
     template = root / "internal/scaffold/assets/common/go.mod.tmpl"
     if not template.is_file():
         raise ValueError("template module file missing")
-    template_match = re.search(r"require github.com/cymondez/pangolin-framework (v[0-9]+\.[0-9]+\.[0-9]+)", template.read_text(encoding="utf-8-sig"))
+    template_match = re.search(r"require github.com/pangolin-framework/pangolin (v[0-9]+\.[0-9]+\.[0-9]+)", template.read_text(encoding="utf-8-sig"))
     if not template_match or template_match[1] != "v" + version:
         raise ValueError("template runtime require version differs from the runtime VERSION")
     return {"runtime": version, "cli": cli_match[1], "template": version, "template_runtime_require": template_match[1]}

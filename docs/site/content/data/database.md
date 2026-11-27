@@ -58,8 +58,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/cymondez/pangolin-framework/persistence/database"
-	"github.com/cymondez/pangolin-framework/persistence/uow"
+	"github.com/pangolin-framework/pangolin/persistence/database"
+	"github.com/pangolin-framework/pangolin/persistence/uow"
 )
 
 // Repository 是實作 BookStore 介面的基礎設施層。

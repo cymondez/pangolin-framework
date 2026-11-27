@@ -5,9 +5,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/cymondez/pangolin-framework/events/local"
-	"github.com/cymondez/pangolin-framework/events/outbox"
-	"github.com/cymondez/pangolin-framework/persistence/uow"
+	"github.com/pangolin-framework/pangolin/events/local"
+	"github.com/pangolin-framework/pangolin/events/outbox"
+	"github.com/pangolin-framework/pangolin/persistence/uow"
 )
 
 type Resource struct {

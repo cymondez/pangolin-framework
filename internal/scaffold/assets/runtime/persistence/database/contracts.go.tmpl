@@ -12,8 +12,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cymondez/pangolin-framework/kernel/ambient"
-	"github.com/cymondez/pangolin-framework/persistence/uow"
+	"github.com/pangolin-framework/pangolin/kernel/ambient"
+	"github.com/pangolin-framework/pangolin/persistence/uow"
 )
 
 // Capabilities is the truthful admission contract of one backend. It reports

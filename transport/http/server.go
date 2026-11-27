@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/cymondez/pangolin-framework/kernel/runtime"
+	"github.com/pangolin-framework/pangolin/kernel/runtime"
 )
 
 // ServerParticipant bridges an *http.Server, a runtime.WorkGroup and optional

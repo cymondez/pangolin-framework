@@ -10,7 +10,7 @@ import (
 	"example.com/moduleapp/catalog"
 	"example.com/moduleapp/catalog/contracts"
 	"example.com/moduleapp/pricing"
-	"github.com/cymondez/pangolin-framework/kernel/module"
+	"github.com/pangolin-framework/pangolin/kernel/module"
 )
 
 // Module 是整個應用的最頂層根模組；本身不註冊業務實作，只負責聚合相依與啟動入口。

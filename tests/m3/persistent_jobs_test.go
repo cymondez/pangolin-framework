@@ -10,15 +10,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cymondez/pangolin-framework/modules/organization"
-	"github.com/cymondez/pangolin-framework/persistence/migration"
-	"github.com/cymondez/pangolin-framework/persistence/postgres"
-	"github.com/cymondez/pangolin-framework/persistence/uow"
-	"github.com/cymondez/pangolin-framework/platform/jobs"
-	jobpg "github.com/cymondez/pangolin-framework/platform/jobs/postgres"
-	"github.com/cymondez/pangolin-framework/security/scope"
-	"github.com/cymondez/pangolin-framework/tenancy"
-	tenantpg "github.com/cymondez/pangolin-framework/tenancy/postgres"
+	"github.com/pangolin-framework/pangolin/modules/organization"
+	"github.com/pangolin-framework/pangolin/persistence/migration"
+	"github.com/pangolin-framework/pangolin/persistence/postgres"
+	"github.com/pangolin-framework/pangolin/persistence/uow"
+	"github.com/pangolin-framework/pangolin/platform/jobs"
+	jobpg "github.com/pangolin-framework/pangolin/platform/jobs/postgres"
+	"github.com/pangolin-framework/pangolin/security/scope"
+	"github.com/pangolin-framework/pangolin/tenancy"
+	tenantpg "github.com/pangolin-framework/pangolin/tenancy/postgres"
 )
 
 // Extends the original A79/A91 governance fixtures with the delivered persistent

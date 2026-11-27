@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cymondez/pangolin-framework/kernel/di"
+	"github.com/pangolin-framework/pangolin/kernel/di"
 )
 
 type facadeActual struct{ value string }

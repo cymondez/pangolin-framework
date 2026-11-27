@@ -12,9 +12,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cymondez/pangolin-framework/events/distributed"
-	broker "github.com/cymondez/pangolin-framework/events/nats"
-	"github.com/cymondez/pangolin-framework/security/scope"
+	"github.com/pangolin-framework/pangolin/events/distributed"
+	broker "github.com/pangolin-framework/pangolin/events/nats"
+	"github.com/pangolin-framework/pangolin/security/scope"
 	"github.com/nats-io/nats.go"
 )
 

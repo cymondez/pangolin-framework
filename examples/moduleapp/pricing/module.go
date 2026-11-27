@@ -8,7 +8,7 @@ import (
 	"fmt"
 
 	"example.com/moduleapp/store"
-	"github.com/cymondez/pangolin-framework/kernel/module"
+	"github.com/pangolin-framework/pangolin/kernel/module"
 )
 
 // Prices is the pricing service. It stays private to this module: without an

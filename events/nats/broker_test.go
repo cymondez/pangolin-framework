@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/cymondez/pangolin-framework/events/distributed"
+	"github.com/pangolin-framework/pangolin/events/distributed"
 	"github.com/nats-io/nats.go"
 	"testing"
 	"time"

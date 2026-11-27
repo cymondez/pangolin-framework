@@ -5,7 +5,7 @@ go 1.27.0
 toolchain go1.27.4
 
 require (
-	github.com/cymondez/pangolin-framework v0.1.0
+	github.com/pangolin-framework/pangolin v0.1.0
 	github.com/jackc/pgx/v5 v5.12.0
 	go.opentelemetry.io/otel/sdk v1.47.0
 	go.opentelemetry.io/otel/sdk/metric v1.47.0
@@ -34,4 +34,4 @@ require (
 	golang.org/x/text v0.44.0 // indirect
 )
 
-replace github.com/cymondez/pangolin-framework => ../..
+replace github.com/pangolin-framework/pangolin => ../..

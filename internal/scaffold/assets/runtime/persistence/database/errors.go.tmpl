@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/cymondez/pangolin-framework/security/scope"
+	"github.com/pangolin-framework/pangolin/security/scope"
 )
 
 // ErrConflict is the neutral sentinel for a unique or conflict constraint

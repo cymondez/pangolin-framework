@@ -121,7 +121,7 @@ func (c CLI) writePresetModule(stage, name, preset string, p Project, dependenci
 		imports.WriteString("\t\"example.com/" + p.Name + "/modules/" + name + "/application\"\n")
 		for _, dependency := range dependencies {
 			if dependency == "realtime" && p.Realtime {
-				imports.WriteString("\t\"github.com/cymondez/pangolin-framework/modules/realtime\"\n")
+				imports.WriteString("\t\"github.com/pangolin-framework/pangolin/modules/realtime\"\n")
 				continue
 			}
 			if dependency != "persistence" && dependency != "authorization" && dependency != "organization" && dependency != name && namePattern.MatchString(dependency) {
@@ -148,7 +148,7 @@ func (c CLI) writePresetModule(stage, name, preset string, p Project, dependenci
 
 import (
 	"context"
-%s	"github.com/cymondez/pangolin-framework/kernel/module"
+%s	"github.com/pangolin-framework/pangolin/kernel/module"
 )
 
 type Module struct{}
@@ -216,8 +216,8 @@ import (
 	"context"
 	"errors"
 
-	frameworkapplication "github.com/cymondez/pangolin-framework/application"
-	"github.com/cymondez/pangolin-framework/persistence/uow"
+	frameworkapplication "github.com/pangolin-framework/pangolin/application"
+	"github.com/pangolin-framework/pangolin/persistence/uow"
 
 	"example.com/%s/foundation"
 )
@@ -267,8 +267,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/cymondez/pangolin-framework/persistence/uow"
-	"github.com/cymondez/pangolin-framework/security/scope"
+	"github.com/pangolin-framework/pangolin/persistence/uow"
+	"github.com/pangolin-framework/pangolin/security/scope"
 
 	"example.com/%s/foundation"
 )
@@ -333,12 +333,12 @@ func TestServiceStatus(t *testing.T) {
 
 	// The no-preset path intentionally remains the existing small skeleton.
 	var body strings.Builder
-	importList := []string{"\"github.com/cymondez/pangolin-framework/kernel/module\""}
+	importList := []string{"\"github.com/pangolin-framework/pangolin/kernel/module\""}
 	var refs strings.Builder
 	framework := false
 	for _, dependency := range dependencies {
 		if dependency == "realtime" && p.Realtime {
-			importList = append(importList, `"github.com/cymondez/pangolin-framework/modules/realtime"`)
+			importList = append(importList, `"github.com/pangolin-framework/pangolin/modules/realtime"`)
 			refs.WriteString("module.Of[realtime.Module](),")
 			continue
 		}
@@ -525,7 +525,7 @@ func (c CLI) checkRuntimeManifest(p Project) error {
 		return errors.New("bundled runtime missing")
 	}
 	raw, err := os.ReadFile(filepath.Join(c.Dir, "framework", "go.mod"))
-	if err != nil || !strings.Contains(string(raw), "module github.com/cymondez/pangolin-framework") {
+	if err != nil || !strings.Contains(string(raw), "module github.com/pangolin-framework/pangolin") {
 		return errors.New("bundled runtime missing")
 	}
 	manifestRaw, err := os.ReadFile(filepath.Join(c.Dir, "runtime-manifest.json"))

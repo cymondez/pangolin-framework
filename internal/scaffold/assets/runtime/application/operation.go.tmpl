@@ -5,8 +5,8 @@ import (
 	"context"
 	"reflect"
 
-	"github.com/cymondez/pangolin-framework/observability"
-	"github.com/cymondez/pangolin-framework/persistence/uow"
+	"github.com/pangolin-framework/pangolin/observability"
+	"github.com/pangolin-framework/pangolin/persistence/uow"
 )
 
 // Command establishes the same write policy for every transport.

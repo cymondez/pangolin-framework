@@ -9,9 +9,9 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/cymondez/pangolin-framework/platform/settings"
-	"github.com/cymondez/pangolin-framework/security/policy"
-	"github.com/cymondez/pangolin-framework/security/scope"
+	"github.com/pangolin-framework/pangolin/platform/settings"
+	"github.com/pangolin-framework/pangolin/security/policy"
+	"github.com/pangolin-framework/pangolin/security/scope"
 )
 
 var ErrInvalid = errors.New("FEATURE_INVALID")

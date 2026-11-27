@@ -38,8 +38,8 @@ def main():
 
     version = (ROOT / 'VERSION').read_text().strip()
     run(['go', 'mod', 'init', 'example.com/hello-pangolin'])
-    run(['go', 'mod', 'edit', '-require=github.com/cymondez/pangolin-framework@v' + version])
-    run(['go', 'mod', 'edit', '-replace=github.com/cymondez/pangolin-framework=' + ROOT.as_posix()])
+    run(['go', 'mod', 'edit', '-require=github.com/pangolin-framework/pangolin@v' + version])
+    run(['go', 'mod', 'edit', '-replace=github.com/pangolin-framework/pangolin=' + ROOT.as_posix()])
     samples = {
         'hello': 'Hello, panGOlin!',
         'root-greeting': 'Hello, World!',

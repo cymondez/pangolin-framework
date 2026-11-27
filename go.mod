@@ -1,4 +1,4 @@
-module github.com/cymondez/pangolin-framework
+module github.com/pangolin-framework/pangolin
 
 go 1.27.0
 

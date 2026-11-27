@@ -58,9 +58,9 @@ package authentication
 import (
 	"context"
 
-	"github.com/cymondez/pangolin-framework/security/identity"
-	"github.com/cymondez/pangolin-framework/security/scope"
-	transport "github.com/cymondez/pangolin-framework/transport/http"
+	"github.com/pangolin-framework/pangolin/security/identity"
+	"github.com/pangolin-framework/pangolin/security/scope"
+	transport "github.com/pangolin-framework/pangolin/transport/http"
 )
 
 // SessionStore 是你自己的登入模組介面，負責向持久化儲存查驗 Session 是否仍有效且未撤銷。

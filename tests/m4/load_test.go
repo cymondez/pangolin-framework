@@ -14,10 +14,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cymondez/pangolin-framework/persistence/uow"
-	"github.com/cymondez/pangolin-framework/platform/jobs"
-	jobpg "github.com/cymondez/pangolin-framework/platform/jobs/postgres"
-	"github.com/cymondez/pangolin-framework/security/scope"
+	"github.com/pangolin-framework/pangolin/persistence/uow"
+	"github.com/pangolin-framework/pangolin/platform/jobs"
+	jobpg "github.com/pangolin-framework/pangolin/platform/jobs/postgres"
+	"github.com/pangolin-framework/pangolin/security/scope"
 )
 
 type sample struct {

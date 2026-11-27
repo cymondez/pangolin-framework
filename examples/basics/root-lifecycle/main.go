@@ -6,8 +6,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/cymondez/pangolin-framework/kernel/app"
-	"github.com/cymondez/pangolin-framework/kernel/module"
+	"github.com/pangolin-framework/pangolin/kernel/app"
+	"github.com/pangolin-framework/pangolin/kernel/module"
 )
 
 // 步驟 1：定義底層被依賴的 storage 模組（這裡以純印出模擬連線資源）。

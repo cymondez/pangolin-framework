@@ -22,7 +22,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/cymondez/pangolin-framework/internal/scaffold"
+	"github.com/pangolin-framework/pangolin/internal/scaffold"
 )
 
 // legacyDatabase isolates one generated-runtime run in its own database of

@@ -8,9 +8,9 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/cymondez/pangolin-framework/application"
-	"github.com/cymondez/pangolin-framework/persistence/database"
-	"github.com/cymondez/pangolin-framework/persistence/uow"
+	"github.com/pangolin-framework/pangolin/application"
+	"github.com/pangolin-framework/pangolin/persistence/database"
+	"github.com/pangolin-framework/pangolin/persistence/uow"
 )
 
 func TestD2ExplicitWriteReturningPortsCommitAndRollback(t *testing.T) {

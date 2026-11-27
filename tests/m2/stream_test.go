@@ -10,8 +10,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/cymondez/pangolin-framework/persistence/postgres"
-	transport "github.com/cymondez/pangolin-framework/transport/http"
+	"github.com/pangolin-framework/pangolin/persistence/postgres"
+	transport "github.com/pangolin-framework/pangolin/transport/http"
 )
 
 func TestA49Stream(t *testing.T) {

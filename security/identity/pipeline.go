@@ -5,7 +5,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/cymondez/pangolin-framework/security/scope"
+	"github.com/pangolin-framework/pangolin/security/scope"
 )
 
 // Credential kinds select the registered verifier. Transport adapters own

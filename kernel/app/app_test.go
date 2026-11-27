@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cymondez/pangolin-framework/kernel/config"
-	"github.com/cymondez/pangolin-framework/kernel/module"
+	"github.com/pangolin-framework/pangolin/kernel/config"
+	"github.com/pangolin-framework/pangolin/kernel/module"
 )
 
 type appTestModule struct {

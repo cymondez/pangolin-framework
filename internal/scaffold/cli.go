@@ -20,7 +20,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/cymondez/pangolin-framework/kernel/module"
+	"github.com/pangolin-framework/pangolin/kernel/module"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
@@ -343,7 +343,7 @@ func registryBytes(p Project) ([]byte, error) {
 		fmt.Fprintf(&imports, "m_%s %q\n", name, "example.com/"+p.Name+"/modules/"+name)
 		fmt.Fprintf(&refs, "module.Of[m_%s.Module](),\n", name)
 	}
-	raw := "package modules\nimport (\n\"github.com/cymondez/pangolin-framework/kernel/module\"\n" + imports.String() + ")\n" +
+	raw := "package modules\nimport (\n\"github.com/pangolin-framework/pangolin/kernel/module\"\n" + imports.String() + ")\n" +
 		"\n// UserRoot aggregates every user module as one typed root dependency;\n" +
 		"// the loader plans and dedupes reachable Types exactly once.\n" +
 		"type UserRoot struct{}\n" +

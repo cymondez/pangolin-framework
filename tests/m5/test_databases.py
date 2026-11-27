@@ -91,7 +91,7 @@ class IntegrationSeam(unittest.TestCase):
             with self.assertRaises(ValueError):m1.database_packages('M6',Path(directory)/'tests/database')
 
 
-DB='github.com/cymondez/pangolin-framework/tests/database:TestBackendContracts/'
+DB='github.com/pangolin-framework/pangolin/tests/database:TestBackendContracts/'
 
 
 class RegressionIntegrationEnforcement(unittest.TestCase):

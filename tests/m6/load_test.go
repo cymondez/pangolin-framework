@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cymondez/pangolin-framework/examples/bookstore/application"
-	"github.com/cymondez/pangolin-framework/examples/bookstore/infrastructure"
+	"github.com/pangolin-framework/pangolin/examples/bookstore/application"
+	"github.com/pangolin-framework/pangolin/examples/bookstore/infrastructure"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )

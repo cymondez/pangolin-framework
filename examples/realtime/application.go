@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/cymondez/pangolin-framework/application"
-	"github.com/cymondez/pangolin-framework/modules/realtime"
-	"github.com/cymondez/pangolin-framework/persistence/postgres"
-	"github.com/cymondez/pangolin-framework/security/scope"
+	"github.com/pangolin-framework/pangolin/application"
+	"github.com/pangolin-framework/pangolin/modules/realtime"
+	"github.com/pangolin-framework/pangolin/persistence/postgres"
+	"github.com/pangolin-framework/pangolin/security/scope"
 )
 
 type demoApplication struct {

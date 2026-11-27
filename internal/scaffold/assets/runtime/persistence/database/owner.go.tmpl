@@ -4,7 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/cymondez/pangolin-framework/security/scope"
+	"github.com/pangolin-framework/pangolin/security/scope"
 )
 
 // Owner is the exact trusted owner of scoped rows: tenant, scope kind and

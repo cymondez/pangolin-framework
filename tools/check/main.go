@@ -15,7 +15,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/cymondez/pangolin-framework/internal/quality"
+	"github.com/pangolin-framework/pangolin/internal/quality"
 )
 
 func run(args []string, out io.Writer) error {
@@ -74,7 +74,7 @@ func checkCoverage(root, profile string, out io.Writer) error {
 	if !coverage.Overall.Pass() {
 		return fmt.Errorf("overall statement coverage is below 90%%")
 	}
-	const module = "github.com/cymondez/pangolin-framework/"
+	const module = "github.com/pangolin-framework/pangolin/"
 	for pkg, counts := range coverage.Packages {
 		path := strings.TrimPrefix(pkg, module)
 		for _, key := range []string{"kernel", "persistence/uow", "persistence/postgres", "persistence/database", "persistence/mysql", "persistence/sqlite", "security", "tenancy", "events", "platform/audit", "modules/organization", "modules/realtime"} {
@@ -255,10 +255,10 @@ func trackedPackageInventory(root string) ([]byte, error) {
 			continue
 		}
 		switch {
-		case pkg.ImportPath == "github.com/cymondez/pangolin-framework":
+		case pkg.ImportPath == "github.com/pangolin-framework/pangolin":
 			inventory = append(inventory, ".")
-		case strings.HasPrefix(pkg.ImportPath, "github.com/cymondez/pangolin-framework/"):
-			inventory = append(inventory, "./"+strings.TrimPrefix(pkg.ImportPath, "github.com/cymondez/pangolin-framework/"))
+		case strings.HasPrefix(pkg.ImportPath, "github.com/pangolin-framework/pangolin/"):
+			inventory = append(inventory, "./"+strings.TrimPrefix(pkg.ImportPath, "github.com/pangolin-framework/pangolin/"))
 		default:
 			inventory = append(inventory, pkg.ImportPath)
 		}

@@ -11,7 +11,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/cymondez/pangolin-framework/internal/testkit/idp"
+	"github.com/pangolin-framework/pangolin/internal/testkit/idp"
 )
 
 func main() {

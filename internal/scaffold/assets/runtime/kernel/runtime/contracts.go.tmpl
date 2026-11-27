@@ -5,7 +5,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/cymondez/pangolin-framework/kernel/module"
+	"github.com/pangolin-framework/pangolin/kernel/module"
 )
 
 type Options struct {

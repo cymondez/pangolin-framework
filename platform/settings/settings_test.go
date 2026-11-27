@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cymondez/pangolin-framework/platform/cache"
-	"github.com/cymondez/pangolin-framework/security/scope"
+	"github.com/pangolin-framework/pangolin/platform/cache"
+	"github.com/pangolin-framework/pangolin/security/scope"
 )
 
 type provider struct{ kind, revision string }

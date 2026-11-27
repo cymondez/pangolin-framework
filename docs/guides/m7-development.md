@@ -125,7 +125,7 @@ client-license review before freezing.
 
 - `milestone: "M7"`, `baseline: "v1.3"`, `pending: []`;
 - `unit_tests` mapping the 35 named Go subtests to Go test identities of the
-  form `github.com/cymondez/pangolin-framework/<pkg>:TestAxxRTxxx/<name>` that
+  form `github.com/pangolin-framework/pangolin/<pkg>:TestAxxRTxxx/<name>` that
   actually run in the unit (`-json`) stream — e.g.
   `.../modules/realtime/signalr:TestA96RT001/official-negotiate`;
 - `template_tests` mapping the official-client/E2E named subtests to the

@@ -7,9 +7,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/cymondez/pangolin-framework/kernel/app"
-	"github.com/cymondez/pangolin-framework/kernel/config"
-	"github.com/cymondez/pangolin-framework/kernel/module"
+	"github.com/pangolin-framework/pangolin/kernel/app"
+	"github.com/pangolin-framework/pangolin/kernel/config"
+	"github.com/pangolin-framework/pangolin/kernel/module"
 )
 
 // 步驟 1：定義你自己的業務服務。

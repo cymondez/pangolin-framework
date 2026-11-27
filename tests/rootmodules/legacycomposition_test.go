@@ -16,13 +16,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cymondez/pangolin-framework/kernel/config"
-	"github.com/cymondez/pangolin-framework/kernel/di"
-	"github.com/cymondez/pangolin-framework/kernel/module"
-	"github.com/cymondez/pangolin-framework/kernel/runtime"
-	"github.com/cymondez/pangolin-framework/persistence/uow"
-	"github.com/cymondez/pangolin-framework/security/scope"
-	"github.com/cymondez/pangolin-framework/tenancy"
+	"github.com/pangolin-framework/pangolin/kernel/config"
+	"github.com/pangolin-framework/pangolin/kernel/di"
+	"github.com/pangolin-framework/pangolin/kernel/module"
+	"github.com/pangolin-framework/pangolin/kernel/runtime"
+	"github.com/pangolin-framework/pangolin/persistence/uow"
+	"github.com/pangolin-framework/pangolin/security/scope"
+	"github.com/pangolin-framework/pangolin/tenancy"
 )
 
 // legacyResource is a construction-only stand-in for the UOW backend; the
@@ -173,7 +173,7 @@ func newLegacyTestHost(t *testing.T) runtime.Host {
 
 func TestLegacyRootOwnedServicesRejectTypedInjection(t *testing.T) {
 	err := runLegacyComposition(t, newLegacyTestHost(t), &legacyRootModule{})
-	if !strings.Contains(err.Error(), "missing provider github.com/cymondez/pangolin-framework/persistence/uow.UnitOfWorkManager") {
+	if !strings.Contains(err.Error(), "missing provider github.com/pangolin-framework/pangolin/persistence/uow.UnitOfWorkManager") {
 		t.Fatalf("expected missing UOW contract provider diagnostic:\n%v", err)
 	}
 	if !strings.Contains(err.Error(), "module legacyuser") {
@@ -187,7 +187,7 @@ func TestLegacyRootOwnedServicesRejectTypedInjection(t *testing.T) {
 // time, in sorted token order, hence a dedicated composition.
 func TestLegacyRootOwnedServicesRejectRegistryTypedInjection(t *testing.T) {
 	err := runLegacyComposition(t, newLegacyTestHost(t), &legacyRegistryRootModule{})
-	if !strings.Contains(err.Error(), "missing provider *github.com/cymondez/pangolin-framework/security/scope.Registry") {
+	if !strings.Contains(err.Error(), "missing provider *github.com/pangolin-framework/pangolin/security/scope.Registry") {
 		t.Fatalf("expected missing scope registry diagnostic:\n%v", err)
 	}
 	if !strings.Contains(err.Error(), "module legacyuser") {
@@ -282,7 +282,7 @@ func TestLegacyExportedRootServicesStillNeedOwnerEdge(t *testing.T) {
 	err := runLegacyComposition(t, newLegacyTestHost(t), &legacyExportedRootModule{})
 	// The engine reports the first violating dependency of the user ctor in
 	// sorted token order; the diagnostic names consumer, type and owner.
-	message := "module legacyuser cannot resolve github.com/cymondez/pangolin-framework/persistence/uow.UnitOfWorkManager: it is owned by module app; declare a direct dependency on app and require it to export"
+	message := "module legacyuser cannot resolve github.com/pangolin-framework/pangolin/persistence/uow.UnitOfWorkManager: it is owned by module app; declare a direct dependency on app and require it to export"
 	if !strings.Contains(err.Error(), message) {
 		t.Fatalf("expected owner-edge diagnostic:\n%v", err)
 	}

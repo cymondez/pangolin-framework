@@ -4977,7 +4977,7 @@
           "assertion_ref": "A96.expected",
           "status": "planned",
           "evidence": "artifacts/{commit}/{profile}/A96/concurrent-consume/",
-          "test": "github.com/cymondez/pangolin-framework/modules/realtime/signalr:TestA96RT001/concurrent-consume"
+          "test": "github.com/pangolin-framework/pangolin/modules/realtime/signalr:TestA96RT001/concurrent-consume"
         },
         {
           "id": "A96/official-negotiate",
@@ -4985,7 +4985,7 @@
           "assertion_ref": "A96.expected",
           "status": "planned",
           "evidence": "artifacts/{commit}/{profile}/A96/official-negotiate/",
-          "test": "github.com/cymondez/pangolin-framework/modules/realtime/signalr:TestA96RT001/official-negotiate"
+          "test": "github.com/pangolin-framework/pangolin/modules/realtime/signalr:TestA96RT001/official-negotiate"
         },
         {
           "id": "A96/origin-rejected",
@@ -4993,7 +4993,7 @@
           "assertion_ref": "A96.expected",
           "status": "planned",
           "evidence": "artifacts/{commit}/{profile}/A96/origin-rejected/",
-          "test": "github.com/cymondez/pangolin-framework/modules/realtime/signalr:TestA96RT001/origin-rejected"
+          "test": "github.com/pangolin-framework/pangolin/modules/realtime/signalr:TestA96RT001/origin-rejected"
         },
         {
           "id": "A96/token-binding",
@@ -5001,7 +5001,7 @@
           "assertion_ref": "A96.expected",
           "status": "planned",
           "evidence": "artifacts/{commit}/{profile}/A96/token-binding/",
-          "test": "github.com/cymondez/pangolin-framework/modules/realtime/signalr:TestA96RT001/token-binding"
+          "test": "github.com/pangolin-framework/pangolin/modules/realtime/signalr:TestA96RT001/token-binding"
         },
         {
           "id": "A96/unsupported-transport",
@@ -5009,7 +5009,7 @@
           "assertion_ref": "A96.expected",
           "status": "planned",
           "evidence": "artifacts/{commit}/{profile}/A96/unsupported-transport/",
-          "test": "github.com/cymondez/pangolin-framework/modules/realtime/signalr:TestA96RT001/unsupported-transport"
+          "test": "github.com/pangolin-framework/pangolin/modules/realtime/signalr:TestA96RT001/unsupported-transport"
         },
         {
           "id": "A96/unsupported-version",
@@ -5017,7 +5017,7 @@
           "assertion_ref": "A96.expected",
           "status": "planned",
           "evidence": "artifacts/{commit}/{profile}/A96/unsupported-version/",
-          "test": "github.com/cymondez/pangolin-framework/modules/realtime/signalr:TestA96RT001/unsupported-version"
+          "test": "github.com/pangolin-framework/pangolin/modules/realtime/signalr:TestA96RT001/unsupported-version"
         }
       ]
     },
@@ -5077,7 +5077,7 @@
           "assertion_ref": "A97.expected",
           "status": "planned",
           "evidence": "artifacts/{commit}/{profile}/A97/cancel/",
-          "test": "github.com/cymondez/pangolin-framework/modules/realtime/signalr:TestA97RT002/cancel"
+          "test": "github.com/pangolin-framework/pangolin/modules/realtime/signalr:TestA97RT002/cancel"
         },
         {
           "id": "A97/invalid-frame",
@@ -5085,7 +5085,7 @@
           "assertion_ref": "A97.expected",
           "status": "planned",
           "evidence": "artifacts/{commit}/{profile}/A97/invalid-frame/",
-          "test": "github.com/cymondez/pangolin-framework/modules/realtime/signalr:TestA97RT002/invalid-frame"
+          "test": "github.com/pangolin-framework/pangolin/modules/realtime/signalr:TestA97RT002/invalid-frame"
         },
         {
           "id": "A97/invalid-method",
@@ -5093,7 +5093,7 @@
           "assertion_ref": "A97.expected",
           "status": "planned",
           "evidence": "artifacts/{commit}/{profile}/A97/invalid-method/",
-          "test": "github.com/cymondez/pangolin-framework/modules/realtime/signalr:TestA97RT002/invalid-method"
+          "test": "github.com/pangolin-framework/pangolin/modules/realtime/signalr:TestA97RT002/invalid-method"
         },
         {
           "id": "A97/oversize",
@@ -5101,7 +5101,7 @@
           "assertion_ref": "A97.expected",
           "status": "planned",
           "evidence": "artifacts/{commit}/{profile}/A97/oversize/",
-          "test": "github.com/cymondez/pangolin-framework/modules/realtime/signalr:TestA97RT002/oversize"
+          "test": "github.com/pangolin-framework/pangolin/modules/realtime/signalr:TestA97RT002/oversize"
         }
       ]
     },
@@ -5137,7 +5137,7 @@
           "assertion_ref": "A98.expected",
           "status": "planned",
           "evidence": "artifacts/{commit}/{profile}/A98/cross-tenant-host-negative/",
-          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA98RT003/cross-tenant-host-negative"
+          "test": "github.com/pangolin-framework/pangolin/modules/realtime:TestA98RT003/cross-tenant-host-negative"
         },
         {
           "id": "A98/forged-owner",
@@ -5145,7 +5145,7 @@
           "assertion_ref": "A98.expected",
           "status": "planned",
           "evidence": "artifacts/{commit}/{profile}/A98/forged-owner/",
-          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA98RT003/forged-owner"
+          "test": "github.com/pangolin-framework/pangolin/modules/realtime:TestA98RT003/forged-owner"
         },
         {
           "id": "A98/scope-collision",
@@ -5153,7 +5153,7 @@
           "assertion_ref": "A98.expected",
           "status": "planned",
           "evidence": "artifacts/{commit}/{profile}/A98/scope-collision/",
-          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA98RT003/scope-collision"
+          "test": "github.com/pangolin-framework/pangolin/modules/realtime:TestA98RT003/scope-collision"
         },
         {
           "id": "A98/tenant-collision",
@@ -5161,7 +5161,7 @@
           "assertion_ref": "A98.expected",
           "status": "planned",
           "evidence": "artifacts/{commit}/{profile}/A98/tenant-collision/",
-          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA98RT003/tenant-collision"
+          "test": "github.com/pangolin-framework/pangolin/modules/realtime:TestA98RT003/tenant-collision"
         },
         {
           "id": "A98/unsubscribe",
@@ -5169,7 +5169,7 @@
           "assertion_ref": "A98.expected",
           "status": "planned",
           "evidence": "artifacts/{commit}/{profile}/A98/unsubscribe/",
-          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA98RT003/unsubscribe"
+          "test": "github.com/pangolin-framework/pangolin/modules/realtime:TestA98RT003/unsubscribe"
         },
         {
           "id": "A98/user-devices",
@@ -5177,7 +5177,7 @@
           "assertion_ref": "A98.expected",
           "status": "planned",
           "evidence": "artifacts/{commit}/{profile}/A98/user-devices/",
-          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA98RT003/user-devices"
+          "test": "github.com/pangolin-framework/pangolin/modules/realtime:TestA98RT003/user-devices"
         }
       ]
     },
@@ -5205,7 +5205,7 @@
           "assertion_ref": "A99.expected",
           "status": "planned",
           "evidence": "artifacts/{commit}/{profile}/A99/authority-down/",
-          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA99RT004/authority-down"
+          "test": "github.com/pangolin-framework/pangolin/modules/realtime:TestA99RT004/authority-down"
         },
         {
           "id": "A99/before-write",
@@ -5213,7 +5213,7 @@
           "assertion_ref": "A99.expected",
           "status": "planned",
           "evidence": "artifacts/{commit}/{profile}/A99/before-write/",
-          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA99RT004/before-write"
+          "test": "github.com/pangolin-framework/pangolin/modules/realtime:TestA99RT004/before-write"
         },
         {
           "id": "A99/disabled-account",
@@ -5221,7 +5221,7 @@
           "assertion_ref": "A99.expected",
           "status": "planned",
           "evidence": "artifacts/{commit}/{profile}/A99/disabled-account/",
-          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA99RT004/disabled-account"
+          "test": "github.com/pangolin-framework/pangolin/modules/realtime:TestA99RT004/disabled-account"
         },
         {
           "id": "A99/invalid-credential",
@@ -5229,7 +5229,7 @@
           "assertion_ref": "A99.expected",
           "status": "planned",
           "evidence": "artifacts/{commit}/{profile}/A99/invalid-credential/",
-          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA99RT004/invalid-credential"
+          "test": "github.com/pangolin-framework/pangolin/modules/realtime:TestA99RT004/invalid-credential"
         },
         {
           "id": "A99/membership-revocation",
@@ -5237,7 +5237,7 @@
           "assertion_ref": "A99.expected",
           "status": "planned",
           "evidence": "artifacts/{commit}/{profile}/A99/membership-revocation/",
-          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA99RT004/membership-revocation"
+          "test": "github.com/pangolin-framework/pangolin/modules/realtime:TestA99RT004/membership-revocation"
         },
         {
           "id": "A99/permission-deny",
@@ -5245,7 +5245,7 @@
           "assertion_ref": "A99.expected",
           "status": "planned",
           "evidence": "artifacts/{commit}/{profile}/A99/permission-deny/",
-          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA99RT004/permission-deny"
+          "test": "github.com/pangolin-framework/pangolin/modules/realtime:TestA99RT004/permission-deny"
         },
         {
           "id": "A99/disabled-scope",
@@ -5253,7 +5253,7 @@
           "assertion_ref": "A99.expected",
           "status": "pending",
           "evidence": "artifacts/{commit}/{profile}/A99/disabled-scope/",
-          "test": "github.com/cymondez/pangolin-framework/examples/realtime:TestA99DisabledScope"
+          "test": "github.com/pangolin-framework/pangolin/examples/realtime:TestA99DisabledScope"
         }
       ]
     },
@@ -5281,7 +5281,7 @@
           "assertion_ref": "A100.expected",
           "status": "planned",
           "evidence": "artifacts/{commit}/{profile}/A100/exact-method-owner/",
-          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA100RT005/exact-method-owner"
+          "test": "github.com/pangolin-framework/pangolin/modules/realtime:TestA100RT005/exact-method-owner"
         },
         {
           "id": "A100/no-long-uow",
@@ -5289,7 +5289,7 @@
           "assertion_ref": "A100.expected",
           "status": "planned",
           "evidence": "artifacts/{commit}/{profile}/A100/no-long-uow/",
-          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA100RT005/no-long-uow"
+          "test": "github.com/pangolin-framework/pangolin/modules/realtime:TestA100RT005/no-long-uow"
         },
         {
           "id": "A100/operation-scope-close",
@@ -5297,7 +5297,7 @@
           "assertion_ref": "A100.expected",
           "status": "planned",
           "evidence": "artifacts/{commit}/{profile}/A100/operation-scope-close/",
-          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA100RT005/operation-scope-close"
+          "test": "github.com/pangolin-framework/pangolin/modules/realtime:TestA100RT005/operation-scope-close"
         },
         {
           "id": "A100/commit-unknown",
@@ -5305,7 +5305,7 @@
           "assertion_ref": "A100.expected",
           "status": "pending",
           "evidence": "artifacts/{commit}/{profile}/A100/commit-unknown/",
-          "test": "github.com/cymondez/pangolin-framework/tests/m7:TestA100CommitUnknown"
+          "test": "github.com/pangolin-framework/pangolin/tests/m7:TestA100CommitUnknown"
         }
       ]
     },
@@ -5341,7 +5341,7 @@
           "assertion_ref": "A101.expected",
           "status": "planned",
           "evidence": "artifacts/{commit}/{profile}/A101/stable-envelope/",
-          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA101RT006/stable-envelope"
+          "test": "github.com/pangolin-framework/pangolin/modules/realtime:TestA101RT006/stable-envelope"
         },
         {
           "id": "A101/wrong-owner",
@@ -5349,7 +5349,7 @@
           "assertion_ref": "A101.expected",
           "status": "planned",
           "evidence": "artifacts/{commit}/{profile}/A101/wrong-owner/",
-          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA101RT006/wrong-owner"
+          "test": "github.com/pangolin-framework/pangolin/modules/realtime:TestA101RT006/wrong-owner"
         },
         {
           "id": "A101/wrong-producer",
@@ -5357,7 +5357,7 @@
           "assertion_ref": "A101.expected",
           "status": "planned",
           "evidence": "artifacts/{commit}/{profile}/A101/wrong-producer/",
-          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA101RT006/wrong-producer"
+          "test": "github.com/pangolin-framework/pangolin/modules/realtime:TestA101RT006/wrong-producer"
         },
         {
           "id": "A101/unknown-reconcile",
@@ -5365,7 +5365,7 @@
           "assertion_ref": "A101.expected",
           "status": "pending",
           "evidence": "artifacts/{commit}/{profile}/A101/unknown-reconcile/",
-          "test": "github.com/cymondez/pangolin-framework/tests/m7:TestA101UnknownReconcile"
+          "test": "github.com/pangolin-framework/pangolin/tests/m7:TestA101UnknownReconcile"
         }
       ]
     },
@@ -5393,7 +5393,7 @@
           "assertion_ref": "A102.expected",
           "status": "planned",
           "evidence": "artifacts/{commit}/{profile}/A102/wrong-scope-negative/",
-          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA102RT007/wrong-scope-negative"
+          "test": "github.com/pangolin-framework/pangolin/modules/realtime:TestA102RT007/wrong-scope-negative"
         },
         {
           "id": "A102/broker-redelivery",
@@ -5401,7 +5401,7 @@
           "assertion_ref": "A102.expected",
           "status": "pending",
           "evidence": "artifacts/{commit}/{profile}/A102/broker-redelivery/",
-          "test": "github.com/cymondez/pangolin-framework/events/nats:TestLiveAckWaitRedeliverySameConsumer"
+          "test": "github.com/pangolin-framework/pangolin/events/nats:TestLiveAckWaitRedeliverySameConsumer"
         },
         {
           "id": "A102/node-restart",
@@ -5409,7 +5409,7 @@
           "assertion_ref": "A102.expected",
           "status": "pending",
           "evidence": "artifacts/{commit}/{profile}/A102/node-restart/",
-          "test": "github.com/cymondez/pangolin-framework/tests/m7:TestA102NodeRestart"
+          "test": "github.com/pangolin-framework/pangolin/tests/m7:TestA102NodeRestart"
         },
         {
           "id": "A102/no-client-ack",
@@ -5417,7 +5417,7 @@
           "assertion_ref": "A102.expected",
           "status": "pending",
           "evidence": "artifacts/{commit}/{profile}/A102/no-client-ack/",
-          "test": "github.com/cymondez/pangolin-framework/tests/m7:TestA102NoClientAck"
+          "test": "github.com/pangolin-framework/pangolin/tests/m7:TestA102NoClientAck"
         }
       ]
     },
@@ -5437,7 +5437,7 @@
           "assertion_ref": "A103.expected",
           "status": "planned",
           "evidence": "artifacts/{commit}/{profile}/A103/active-drain/",
-          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA103RT008/active-drain"
+          "test": "github.com/pangolin-framework/pangolin/modules/realtime:TestA103RT008/active-drain"
         },
         {
           "id": "A103/admission-capacity",
@@ -5445,7 +5445,7 @@
           "assertion_ref": "A103.expected",
           "status": "planned",
           "evidence": "artifacts/{commit}/{profile}/A103/admission-capacity/",
-          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA103RT008/admission-capacity"
+          "test": "github.com/pangolin-framework/pangolin/modules/realtime:TestA103RT008/admission-capacity"
         },
         {
           "id": "A103/close-once",
@@ -5453,7 +5453,7 @@
           "assertion_ref": "A103.expected",
           "status": "planned",
           "evidence": "artifacts/{commit}/{profile}/A103/close-once/",
-          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA103RT008/close-once"
+          "test": "github.com/pangolin-framework/pangolin/modules/realtime:TestA103RT008/close-once"
         },
         {
           "id": "A103/queue-full",
@@ -5461,7 +5461,7 @@
           "assertion_ref": "A103.expected",
           "status": "planned",
           "evidence": "artifacts/{commit}/{profile}/A103/queue-full/",
-          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA103RT008/queue-full"
+          "test": "github.com/pangolin-framework/pangolin/modules/realtime:TestA103RT008/queue-full"
         },
         {
           "id": "A103/slow-client",
@@ -5469,7 +5469,7 @@
           "assertion_ref": "A103.expected",
           "status": "planned",
           "evidence": "artifacts/{commit}/{profile}/A103/slow-client/",
-          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA103RT008/slow-client"
+          "test": "github.com/pangolin-framework/pangolin/modules/realtime:TestA103RT008/slow-client"
         },
         {
           "id": "A103/write-timeout",
@@ -5477,7 +5477,7 @@
           "assertion_ref": "A103.expected",
           "status": "planned",
           "evidence": "artifacts/{commit}/{profile}/A103/write-timeout/",
-          "test": "github.com/cymondez/pangolin-framework/modules/realtime:TestA103RT008/write-timeout"
+          "test": "github.com/pangolin-framework/pangolin/modules/realtime:TestA103RT008/write-timeout"
         },
         {
           "id": "A103/redaction",
@@ -5485,7 +5485,7 @@
           "assertion_ref": "A103.expected",
           "status": "pending",
           "evidence": "artifacts/{commit}/{profile}/A103/redaction/",
-          "test": "github.com/cymondez/pangolin-framework/modules/realtime/signalr:TestA103Redaction"
+          "test": "github.com/pangolin-framework/pangolin/modules/realtime/signalr:TestA103Redaction"
         }
       ]
     },
@@ -5506,7 +5506,7 @@
           "status": "planned",
           "evidence": "artifacts/{commit}/{profile}/A104/generated-profiles/",
           "template": "examples/realtime/client/integration.test.mjs (official client, two live nodes, three profiles)",
-          "test": "github.com/cymondez/pangolin-framework/internal/scaffold:TestGeneratedRealtimeProfiles"
+          "test": "github.com/pangolin-framework/pangolin/internal/scaffold:TestGeneratedRealtimeProfiles"
         },
         {
           "id": "A104/organization-enabled",
@@ -5546,7 +5546,7 @@
           "assertion_ref": "A104.expected",
           "status": "pending",
           "evidence": "artifacts/{commit}/{profile}/A104/legacy-off/",
-          "test": "github.com/cymondez/pangolin-framework/tests/m7:TestA104LegacyOff"
+          "test": "github.com/pangolin-framework/pangolin/tests/m7:TestA104LegacyOff"
         },
         {
           "id": "A104/cumulative-gates",

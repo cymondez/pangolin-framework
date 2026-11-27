@@ -5,7 +5,7 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/cymondez/pangolin-framework/internal/scaffold"
+	"github.com/pangolin-framework/pangolin/internal/scaffold"
 )
 
 func main() {

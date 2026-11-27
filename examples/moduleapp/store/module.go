@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/cymondez/pangolin-framework/kernel/module"
+	"github.com/pangolin-framework/pangolin/kernel/module"
 )
 
 // Store is the shared in-memory data service constructed once by the root DI

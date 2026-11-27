@@ -15,9 +15,9 @@ import (
 const catalogServiceGo = `package catalog
 
 import (
-	"github.com/cymondez/pangolin-framework/events/outbox"
-	"github.com/cymondez/pangolin-framework/persistence/idempotency"
-	"github.com/cymondez/pangolin-framework/persistence/uow"
+	"github.com/pangolin-framework/pangolin/events/outbox"
+	"github.com/pangolin-framework/pangolin/persistence/idempotency"
+	"github.com/pangolin-framework/pangolin/persistence/uow"
 	"example.com/bookstore/foundation"
 )
 

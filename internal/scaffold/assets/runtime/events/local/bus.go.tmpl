@@ -8,8 +8,8 @@ import (
 	"sort"
 	"sync"
 
-	"github.com/cymondez/pangolin-framework/kernel/ambient"
-	"github.com/cymondez/pangolin-framework/persistence/uow"
+	"github.com/pangolin-framework/pangolin/kernel/ambient"
+	"github.com/pangolin-framework/pangolin/persistence/uow"
 )
 
 var ErrEventLimit = errors.New("LOCAL_EVENT_LIMIT")

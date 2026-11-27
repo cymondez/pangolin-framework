@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cymondez/pangolin-framework/examples/bookstore/infrastructure"
-	"github.com/cymondez/pangolin-framework/persistence/migration"
+	"github.com/pangolin-framework/pangolin/examples/bookstore/infrastructure"
+	"github.com/pangolin-framework/pangolin/persistence/migration"
 	"github.com/jackc/pgx/v5"
 )
 

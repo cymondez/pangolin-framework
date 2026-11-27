@@ -18,7 +18,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cymondez/pangolin-framework/security/identity"
+	"github.com/pangolin-framework/pangolin/security/identity"
 )
 
 // jwksFixture is a deterministic JWKS transport: every attempt is counted at

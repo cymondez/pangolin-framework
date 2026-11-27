@@ -8,10 +8,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cymondez/pangolin-framework/events/distributed"
-	"github.com/cymondez/pangolin-framework/events/nats"
-	"github.com/cymondez/pangolin-framework/modules/realtime"
-	"github.com/cymondez/pangolin-framework/observability"
+	"github.com/pangolin-framework/pangolin/events/distributed"
+	"github.com/pangolin-framework/pangolin/events/nats"
+	"github.com/pangolin-framework/pangolin/modules/realtime"
+	"github.com/pangolin-framework/pangolin/observability"
 )
 
 // Route sends realtime events to a dedicated stream and preserves the existing

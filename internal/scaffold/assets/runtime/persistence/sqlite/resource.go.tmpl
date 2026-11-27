@@ -12,8 +12,8 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/cymondez/pangolin-framework/persistence/database"
-	"github.com/cymondez/pangolin-framework/persistence/uow"
+	"github.com/pangolin-framework/pangolin/persistence/database"
+	"github.com/pangolin-framework/pangolin/persistence/uow"
 	_ "modernc.org/sqlite"
 )
 

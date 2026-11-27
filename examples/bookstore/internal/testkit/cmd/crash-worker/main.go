@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/cymondez/pangolin-framework/events/distributed"
-	"github.com/cymondez/pangolin-framework/examples/bookstore/bootstrap"
+	"github.com/pangolin-framework/pangolin/events/distributed"
+	"github.com/pangolin-framework/pangolin/examples/bookstore/bootstrap"
 )
 
 type crash struct{ publisher distributed.BrokerPublisher }

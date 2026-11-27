@@ -4,7 +4,7 @@ package policy
 import (
 	"context"
 
-	"github.com/cymondez/pangolin-framework/security/scope"
+	"github.com/pangolin-framework/pangolin/security/scope"
 )
 
 type Decision uint8

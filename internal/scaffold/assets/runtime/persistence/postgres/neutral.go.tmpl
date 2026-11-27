@@ -3,8 +3,8 @@ package postgres
 import (
 	"context"
 
-	"github.com/cymondez/pangolin-framework/persistence/database"
-	"github.com/cymondez/pangolin-framework/persistence/uow"
+	"github.com/pangolin-framework/pangolin/persistence/database"
+	"github.com/pangolin-framework/pangolin/persistence/uow"
 )
 
 // Capabilities is truthful: PostgreSQL enforces transaction-local FORCE RLS,

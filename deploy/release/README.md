@@ -10,7 +10,7 @@
 
 ## 版本與 Schema 政策
 
-runtime（`VERSION`）、CLI（`internal/scaffold/cli.go` 的 `Version` 常數）與 Template（`internal/scaffold/assets` 的同版 runtime bundle 及其 `require github.com/cymondez/pangolin-framework v0.1.0`）都綁定 0.1.0；發布驗收要求三者一致。已發布 Event Schema 使用自己的 wire 版本（v0.1.0 發布 `bookstore.book_created` 與 organization 系列事件的 schema version 1），**不要求** schema 版號等於產品版本；清單逐一綁定 schema 的來源檔案，防止虛構或未宣告的 schema。
+runtime（`VERSION`）、CLI（`internal/scaffold/cli.go` 的 `Version` 常數）與 Template（`internal/scaffold/assets` 的同版 runtime bundle 及其 `require github.com/pangolin-framework/pangolin v0.1.0`）都綁定 0.1.0；發布驗收要求三者一致。已發布 Event Schema 使用自己的 wire 版本（v0.1.0 發布 `bookstore.book_created` 與 organization 系列事件的 schema version 1），**不要求** schema 版號等於產品版本；清單逐一綁定 schema 的來源檔案，防止虛構或未宣告的 schema。
 
 ## 錯誤與清理行為
 

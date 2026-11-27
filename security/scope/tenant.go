@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/cymondez/pangolin-framework/kernel/ambient"
+	"github.com/pangolin-framework/pangolin/kernel/ambient"
 )
 
 var (

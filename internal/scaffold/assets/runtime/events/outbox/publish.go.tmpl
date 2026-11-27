@@ -3,8 +3,8 @@ package outbox
 import (
 	"context"
 
-	"github.com/cymondez/pangolin-framework/events/distributed"
-	"github.com/cymondez/pangolin-framework/persistence/uow"
+	"github.com/pangolin-framework/pangolin/events/distributed"
+	"github.com/pangolin-framework/pangolin/persistence/uow"
 )
 
 // EventSpec describes an integration event staged via Publisher.PublishJSON.

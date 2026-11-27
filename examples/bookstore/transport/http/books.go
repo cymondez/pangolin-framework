@@ -9,13 +9,13 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/cymondez/pangolin-framework/examples/bookstore/domain"
-	"github.com/cymondez/pangolin-framework/kernel/runtime"
-	"github.com/cymondez/pangolin-framework/persistence/uow"
-	"github.com/cymondez/pangolin-framework/security/authn"
-	"github.com/cymondez/pangolin-framework/security/identity"
-	"github.com/cymondez/pangolin-framework/security/scope"
-	response "github.com/cymondez/pangolin-framework/transport/http"
+	"github.com/pangolin-framework/pangolin/examples/bookstore/domain"
+	"github.com/pangolin-framework/pangolin/kernel/runtime"
+	"github.com/pangolin-framework/pangolin/persistence/uow"
+	"github.com/pangolin-framework/pangolin/security/authn"
+	"github.com/pangolin-framework/pangolin/security/identity"
+	"github.com/pangolin-framework/pangolin/security/scope"
+	response "github.com/pangolin-framework/pangolin/transport/http"
 )
 
 type BookService interface {

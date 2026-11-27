@@ -88,8 +88,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cymondez/pangolin-framework/application"
-	"github.com/cymondez/pangolin-framework/persistence/uow"
+	"github.com/pangolin-framework/pangolin/application"
+	"github.com/pangolin-framework/pangolin/persistence/uow"
 )
 
 // BookStore 是 Application 層自己定義的輸出介面（Port）。

@@ -12,8 +12,8 @@ import (
 	"testing"
 	"testing/fstest"
 
-	"github.com/cymondez/pangolin-framework/internal/scaffold"
-	"github.com/cymondez/pangolin-framework/persistence/migration"
+	"github.com/pangolin-framework/pangolin/internal/scaffold"
+	"github.com/pangolin-framework/pangolin/persistence/migration"
 	"github.com/jackc/pgx/v5"
 	_ "github.com/jackc/pgx/v5/stdlib"
 )

@@ -50,9 +50,9 @@ package orders
 import (
 	"context"
 
-	"github.com/cymondez/pangolin-framework/application"
-	"github.com/cymondez/pangolin-framework/persistence/idempotency"
-	"github.com/cymondez/pangolin-framework/persistence/uow"
+	"github.com/pangolin-framework/pangolin/application"
+	"github.com/pangolin-framework/pangolin/persistence/idempotency"
+	"github.com/pangolin-framework/pangolin/persistence/uow"
 )
 
 // CreateResult 封裝冪等執行的回傳值，讓呼叫端知道結果是「首次建立」還是「安全重播」。

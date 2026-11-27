@@ -12,10 +12,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cymondez/pangolin-framework/kernel/config"
-	"github.com/cymondez/pangolin-framework/kernel/module"
-	"github.com/cymondez/pangolin-framework/kernel/runtime"
-	"github.com/cymondez/pangolin-framework/platform/jobs"
+	"github.com/pangolin-framework/pangolin/kernel/config"
+	"github.com/pangolin-framework/pangolin/kernel/module"
+	"github.com/pangolin-framework/pangolin/kernel/runtime"
+	"github.com/pangolin-framework/pangolin/platform/jobs"
 )
 
 func TestActiveHTTPWorkerDrain(t *testing.T) {

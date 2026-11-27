@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cymondez/pangolin-framework/security/scope"
+	"github.com/pangolin-framework/pangolin/security/scope"
 )
 
 func bound(t *testing.T, tenant, kind, id, user, revision string) context.Context {

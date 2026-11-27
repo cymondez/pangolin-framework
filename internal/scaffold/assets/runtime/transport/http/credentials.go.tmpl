@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/cymondez/pangolin-framework/security/identity"
+	"github.com/pangolin-framework/pangolin/security/identity"
 )
 
 var (

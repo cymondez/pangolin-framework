@@ -7,7 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/cymondez/pangolin-framework/examples/bookstore/bootstrap"
+	"github.com/pangolin-framework/pangolin/examples/bookstore/bootstrap"
 )
 
 func main() {

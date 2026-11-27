@@ -14,12 +14,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cymondez/pangolin-framework/examples/bookstore/domain"
-	"github.com/cymondez/pangolin-framework/examples/bookstore/infrastructure"
-	"github.com/cymondez/pangolin-framework/persistence/postgres"
-	"github.com/cymondez/pangolin-framework/persistence/uow"
-	"github.com/cymondez/pangolin-framework/security/scope"
-	transport "github.com/cymondez/pangolin-framework/transport/http"
+	"github.com/pangolin-framework/pangolin/examples/bookstore/domain"
+	"github.com/pangolin-framework/pangolin/examples/bookstore/infrastructure"
+	"github.com/pangolin-framework/pangolin/persistence/postgres"
+	"github.com/pangolin-framework/pangolin/persistence/uow"
+	"github.com/pangolin-framework/pangolin/security/scope"
+	transport "github.com/pangolin-framework/pangolin/transport/http"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 

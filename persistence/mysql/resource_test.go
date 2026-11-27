@@ -6,8 +6,8 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/cymondez/pangolin-framework/persistence/database"
-	"github.com/cymondez/pangolin-framework/persistence/uow"
+	"github.com/pangolin-framework/pangolin/persistence/database"
+	"github.com/pangolin-framework/pangolin/persistence/uow"
 	"github.com/go-sql-driver/mysql"
 )
 

@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cymondez/pangolin-framework/events/outbox"
+	"github.com/pangolin-framework/pangolin/events/outbox"
 	"github.com/jackc/pgx/v5/pgconn"
 )
 

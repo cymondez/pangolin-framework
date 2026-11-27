@@ -9,10 +9,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cymondez/pangolin-framework/events/outbox"
-	"github.com/cymondez/pangolin-framework/kernel/runtime"
-	"github.com/cymondez/pangolin-framework/observability"
-	"github.com/cymondez/pangolin-framework/security/scope"
+	"github.com/pangolin-framework/pangolin/events/outbox"
+	"github.com/pangolin-framework/pangolin/kernel/runtime"
+	"github.com/pangolin-framework/pangolin/observability"
+	"github.com/pangolin-framework/pangolin/security/scope"
 )
 
 var (

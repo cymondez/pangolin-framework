@@ -9,12 +9,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cymondez/pangolin-framework/persistence/postgres"
-	"github.com/cymondez/pangolin-framework/persistence/uow"
-	"github.com/cymondez/pangolin-framework/platform/audit"
-	"github.com/cymondez/pangolin-framework/platform/cache"
-	"github.com/cymondez/pangolin-framework/platform/settings"
-	"github.com/cymondez/pangolin-framework/security/scope"
+	"github.com/pangolin-framework/pangolin/persistence/postgres"
+	"github.com/pangolin-framework/pangolin/persistence/uow"
+	"github.com/pangolin-framework/pangolin/platform/audit"
+	"github.com/pangolin-framework/pangolin/platform/cache"
+	"github.com/pangolin-framework/pangolin/platform/settings"
+	"github.com/pangolin-framework/pangolin/security/scope"
 )
 
 // Reuses the complete governance fixture so ancestry is current SQL authority,

@@ -5,7 +5,7 @@ package contracts
 import (
 	"context"
 
-	"github.com/cymondez/pangolin-framework/security/scope"
+	"github.com/pangolin-framework/pangolin/security/scope"
 )
 
 const (

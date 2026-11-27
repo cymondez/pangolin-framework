@@ -9,7 +9,7 @@ import (
 	"reflect"
 	"sort"
 
-	"github.com/cymondez/pangolin-framework/kernel/di"
+	"github.com/pangolin-framework/pangolin/kernel/di"
 )
 
 // privateAliasMarker separates the engine-managed alias identity from
