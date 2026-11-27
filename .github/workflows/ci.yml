@@ -17,6 +17,9 @@ jobs:
         with:
           go-version: '1.27.4'
           cache: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
       - name: Inventory the disposable runner
         run: |
           docker ps -a
@@ -44,7 +47,9 @@ jobs:
       - name: Cumulative cases, real integration/E2E, coverage, race, drills and release manifest
         env:
           PANGOLIN_PROJECT: pangolin-m6-ci
+          PANGOLIN_SCOPE: realtime
           PANGOLIN_M5_COMPOSE: 1
+          PANGOLIN_M7_DEMO_KEY: local-ci-realtime-demo-key
           PANGOLIN_M1_ADMIN_DSN: postgres://pangolin_bootstrap:local-bootstrap-only@127.0.0.1:15542/pangolin_m0?sslmode=disable
           PANGOLIN_M1_APP_DSN: postgres://pangolin_app:local-app-only@127.0.0.1:15542/pangolin_m0?sslmode=disable
           PANGOLIN_M1_WORKER_DSN: postgres://pangolin_worker:local-worker-only@127.0.0.1:15542/pangolin_m0?sslmode=disable
@@ -78,7 +83,8 @@ jobs:
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
           go vet ./...
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
-          go test -json ./... > windows-tests.json
+          $liveSkip = '^(TestDurableDeliveryAcknowledge|TestLiveFanOutAckRejectAndClose|TestLiveAckWaitRedeliverySameConsumer|TestReceiverFanOutLifecycle|TestReceiverDrainDeadline|TestReceiverNoClientAckAndRedelivery|TestRealtimePublish)'
+          go test -json -skip $liveSkip ./... | Set-Content -Encoding utf8 windows-tests.json
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
           python -c "import sys; sys.path.insert(0,'scripts'); import test_runner; test_runner.validate_tests(open('windows-tests.json',encoding='utf-8-sig').read())"
       # Full Windows integration/E2E/coverage is collected on a Windows + Docker
